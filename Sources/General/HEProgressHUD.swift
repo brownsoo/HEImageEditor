@@ -32,7 +32,7 @@ public class ZLProgressHUD: UIView {
     private lazy var loadingView = UIImageView(image: style.icon)
     
     deinit {
-        zl_debugPrint("ZLProgressHUD deinit")
+        trace("ZLProgressHUD deinit")
     }
     
     @objc public init(style: ZLProgressHUD.HUDStyle) {

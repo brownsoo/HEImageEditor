@@ -6,7 +6,7 @@
 //
 
 import UIKit
-import ZLImageEditor
+import HEImageEditor
 
 class ViewController: UIViewController {
     var editImageToolView: UIView!
@@ -33,7 +33,7 @@ class ViewController: UIViewController {
     
     var resultImageEditModel: ZLEditImageModel?
     
-    let config = ZLImageEditorConfiguration.default()
+    let config = HEImageEditorConfiguration.default()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -218,7 +218,7 @@ class ViewController: UIViewController {
 //                ]
 //            )
         
-        ZLImageEditorConfiguration.default()
+        HEImageEditorConfiguration.default()
             // Provide a image sticker container view
             .imageStickerContainerView(ImageStickerContainerView())
             .fontChooserContainerView(FontChooserContainerView())

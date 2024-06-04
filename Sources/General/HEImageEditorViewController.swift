@@ -397,7 +397,7 @@ open class ZLEditImageViewController: UIViewController {
     
     deinit {
         cleanToolViewStateTimer()
-        zl_debugPrint("ZLEditImageViewController deinit")
+        trace("ZLEditImageViewController deinit")
     }
     
     @objc public class func showEditImageVC(
@@ -409,7 +409,7 @@ open class ZLEditImageViewController: UIViewController {
     ) {
         let tools = HEImageEditorConfiguration.default().tools
         if HEImageEditorConfiguration.default().showClipDirectlyIfOnlyHasClipTool, tools.count == 1, tools.contains(.clip) {
-            let vc = ZLClipImageViewController(
+            let vc = HEClipImageViewController(
                 image: image,
                 status: editModel?.clipStatus ?? ZLClipStatus(editRect: CGRect(origin: .zero, size: image.size))
             )
@@ -526,7 +526,7 @@ open class ZLEditImageViewController: UIViewController {
         }
         
         shouldLayout = false
-        zl_debugPrint("edit image layout subviews")
+        trace("edit image layout subviews")
         var insets = UIEdgeInsets.zero
         if #available(iOS 11.0, *) {
             insets = self.view.safeAreaInsets
@@ -923,7 +923,7 @@ open class ZLEditImageViewController: UIViewController {
             currentEditImage = buildImage()
         }
         
-        let vc = ZLClipImageViewController(image: currentEditImage, status: currentClipStatus)
+        let vc = HEClipImageViewController(image: currentEditImage, status: currentClipStatus)
         let rect = mainScrollView.convert(containerView.frame, to: view)
         vc.presentAnimateFrame = rect
         vc.presentAnimateImage = currentEditImage.zl
@@ -1368,7 +1368,7 @@ open class ZLEditImageViewController: UIViewController {
     func setToolView(show: Bool, delay: TimeInterval? = nil) {
         cleanToolViewStateTimer()
         if let delay = delay {
-            toolViewStateTimer = Timer.scheduledTimer(timeInterval: delay, target: ZLWeakProxy(target: self), selector: #selector(setToolViewShow_timerFunc(show:)), userInfo: ["show": show], repeats: false)
+            toolViewStateTimer = Timer.scheduledTimer(timeInterval: delay, target: HEWeakProxy(target: self), selector: #selector(setToolViewShow_timerFunc(show:)), userInfo: ["show": show], repeats: false)
             RunLoop.current.add(toolViewStateTimer!, forMode: .common)
         } else {
             setToolViewShow_timerFunc(show: show)

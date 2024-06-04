@@ -6,9 +6,9 @@
 //
 
 import UIKit
-import ZLImageEditor
+import HEImageEditor
 
-class FontChooserContainerView: UIView, ZLTextFontChooserDelegate {
+class FontChooserContainerView: UIView, HETextFontChooserDelegate {
     static let baseViewH: CGFloat = 400
 
     var baseView: UIView!

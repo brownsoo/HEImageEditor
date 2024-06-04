@@ -2,31 +2,10 @@
 //  ZLClipImageViewController.swift
 //  HEImageEditor
 //
-//  Created by long on 2020/8/27.
-//
-//  Copyright (c) 2020 Long Zhang <495181165@qq.com>
-//
-//  Permission is hereby granted, free of charge, to any person obtaining a copy
-//  of this software and associated documentation files (the "Software"), to deal
-//  in the Software without restriction, including without limitation the rights
-//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//  copies of the Software, and to permit persons to whom the Software is
-//  furnished to do so, subject to the following conditions:
-//
-//  The above copyright notice and this permission notice shall be included in
-//  all copies or substantial portions of the Software.
-//
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-//  THE SOFTWARE.
 
 import UIKit
 
-extension ZLClipImageViewController {
+extension HEClipImageViewController {
     enum ClipPanEdge {
         case none
         case top
@@ -40,7 +19,7 @@ extension ZLClipImageViewController {
     }
 }
 
-class ZLClipImageViewController: UIViewController {
+class HEClipImageViewController: UIViewController {
     static let bottomToolViewH: CGFloat = 90
     
     static let clipRatioItemSize  = CGSize(width: 60, height: 70)
@@ -96,7 +75,7 @@ class ZLClipImageViewController: UIViewController {
     
     var shouldLayout = true
     
-    var panEdge: ZLClipImageViewController.ClipPanEdge = .none
+    var panEdge: HEClipImageViewController.ClipPanEdge = .none
     
     var beginPanPoint: CGPoint = .zero
     
@@ -140,7 +119,7 @@ class ZLClipImageViewController: UIViewController {
     }
     
     deinit {
-        zl_debugPrint("ZLClipImageViewController deinit")
+        trace("ZLClipImageViewController deinit")
         self.cleanTimer()
     }
     
@@ -234,19 +213,19 @@ class ZLClipImageViewController: UIViewController {
         
         layoutInitialImage()
         
-        bottomToolView.frame = CGRect(x: 0, y: view.bounds.height - ZLClipImageViewController.bottomToolViewH, width: view.bounds.width, height: ZLClipImageViewController.bottomToolViewH)
+        bottomToolView.frame = CGRect(x: 0, y: view.bounds.height - HEClipImageViewController.bottomToolViewH, width: view.bounds.width, height: HEClipImageViewController.bottomToolViewH)
         bottomShadowLayer.frame = bottomToolView.bounds
         
         bottomToolLineView.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: 1 / UIScreen.main.scale)
         let toolBtnH: CGFloat = 25
-        let toolBtnY = (ZLClipImageViewController.bottomToolViewH - toolBtnH) / 2 - 10
+        let toolBtnY = (HEClipImageViewController.bottomToolViewH - toolBtnH) / 2 - 10
         cancelBtn.frame = CGRect(x: 30, y: toolBtnY, width: toolBtnH, height: toolBtnH)
         let revertBtnW = localLanguageTextValue(.revert).zl.boundingRect(font: HEImageEditorLayout.bottomToolTitleFont, limitSize: CGSize(width: CGFloat.greatestFiniteMagnitude, height: toolBtnH)).width + 20
         revertBtn.frame = CGRect(x: (view.bounds.width - revertBtnW) / 2, y: toolBtnY, width: revertBtnW, height: toolBtnH)
         doneBtn.frame = CGRect(x: view.bounds.width - 30 - toolBtnH, y: toolBtnY, width: toolBtnH, height: toolBtnH)
         
-        let ratioColViewY = bottomToolView.frame.minY - ZLClipImageViewController.clipRatioItemSize.height - 5
-        rotateBtn.frame = CGRect(x: 30, y: ratioColViewY + (ZLClipImageViewController.clipRatioItemSize.height - 25) / 2, width: 25, height: 25)
+        let ratioColViewY = bottomToolView.frame.minY - HEClipImageViewController.clipRatioItemSize.height - 5
+        rotateBtn.frame = CGRect(x: 30, y: ratioColViewY + (HEClipImageViewController.clipRatioItemSize.height - 25) / 2, width: 25, height: 25)
         let ratioColViewX = rotateBtn.frame.maxX + 15
         clipRatioColView.frame = CGRect(x: ratioColViewX, y: ratioColViewY, width: view.bounds.width - ratioColViewX, height: 70)
         
@@ -336,7 +315,7 @@ class ZLClipImageViewController: UIViewController {
         view.addSubview(rotateBtn)
         
         let layout = UICollectionViewFlowLayout()
-        layout.itemSize = ZLClipImageViewController.clipRatioItemSize
+        layout.itemSize = HEClipImageViewController.clipRatioItemSize
         layout.scrollDirection = .horizontal
         layout.sectionInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 20)
         clipRatioColView = UICollectionView(frame: .zero, collectionViewLayout: layout)
@@ -379,7 +358,7 @@ class ZLClipImageViewController: UIViewController {
         rect.origin.x = 15
         rect.origin.y = insets.top
         rect.size.width = UIScreen.main.bounds.width - 15 * 2
-        rect.size.height = UIScreen.main.bounds.height - insets.top - ZLClipImageViewController.bottomToolViewH - ZLClipImageViewController.clipRatioItemSize.height - 25
+        rect.size.height = UIScreen.main.bounds.height - insets.top - HEClipImageViewController.bottomToolViewH - HEClipImageViewController.clipRatioItemSize.height - 25
         return rect
     }
     
@@ -602,7 +581,7 @@ class ZLClipImageViewController: UIViewController {
         }
     }
     
-    func calculatePanEdge(at point: CGPoint) -> ZLClipImageViewController.ClipPanEdge {
+    func calculatePanEdge(at point: CGPoint) -> HEClipImageViewController.ClipPanEdge {
         let frame = clipBoxFrame.insetBy(dx: -30, dy: -30)
         
         let cornerSize = CGSize(width: 60, height: 60)
@@ -818,7 +797,7 @@ class ZLClipImageViewController: UIViewController {
     
     func startTimer() {
         cleanTimer()
-        resetTimer = Timer.scheduledTimer(timeInterval: 0.8, target: ZLWeakProxy(target: self), selector: #selector(endEditing), userInfo: nil, repeats: false)
+        resetTimer = Timer.scheduledTimer(timeInterval: 0.8, target: HEWeakProxy(target: self), selector: #selector(endEditing), userInfo: nil, repeats: false)
         RunLoop.current.add(resetTimer!, forMode: .common)
     }
     
@@ -899,7 +878,7 @@ class ZLClipImageViewController: UIViewController {
     }
 }
 
-extension ZLClipImageViewController: UIGestureRecognizerDelegate {
+extension HEClipImageViewController: UIGestureRecognizerDelegate {
     func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
         guard gestureRecognizer == gridPanGes else {
             return true
@@ -916,7 +895,7 @@ extension ZLClipImageViewController: UIGestureRecognizerDelegate {
     }
 }
 
-extension ZLClipImageViewController: UICollectionViewDataSource, UICollectionViewDelegate {
+extension HEClipImageViewController: UICollectionViewDataSource, UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return clipRatios.count
     }
@@ -949,7 +928,7 @@ extension ZLClipImageViewController: UICollectionViewDataSource, UICollectionVie
     }
 }
 
-extension ZLClipImageViewController: UIScrollViewDelegate {
+extension HEClipImageViewController: UIScrollViewDelegate {
     func viewForZooming(in scrollView: UIScrollView) -> UIView? {
         return containerView
     }
@@ -982,7 +961,7 @@ extension ZLClipImageViewController: UIScrollViewDelegate {
     }
 }
 
-extension ZLClipImageViewController: UIViewControllerTransitioningDelegate {
+extension HEClipImageViewController: UIViewControllerTransitioningDelegate {
     func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
         return ZLClipImageDismissAnimatedTransition()
     }

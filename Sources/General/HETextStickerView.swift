@@ -71,7 +71,7 @@ class ZLTextStickerView: ZLBaseStickerView {
     }
     
     deinit {
-        zl_debugPrint("ZLTextStickerView deinit")
+        trace("ZLTextStickerView deinit")
     }
     
     convenience init(state: ZLTextStickerState) {

@@ -6,9 +6,9 @@
 //
 
 import UIKit
-import ZLImageEditor
+import HEImageEditor
 
-class ImageStickerContainerView: UIView, ZLImageStickerContainerDelegate {
+class ImageStickerContainerView: UIView, HEImageStickerContainerDelegate {
     
     static let baseViewH: CGFloat = 400
     

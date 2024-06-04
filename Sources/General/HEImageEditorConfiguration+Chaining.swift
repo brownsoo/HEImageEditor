@@ -82,13 +82,13 @@ public extension HEImageEditorConfiguration {
     }
     
     @discardableResult
-    func imageStickerContainerView(_ view: (UIView & ZLImageStickerContainerDelegate)?) -> HEImageEditorConfiguration {
+    func imageStickerContainerView(_ view: (UIView & HEImageStickerContainerDelegate)?) -> HEImageEditorConfiguration {
         imageStickerContainerView = view
         return self
     }
 
     @discardableResult
-    func fontChooserContainerView(_ view: (UIView & ZLTextFontChooserDelegate)?) -> HEImageEditorConfiguration {
+    func fontChooserContainerView(_ view: (UIView & HETextFontChooserDelegate)?) -> HEImageEditorConfiguration {
         fontChooserContainerView = view
         return self
     }

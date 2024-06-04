@@ -141,9 +141,9 @@ public class HEImageEditorConfiguration: NSObject {
         }
     }
     
-    @objc public var imageStickerContainerView: (UIView & ZLImageStickerContainerDelegate)?
+    @objc public var imageStickerContainerView: (UIView & HEImageStickerContainerDelegate)?
 
-    @objc public var fontChooserContainerView: (UIView & ZLTextFontChooserDelegate)?
+    @objc public var fontChooserContainerView: (UIView & HETextFontChooserDelegate)?
 
     private var pri_adjustTools: [HEImageEditorConfiguration.AdjustTool] = [.brightness, .contrast, .saturation]
     /// Adjust image tools. (Default order is brightness, contrast, saturation)
@@ -303,7 +303,7 @@ public extension ZLImageClipRatio {
 }
 
 /// Provide an image sticker container view that conform to this protocol must be a subclass of UIView
-@objc public protocol ZLImageStickerContainerDelegate {
+@objc public protocol HEImageStickerContainerDelegate {
     @objc var selectImageBlock: ((UIImage) -> Void)? { get set }
     
     @objc var hideBlock: (() -> Void)? { get set }
@@ -312,7 +312,7 @@ public extension ZLImageClipRatio {
 }
 
 /// Provide an text font choose view that conform to this protocol must be a subclass of UIView
-@objc public protocol ZLTextFontChooserDelegate {
+@objc public protocol HETextFontChooserDelegate {
     @objc var selectFontBlock: ((UIFont) -> Void)? { get set }
 
     @objc var hideBlock: (() -> Void)? { get set }

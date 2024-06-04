@@ -95,7 +95,7 @@ class ZLAdjustSlider: UIView {
     var endAdjust: (() -> Void)?
     
     deinit {
-        zl_debugPrint("ZLAdjustSlider deinit")
+        trace("ZLAdjustSlider deinit")
     }
     
     override init(frame: CGRect) {
