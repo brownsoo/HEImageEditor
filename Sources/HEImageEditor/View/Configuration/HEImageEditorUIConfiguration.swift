@@ -19,7 +19,7 @@ public class HEImageEditorUIConfiguration: NSObject {
     @objc public var hudStyle: ZLProgressHUD.HUDStyle = .dark
     
     /// Adjust Slider Type
-    @objc public var adjustSliderType: ZLAdjustSliderType = .vertical
+    @objc public var adjustSliderType: HEAdjustSliderType = .vertical
     
     // MARK: Language properties
     
@@ -35,7 +35,7 @@ public class HEImageEditorUIConfiguration: NSObject {
     /// key: .hudProcessing, value: "loading, waiting please" language,
     /// The dictionary that needs to be passed in is [.hudProcessing: "text to be replaced"].
     /// - warning: Please pay attention to the placeholders contained in languages when changing, such as %ld, %@.
-    public var customLanguageConfig: [ZLLocalLanguageKey: String] = [:]
+    public var customLanguageConfig: [HELocalLanguageKey: String] = [:]
     
     /// Developers can customize languages (This property is only for objc).
     /// - example: If you needs to replace
@@ -44,9 +44,9 @@ public class HEImageEditorUIConfiguration: NSObject {
     /// - warning: Please pay attention to the placeholders contained in languages when changing, such as %ld, %@.
     @objc public var customLanguageConfig_objc: [String: String] = [:] {
         didSet {
-            var swiftParams: [ZLLocalLanguageKey: String] = [:]
+            var swiftParams: [HELocalLanguageKey: String] = [:]
             customLanguageConfig_objc.forEach { key, value in
-                swiftParams[ZLLocalLanguageKey(rawValue: key)] = value
+                swiftParams[HELocalLanguageKey(rawValue: key)] = value
             }
             customLanguageConfig = swiftParams
         }
@@ -57,7 +57,7 @@ public class HEImageEditorUIConfiguration: NSObject {
     /// ["zl_btn_selected", "zl_btn_unselected"].
     @objc public var customImageNames: [String] = [] {
         didSet {
-            ZLCustomImageDeploy.imageNames = customImageNames
+            HECustomImageDeploy.imageNames = customImageNames
         }
     }
     
@@ -66,7 +66,7 @@ public class HEImageEditorUIConfiguration: NSObject {
     /// ["zl_btn_selected": selectedImage, "zl_btn_unselected": unselectedImage].
     public var customImageForKey: [String: UIImage?] = [:] {
         didSet {
-            customImageForKey.forEach { ZLCustomImageDeploy.imageForKey[$0.key] = $0.value }
+            customImageForKey.forEach { HECustomImageDeploy.imageForKey[$0.key] = $0.value }
         }
     }
     
@@ -75,7 +75,7 @@ public class HEImageEditorUIConfiguration: NSObject {
     /// ["zl_btn_selected": selectedImage, "zl_btn_unselected": unselectedImage].
     @objc public var customImageForKey_objc: [String: UIImage] = [:] {
         didSet {
-            ZLCustomImageDeploy.imageForKey = customImageForKey_objc
+            HECustomImageDeploy.imageForKey = customImageForKey_objc
         }
     }
     
@@ -85,22 +85,22 @@ public class HEImageEditorUIConfiguration: NSObject {
     @objc public var adjustSliderNormalColor = UIColor.white
     
     /// The tint color of adjust slider.
-    @objc public var adjustSliderTintColor: UIColor = .zl.rgba(7, 213, 101)
+    @objc public var adjustSliderTintColor: UIColor = .he.rgba(7, 213, 101)
     
     /// The background color of edit done button.
-    @objc public var editDoneBtnBgColor: UIColor = .zl.rgba(7, 213, 101)
+    @objc public var editDoneBtnBgColor: UIColor = .he.rgba(7, 213, 101)
     
     /// The title color of edit done button.
     @objc public var editDoneBtnTitleColor = UIColor.white
     
     /// The normal background color of ashbin.
-    @objc public var ashbinNormalBgColor: UIColor = .zl.rgba(40, 40, 40, 0.8)
+    @objc public var ashbinNormalBgColor: UIColor = .he.rgba(40, 40, 40, 0.8)
     
     /// The tint background color of ashbin.
-    @objc public var ashbinTintBgColor: UIColor = .zl.rgba(241, 79, 79, 0.98)
+    @objc public var ashbinTintBgColor: UIColor = .he.rgba(241, 79, 79, 0.98)
     
     /// The normal color of the title below the various tools in the image editor.
-    @objc public var toolTitleNormalColor: UIColor = .zl.rgba(160, 160, 160)
+    @objc public var toolTitleNormalColor: UIColor = .he.rgba(160, 160, 160)
     
     /// The tint color of the title below the various tools in the image editor.
     @objc public var toolTitleTintColor = UIColor.white
@@ -111,13 +111,13 @@ public class HEImageEditorUIConfiguration: NSObject {
 
 // MARK: Image source deploy
 
-enum ZLCustomImageDeploy {
+enum HECustomImageDeploy {
     static var imageNames: [String] = []
     
     static var imageForKey: [String: UIImage] = [:]
 }
 
-@objc public enum ZLAdjustSliderType: Int {
+@objc public enum HEAdjustSliderType: Int {
     case vertical
     case horizontal
 }

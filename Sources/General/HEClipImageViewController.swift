@@ -39,7 +39,7 @@ class HEClipImageViewController: UIViewController {
     
     let originalImage: UIImage
     
-    let clipRatios: [ZLImageClipRatio]
+    let clipRatios: [HEImageClipRatio]
     
     var editImage: UIImage
     
@@ -87,7 +87,7 @@ class HEClipImageViewController: UIViewController {
     
     var angle: CGFloat = 0
     
-    var selectedRatio: ZLImageClipRatio {
+    var selectedRatio: HEImageClipRatio {
         didSet {
             overlayView.isCircle = selectedRatio.isCircle
         }
@@ -106,7 +106,7 @@ class HEClipImageViewController: UIViewController {
     var dismissAnimateImage: UIImage?
     
     // Angle, edit rect, clip ratio
-    var clipDoneBlock: ((CGFloat, CGRect, ZLImageClipRatio) -> Void)?
+    var clipDoneBlock: ((CGFloat, CGRect, HEImageClipRatio) -> Void)?
     
     var cancelClipBlock: (() -> Void)?
     
@@ -123,17 +123,17 @@ class HEClipImageViewController: UIViewController {
         self.cleanTimer()
     }
     
-    init(image: UIImage, status: ZLClipStatus) {
+    init(image: UIImage, status: HEClipStatus) {
         originalImage = image
         clipRatios = HEImageEditorConfiguration.default().clipRatios
         self.editRect = status.editRect
         self.angle = status.angle
         if angle == -90 {
-            editImage = image.zl.rotate(orientation: .left)
+            editImage = image.he.rotate(orientation: .left)
         } else if self.angle == -180 {
-            editImage = image.zl.rotate(orientation: .down)
+            editImage = image.he.rotate(orientation: .down)
         } else if self.angle == -270 {
-            editImage = image.zl.rotate(orientation: .right)
+            editImage = image.he.rotate(orientation: .right)
         } else {
             editImage = image
         }
@@ -166,7 +166,7 @@ class HEClipImageViewController: UIViewController {
         super.viewDidAppear(animated)
         
         viewDidAppearCount += 1
-        if presentingViewController is ZLEditImageViewController {
+        if presentingViewController is HEEditImageViewController {
             transitioningDelegate = self
         }
         
@@ -220,7 +220,7 @@ class HEClipImageViewController: UIViewController {
         let toolBtnH: CGFloat = 25
         let toolBtnY = (HEClipImageViewController.bottomToolViewH - toolBtnH) / 2 - 10
         cancelBtn.frame = CGRect(x: 30, y: toolBtnY, width: toolBtnH, height: toolBtnH)
-        let revertBtnW = localLanguageTextValue(.revert).zl.boundingRect(font: HEImageEditorLayout.bottomToolTitleFont, limitSize: CGSize(width: CGFloat.greatestFiniteMagnitude, height: toolBtnH)).width + 20
+        let revertBtnW = localLanguageTextValue(.revert).he.boundingRect(font: HEImageEditorLayout.bottomToolTitleFont, limitSize: CGSize(width: CGFloat.greatestFiniteMagnitude, height: toolBtnH)).width + 20
         revertBtn.frame = CGRect(x: (view.bounds.width - revertBtnW) / 2, y: toolBtnY, width: revertBtnW, height: toolBtnH)
         doneBtn.frame = CGRect(x: view.bounds.width - 30 - toolBtnH, y: toolBtnY, width: toolBtnH, height: toolBtnH)
         
@@ -286,10 +286,10 @@ class HEClipImageViewController: UIViewController {
         bottomToolView.layer.addSublayer(bottomShadowLayer)
         
         bottomToolLineView = UIView()
-        bottomToolLineView.backgroundColor = .zl.rgba(240, 240, 240)
+        bottomToolLineView.backgroundColor = .he.rgba(240, 240, 240)
         bottomToolView.addSubview(bottomToolLineView)
         
-        cancelBtn.setImage(.zl.getImage("zl_close"), for: .normal)
+        cancelBtn.setImage(.he.getImage("zl_close"), for: .normal)
         cancelBtn.adjustsImageWhenHighlighted = false
         cancelBtn.enlargeInset = 20
         cancelBtn.addTarget(self, action: #selector(cancelBtnClick), for: .touchUpInside)
@@ -302,13 +302,13 @@ class HEClipImageViewController: UIViewController {
         revertBtn.addTarget(self, action: #selector(revertBtnClick), for: .touchUpInside)
         bottomToolView.addSubview(revertBtn)
         
-        doneBtn.setImage(.zl.getImage("zl_right"), for: .normal)
+        doneBtn.setImage(.he.getImage("zl_right"), for: .normal)
         doneBtn.adjustsImageWhenHighlighted = false
         doneBtn.enlargeInset = 20
         doneBtn.addTarget(self, action: #selector(doneBtnClick), for: .touchUpInside)
         bottomToolView.addSubview(doneBtn)
         
-        rotateBtn.setImage(.zl.getImage("zl_rotateimage"), for: .normal)
+        rotateBtn.setImage(.he.getImage("zl_rotateimage"), for: .normal)
         rotateBtn.adjustsImageWhenHighlighted = false
         rotateBtn.enlargeInset = 20
         rotateBtn.addTarget(self, action: #selector(rotateBtnClick), for: .touchUpInside)
@@ -325,7 +325,7 @@ class HEClipImageViewController: UIViewController {
         clipRatioColView.isHidden = clipRatios.count <= 1
         clipRatioColView.showsHorizontalScrollIndicator = false
         view.addSubview(clipRatioColView)
-        ZLImageClipRatioCell.zl.register(clipRatioColView)
+        ZLImageClipRatioCell.he.register(clipRatioColView)
         
         gridPanGes = UIPanGestureRecognizer(target: self, action: #selector(gridGesPanAction(_:)))
         gridPanGes.delegate = self
@@ -347,7 +347,7 @@ class HEClipImageViewController: UIViewController {
         } else {
             size = CGSize(width: fixLength, height: fixLength / ratio)
         }
-        thumbnailImage = editImage.zl.resize(size)
+        thumbnailImage = editImage.he.resize(size)
     }
     
     /// 计算做大裁剪范围
@@ -531,14 +531,14 @@ class HEClipImageViewController: UIViewController {
             // 将edit rect转换为相对edit image的rect
             let rect = convertClipRectToEditImageRect()
             // 旋转图片
-            editImage = editImage.zl.rotate(orientation: .left)
+            editImage = editImage.he.rotate(orientation: .left)
             // 将rect进行旋转，转换到相对于旋转后的edit image的rect
             editRect = CGRect(x: rect.minY, y: editImage.size.height - rect.minX - rect.width, width: rect.height, height: rect.width)
         } else {
             // 其他比例的裁剪框，旋转后都重置edit rect
             
             // 旋转图片
-            editImage = editImage.zl.rotate(orientation: .left)
+            editImage = editImage.he.rotate(orientation: .left)
             calculateClipRect()
         }
         
@@ -851,7 +851,7 @@ class HEClipImageViewController: UIViewController {
     
     func clipImage() -> (clipImage: UIImage, editRect: CGRect) {
         let frame = convertClipRectToEditImageRect()
-        let clipImage = editImage.zl.clipImage(angle: 0, editRect: frame, isCircle: selectedRatio.isCircle) ?? editImage
+        let clipImage = editImage.he.clipImage(angle: 0, editRect: frame, isCircle: selectedRatio.isCircle) ?? editImage
         return (clipImage, frame)
     }
     
@@ -901,15 +901,15 @@ extension HEClipImageViewController: UICollectionViewDataSource, UICollectionVie
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ZLImageClipRatioCell.zl.identifier, for: indexPath) as! ZLImageClipRatioCell
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ZLImageClipRatioCell.he.identifier, for: indexPath) as! ZLImageClipRatioCell
         
         let ratio = clipRatios[indexPath.row]
         cell.configureCell(image: thumbnailImage ?? editImage, ratio: ratio)
         
         if ratio == selectedRatio {
-            cell.titleLabel.textColor = .zl.toolTitleTintColor
+            cell.titleLabel.textColor = .he.toolTitleTintColor
         } else {
-            cell.titleLabel.textColor = .zl.toolTitleNormalColor
+            cell.titleLabel.textColor = .he.toolTitleNormalColor
         }
         
         return cell
@@ -976,7 +976,7 @@ class ZLImageClipRatioCell: UICollectionViewCell {
     
     var image: UIImage?
     
-    var ratio: ZLImageClipRatio!
+    var ratio: HEImageClipRatio!
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -1037,7 +1037,7 @@ class ZLImageClipRatioCell: UICollectionViewCell {
         contentView.addSubview(titleLabel)
     }
     
-    func configureCell(image: UIImage, ratio: ZLImageClipRatio) {
+    func configureCell(image: UIImage, ratio: HEImageClipRatio) {
         imageView.image = image
         titleLabel.text = ratio.title
         self.image = image

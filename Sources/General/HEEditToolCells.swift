@@ -31,30 +31,30 @@ class ZLEditToolCell: UICollectionViewCell {
         didSet {
             switch toolType {
             case .draw:
-                icon.image = .zl.getImage("zl_drawLine")
-                icon.highlightedImage = .zl.getImage("zl_drawLine_selected")
+                icon.image = .he.getImage("zl_drawLine")
+                icon.highlightedImage = .he.getImage("zl_drawLine_selected")
             case .clip:
-                icon.image = .zl.getImage("zl_clip")
-                icon.highlightedImage = .zl.getImage("zl_clip")
+                icon.image = .he.getImage("zl_clip")
+                icon.highlightedImage = .he.getImage("zl_clip")
             case .imageSticker:
-                icon.image = .zl.getImage("zl_imageSticker")
-                icon.highlightedImage = .zl.getImage("zl_imageSticker")
+                icon.image = .he.getImage("zl_imageSticker")
+                icon.highlightedImage = .he.getImage("zl_imageSticker")
             case .textSticker:
-                icon.image = .zl.getImage("zl_textSticker")
-                icon.highlightedImage = .zl.getImage("zl_textSticker")
+                icon.image = .he.getImage("zl_textSticker")
+                icon.highlightedImage = .he.getImage("zl_textSticker")
             case .mosaic:
-                icon.image = .zl.getImage("zl_mosaic")
-                icon.highlightedImage = .zl.getImage("zl_mosaic_selected")
+                icon.image = .he.getImage("zl_mosaic")
+                icon.highlightedImage = .he.getImage("zl_mosaic_selected")
             case .filter:
-                icon.image = .zl.getImage("zl_filter")
-                icon.highlightedImage = .zl.getImage("zl_filter_selected")
+                icon.image = .he.getImage("zl_filter")
+                icon.highlightedImage = .he.getImage("zl_filter_selected")
             case .adjust:
-                icon.image = .zl.getImage("zl_adjust")
-                icon.highlightedImage = .zl.getImage("zl_adjust_selected")
+                icon.image = .he.getImage("zl_adjust")
+                icon.highlightedImage = .he.getImage("zl_adjust_selected")
             }
-            if let color = UIColor.zl.toolIconHighlightedColor {
+            if let color = UIColor.he.toolIconHighlightedColor {
                 icon.highlightedImage = icon.highlightedImage?
-                    .zl.fillColor(color)
+                    .he.fillColor(color)
             }
         }
     }
@@ -188,21 +188,21 @@ class ZLAdjustToolCell: UICollectionViewCell {
         didSet {
             switch adjustTool {
             case .brightness:
-                imageView.image = .zl.getImage("zl_brightness")
-                imageView.highlightedImage = .zl.getImage("zl_brightness_selected")
+                imageView.image = .he.getImage("zl_brightness")
+                imageView.highlightedImage = .he.getImage("zl_brightness_selected")
                 nameLabel.text = localLanguageTextValue(.brightness)
             case .contrast:
-                imageView.image = .zl.getImage("zl_contrast")
-                imageView.highlightedImage = .zl.getImage("zl_contrast_selected")
+                imageView.image = .he.getImage("zl_contrast")
+                imageView.highlightedImage = .he.getImage("zl_contrast_selected")
                 nameLabel.text = localLanguageTextValue(.contrast)
             case .saturation:
-                imageView.image = .zl.getImage("zl_saturation")
-                imageView.highlightedImage = .zl.getImage("zl_saturation_selected")
+                imageView.image = .he.getImage("zl_saturation")
+                imageView.highlightedImage = .he.getImage("zl_saturation_selected")
                 nameLabel.text = localLanguageTextValue(.saturation)
             }
-            if let color = UIColor.zl.toolIconHighlightedColor {
+            if let color = UIColor.he.toolIconHighlightedColor {
                 imageView.highlightedImage = imageView.highlightedImage?
-                    .zl.fillColor(color)
+                    .he.fillColor(color)
             }
         }
     }

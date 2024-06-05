@@ -46,13 +46,13 @@ class ZLAdjustSlider: UIView {
     
     lazy var separator: UIView = {
         let view = UIView()
-        view.backgroundColor = .zl.rgba(230, 230, 230)
+        view.backgroundColor = .he.rgba(230, 230, 230)
         return view
     }()
     
     lazy var shadowView: UIView = {
         let view = UIView()
-        view.backgroundColor = .zl.adjustSliderNormalColor
+        view.backgroundColor = .he.adjustSliderNormalColor
         view.layer.cornerRadius = sliderWidth / 2
         view.layer.shadowColor = UIColor.black.withAlphaComponent(0.4).cgColor
         view.layer.shadowOffset = .zero
@@ -63,7 +63,7 @@ class ZLAdjustSlider: UIView {
     
     lazy var whiteView: UIView = {
         let view = UIView()
-        view.backgroundColor = .zl.adjustSliderNormalColor
+        view.backgroundColor = .he.adjustSliderNormalColor
         view.layer.cornerRadius = sliderWidth / 2
         view.layer.masksToBounds = true
         return view
@@ -71,7 +71,7 @@ class ZLAdjustSlider: UIView {
     
     lazy var tintView: UIView = {
         let view = UIView()
-        view.backgroundColor = .zl.adjustSliderTintColor
+        view.backgroundColor = .he.adjustSliderTintColor
         return view
     }()
     
@@ -121,12 +121,12 @@ class ZLAdjustSlider: UIView {
             separator.frame = CGRect(x: 0, y: (bounds.height - separatorH) / 2, width: sliderWidth, height: separatorH)
             valueLabel.frame = CGRect(x: 0, y: bounds.height / 2 - 10, width: 38, height: 20)
         } else {
-            valueLabel.frame = CGRect(x: 0, y: 0, width: zl.width, height: 38)
-            shadowView.frame = CGRect(x: 0, y: valueLabel.zl.bottom + 2, width: zl.width, height: sliderWidth)
+            valueLabel.frame = CGRect(x: 0, y: 0, width: he.width, height: 38)
+            shadowView.frame = CGRect(x: 0, y: valueLabel.he.bottom + 2, width: he.width, height: sliderWidth)
             whiteView.frame = shadowView.frame
             tintView.frame = calculateTintFrame()
             let separatorW: CGFloat = 1
-            separator.frame = CGRect(x: (zl.width - separatorW) / 2, y: 0, width: separatorW, height: sliderWidth)
+            separator.frame = CGRect(x: (he.width - separatorW) / 2, y: 0, width: separatorW, height: sliderWidth)
         }
     }
     
@@ -140,7 +140,7 @@ class ZLAdjustSlider: UIView {
     
     private func calculateTintFrame() -> CGRect {
         if isVertical {
-            let totalH = zl.height / 2
+            let totalH = he.height / 2
             let tintH = totalH * abs(CGFloat(value)) / CGFloat(ZLAdjustSlider.maximumValue)
             if value > 0 {
                 return CGRect(x: 0, y: totalH - tintH, width: sliderWidth, height: tintH)
@@ -148,7 +148,7 @@ class ZLAdjustSlider: UIView {
                 return CGRect(x: 0, y: totalH, width: sliderWidth, height: tintH)
             }
         } else {
-            let totalW = zl.width / 2
+            let totalW = he.width / 2
             let tintW = totalW * abs(CGFloat(value)) / CGFloat(ZLAdjustSlider.maximumValue)
             if value > 0 {
                 return CGRect(x: totalW, y: 0, width: tintW, height: sliderWidth)
@@ -166,7 +166,7 @@ class ZLAdjustSlider: UIView {
             beginAdjust?()
         } else if pan.state == .changed {
             let transValue = isVertical ? -translation.y : translation.x
-            let totalLength = isVertical ? zl.height / 2 : zl.width / 2
+            let totalLength = isVertical ? he.height / 2 : he.width / 2
             var temp = valueForPanBegan + Float(transValue / totalLength)
             temp = max(ZLAdjustSlider.minimumValue, min(ZLAdjustSlider.maximumValue, temp))
             

@@ -5,6 +5,6 @@
       location = "group:Example/Example.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:/Users/brownsoo/Workspace/ZLImageEditor/HEImageEditor.xcodeproj">
+      location = "group:HEImageEditor.xcodeproj">
    </FileRef>
 </Workspace>

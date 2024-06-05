@@ -34,7 +34,7 @@ public extension HEImageEditorUIConfiguration {
     }
     
     @discardableResult
-    func adjustSliderType(_ type: ZLAdjustSliderType) -> HEImageEditorUIConfiguration {
+    func adjustSliderType(_ type: HEAdjustSliderType) -> HEImageEditorUIConfiguration {
         adjustSliderType = type
         return self
     }
@@ -46,7 +46,7 @@ public extension HEImageEditorUIConfiguration {
     }
     
     @discardableResult
-    func customLanguageConfig(_ config: [ZLLocalLanguageKey: String]) -> HEImageEditorUIConfiguration {
+    func customLanguageConfig(_ config: [HELocalLanguageKey: String]) -> HEImageEditorUIConfiguration {
         customLanguageConfig = config
         return self
     }

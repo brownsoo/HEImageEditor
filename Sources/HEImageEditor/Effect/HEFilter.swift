@@ -1,32 +1,11 @@
 //
-//  ZLFilter.swift
+//  HEFilter.swift
 //  HEImageEditor
 //
-//  Created by long on 2020/10/9.
-//
-//  Copyright (c) 2020 Long Zhang <495181165@qq.com>
-//
-//  Permission is hereby granted, free of charge, to any person obtaining a copy
-//  of this software and associated documentation files (the "Software"), to deal
-//  in the Software without restriction, including without limitation the rights
-//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//  copies of the Software, and to permit persons to whom the Software is
-//  furnished to do so, subject to the following conditions:
-//
-//  The above copyright notice and this permission notice shall be included in
-//  all copies or substantial portions of the Software.
-//
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-//  THE SOFTWARE.
 
 import UIKit
 
-/// 滤镜代码参考自 https://github.com/Yummypets/YPImagePicker
+/// https://github.com/Yummypets/YPImagePicker
 
 public typealias ZLFilterApplierType = (_ image: UIImage) -> UIImage
 
@@ -74,7 +53,7 @@ public typealias ZLFilterApplierType = (_ image: UIImage) -> UIImage
     }
 }
 
-public class ZLFilter: NSObject {
+public class HEFilter: NSObject {
     public var name: String
     
     let applier: ZLFilterApplierType?
@@ -84,13 +63,13 @@ public class ZLFilter: NSObject {
         
         if filterType != .normal {
             applier = { image -> UIImage in
-                guard let ciImage = image.zl.toCIImage() else {
+                guard let ciImage = image.he.toCIImage() else {
                     return image
                 }
                 
                 let filter = CIFilter(name: filterType.coreImageFilterName)
                 filter?.setValue(ciImage, forKey: kCIInputImageKey)
-                guard let outputImage = filter?.outputImage?.zl.toUIImage() else {
+                guard let outputImage = filter?.outputImage?.he.toUIImage() else {
                     return image
                 }
                 return outputImage
@@ -107,9 +86,9 @@ public class ZLFilter: NSObject {
     }
 }
 
-extension ZLFilter {
+extension HEFilter {
     class func clarendonFilter(image: UIImage) -> UIImage {
-        guard let ciImage = image.zl.toCIImage() else {
+        guard let ciImage = image.he.toCIImage() else {
             return image
         }
         
@@ -123,14 +102,14 @@ extension ZLFilter {
             "inputBrightness": 0.05,
             "inputContrast": 1.1,
         ])
-        guard let outputImage = outputCIImage.zl.toUIImage() else {
+        guard let outputImage = outputCIImage.he.toUIImage() else {
             return image
         }
         return outputImage
     }
     
     class func nashvilleFilter(image: UIImage) -> UIImage {
-        guard let ciImage = image.zl.toCIImage() else {
+        guard let ciImage = image.he.toCIImage() else {
             return image
         }
         
@@ -154,14 +133,14 @@ extension ZLFilter {
                 "inputBackgroundImage": backgroundImage2,
             ])
         
-        guard let outputImage = outputCIImage.zl.toUIImage() else {
+        guard let outputImage = outputCIImage.he.toUIImage() else {
             return image
         }
         return outputImage
     }
     
     class func apply1977Filter(image: UIImage) -> UIImage {
-        guard let ciImage = image.zl.toCIImage() else {
+        guard let ciImage = image.he.toCIImage() else {
             return image
         }
         
@@ -188,14 +167,14 @@ extension ZLFilter {
                 "inputPoint4": CIVector(x: 1, y: 1),
             ])
         
-        guard let outputImage = outputCIImage.zl.toUIImage() else {
+        guard let outputImage = outputCIImage.he.toUIImage() else {
             return image
         }
         return outputImage
     }
     
     class func toasterFilter(image: UIImage) -> UIImage {
-        guard let ciImage = image.zl.toCIImage() else {
+        guard let ciImage = image.he.toCIImage() else {
             return image
         }
         
@@ -226,7 +205,7 @@ extension ZLFilter {
                 "inputBackgroundImage": circle!,
             ])
         
-        guard let outputImage = outputCIImage.zl.toUIImage() else {
+        guard let outputImage = outputCIImage.he.toUIImage() else {
             return image
         }
         return outputImage
@@ -245,38 +224,38 @@ extension ZLFilter {
     }
 }
 
-public extension ZLFilter {
-    @objc static let all: [ZLFilter] = [.normal, .clarendon, .nashville, .apply1977, .toaster, .chrome, .fade, .instant, .process, .transfer, .tone, .linear, .sepia, .mono, .noir, .tonal]
+public extension HEFilter {
+    @objc static let all: [HEFilter] = [.normal, .clarendon, .nashville, .apply1977, .toaster, .chrome, .fade, .instant, .process, .transfer, .tone, .linear, .sepia, .mono, .noir, .tonal]
     
-    @objc static let normal = ZLFilter(name: "Normal", filterType: .normal)
+    @objc static let normal = HEFilter(name: "Normal", filterType: .normal)
     
-    @objc static let clarendon = ZLFilter(name: "Clarendon", applier: ZLFilter.clarendonFilter)
+    @objc static let clarendon = HEFilter(name: "Clarendon", applier: HEFilter.clarendonFilter)
     
-    @objc static let nashville = ZLFilter(name: "Nashville", applier: ZLFilter.nashvilleFilter)
+    @objc static let nashville = HEFilter(name: "Nashville", applier: HEFilter.nashvilleFilter)
     
-    @objc static let apply1977 = ZLFilter(name: "1977", applier: ZLFilter.apply1977Filter)
+    @objc static let apply1977 = HEFilter(name: "1977", applier: HEFilter.apply1977Filter)
     
-    @objc static let toaster = ZLFilter(name: "Toaster", applier: ZLFilter.toasterFilter)
+    @objc static let toaster = HEFilter(name: "Toaster", applier: HEFilter.toasterFilter)
     
-    @objc static let chrome = ZLFilter(name: "Chrome", filterType: .chrome)
+    @objc static let chrome = HEFilter(name: "Chrome", filterType: .chrome)
     
-    @objc static let fade = ZLFilter(name: "Fade", filterType: .fade)
+    @objc static let fade = HEFilter(name: "Fade", filterType: .fade)
     
-    @objc static let instant = ZLFilter(name: "Instant", filterType: .instant)
+    @objc static let instant = HEFilter(name: "Instant", filterType: .instant)
     
-    @objc static let process = ZLFilter(name: "Process", filterType: .process)
+    @objc static let process = HEFilter(name: "Process", filterType: .process)
     
-    @objc static let transfer = ZLFilter(name: "Transfer", filterType: .transfer)
+    @objc static let transfer = HEFilter(name: "Transfer", filterType: .transfer)
     
-    @objc static let tone = ZLFilter(name: "Tone", filterType: .tone)
+    @objc static let tone = HEFilter(name: "Tone", filterType: .tone)
     
-    @objc static let linear = ZLFilter(name: "Linear", filterType: .linear)
+    @objc static let linear = HEFilter(name: "Linear", filterType: .linear)
     
-    @objc static let sepia = ZLFilter(name: "Sepia", filterType: .sepia)
+    @objc static let sepia = HEFilter(name: "Sepia", filterType: .sepia)
     
-    @objc static let mono = ZLFilter(name: "Mono", filterType: .mono)
+    @objc static let mono = HEFilter(name: "Mono", filterType: .mono)
     
-    @objc static let noir = ZLFilter(name: "Noir", filterType: .noir)
+    @objc static let noir = HEFilter(name: "Noir", filterType: .noir)
     
-    @objc static let tonal = ZLFilter(name: "Tonal", filterType: .tonal)
+    @objc static let tonal = HEFilter(name: "Tonal", filterType: .tonal)
 }

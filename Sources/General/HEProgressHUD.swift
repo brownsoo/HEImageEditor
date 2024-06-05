@@ -85,16 +85,17 @@ public class ZLProgressHUD: UIView {
         loadingView.layer.add(animation, forKey: nil)
     }
     
-    @objc public func show(in view: UIView? = UIApplication.shared.keyWindow) {
+    @objc public func show(in view: UIView? = nil) {
+        let parentView = view ?? UIApplication.shared.findKeyWindow()
         guard Thread.isMainThread else {
             DispatchQueue.main.async {
-                self.show(in: view)
+                self.show(in: parentView)
             }
             return
         }
         
         startAnimation()
-        view?.addSubview(self)
+        parentView?.addSubview(self)
     }
     
     @objc public func hide() {
@@ -133,9 +134,9 @@ public extension ZLProgressHUD {
         var icon: UIImage? {
             switch self {
             case .light, .lightBlur:
-                return .zl.getImage("zl_loading_dark")
+                return .he.getImage("zl_loading_dark")
             case .dark, .darkBlur:
-                return .zl.getImage("zl_loading_light")
+                return .he.getImage("zl_loading_light")
             }
         }
         

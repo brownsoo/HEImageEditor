@@ -26,36 +26,36 @@
 
 import Foundation
 
-public enum ZLEditorAction {
-    case draw(ZLDrawPath)
-    case eraser([ZLDrawPath])
-    case clip(oldStatus: ZLClipStatus, newStatus: ZLClipStatus)
-    case sticker(oldState: ZLBaseStickertState?, newState: ZLBaseStickertState?)
-    case mosaic(ZLMosaicPath)
-    case filter(oldFilter: ZLFilter?, newFilter: ZLFilter?)
-    case adjust(oldStatus: ZLAdjustStatus, newStatus: ZLAdjustStatus)
+public enum HEEditorAction {
+    case draw(HEDrawPath)
+    case eraser([HEDrawPath])
+    case clip(oldStatus: HEClipStatus, newStatus: HEClipStatus)
+    case sticker(oldState: HEBaseStickertState?, newState: HEBaseStickertState?)
+    case mosaic(HEMosaicPath)
+    case filter(oldFilter: HEFilter?, newFilter: HEFilter?)
+    case adjust(oldStatus: HEAdjustStatus, newStatus: HEAdjustStatus)
 }
 
 protocol ZLEditorManagerDelegate: AnyObject {
-    func editorManager(_ manager: ZLEditorManager, didUpdateActions actions: [ZLEditorAction], redoActions: [ZLEditorAction])
+    func editorManager(_ manager: ZLEditorManager, didUpdateActions actions: [HEEditorAction], redoActions: [HEEditorAction])
     
-    func editorManager(_ manager: ZLEditorManager, undoAction action: ZLEditorAction)
+    func editorManager(_ manager: ZLEditorManager, undoAction action: HEEditorAction)
     
-    func editorManager(_ manager: ZLEditorManager, redoAction action: ZLEditorAction)
+    func editorManager(_ manager: ZLEditorManager, redoAction action: HEEditorAction)
 }
 
 class ZLEditorManager {
-    private(set) var actions: [ZLEditorAction] = []
-    private(set) var redoActions: [ZLEditorAction] = []
+    private(set) var actions: [HEEditorAction] = []
+    private(set) var redoActions: [HEEditorAction] = []
     
     weak var delegate: ZLEditorManagerDelegate?
     
-    init(actions: [ZLEditorAction] = []) {
+    init(actions: [HEEditorAction] = []) {
         self.actions = actions
         self.redoActions = actions
     }
     
-    func storeAction(_ action: ZLEditorAction) {
+    func storeAction(_ action: HEEditorAction) {
         actions.append(action)
         redoActions = actions
         

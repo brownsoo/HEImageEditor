@@ -1,0 +1,117 @@
+@startuml HiEffectImage
+
+page 2x2
+skinparam PageMargin 10
+skinparam PackageStyle rectangle
+
+package "HiImageEditor.Core" {
+    
+    interface HEImage {
+        원본 이미지, 효과 정보를 가진 데이터
+        ==
+        + String id
+        + String? assetId
+        + File origin
+        중간 정리된 파일
+        + File fatten
+        + File? thumbnailFile
+        --
+        + List<HEEffect> effects
+        --
+        + UIImage makeUIImage()
+    }
+    
+    enum HEEfectLevel {
+        IMAGING = 0
+        SHADING = 10
+        FLOATING = 20
+        MAX = 100
+    }
+    
+    interface HEEffect {
+        큰 범위의 효과 순서 
+        + int level
+        레벨 안에서의 순서
+        + int zIndex
+        순서 변경 가능 여부
+        + boolean zIndexable
+        되돌리가능 여부, 불가하면 이전 이펙트들도 되돌릴 수 없음
+        + boolean undoable
+        --
+        + void apply(HEImage image)
+    }
+    interface HEBitmapEffect {
+        이미지 비트맵에 바로 적용되는 효과
+        --
+        {field} level = -1
+        {field} zIndex = -1
+        {field} zIndexable = false
+    }
+    interface HEOverlayEffect {
+        이미지 위에 오버레이로 적용되는 효과
+        --
+        {field} level = 1
+        {field} zIndexable = true
+    }
+}
+
+package "HiImageEditor.Core" {
+    interface HETransfomable {}
+}
+
+package "HiImageEditor.Effect" {
+    
+    struct ImageStickerEffect {
+        + String stickerId
+        + String? name
+        + File content
+    }
+    struct TextStickerEffect {
+        + String text
+        + String fontName
+        + int fontSize
+        + UIColor color
+        + NSTextAlignment alignment
+        + void apply(HEImage image)
+    }
+    
+    class BlurStickerEffect {
+        {field} zIndex = 1
+        {field} zIndexable = false
+        + float blurRadius
+        + int blurType
+    }
+    class MosaicStickerEffect {
+        + float mosaicSize
+    }
+    struct FilterEffect {
+        + float intensity
+    }
+    struct DrawingEffect {}
+
+    struct TransformEffect {
+        센터 기준으로 확대/축소
+        + float scale
+        센터 기준으로 회전
+        + float rotation
+    }
+    struct CropEffect {
+        {field} undoable = false
+        + CGRect cropRect
+    }
+
+    HETransfomable <|--- HEOverlayEffect
+
+    HEEffect <|-- HEBitmapEffect
+    HEEffect <|-- HEOverlayEffect
+    HEBitmapEffect <|-- FilterEffect
+    HEBitmapEffect <|-- TransformEffect
+    HEBitmapEffect <|-- CropEffect
+    HEOverlayEffect <|-- DrawingEffect
+    HEOverlayEffect <|-- ImageStickerEffect
+    HEOverlayEffect <|-- BlurStickerEffect
+    HEOverlayEffect <|-- TextStickerEffect
+    BlurStickerEffect <|-- MosaicStickerEffect
+}
+
+@enduml
