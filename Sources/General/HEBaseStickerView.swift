@@ -179,7 +179,7 @@ public class ZLBaseStickerView: UIView, UIGestureRecognizerDelegate {
         }
         
         // Rotate must be first when first layout.
-        transform = transform.rotated(by: originAngle.zl.toPi)
+        transform = transform.rotated(by: originAngle.he.toPi)
         
         if totalTranslationPoint != .zero {
             let direction = direction(for: originAngle)

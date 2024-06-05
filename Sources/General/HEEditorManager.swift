@@ -32,7 +32,7 @@ public enum ZLEditorAction {
     case clip(oldStatus: ZLClipStatus, newStatus: ZLClipStatus)
     case sticker(oldState: ZLBaseStickertState?, newState: ZLBaseStickertState?)
     case mosaic(ZLMosaicPath)
-    case filter(oldFilter: ZLFilter?, newFilter: ZLFilter?)
+    case filter(oldFilter: HEFilter?, newFilter: HEFilter?)
     case adjust(oldStatus: ZLAdjustStatus, newStatus: ZLAdjustStatus)
 }
 

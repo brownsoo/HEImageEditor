@@ -2,27 +2,6 @@
 //  HEImageEditorConfiguration.swift
 //  HEImageEditor
 //
-//  Created by long on 2020/11/23.
-//
-//  Copyright (c) 2020 Long Zhang <495181165@qq.com>
-//
-//  Permission is hereby granted, free of charge, to any person obtaining a copy
-//  of this software and associated documentation files (the "Software"), to deal
-//  in the Software without restriction, including without limitation the rights
-//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//  copies of the Software, and to permit persons to whom the Software is
-//  furnished to do so, subject to the following conditions:
-//
-//  The above copyright notice and this permission notice shall be included in
-//  all copies or substantial portions of the Software.
-//
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-//  THE SOFTWARE.
 
 import UIKit
 
@@ -32,15 +11,15 @@ public class HEImageEditorConfiguration: NSObject {
     private static let defaultColors: [UIColor] = [
         .white,
         .black,
-        .zl.rgba(249, 80, 81),
-        .zl.rgba(248, 156, 59),
-        .zl.rgba(255, 195, 0),
-        .zl.rgba(145, 211, 0),
-        .zl.rgba(0, 193, 94),
-        .zl.rgba(16, 173, 254),
-        .zl.rgba(16, 132, 236),
-        .zl.rgba(99, 103, 240),
-        .zl.rgba(127, 127, 127)
+        .he.rgba(249, 80, 81),
+        .he.rgba(248, 156, 59),
+        .he.rgba(255, 195, 0),
+        .he.rgba(145, 211, 0),
+        .he.rgba(0, 193, 94),
+        .he.rgba(16, 173, 254),
+        .he.rgba(16, 132, 236),
+        .he.rgba(99, 103, 240),
+        .he.rgba(127, 127, 127)
     ]
     
     @objc public class func `default`() -> HEImageEditorConfiguration {
@@ -51,40 +30,40 @@ public class HEImageEditorConfiguration: NSObject {
         HEImageEditorConfiguration.single = HEImageEditorConfiguration()
     }
     
-    private var pri_tools: [HEImageEditorConfiguration.EditTool] = [.draw, .clip, .imageSticker, .textSticker, .mosaic, .filter, .adjust]
+    private var _tools: [HEImageEditorConfiguration.EditTool] = [.draw, .clip, .imageSticker, .textSticker, .mosaic, .filter, .adjust]
+    
     /// Edit image tools. (Default order is draw, clip, imageSticker, textSticker, mosaic, filtter)
-    /// Because Objective-C Array can't contain Enum styles, so this property is not available in Objective-C.
-    /// - warning: If you want to use the image sticker feature, you must provide a view that implements ZLImageStickerContainerDelegate.
+    /// - warning: If you want to use the image sticker feature, you must provide a view that implements HEImageStickerContainerDelegate.
     public var tools: [HEImageEditorConfiguration.EditTool] {
         get {
-            if pri_tools.isEmpty {
+            if _tools.isEmpty {
                 return [.draw, .clip, .imageSticker, .textSticker, .mosaic, .filter, .adjust]
             } else {
-                return pri_tools
+                return _tools
             }
         }
         set {
-            pri_tools = newValue
+            _tools = newValue
         }
     }
     
-    private var pri_drawColors = HEImageEditorConfiguration.defaultColors
+    private var _drawColors = HEImageEditorConfiguration.defaultColors
     /// Draw colors for image editor.
     @objc public var drawColors: [UIColor] {
         get {
-            if pri_drawColors.isEmpty {
+            if _drawColors.isEmpty {
                 return HEImageEditorConfiguration.defaultColors
             } else {
-                return pri_drawColors
+                return _drawColors
             }
         }
         set {
-            pri_drawColors = newValue
+            _drawColors = newValue
         }
     }
     
     /// The default draw color. If this color not in editImageDrawColors, will pick the first color in editImageDrawColors as the default.
-    @objc public var defaultDrawColor: UIColor = .zl.rgba(249, 80, 81)
+    @objc public var defaultDrawColor: UIColor = .he.rgba(249, 80, 81)
     
     private var pri_clipRatios: [ZLImageClipRatio] = [.custom]
     /// Edit ratios for image editor.
@@ -101,18 +80,18 @@ public class HEImageEditorConfiguration: NSObject {
         }
     }
     
-    private var pri_textStickerTextColors = HEImageEditorConfiguration.defaultColors
+    private var _textStickerTextColors = HEImageEditorConfiguration.defaultColors
     /// Text sticker colors for image editor.
     @objc public var textStickerTextColors: [UIColor] {
         get {
-            if pri_textStickerTextColors.isEmpty {
+            if _textStickerTextColors.isEmpty {
                 return HEImageEditorConfiguration.defaultColors
             } else {
-                return pri_textStickerTextColors
+                return _textStickerTextColors
             }
         }
         set {
-            pri_textStickerTextColors = newValue
+            _textStickerTextColors = newValue
         }
     }
     
@@ -126,18 +105,18 @@ public class HEImageEditorConfiguration: NSObject {
     /// Whether text sticker allows line break.
     @objc public var textStickerCanLineBreak = false
     
-    private var pri_filters: [ZLFilter] = ZLFilter.all
+    private var _filters: [HEFilter] = HEFilter.all
     /// Filters for image editor.
-    @objc public var filters: [ZLFilter] {
+    @objc public var filters: [HEFilter] {
         get {
-            if pri_filters.isEmpty {
-                return ZLFilter.all
+            if _filters.isEmpty {
+                return HEFilter.all
             } else {
-                return pri_filters
+                return _filters
             }
         }
         set {
-            pri_filters = newValue
+            _filters = newValue
         }
     }
     
@@ -145,20 +124,20 @@ public class HEImageEditorConfiguration: NSObject {
 
     @objc public var fontChooserContainerView: (UIView & HETextFontChooserDelegate)?
 
-    private var pri_adjustTools: [HEImageEditorConfiguration.AdjustTool] = [.brightness, .contrast, .saturation]
+    private var _adjustTools: [HEImageEditorConfiguration.AdjustTool] = [.brightness, .contrast, .saturation]
     /// Adjust image tools. (Default order is brightness, contrast, saturation)
     /// Valid when the tools contain EditTool.adjust
     /// Because Objective-C Array can't contain Enum styles, so this property is invalid in Objective-C.
     public var adjustTools: [HEImageEditorConfiguration.AdjustTool] {
         get {
-            if pri_adjustTools.isEmpty {
+            if _adjustTools.isEmpty {
                 return [.brightness, .contrast, .saturation]
             } else {
-                return pri_adjustTools
+                return _adjustTools
             }
         }
         set {
-            pri_adjustTools = newValue
+            _adjustTools = newValue
         }
     }
     

@@ -1,0 +1,58 @@
+@startuml HiEffectImage
+
+page 2x2
+skinparam PageMargin 10
+skinparam PackageStyle rectangle
+
+package "HiImageEditor.Effect" {
+    interface HEEffect {}
+}
+
+package "HiImageEditor.View" {
+    
+
+    interface HEImageView {
+        + HEImage image
+        + List<HEEffect> effects
+        + HEEffect? selectedEffect
+        --
+        + void setImage(HEImage image)
+        + void setImage(UIImage image)
+        + void setImage(PHAsset asset)
+        --
+        + void addEffect(HEEffect effect)
+        + void removeEffect(HEEffect effect)
+        + void applyEffects(List<HEEffect> effects)
+        + void resetEffects()
+        + void bringEffectToFront(HEEffect effect)
+        + HEEffect? selectEffectAt(int x, int y)
+        --
+        + void rotate(float degree)
+        + void crop(CGRect rect)
+        --
+        이미지 추출
+        + File export(File destination)
+    }
+
+    HEImage "1" *-- "many" HEEffect : < owns
+
+
+    interface HEImageViewPager {
+        + List<HEImageView> effectImageViews
+        + HEImageView? selectedEffectImageView
+        + int currentPage
+        + int pageCount
+        --
+        + void addEffectImageView(HEImageView effectImageView)
+        + void removeEffectImageView(HEImageView effectImageView)
+        + void selectEffectImageView(HEImageView effectImageView)
+        + void nextPage()
+        + void prevPage()
+    }
+
+    class HETransformBoxView {
+        핸들러 뷰
+    }
+}
+
+@enduml

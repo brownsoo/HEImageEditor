@@ -152,7 +152,7 @@ class ZLTextStickerView: ZLBaseStickerView {
         transform = transform.scaledBy(x: 1 / gesScale, y: 1 / gesScale)
         // Revert ges rotation.
         transform = transform.rotated(by: -gesRotation)
-        transform = transform.rotated(by: -originAngle.zl.toPi)
+        transform = transform.rotated(by: -originAngle.he.toPi)
         
         // Recalculate current frame.
         let center = CGPoint(x: self.frame.midX, y: self.frame.midY)
@@ -177,7 +177,7 @@ class ZLTextStickerView: ZLBaseStickerView {
         transform = transform.scaledBy(x: gesScale, y: gesScale)
         // Readd ges rotation.
         transform = transform.rotated(by: gesRotation)
-        transform = transform.rotated(by: originAngle.zl.toPi)
+        transform = transform.rotated(by: originAngle.he.toPi)
     }
     
     class func calculateSize(image: UIImage) -> CGSize {

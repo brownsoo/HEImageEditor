@@ -2,33 +2,12 @@
 //  UIImage+HEImageEditor.swift
 //  HEImageEditor
 //
-//  Created by long on 2020/8/22.
-//
-//  Copyright (c) 2020 Long Zhang <495181165@qq.com>
-//
-//  Permission is hereby granted, free of charge, to any person obtaining a copy
-//  of this software and associated documentation files (the "Software"), to deal
-//  in the Software without restriction, including without limitation the rights
-//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//  copies of the Software, and to permit persons to whom the Software is
-//  furnished to do so, subject to the following conditions:
-//
-//  The above copyright notice and this permission notice shall be included in
-//  all copies or substantial portions of the Software.
-//
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-//  THE SOFTWARE.
 
 import UIKit
 import Accelerate
 
 public extension HEImageEditorWrapper where Base: UIImage {
-    // 修复转向
+    // 회전 정정
     func fixOrientation() -> UIImage {
         if base.imageOrientation == .up {
             return base
@@ -144,7 +123,7 @@ public extension HEImageEditorWrapper where Base: UIImage {
         
         return newImage ?? base
     }
-    
+    /// 가로 세로 교환
     func swapRectWidthAndHeight(_ rect: CGRect) -> CGRect {
         var r = rect
         r.size.width = rect.height
@@ -204,7 +183,7 @@ public extension HEImageEditorWrapper where Base: UIImage {
             return nil
         }
         
-        return UIGraphicsImageRenderer.zl.renderImage(size: size) { format in
+        return UIGraphicsImageRenderer.he.renderImage(size: size) { format in
             format.scale = scale ?? base.scale
         } imageActions: { _ in
             base.draw(in: CGRect(origin: .zero, size: size))
@@ -284,7 +263,7 @@ public extension HEImageEditorWrapper where Base: UIImage {
         }
         
         let origin = CGPoint(x: -editRect.minX, y: -editRect.minY)
-        let temp = UIGraphicsImageRenderer.zl.renderImage(size: editRect.size) { format in
+        let temp = UIGraphicsImageRenderer.he.renderImage(size: editRect.size) { format in
             format.scale = newImage.scale
         } imageActions: { context in
             if isCircle {
@@ -346,7 +325,7 @@ public extension HEImageEditorWrapper where Base: UIImage {
     }
 
     func fillColor(_ color: UIColor) -> UIImage? {
-        return UIGraphicsImageRenderer.zl.renderImage(size: base.size) { format in
+        return UIGraphicsImageRenderer.he.renderImage(size: base.size) { format in
             format.scale = base.scale
         } imageActions: { context in
             let drawRect = CGRect(origin: .zero, size: base.size)
@@ -368,7 +347,7 @@ public extension HEImageEditorWrapper where Base: UIImage {
 }
 
 public extension HEImageEditorWrapper where Base: UIImage {
-    /// 调整图片亮度、对比度、饱和度
+    /// 사진 밝기, 대비, 채도 조정
     /// - Parameters:
     ///   - brightness: value in [-1, 1]
     ///   - contrast: value in [-1, 1]
@@ -384,7 +363,7 @@ public extension HEImageEditorWrapper where Base: UIImage {
         filter?.setValue(HEImageEditorConfiguration.AdjustTool.contrast.filterValue(contrast), forKey: HEImageEditorConfiguration.AdjustTool.contrast.key)
         filter?.setValue(HEImageEditorConfiguration.AdjustTool.saturation.filterValue(saturation), forKey: HEImageEditorConfiguration.AdjustTool.saturation.key)
         let outputCIImage = filter?.outputImage
-        return outputCIImage?.zl.toUIImage()
+        return outputCIImage?.he.toUIImage()
     }
 }
 

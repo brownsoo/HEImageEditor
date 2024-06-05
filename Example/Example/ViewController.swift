@@ -209,21 +209,10 @@ class ViewController: UIViewController {
     }
     
     func configImageEditor() {
-//        ZLImageEditorUIConfiguration.default()
-//            .languageType(.english)
-//            .customLanguageConfig(
-//                [
-//                    .cancel: "×",
-//                    .editFinish: "👌"
-//                ]
-//            )
-        
         HEImageEditorConfiguration.default()
             // Provide a image sticker container view
             .imageStickerContainerView(ImageStickerContainerView())
             .fontChooserContainerView(FontChooserContainerView())
-            // Custom filter
-//            .filters = [.normal]
     }
     
     @objc func pickImage() {
@@ -299,7 +288,7 @@ class ViewController: UIViewController {
     }
     
     func editImage(_ image: UIImage, editModel: ZLEditImageModel?) {
-        ZLEditImageViewController.showEditImageVC(parentVC: self, image: image, editModel: editModel) { [weak self] resImage, editModel in
+        HEEditImageViewController.showEditImageVC(parentVC: self, image: image, editModel: editModel) { [weak self] resImage, editModel in
             self?.resultImageView.image = resImage
             self?.resultImageEditModel = editModel
         }
@@ -314,9 +303,9 @@ extension ViewController: UIImagePickerControllerDelegate, UINavigationControlle
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
         picker.dismiss(animated: true) {
             guard var image = info[.originalImage] as? UIImage else { return }
-            let w = min(1500, image.zl.width)
-            let h = w * image.zl.height / image.zl.width
-            image = image.zl.resize(CGSize(width: w, height: h)) ?? image
+            let w = min(1500, image.he.width)
+            let h = w * image.he.height / image.he.width
+            image = image.he.resize(CGSize(width: w, height: h)) ?? image
             self.originalImage = image
             self.editImage(image, editModel: nil)
         }

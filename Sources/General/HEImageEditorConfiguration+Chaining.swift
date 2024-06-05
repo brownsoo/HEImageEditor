@@ -76,7 +76,7 @@ public extension HEImageEditorConfiguration {
     }
     
     @discardableResult
-    func filters(_ filters: [ZLFilter]) -> HEImageEditorConfiguration {
+    func filters(_ filters: [HEFilter]) -> HEImageEditorConfiguration {
         self.filters = filters
         return self
     }

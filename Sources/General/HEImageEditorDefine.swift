@@ -22,10 +22,6 @@ func deviceIsiPad() -> Bool {
 
 func deviceSafeAreaInsets() -> UIEdgeInsets {
     var insets: UIEdgeInsets = .zero
-    insets = UIApplication.shared.keyWindow?.safeAreaInsets ?? .zero
+    insets = UIApplication.shared.findKeyWindow()?.safeAreaInsets ?? .zero
     return insets
-}
-
-func trace(_ message: Any) {
-//    debugPrint(message)
 }
