@@ -16,7 +16,7 @@ public class HEImageEditorUIConfiguration: NSObject {
     }
     
     /// HUD style. Defaults to dark.
-    @objc public var hudStyle: ZLProgressHUD.HUDStyle = .dark
+    @objc public var hudStyle: HEProgressHUD.HUDStyle = .dark
     
     /// Adjust Slider Type
     @objc public var adjustSliderType: HEAdjustSliderType = .vertical

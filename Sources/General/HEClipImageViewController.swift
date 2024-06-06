@@ -1,5 +1,5 @@
 //
-//  ZLClipImageViewController.swift
+//  HEClipImageViewController.swift
 //  HEImageEditor
 //
 
@@ -63,13 +63,13 @@ class HEClipImageViewController: UIViewController {
     
     var bottomToolLineView: UIView!
     
-    lazy var cancelBtn = ZLEnlargeButton(type: .custom)
+    lazy var cancelBtn = HEEnlargeButton(type: .custom)
     
-    lazy var revertBtn = ZLEnlargeButton(type: .custom)
+    lazy var revertBtn = HEEnlargeButton(type: .custom)
     
-    lazy var doneBtn = ZLEnlargeButton(type: .custom)
+    lazy var doneBtn = HEEnlargeButton(type: .custom)
     
-    lazy var rotateBtn = ZLEnlargeButton(type: .custom)
+    lazy var rotateBtn = HEEnlargeButton(type: .custom)
     
     var clipRatioColView: UICollectionView!
     

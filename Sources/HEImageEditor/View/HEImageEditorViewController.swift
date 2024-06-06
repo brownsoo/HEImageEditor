@@ -21,6 +21,7 @@ public struct HEClipStatus {
     }
 }
 
+/// 명도, 대비, 채도 변형 상태
 public struct HEAdjustStatus {
     var brightness: Float = 0
     var contrast: Float = 0
@@ -48,7 +49,7 @@ public class HEEditImageModel: NSObject {
     public let mosaicPaths: [HEMosaicPath]
     
     public let clipStatus: HEClipStatus?
-    
+    /// 색조 적용 상태
     public let adjustStatus: HEAdjustStatus
     
     public let selectFilter: HEFilter?
@@ -85,7 +86,7 @@ open class HEEditImageViewController: UIViewController {
     static let shadowColorTo = UIColor.clear.cgColor
     
     public var drawColViewH: CGFloat = 50
-    
+    /// 필터 컬렉션 트레이 높이
     public var filterColViewH: CGFloat = 90
     
     public var adjustColViewH: CGFloat = 60
@@ -116,8 +117,8 @@ open class HEEditImageViewController: UIViewController {
         return view
     }()
     
-    open lazy var topShadowView: ZLPassThroughView = {
-        let shadowView = ZLPassThroughView()
+    open lazy var topShadowView: HEPassThroughView = {
+        let shadowView = HEPassThroughView()
         shadowView.findResponderSticker = findResponderSticker(_:)
         return shadowView
     }()
@@ -129,8 +130,8 @@ open class HEEditImageViewController: UIViewController {
         return layer
     }()
      
-    open lazy var bottomShadowView: ZLPassThroughView = {
-        let shadowView = ZLPassThroughView()
+    open lazy var bottomShadowView: HEPassThroughView = {
+        let shadowView = HEPassThroughView()
         shadowView.findResponderSticker = findResponderSticker(_:)
         return shadowView
     }()
@@ -142,8 +143,8 @@ open class HEEditImageViewController: UIViewController {
         return layer
     }()
     
-    open lazy var cancelBtn: ZLEnlargeButton = {
-        let btn = ZLEnlargeButton(type: .custom)
+    open lazy var cancelBtn: HEEnlargeButton = {
+        let btn = HEEnlargeButton(type: .custom)
         btn.titleLabel?.font = HEImageEditorLayout.bottomToolTitleFont
         btn.setTitleColor(.white, for: .normal)
         btn.setTitle(localLanguageTextValue(.cancel), for: .normal)
@@ -164,8 +165,8 @@ open class HEEditImageViewController: UIViewController {
         return btn
     }()
     
-    open lazy var undoBtn: ZLEnlargeButton = {
-        let btn = ZLEnlargeButton(type: .custom)
+    open lazy var undoBtn: HEEnlargeButton = {
+        let btn = HEEnlargeButton(type: .custom)
         btn.setImage(.he.getImage("zl_undo_disable"), for: .disabled)
         btn.setImage(.he.getImage("zl_undo"), for: .normal)
         btn.adjustsImageWhenHighlighted = false
@@ -175,8 +176,8 @@ open class HEEditImageViewController: UIViewController {
         return btn
     }()
     
-    open lazy var redoBtn: ZLEnlargeButton = {
-        let btn = ZLEnlargeButton(type: .custom)
+    open lazy var redoBtn: HEEnlargeButton = {
+        let btn = HEEnlargeButton(type: .custom)
         btn.setImage(.he.getImage("zl_redo"), for: .normal)
         btn.setImage(.he.getImage("zl_redo_disable"), for: .disabled)
         btn.adjustsImageWhenHighlighted = false
@@ -209,8 +210,8 @@ open class HEEditImageViewController: UIViewController {
     
     open var adjustCollectionView: UICollectionView?
     
-    open lazy var eraserBtn: ZLEnlargeButton = {
-        let btn = ZLEnlargeButton(type: .custom)
+    open lazy var eraserBtn: HEEnlargeButton = {
+        let btn = HEEnlargeButton(type: .custom)
         btn.setImage(.he.getImage("zl_eraser"), for: .normal)
         btn.addTarget(self, action: #selector(eraserBtnClick), for: .touchUpInside)
         btn.isHidden = true
@@ -282,12 +283,13 @@ open class HEEditImageViewController: UIViewController {
     // Show text and image stickers.
     lazy var stickersContainer = UIView()
     
+    /// 모자이크 된 이미지
     var mosaicImage: UIImage?
     
-    // Show mosaic image
+    /// mosaicImage 표시 레이어
     var mosaicImageLayer: CALayer?
     
-    // The mask layer of mosaicImageLayer
+    /// mosaicImageLayer 마스킹 레이어
     var mosaicImageLayerMaskLayer: CAShapeLayer?
     
     var selectedTool: HEImageEditorConfiguration.EditTool?
@@ -333,7 +335,7 @@ open class HEEditImageViewController: UIViewController {
 
     private var preAdjustStatus: HEAdjustStatus
 
-    private var editorManager: ZLEditorManager
+    private var editorManager: HEEditorActionManager
     
     private lazy var deleteDrawPaths: [HEDrawPath] = []
     
@@ -449,7 +451,7 @@ open class HEEditImageViewController: UIViewController {
         tools = ts
         adjustTools = HEImageEditorConfiguration.default().adjustTools
         selectedAdjustTool = adjustTools.first
-        editorManager = ZLEditorManager(actions: editModel?.actions ?? [])
+        editorManager = HEEditorActionManager(actions: editModel?.actions ?? [])
         
         super.init(nibName: nil, bundle: nil)
         
@@ -507,10 +509,7 @@ open class HEEditImageViewController: UIViewController {
         
         shouldLayout = false
         trace("edit image layout subviews")
-        var insets = UIEdgeInsets.zero
-        if #available(iOS 11.0, *) {
-            insets = self.view.safeAreaInsets
-        }
+        let insets = self.view.safeAreaInsets
         
         mainScrollView.frame = view.bounds
         resetContainerViewFrame()
@@ -551,7 +550,7 @@ open class HEEditImageViewController: UIViewController {
         }
         
         filterCollectionView?.frame = CGRect(x: 20, y: 0, width: view.he.width - 40, height: filterColViewH)
-        
+         
         ashbinView.frame = CGRect(
             x: (view.he.width - ashbinSize.width) / 2,
             y: view.he.height - ashbinSize.height - 40,
@@ -843,7 +842,9 @@ open class HEEditImageViewController: UIViewController {
         stickers.forEach { self.addSticker($0) }
     }
     
-    /// 根据point查找可响应的sticker
+    /// point로 스티커 찾기
+    ///
+    /// - point 는 컨트롤러의 view 좌표계
     func findResponderSticker(_ point: CGPoint) -> UIView? {
         // 倒序查找subview
         for sticker in stickersContainer.subviews.reversed() {
@@ -856,6 +857,9 @@ open class HEEditImageViewController: UIViewController {
         return nil
     }
     
+    /// 회전 -
+    ///
+    /// -- TODO: 패튼 처리
     func rotationImageView() {
         let transform = CGAffineTransform(rotationAngle: currentClipStatus.angle.he.toPi)
         imageView.transform = transform
@@ -1083,7 +1087,7 @@ open class HEEditImageViewController: UIViewController {
         }
         
         autoreleasepool {
-            let hud = ZLProgressHUD(style: HEImageEditorUIConfiguration.default().hudStyle)
+            let hud = HEProgressHUD(style: HEImageEditorUIConfiguration.default().hudStyle)
             hud.show(in: view)
             
             DispatchQueue.main.async { [self] in
@@ -1976,13 +1980,13 @@ extension HEEditImageViewController: ZLStickerViewDelegate {
 
 // MARK: unod & redo
 
-extension HEEditImageViewController: ZLEditorManagerDelegate {
-    func editorManager(_ manager: ZLEditorManager, didUpdateActions actions: [HEEditorAction], redoActions: [HEEditorAction]) {
+extension HEEditImageViewController: HEEditorManagerDelegate {
+    func editorManager(_ manager: HEEditorActionManager, didUpdateActions actions: [HEEditorAction], redoActions: [HEEditorAction]) {
         undoBtn.isEnabled = !actions.isEmpty
         redoBtn.isEnabled = actions.count != redoActions.count
     }
     
-    func editorManager(_ manager: ZLEditorManager, undoAction action: HEEditorAction) {
+    func editorManager(_ manager: HEEditorActionManager, undoAction action: HEEditorAction) {
         switch action {
         case let .draw(path):
             undoDraw(path)
@@ -2001,7 +2005,7 @@ extension HEEditImageViewController: ZLEditorManagerDelegate {
         }
     }
     
-    func editorManager(_ manager: ZLEditorManager, redoAction action: HEEditorAction) {
+    func editorManager(_ manager: HEEditorActionManager, redoAction action: HEEditorAction) {
         switch action {
         case let .draw(path):
             redoDraw(path)
@@ -2129,9 +2133,9 @@ extension HEEditImageViewController: ZLEditorManagerDelegate {
     }
 }
 
-// MARK: 手势可透传的自定义view
+// MARK: 터치 포인트로 대상 찾기
 
-public class ZLPassThroughView: UIView {
+public class HEPassThroughView: UIView {
     var findResponderSticker: ((CGPoint) -> UIView?)?
     
     override public func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
