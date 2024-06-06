@@ -5,15 +5,15 @@
 
 import UIKit
 
-public struct ZLClipStatus {
+public struct HEClipStatus {
     var editRect: CGRect
     var angle: CGFloat = 0
-    var ratio: ZLImageClipRatio?
+    var ratio: HEImageClipRatio?
     
     public init(
         editRect: CGRect,
         angle: CGFloat = 0,
-        ratio: ZLImageClipRatio? = nil
+        ratio: HEImageClipRatio? = nil
     ) {
         self.editRect = editRect
         self.angle = angle
@@ -21,7 +21,8 @@ public struct ZLClipStatus {
     }
 }
 
-public struct ZLAdjustStatus {
+/// 명도, 대비, 채도 변형 상태
+public struct HEAdjustStatus {
     var brightness: Float = 0
     var contrast: Float = 0
     var saturation: Float = 0
@@ -40,30 +41,31 @@ public struct ZLAdjustStatus {
         self.saturation = saturation
     }
 }
-
-public class ZLEditImageModel: NSObject {
-    public let drawPaths: [ZLDrawPath]
+/// 편집 대상 모델
+public class HEEditImageModel: NSObject {
+    /// 드로잉스
+    public let drawPaths: [HEDrawPath]
+    /// 모자잌스
+    public let mosaicPaths: [HEMosaicPath]
     
-    public let mosaicPaths: [ZLMosaicPath]
-    
-    public let clipStatus: ZLClipStatus?
-    
-    public let adjustStatus: ZLAdjustStatus
+    public let clipStatus: HEClipStatus?
+    /// 색조 적용 상태
+    public let adjustStatus: HEAdjustStatus
     
     public let selectFilter: HEFilter?
     
-    public let stickers: [ZLBaseStickertState]
+    public let stickers: [HEBaseStickertState]
     
-    public let actions: [ZLEditorAction]
+    public let actions: [HEEditorAction]
     
     public init(
-        drawPaths: [ZLDrawPath] = [],
-        mosaicPaths: [ZLMosaicPath] = [],
-        clipStatus: ZLClipStatus? = nil,
-        adjustStatus: ZLAdjustStatus = ZLAdjustStatus(),
+        drawPaths: [HEDrawPath] = [],
+        mosaicPaths: [HEMosaicPath] = [],
+        clipStatus: HEClipStatus? = nil,
+        adjustStatus: HEAdjustStatus = HEAdjustStatus(),
         selectFilter: HEFilter? = nil,
-        stickers: [ZLBaseStickertState] = [],
-        actions: [ZLEditorAction] = []
+        stickers: [HEBaseStickertState] = [],
+        actions: [HEEditorAction] = []
     ) {
         self.drawPaths = drawPaths
         self.mosaicPaths = mosaicPaths
@@ -84,7 +86,7 @@ open class HEEditImageViewController: UIViewController {
     static let shadowColorTo = UIColor.clear.cgColor
     
     public var drawColViewH: CGFloat = 50
-    
+    /// 필터 컬렉션 트레이 높이
     public var filterColViewH: CGFloat = 90
     
     public var adjustColViewH: CGFloat = 60
@@ -115,8 +117,8 @@ open class HEEditImageViewController: UIViewController {
         return view
     }()
     
-    open lazy var topShadowView: ZLPassThroughView = {
-        let shadowView = ZLPassThroughView()
+    open lazy var topShadowView: HEPassThroughView = {
+        let shadowView = HEPassThroughView()
         shadowView.findResponderSticker = findResponderSticker(_:)
         return shadowView
     }()
@@ -128,8 +130,8 @@ open class HEEditImageViewController: UIViewController {
         return layer
     }()
      
-    open lazy var bottomShadowView: ZLPassThroughView = {
-        let shadowView = ZLPassThroughView()
+    open lazy var bottomShadowView: HEPassThroughView = {
+        let shadowView = HEPassThroughView()
         shadowView.findResponderSticker = findResponderSticker(_:)
         return shadowView
     }()
@@ -141,8 +143,8 @@ open class HEEditImageViewController: UIViewController {
         return layer
     }()
     
-    open lazy var cancelBtn: ZLEnlargeButton = {
-        let btn = ZLEnlargeButton(type: .custom)
+    open lazy var cancelBtn: HEEnlargeButton = {
+        let btn = HEEnlargeButton(type: .custom)
         btn.titleLabel?.font = HEImageEditorLayout.bottomToolTitleFont
         btn.setTitleColor(.white, for: .normal)
         btn.setTitle(localLanguageTextValue(.cancel), for: .normal)
@@ -163,8 +165,8 @@ open class HEEditImageViewController: UIViewController {
         return btn
     }()
     
-    open lazy var undoBtn: ZLEnlargeButton = {
-        let btn = ZLEnlargeButton(type: .custom)
+    open lazy var undoBtn: HEEnlargeButton = {
+        let btn = HEEnlargeButton(type: .custom)
         btn.setImage(.he.getImage("zl_undo_disable"), for: .disabled)
         btn.setImage(.he.getImage("zl_undo"), for: .normal)
         btn.adjustsImageWhenHighlighted = false
@@ -174,8 +176,8 @@ open class HEEditImageViewController: UIViewController {
         return btn
     }()
     
-    open lazy var redoBtn: ZLEnlargeButton = {
-        let btn = ZLEnlargeButton(type: .custom)
+    open lazy var redoBtn: HEEnlargeButton = {
+        let btn = HEEnlargeButton(type: .custom)
         btn.setImage(.he.getImage("zl_redo"), for: .normal)
         btn.setImage(.he.getImage("zl_redo_disable"), for: .disabled)
         btn.adjustsImageWhenHighlighted = false
@@ -208,8 +210,8 @@ open class HEEditImageViewController: UIViewController {
     
     open var adjustCollectionView: UICollectionView?
     
-    open lazy var eraserBtn: ZLEnlargeButton = {
-        let btn = ZLEnlargeButton(type: .custom)
+    open lazy var eraserBtn: HEEnlargeButton = {
+        let btn = HEEnlargeButton(type: .custom)
         btn.setImage(.he.getImage("zl_eraser"), for: .normal)
         btn.addTarget(self, action: #selector(eraserBtnClick), for: .touchUpInside)
         btn.isHidden = true
@@ -281,12 +283,13 @@ open class HEEditImageViewController: UIViewController {
     // Show text and image stickers.
     lazy var stickersContainer = UIView()
     
+    /// 모자이크 된 이미지
     var mosaicImage: UIImage?
     
-    // Show mosaic image
+    /// mosaicImage 표시 레이어
     var mosaicImageLayer: CALayer?
     
-    // The mask layer of mosaicImageLayer
+    /// mosaicImageLayer 마스킹 레이어
     var mosaicImageLayerMaskLayer: CAShapeLayer?
     
     var selectedTool: HEImageEditorConfiguration.EditTool?
@@ -297,11 +300,11 @@ open class HEEditImageViewController: UIViewController {
     
     var currentDrawColor = HEImageEditorConfiguration.default().defaultDrawColor
     
-    var drawPaths: [ZLDrawPath]
+    var drawPaths: [HEDrawPath]
     
     var drawLineWidth: CGFloat = 6
     
-    var mosaicPaths: [ZLMosaicPath]
+    var mosaicPaths: [HEMosaicPath]
     
     var mosaicLineWidth: CGFloat = 25
     
@@ -322,19 +325,19 @@ open class HEEditImageViewController: UIViewController {
 
     var fontChooserContainerIsHidden = true
     
-    private var currentClipStatus: ZLClipStatus
+    private var currentClipStatus: HEClipStatus
 
-    private var preClipStatus: ZLClipStatus
+    private var preClipStatus: HEClipStatus
 
-    private var preStickerState: ZLBaseStickertState?
+    private var preStickerState: HEBaseStickertState?
 
-    private var currentAdjustStatus: ZLAdjustStatus
+    private var currentAdjustStatus: HEAdjustStatus
 
-    private var preAdjustStatus: ZLAdjustStatus
+    private var preAdjustStatus: HEAdjustStatus
 
-    private var editorManager: ZLEditorManager
+    private var editorManager: HEEditorActionManager
     
-    private lazy var deleteDrawPaths: [ZLDrawPath] = []
+    private lazy var deleteDrawPaths: [HEDrawPath] = []
     
     private var defaultDrawPathWidth: CGFloat = 0
     
@@ -364,7 +367,7 @@ open class HEEditImageViewController: UIViewController {
     
     var hasAdjustedImage = false
     
-    @objc public var editFinishBlock: ((UIImage, ZLEditImageModel?) -> Void)?
+    @objc public var editFinishBlock: ((UIImage, HEEditImageModel?) -> Void)?
     
     override open var prefersStatusBarHidden: Bool { true }
     
@@ -383,22 +386,22 @@ open class HEEditImageViewController: UIViewController {
         parentVC: UIViewController?,
         animate: Bool = true,
         image: UIImage,
-        editModel: ZLEditImageModel? = nil,
-        completion: ((UIImage, ZLEditImageModel?) -> Void)?
+        editModel: HEEditImageModel? = nil,
+        completion: ((UIImage, HEEditImageModel?) -> Void)?
     ) {
         let tools = HEImageEditorConfiguration.default().tools
         if HEImageEditorConfiguration.default().showClipDirectlyIfOnlyHasClipTool, tools.count == 1, tools.contains(.clip) {
             let vc = HEClipImageViewController(
                 image: image,
-                status: editModel?.clipStatus ?? ZLClipStatus(editRect: CGRect(origin: .zero, size: image.size))
+                status: editModel?.clipStatus ?? HEClipStatus(editRect: CGRect(origin: .zero, size: image.size))
             )
             
             vc.clipDoneBlock = { angle, editRect, ratio in
-                let m = ZLEditImageModel(
+                let m = HEEditImageModel(
                     drawPaths: [],
                     mosaicPaths: [],
-                    clipStatus: ZLClipStatus(editRect: editRect, angle: angle, ratio: ratio),
-                    adjustStatus: ZLAdjustStatus(),
+                    clipStatus: HEClipStatus(editRect: editRect, angle: angle, ratio: ratio),
+                    adjustStatus: HEAdjustStatus(),
                     selectFilter: .normal,
                     stickers: [],
                     actions: []
@@ -419,7 +422,7 @@ open class HEEditImageViewController: UIViewController {
         }
     }
     
-    @objc public init(image: UIImage, editModel: ZLEditImageModel? = nil) {
+    @objc public init(image: UIImage, editModel: HEEditImageModel? = nil) {
         var image = image
         if image.scale != 1,
            let cgImage = image.cgImage {
@@ -432,13 +435,13 @@ open class HEEditImageViewController: UIViewController {
         originalImage = image.he.fixOrientation()
         editImage = originalImage
         editImageWithoutAdjust = originalImage
-        currentClipStatus = editModel?.clipStatus ?? ZLClipStatus(editRect: CGRect(origin: .zero, size: image.size))
+        currentClipStatus = editModel?.clipStatus ?? HEClipStatus(editRect: CGRect(origin: .zero, size: image.size))
         preClipStatus = currentClipStatus
         drawColors = HEImageEditorConfiguration.default().drawColors
         currentFilter = editModel?.selectFilter ?? .normal
         drawPaths = editModel?.drawPaths ?? []
         mosaicPaths = editModel?.mosaicPaths ?? []
-        currentAdjustStatus = editModel?.adjustStatus ?? ZLAdjustStatus()
+        currentAdjustStatus = editModel?.adjustStatus ?? HEAdjustStatus()
         preAdjustStatus = currentAdjustStatus
         
         var ts = HEImageEditorConfiguration.default().tools
@@ -448,7 +451,7 @@ open class HEEditImageViewController: UIViewController {
         tools = ts
         adjustTools = HEImageEditorConfiguration.default().adjustTools
         selectedAdjustTool = adjustTools.first
-        editorManager = ZLEditorManager(actions: editModel?.actions ?? [])
+        editorManager = HEEditorActionManager(actions: editModel?.actions ?? [])
         
         super.init(nibName: nil, bundle: nil)
         
@@ -506,10 +509,7 @@ open class HEEditImageViewController: UIViewController {
         
         shouldLayout = false
         trace("edit image layout subviews")
-        var insets = UIEdgeInsets.zero
-        if #available(iOS 11.0, *) {
-            insets = self.view.safeAreaInsets
-        }
+        let insets = self.view.safeAreaInsets
         
         mainScrollView.frame = view.bounds
         resetContainerViewFrame()
@@ -550,7 +550,7 @@ open class HEEditImageViewController: UIViewController {
         }
         
         filterCollectionView?.frame = CGRect(x: 20, y: 0, width: view.he.width - 40, height: filterColViewH)
-        
+         
         ashbinView.frame = CGRect(
             x: (view.he.width - ashbinSize.width) / 2,
             y: view.he.height - ashbinSize.height - 40,
@@ -842,7 +842,9 @@ open class HEEditImageViewController: UIViewController {
         stickers.forEach { self.addSticker($0) }
     }
     
-    /// 根据point查找可响应的sticker
+    /// point로 스티커 찾기
+    ///
+    /// - point 는 컨트롤러의 view 좌표계
     func findResponderSticker(_ point: CGPoint) -> UIView? {
         // 倒序查找subview
         for sticker in stickersContainer.subviews.reversed() {
@@ -855,6 +857,9 @@ open class HEEditImageViewController: UIViewController {
         return nil
     }
     
+    /// 회전 -
+    ///
+    /// -- TODO: 패튼 처리
     func rotationImageView() {
         let transform = CGAffineTransform(rotationAngle: currentClipStatus.angle.he.toPi)
         imageView.transform = transform
@@ -916,7 +921,7 @@ open class HEEditImageViewController: UIViewController {
         vc.clipDoneBlock = { [weak self] angle, editRect, selectRatio in
             guard let `self` = self else { return }
             
-            self.clipImage(status: ZLClipStatus(editRect: editRect, angle: angle, ratio: selectRatio))
+            self.clipImage(status: HEClipStatus(editRect: editRect, angle: angle, ratio: selectRatio))
             self.editorManager.storeAction(.clip(oldStatus: self.preClipStatus, newStatus: self.currentClipStatus))
         }
         
@@ -937,7 +942,7 @@ open class HEEditImageViewController: UIViewController {
         setAdjustViews(hidden: true)
     }
     
-    private func clipImage(status: ZLClipStatus) {
+    private func clipImage(status: HEClipStatus) {
         let oldAngle = currentClipStatus.angle
         let oldContainerSize = stickersContainer.frame.size
         if oldAngle != status.angle {
@@ -1050,7 +1055,7 @@ open class HEEditImageViewController: UIViewController {
     }
     
     @objc func doneBtnClick() {
-        var stickerStates: [ZLBaseStickertState] = []
+        var stickerStates: [HEBaseStickertState] = []
         for view in stickersContainer.subviews {
             guard let view = view as? ZLBaseStickerView else { continue }
             stickerStates.append(view.state)
@@ -1068,7 +1073,7 @@ open class HEEditImageViewController: UIViewController {
         }
         
         var resImage = originalImage
-        var editModel: ZLEditImageModel?
+        var editModel: HEEditImageModel?
         
         func callback() {
             dismiss(animated: animateDismiss) {
@@ -1082,7 +1087,7 @@ open class HEEditImageViewController: UIViewController {
         }
         
         autoreleasepool {
-            let hud = ZLProgressHUD(style: HEImageEditorUIConfiguration.default().hudStyle)
+            let hud = HEProgressHUD(style: HEImageEditorUIConfiguration.default().hudStyle)
             hud.show(in: view)
             
             DispatchQueue.main.async { [self] in
@@ -1097,7 +1102,7 @@ open class HEEditImageViewController: UIViewController {
                     resImage = resImage.he.compress(to: oriDataSize)
                 }
                 
-                editModel = ZLEditImageModel(
+                editModel = HEEditImageModel(
                     drawPaths: drawPaths,
                     mosaicPaths: mosaicPaths,
                     clipStatus: currentClipStatus,
@@ -1160,7 +1165,7 @@ open class HEEditImageViewController: UIViewController {
                     toImageScale = HEEditImageViewController.maxDrawLineImageWidth / size.height
                 }
                 
-                let path = ZLDrawPath(
+                let path = HEDrawPath(
                     pathColor: currentDrawColor,
                     pathWidth: drawLineWidth / mainScrollView.zoomScale,
                     defaultLinePath: defaultDrawPathWidth,
@@ -1194,7 +1199,7 @@ open class HEEditImageViewController: UIViewController {
                 )
                 
                 let pathW = mosaicLineWidth / mainScrollView.zoomScale
-                let path = ZLMosaicPath(pathWidth: pathW, ratio: ratio, startPoint: point)
+                let path = HEMosaicPath(pathWidth: pathW, ratio: ratio, startPoint: point)
                 
                 mosaicImageLayerMaskLayer?.lineWidth = pathW
                 mosaicImageLayerMaskLayer?.path = path.path.cgPath
@@ -1927,7 +1932,7 @@ extension HEEditImageViewController: ZLStickerViewDelegate {
         ashbinView.layer.removeAllAnimations()
         ashbinView.isHidden = true
         
-        var endState: ZLBaseStickertState? = sticker.state
+        var endState: HEBaseStickertState? = sticker.state
         let point = panGes.location(in: view)
         if ashbinView.frame.contains(point) {
             sticker.moveToAshbin()
@@ -1975,13 +1980,13 @@ extension HEEditImageViewController: ZLStickerViewDelegate {
 
 // MARK: unod & redo
 
-extension HEEditImageViewController: ZLEditorManagerDelegate {
-    func editorManager(_ manager: ZLEditorManager, didUpdateActions actions: [ZLEditorAction], redoActions: [ZLEditorAction]) {
+extension HEEditImageViewController: HEEditorManagerDelegate {
+    func editorManager(_ manager: HEEditorActionManager, didUpdateActions actions: [HEEditorAction], redoActions: [HEEditorAction]) {
         undoBtn.isEnabled = !actions.isEmpty
         redoBtn.isEnabled = actions.count != redoActions.count
     }
     
-    func editorManager(_ manager: ZLEditorManager, undoAction action: ZLEditorAction) {
+    func editorManager(_ manager: HEEditorActionManager, undoAction action: HEEditorAction) {
         switch action {
         case let .draw(path):
             undoDraw(path)
@@ -2000,7 +2005,7 @@ extension HEEditImageViewController: ZLEditorManagerDelegate {
         }
     }
     
-    func editorManager(_ manager: ZLEditorManager, redoAction action: ZLEditorAction) {
+    func editorManager(_ manager: HEEditorActionManager, redoAction action: HEEditorAction) {
         switch action {
         case let .draw(path):
             redoDraw(path)
@@ -2019,44 +2024,44 @@ extension HEEditImageViewController: ZLEditorManagerDelegate {
         }
     }
     
-    private func undoDraw(_ path: ZLDrawPath) {
+    private func undoDraw(_ path: HEDrawPath) {
         drawPaths.removeLast()
         drawLine()
     }
     
-    private func redoDraw(_ path: ZLDrawPath) {
+    private func redoDraw(_ path: HEDrawPath) {
         drawPaths.append(path)
         drawLine()
     }
     
-    private func undoEraser(_ paths: [ZLDrawPath]) {
+    private func undoEraser(_ paths: [HEDrawPath]) {
         paths.forEach { $0.willDelete = false }
         drawPaths.append(contentsOf: paths)
         drawPaths = drawPaths.sorted { $0.index < $1.index }
         drawLine()
     }
     
-    private func redoEraser(_ paths: [ZLDrawPath]) {
+    private func redoEraser(_ paths: [HEDrawPath]) {
         drawPaths.removeAll { paths.contains($0) }
         drawLine()
     }
     
-    private func undoOrRedoClip(_ status: ZLClipStatus) {
+    private func undoOrRedoClip(_ status: HEClipStatus) {
         clipImage(status: status)
         preClipStatus = status
     }
     
-    private func undoMosaic(_ path: ZLMosaicPath) {
+    private func undoMosaic(_ path: HEMosaicPath) {
         mosaicPaths.removeLast()
         generateNewMosaicImage()
     }
     
-    private func redoMosaic(_ path: ZLMosaicPath) {
+    private func redoMosaic(_ path: HEMosaicPath) {
         mosaicPaths.append(path)
         generateNewMosaicImage()
     }
     
-    private func undoSticker(_ oldState: ZLBaseStickertState?, _ newState: ZLBaseStickertState?) {
+    private func undoSticker(_ oldState: HEBaseStickertState?, _ newState: HEBaseStickertState?) {
         guard let oldState else {
             removeSticker(id: newState?.id)
             return
@@ -2068,7 +2073,7 @@ extension HEEditImageViewController: ZLEditorManagerDelegate {
         }
     }
     
-    private func redoSticker(_ oldState: ZLBaseStickertState?, _ newState: ZLBaseStickertState?) {
+    private func redoSticker(_ oldState: HEBaseStickertState?, _ newState: HEBaseStickertState?) {
         guard let newState else {
             removeSticker(id: oldState?.id)
             return
@@ -2097,7 +2102,7 @@ extension HEEditImageViewController: ZLEditorManagerDelegate {
         filterCollectionView.reloadData()
     }
     
-    private func undoOrRedoAdjust(_ status: ZLAdjustStatus) {
+    private func undoOrRedoAdjust(_ status: HEAdjustStatus) {
         var adjustTool: HEImageEditorConfiguration.AdjustTool?
         
         if currentAdjustStatus.brightness != status.brightness {
@@ -2128,9 +2133,9 @@ extension HEEditImageViewController: ZLEditorManagerDelegate {
     }
 }
 
-// MARK: 手势可透传的自定义view
+// MARK: 터치 포인트로 대상 찾기
 
-public class ZLPassThroughView: UIView {
+public class HEPassThroughView: UIView {
     var findResponderSticker: ((CGPoint) -> UIView?)?
     
     override public func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {

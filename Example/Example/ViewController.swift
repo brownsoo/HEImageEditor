@@ -31,7 +31,7 @@ class ViewController: UIViewController {
     
     var originalImage: UIImage?
     
-    var resultImageEditModel: ZLEditImageModel?
+    var resultImageEditModel: HEEditImageModel?
     
     let config = HEImageEditorConfiguration.default()
     
@@ -287,7 +287,7 @@ class ViewController: UIViewController {
         editImage(oi, editModel: resultImageEditModel)
     }
     
-    func editImage(_ image: UIImage, editModel: ZLEditImageModel?) {
+    func editImage(_ image: UIImage, editModel: HEEditImageModel?) {
         HEEditImageViewController.showEditImageVC(parentVC: self, image: image, editModel: editModel) { [weak self] resImage, editModel in
             self?.resultImageView.image = resImage
             self?.resultImageEditModel = editModel

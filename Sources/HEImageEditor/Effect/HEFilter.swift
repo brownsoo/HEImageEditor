@@ -7,9 +7,9 @@ import UIKit
 
 /// https://github.com/Yummypets/YPImagePicker
 
-public typealias ZLFilterApplierType = (_ image: UIImage) -> UIImage
+public typealias HEFilterApplierType = (_ image: UIImage) -> UIImage
 
-@objc public enum ZLFilterType: Int {
+@objc public enum HEFilterType: Int {
     case normal
     case chrome
     case fade
@@ -56,9 +56,9 @@ public typealias ZLFilterApplierType = (_ image: UIImage) -> UIImage
 public class HEFilter: NSObject {
     public var name: String
     
-    let applier: ZLFilterApplierType?
+    let applier: HEFilterApplierType?
     
-    @objc public init(name: String, filterType: ZLFilterType) {
+    @objc public init(name: String, filterType: HEFilterType) {
         self.name = name
         
         if filterType != .normal {
@@ -80,7 +80,7 @@ public class HEFilter: NSObject {
     }
     
     /// 可传入 applier 自定义滤镜
-    @objc public init(name: String, applier: ZLFilterApplierType?) {
+    @objc public init(name: String, applier: HEFilterApplierType?) {
         self.name = name
         self.applier = applier
     }

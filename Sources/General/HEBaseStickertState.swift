@@ -26,7 +26,7 @@
 
 import UIKit
 
-public class ZLBaseStickertState: NSObject {
+public class HEBaseStickertState: NSObject {
     let id: String
     let image: UIImage
     let originScale: CGFloat
@@ -58,9 +58,9 @@ public class ZLBaseStickertState: NSObject {
     }
 }
 
-public class ZLImageStickerState: ZLBaseStickertState { }
+public class ZLImageStickerState: HEBaseStickertState { }
 
-public class ZLTextStickerState: ZLBaseStickertState {
+public class ZLTextStickerState: HEBaseStickertState {
     let text: String
     let textColor: UIColor
     let font: UIFont?

@@ -28,7 +28,7 @@ import UIKit
 
 // MARK: Draw path
 
-public class ZLDrawPath: NSObject {
+public class HEDrawPath: NSObject {
     private static var pathIndex = 0
     
     let pathColor: UIColor
@@ -137,7 +137,7 @@ public class ZLDrawPath: NSObject {
 
 // MARK: Mosaic path
 
-public class ZLMosaicPath: NSObject {
+public class HEMosaicPath: NSObject {
     let path: UIBezierPath
     
     let ratio: CGFloat

@@ -65,9 +65,9 @@ public class HEImageEditorConfiguration: NSObject {
     /// The default draw color. If this color not in editImageDrawColors, will pick the first color in editImageDrawColors as the default.
     @objc public var defaultDrawColor: UIColor = .he.rgba(249, 80, 81)
     
-    private var pri_clipRatios: [ZLImageClipRatio] = [.custom]
+    private var pri_clipRatios: [HEImageClipRatio] = [.custom]
     /// Edit ratios for image editor.
-    @objc public var clipRatios: [ZLImageClipRatio] {
+    @objc public var clipRatios: [HEImageClipRatio] {
         get {
             if pri_clipRatios.isEmpty {
                 return [.custom]
@@ -141,27 +141,27 @@ public class HEImageEditorConfiguration: NSObject {
         }
     }
     
-    private var pri_impactFeedbackWhenAdjustSliderValueIsZero = true
+    private var _impactFeedbackWhenAdjustSliderValueIsZero = true
     /// Give an impact feedback when the adjust slider value is zero. Defaults to true.
     @available(iOS 10.0, *)
     @objc public var impactFeedbackWhenAdjustSliderValueIsZero: Bool {
         get {
-            return pri_impactFeedbackWhenAdjustSliderValueIsZero
+            return _impactFeedbackWhenAdjustSliderValueIsZero
         }
         set {
-            pri_impactFeedbackWhenAdjustSliderValueIsZero = newValue
+            _impactFeedbackWhenAdjustSliderValueIsZero = newValue
         }
     }
     
-    private var pri_impactFeedbackStyle: HEImageEditorConfiguration.FeedbackStyle = .medium
+    private var _impactFeedbackStyle: HEImageEditorConfiguration.FeedbackStyle = .medium
     /// Impact feedback style. Defaults to .medium
     @available(iOS 10.0, *)
     @objc public var impactFeedbackStyle: HEImageEditorConfiguration.FeedbackStyle {
         get {
-            return pri_impactFeedbackStyle
+            return _impactFeedbackStyle
         }
         set {
-            pri_impactFeedbackStyle = .medium
+            _impactFeedbackStyle = .medium
         }
     }
     
@@ -199,10 +199,10 @@ public extension HEImageEditorConfiguration {
         func filterValue(_ value: Float) -> Float {
             switch self {
             case .brightness:
-                // 亮度范围-1---1，默认0，这里除以3，取 -0.33---0.33
+                // 밝기 범위 -1~1, 기본값 0, 3으로 나누기, -0.33~0.33
                 return value / 3
             case .contrast:
-                // 对比度范围0---4，默认1，这里计算下取0.5---2.5
+                // 대비 범위 0~4, 기본값 1, 여기에서 계산하려면 0.5~2.5를 사용합니다.
                 let v: Float
                 if value < 0 {
                     v = 1 + value * (1 / 2)
@@ -211,7 +211,7 @@ public extension HEImageEditorConfiguration {
                 }
                 return v
             case .saturation:
-                // 饱和度范围0---2，默认1
+                // 채도 범위 0~2, 기본값 1
                 return value + 1
             }
         }
@@ -238,7 +238,7 @@ public extension HEImageEditorConfiguration {
 
 // MARK: Clip ratio.
 
-public class ZLImageClipRatio: NSObject {
+public class HEImageClipRatio: NSObject {
     @objc public var title: String
     
     @objc public let whRatio: CGFloat
@@ -253,32 +253,32 @@ public class ZLImageClipRatio: NSObject {
     }
 }
 
-extension ZLImageClipRatio {
-    static func == (lhs: ZLImageClipRatio, rhs: ZLImageClipRatio) -> Bool {
+extension HEImageClipRatio {
+    static func == (lhs: HEImageClipRatio, rhs: HEImageClipRatio) -> Bool {
         return lhs.whRatio == rhs.whRatio
     }
 }
 
-public extension ZLImageClipRatio {
-    @objc static let all: [ZLImageClipRatio] = [.custom, .circle, .wh1x1, .wh3x4, .wh4x3, .wh2x3, .wh3x2, .wh9x16, .wh16x9]
+public extension HEImageClipRatio {
+    @objc static let all: [HEImageClipRatio] = [.custom, .circle, .wh1x1, .wh3x4, .wh4x3, .wh2x3, .wh3x2, .wh9x16, .wh16x9]
     
-    @objc static let custom = ZLImageClipRatio(title: "custom", whRatio: 0)
+    @objc static let custom = HEImageClipRatio(title: "custom", whRatio: 0)
     
-    @objc static let circle = ZLImageClipRatio(title: "circle", whRatio: 1, isCircle: true)
+    @objc static let circle = HEImageClipRatio(title: "circle", whRatio: 1, isCircle: true)
     
-    @objc static let wh1x1 = ZLImageClipRatio(title: "1 : 1", whRatio: 1)
+    @objc static let wh1x1 = HEImageClipRatio(title: "1 : 1", whRatio: 1)
     
-    @objc static let wh3x4 = ZLImageClipRatio(title: "3 : 4", whRatio: 3.0 / 4.0)
+    @objc static let wh3x4 = HEImageClipRatio(title: "3 : 4", whRatio: 3.0 / 4.0)
     
-    @objc static let wh4x3 = ZLImageClipRatio(title: "4 : 3", whRatio: 4.0 / 3.0)
+    @objc static let wh4x3 = HEImageClipRatio(title: "4 : 3", whRatio: 4.0 / 3.0)
     
-    @objc static let wh2x3 = ZLImageClipRatio(title: "2 : 3", whRatio: 2.0 / 3.0)
+    @objc static let wh2x3 = HEImageClipRatio(title: "2 : 3", whRatio: 2.0 / 3.0)
     
-    @objc static let wh3x2 = ZLImageClipRatio(title: "3 : 2", whRatio: 3.0 / 2.0)
+    @objc static let wh3x2 = HEImageClipRatio(title: "3 : 2", whRatio: 3.0 / 2.0)
     
-    @objc static let wh9x16 = ZLImageClipRatio(title: "9 : 16", whRatio: 9.0 / 16.0)
+    @objc static let wh9x16 = HEImageClipRatio(title: "9 : 16", whRatio: 9.0 / 16.0)
     
-    @objc static let wh16x9 = ZLImageClipRatio(title: "16 : 9", whRatio: 16.0 / 9.0)
+    @objc static let wh16x9 = HEImageClipRatio(title: "16 : 9", whRatio: 16.0 / 9.0)
 }
 
 /// Provide an image sticker container view that conform to this protocol must be a subclass of UIView

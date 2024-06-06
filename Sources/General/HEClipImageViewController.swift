@@ -1,5 +1,5 @@
 //
-//  ZLClipImageViewController.swift
+//  HEClipImageViewController.swift
 //  HEImageEditor
 //
 
@@ -39,7 +39,7 @@ class HEClipImageViewController: UIViewController {
     
     let originalImage: UIImage
     
-    let clipRatios: [ZLImageClipRatio]
+    let clipRatios: [HEImageClipRatio]
     
     var editImage: UIImage
     
@@ -63,13 +63,13 @@ class HEClipImageViewController: UIViewController {
     
     var bottomToolLineView: UIView!
     
-    lazy var cancelBtn = ZLEnlargeButton(type: .custom)
+    lazy var cancelBtn = HEEnlargeButton(type: .custom)
     
-    lazy var revertBtn = ZLEnlargeButton(type: .custom)
+    lazy var revertBtn = HEEnlargeButton(type: .custom)
     
-    lazy var doneBtn = ZLEnlargeButton(type: .custom)
+    lazy var doneBtn = HEEnlargeButton(type: .custom)
     
-    lazy var rotateBtn = ZLEnlargeButton(type: .custom)
+    lazy var rotateBtn = HEEnlargeButton(type: .custom)
     
     var clipRatioColView: UICollectionView!
     
@@ -87,7 +87,7 @@ class HEClipImageViewController: UIViewController {
     
     var angle: CGFloat = 0
     
-    var selectedRatio: ZLImageClipRatio {
+    var selectedRatio: HEImageClipRatio {
         didSet {
             overlayView.isCircle = selectedRatio.isCircle
         }
@@ -106,7 +106,7 @@ class HEClipImageViewController: UIViewController {
     var dismissAnimateImage: UIImage?
     
     // Angle, edit rect, clip ratio
-    var clipDoneBlock: ((CGFloat, CGRect, ZLImageClipRatio) -> Void)?
+    var clipDoneBlock: ((CGFloat, CGRect, HEImageClipRatio) -> Void)?
     
     var cancelClipBlock: (() -> Void)?
     
@@ -123,7 +123,7 @@ class HEClipImageViewController: UIViewController {
         self.cleanTimer()
     }
     
-    init(image: UIImage, status: ZLClipStatus) {
+    init(image: UIImage, status: HEClipStatus) {
         originalImage = image
         clipRatios = HEImageEditorConfiguration.default().clipRatios
         self.editRect = status.editRect
@@ -976,7 +976,7 @@ class ZLImageClipRatioCell: UICollectionViewCell {
     
     var image: UIImage?
     
-    var ratio: ZLImageClipRatio!
+    var ratio: HEImageClipRatio!
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -1037,7 +1037,7 @@ class ZLImageClipRatioCell: UICollectionViewCell {
         contentView.addSubview(titleLabel)
     }
     
-    func configureCell(image: UIImage, ratio: ZLImageClipRatio) {
+    func configureCell(image: UIImage, ratio: HEImageClipRatio) {
         imageView.image = image
         titleLabel.text = ratio.title
         self.image = image
