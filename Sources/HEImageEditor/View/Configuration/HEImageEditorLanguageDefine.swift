@@ -38,6 +38,10 @@ public struct HELocalLanguageKey: Hashable {
         self.rawValue = rawValue
     }
     
+    public static let customRatio = HELocalLanguageKey(rawValue: "custom ratio")
+    public static let original = HELocalLanguageKey(rawValue: "original")
+    public static let rotate = HELocalLanguageKey(rawValue: "rotate")
+    
     /// Cancel
     public static let cancel = HELocalLanguageKey(rawValue: "cancel")
     
@@ -71,5 +75,5 @@ func localLanguageTextValue(_ key: HELocalLanguageKey) -> String {
         return value
     }
     
-    return Bundle.zlLocalizedString(key.rawValue)
+    return Bundle.heLocalizedString(key.rawValue)
 }

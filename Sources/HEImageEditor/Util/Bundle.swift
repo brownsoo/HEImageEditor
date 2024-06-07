@@ -71,7 +71,7 @@ extension Bundle {
         bundle = nil
     }
     
-    class func zlLocalizedString(_ key: String) -> String {
+    class func heLocalizedString(_ key: String) -> String {
         if bundle == nil {
             guard let path = Bundle.HEImageEditorBundle?.path(forResource: HEImageEditorUIConfiguration.default().languageType.key, ofType: "lproj") else {
                 return ""

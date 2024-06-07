@@ -17,6 +17,11 @@ extension HEClipImageViewController {
         case bottomLeft
         case bottomRight
     }
+    
+    enum ClipAction {
+        case rotate
+        case crop
+    }
 }
 
 typealias HEClipImageBottomToolViewBuilder = (HEClipImageViewController) -> (toolView: UIView, height: CGFloat)
@@ -40,7 +45,7 @@ class HEClipImageViewController: UIViewController {
     
     let originalImage: UIImage
     
-    let clipRatios: [HEImageClipRatio]
+    var actionItems: [(action: ClipAction, ratio: HEImageClipRatio)]
     
     var editImage: UIImage
     /// 편집 영역
@@ -79,7 +84,7 @@ class HEClipImageViewController: UIViewController {
 //    lazy var rotateBtn = HEEnlargeButton(type: .custom)
     
     /// 회전, 크롭 툴 아이템 뷰 
-    var clipRatioColView: UICollectionView?
+    var clipActionColView: UICollectionView!
     
     var shouldLayout = true
     
@@ -135,7 +140,9 @@ class HEClipImageViewController: UIViewController {
     
     init(image: UIImage, status: HEClipStatus, bottomToolViewBuilder: HEClipImageBottomToolViewBuilder?) {
         originalImage = image
-        clipRatios = HEImageEditorConfiguration.default().clipRatios
+        
+        actionItems = [(.rotate, .origin)] // 회전
+        actionItems.append(contentsOf: HEImageEditorConfiguration.default().clipRatios.map { (.crop, $0) }) // 크롭
         self.editRect = status.editRect
         self.angle = status.angle
         if angle == -90 {
@@ -232,12 +239,12 @@ class HEClipImageViewController: UIViewController {
         }
         
         let ratioColViewY = bottomToolFrame.minY - HEClipImageViewController.clipRatioItemSize.height
-        rotateBtn.frame = CGRect(x: 30, y: ratioColViewY + (HEClipImageViewController.clipRatioItemSize.height - 25) / 2, width: 25, height: 25)
-        let ratioColViewX = rotateBtn.frame.maxX + 15
-        clipRatioColView.frame = CGRect(x: ratioColViewX, y: ratioColViewY, width: view.bounds.width - ratioColViewX, height: 70)
+        //rotateBtn.frame = CGRect(x: 30, y: ratioColViewY + (HEClipImageViewController.clipRatioItemSize.height - 25) / 2, width: 25, height: 25)
+        //let ratioColViewX = rotateBtn.frame.maxX + 15
+        clipActionColView.frame = CGRect(x: 0, y: ratioColViewY, width: view.bounds.width, height: HEClipImageViewController.clipRatioItemSize.height)
         
-        if clipRatios.count > 1, let index = clipRatios.firstIndex(where: { $0 == self.selectedRatio }) {
-            clipRatioColView.scrollToItem(at: IndexPath(row: index, section: 0), at: .centeredHorizontally, animated: false)
+        if actionItems.count > 1, let index = actionItems.firstIndex(where: { $0.1 == self.selectedRatio }) {
+            clipActionColView.scrollToItem(at: IndexPath(row: index, section: 0), at: .centeredHorizontally, animated: false)
         }
     }
     
@@ -283,24 +290,19 @@ class HEClipImageViewController: UIViewController {
             self.bottomToolViewH = builder.height
         }
         
-        rotateBtn.setImage(.he.getImage("zl_rotateimage"), for: .normal)
-        rotateBtn.adjustsImageWhenHighlighted = false
-        rotateBtn.enlargeInset = 20
-        rotateBtn.addTarget(self, action: #selector(rotateBtnClick), for: .touchUpInside)
-        view.addSubview(rotateBtn)
-        
         let layout = UICollectionViewFlowLayout()
-        layout.itemSize = HEClipImageViewController.clipRatioItemSize
+        layout.estimatedItemSize = HEClipImageViewController.clipRatioItemSize
         layout.scrollDirection = .horizontal
-        layout.sectionInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 20)
-        clipRatioColView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        clipRatioColView.delegate = self
-        clipRatioColView.dataSource = self
-        clipRatioColView.backgroundColor = .clear
-        clipRatioColView.isHidden = clipRatios.count <= 1
-        clipRatioColView.showsHorizontalScrollIndicator = false
-        view.addSubview(clipRatioColView)
-        ZLImageClipRatioCell.he.register(clipRatioColView)
+        layout.sectionInset = UIEdgeInsets(top: 0, left: 35, bottom: 0, right: 35)
+        layout.minimumInteritemSpacing = 10
+        clipActionColView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        clipActionColView.delegate = self
+        clipActionColView.dataSource = self
+        clipActionColView.backgroundColor = .clear
+        clipActionColView.isHidden = actionItems.count < 1
+        clipActionColView.showsHorizontalScrollIndicator = false
+        view.addSubview(clipActionColView)
+        HEImageClipRatioCell.he.register(clipActionColView)
         
         gridPanGes = UIPanGestureRecognizer(target: self, action: #selector(gridGesPanAction(_:)))
         gridPanGes.delegate = self
@@ -310,7 +312,6 @@ class HEClipImageViewController: UIViewController {
         scrollView.alpha = 0
         overlayView.alpha = 0
         bottomToolView?.alpha = 0
-        rotateBtn.alpha = 0
     }
     
     func generateThumbnailImage() {
@@ -334,7 +335,7 @@ class HEClipImageViewController: UIViewController {
         rect.origin.x = editInsets.left
         rect.origin.y = insets.top
         rect.size.width = UIScreen.main.bounds.width - editInsets.width
-        rect.size.height = UIScreen.main.bounds.height - editInsets.top - HEClipImageViewController.bottomToolViewH - HEClipImageViewController.clipRatioItemSize.height - 25
+        rect.size.height = UIScreen.main.bounds.height - editInsets.top - self.bottomToolViewH - HEClipImageViewController.clipRatioItemSize.height - 25
         return rect
     }
     
@@ -474,7 +475,7 @@ class HEClipImageViewController: UIViewController {
         layoutInitialImage()
         
         generateThumbnailImage()
-        clipRatioColView.reloadData()
+        clipActionColView.reloadData()
     }
     
     func doneEdit() {
@@ -537,7 +538,7 @@ class HEClipImageViewController: UIViewController {
         }
         
         generateThumbnailImage()
-        clipRatioColView.reloadData()
+        clipActionColView.reloadData()
     }
     /// 그리드 가이드 패닝 
     @objc func gridGesPanAction(_ pan: UIPanGestureRecognizer) {
@@ -757,12 +758,10 @@ class HEClipImageViewController: UIViewController {
         cleanTimer()
         shadowView.alpha = 0
         overlayView.isEditing = true
-        if rotateBtn.alpha != 0 {
-            rotateBtn.layer.removeAllAnimations()
-            clipRatioColView.layer.removeAllAnimations()
+        if clipActionColView.alpha != 0 {
+            clipActionColView.layer.removeAllAnimations()
             UIView.animate(withDuration: 0.2) {
-                self.rotateBtn.alpha = 0
-                self.clipRatioColView.alpha = 0
+                self.clipActionColView.alpha = 0
             }
         }
     }
@@ -819,8 +818,7 @@ class HEClipImageViewController: UIViewController {
                 offset.y = min(self.scrollView.contentSize.height - clipRect.maxY, offset.y)
                 self.scrollView.contentOffset = offset
             }
-            self.rotateBtn.alpha = 1
-            self.clipRatioColView.alpha = 1
+            self.clipActionColView.alpha = 1
             self.shadowView.alpha = 1
             self.changeClipBoxFrame(newFrame: clipRect)
         }
@@ -874,34 +872,40 @@ extension HEClipImageViewController: UIGestureRecognizerDelegate {
     }
 }
 
+// MARK: 액션 트레이 - UICollectionViewDataSource, UICollectionViewDelegate
 extension HEClipImageViewController: UICollectionViewDataSource, UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return clipRatios.count
+        return actionItems.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ZLImageClipRatioCell.he.identifier, for: indexPath) as! ZLImageClipRatioCell
-        
-        let ratio = clipRatios[indexPath.row]
-        cell.configureCell(image: thumbnailImage ?? editImage, ratio: ratio)
-        
-        if ratio == selectedRatio {
-            cell.titleLabel.textColor = .he.toolTitleTintColor
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HEImageClipRatioCell.he.identifier, for: indexPath) as! HEImageClipRatioCell
+        let item = actionItems[indexPath.row]
+        if item.action == .rotate {
+            cell.configureCell(title: localLanguageTextValue(.rotate),
+                               image: UIImage.he.getImage("icEditRotate"),
+                               ratio: item.ratio)
         } else {
-            cell.titleLabel.textColor = .he.toolTitleNormalColor
+            cell.configureCell(title: localLanguageTextValue(HELocalLanguageKey(rawValue: item.ratio.title)).uppercased(),
+                               image: UIImage.he.getImage(item.ratio.iconName),
+                               ratio: item.ratio)
         }
         
         return cell
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let ratio = clipRatios[indexPath.row]
-        guard ratio != selectedRatio else {
+        let item = actionItems[indexPath.row]
+        if item.action == .rotate {
+            self.rotate()
             return
         }
-        selectedRatio = ratio
-        clipRatioColView.reloadData()
-        clipRatioColView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
+        guard item.ratio != selectedRatio else {
+            return
+        }
+        selectedRatio = item.ratio
+        clipActionColView.reloadData()
+        clipActionColView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
         calculateClipRect()
         layoutInitialImage()
     }
@@ -946,14 +950,14 @@ extension HEClipImageViewController: UIViewControllerTransitioningDelegate {
     }
 }
 
-// MARK: 裁剪比例cell
+// MARK: 액션 cell
 
-class ZLImageClipRatioCell: UICollectionViewCell {
+class HEImageClipRatioCell: UICollectionViewCell {
     var imageView: UIImageView!
     
     var titleLabel: UILabel!
     
-    var image: UIImage?
+//    var image: UIImage?
     
     var ratio: HEImageClipRatio!
     
@@ -969,57 +973,68 @@ class ZLImageClipRatioCell: UICollectionViewCell {
     
     override func layoutSubviews() {
         super.layoutSubviews()
-        guard let ratio = ratio, let image = image else {
-            return
-        }
-        
-        let center = imageView.center
-        var w: CGFloat = 0, h: CGFloat = 0
-        
-        let imageMaxW = bounds.width - 10
-        if ratio.whRatio == 0 {
-            let maxSide = max(image.size.width, image.size.height)
-            w = imageMaxW * image.size.width / maxSide
-            h = imageMaxW * image.size.height / maxSide
-        } else {
-            if ratio.whRatio >= 1 {
-                w = imageMaxW
-                h = w / ratio.whRatio
-            } else {
-                h = imageMaxW
-                w = h * ratio.whRatio
-            }
-        }
-        if ratio.isCircle {
-            imageView.layer.cornerRadius = w / 2
-        } else {
-            imageView.layer.cornerRadius = 3
-        }
-        imageView.frame = CGRect(x: center.x - w / 2, y: center.y - h / 2, width: w, height: h)
+//        guard let ratio = ratio, let image = image else {
+//            return
+//        }
+//        
+//        let center = imageView.center
+//        var w: CGFloat = 0, h: CGFloat = 0
+//        
+//        let imageMaxW = bounds.width - 10
+//        if ratio.whRatio == 0 {
+//            let maxSide = max(image.size.width, image.size.height)
+//            w = imageMaxW * image.size.width / maxSide
+//            h = imageMaxW * image.size.height / maxSide
+//        } else {
+//            if ratio.whRatio >= 1 {
+//                w = imageMaxW
+//                h = w / ratio.whRatio
+//            } else {
+//                h = imageMaxW
+//                w = h * ratio.whRatio
+//            }
+//        }
+//        if ratio.isCircle {
+//            imageView.layer.cornerRadius = w / 2
+//        } else {
+//            imageView.layer.cornerRadius = 3
+//        }
+//        imageView.frame = CGRect(x: center.x - w / 2, y: center.y - h / 2, width: w, height: h)
     }
     
-    func setupUI() {
-        imageView = UIImageView(frame: CGRect(x: 8, y: 5, width: bounds.width - 16, height: bounds.width - 16))
-        imageView.contentMode = .scaleAspectFill
-        imageView.layer.cornerRadius = 3
-        imageView.layer.masksToBounds = true
-        imageView.clipsToBounds = true
-        contentView.addSubview(imageView)
+    private func setupUI() {
         
-        titleLabel = UILabel(frame: CGRect(x: 0, y: bounds.height - 15, width: bounds.width, height: 12))
+        imageView = UIImageView(frame: CGRect(x: 0, y: 0, width: 24, height: 24))
+        imageView.contentMode = .scaleAspectFill
+        
+        titleLabel = UILabel()
         titleLabel.font = UIFont.systemFont(ofSize: 12)
-        titleLabel.textColor = .white
+        titleLabel.textColor = UIColor(white: 204 / 255.0, alpha: 1.0)
         titleLabel.textAlignment = .center
         titleLabel.layer.shadowColor = UIColor.black.withAlphaComponent(0.3).cgColor
         titleLabel.layer.shadowOffset = .zero
         titleLabel.layer.shadowOpacity = 1
-        contentView.addSubview(titleLabel)
+        
+        
+        let sv = UIStackView(arrangedSubviews: [imageView, titleLabel])
+        sv.axis = .vertical
+        sv.spacing = 8
+        sv.alignment = .center
+        sv.distribution = .fill
+        sv.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(sv)
+        NSLayoutConstraint.activate([
+            sv.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            sv.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            sv.topAnchor.constraint(equalTo: contentView.topAnchor),
+            sv.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+        ])
+        
     }
     
-    func configureCell(image: UIImage, ratio: HEImageClipRatio) {
+    func configureCell(title: String, image: UIImage?, ratio: HEImageClipRatio) {
         imageView.image = image
-        titleLabel.text = ratio.title
-        self.image = image
+        titleLabel.text = title
         self.ratio = ratio
         
         setNeedsLayout()

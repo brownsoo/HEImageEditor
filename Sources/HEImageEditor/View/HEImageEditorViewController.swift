@@ -393,7 +393,14 @@ open class HEEditImageViewController: UIViewController {
         if HEImageEditorConfiguration.default().showClipDirectlyIfOnlyHasClipTool, tools.count == 1, tools.contains(.clip) {
             let vc = HEClipImageViewController(
                 image: image,
-                status: editModel?.clipStatus ?? HEClipStatus(editRect: CGRect(origin: .zero, size: image.size))
+                status: editModel?.clipStatus ?? HEClipStatus(editRect: CGRect(origin: .zero, size: image.size)),
+                bottomToolViewBuilder: { vc in
+                    let toolView = HEClipBottomToolView()
+                    toolView.cancelClickListener = { vc.cancelEdit() }
+                    toolView.doneClickListener = { vc.doneEdit() }
+                    toolView.revertClickListener = { vc.revert() }
+                    return (toolView, HEClipBottomToolView.estimateHeight)
+                }
             )
             
             vc.clipDoneBlock = { angle, editRect, ratio in
