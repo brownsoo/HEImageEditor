@@ -7,6 +7,22 @@
 
 import UIKit
 
+extension UIEdgeInsets {
+    var width: CGFloat {
+        self.left + self.right
+    }
+    var height: CGFloat {
+        self.top + self.bottom
+    }
+}
+
+extension NSLayoutConstraint {
+    func withPriority(_ priority: UILayoutPriority) -> Self {
+        self.priority = priority
+        return self
+    }
+}
+
 extension UIApplication {
     @available(iOS 13.0, *)
     func findWindowScenes() -> [UIWindowScene] {

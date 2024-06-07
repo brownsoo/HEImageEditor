@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SnapKit
 import HEImageEditor
 
 class ViewController: UIViewController {
@@ -210,6 +211,7 @@ class ViewController: UIViewController {
     
     func configImageEditor() {
         HEImageEditorConfiguration.default()
+            .clipRatios([.origin, .custom, .wh1x1])
             // Provide a image sticker container view
             .imageStickerContainerView(ImageStickerContainerView())
             .fontChooserContainerView(FontChooserContainerView())

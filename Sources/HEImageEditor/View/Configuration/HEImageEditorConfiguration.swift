@@ -65,18 +65,18 @@ public class HEImageEditorConfiguration: NSObject {
     /// The default draw color. If this color not in editImageDrawColors, will pick the first color in editImageDrawColors as the default.
     @objc public var defaultDrawColor: UIColor = .he.rgba(249, 80, 81)
     
-    private var pri_clipRatios: [HEImageClipRatio] = [.custom]
+    private var _clipRatios: [HEImageClipRatio] = [.custom]
     /// Edit ratios for image editor.
     @objc public var clipRatios: [HEImageClipRatio] {
         get {
-            if pri_clipRatios.isEmpty {
+            if _clipRatios.isEmpty {
                 return [.custom]
             } else {
-                return pri_clipRatios
+                return _clipRatios
             }
         }
         set {
-            pri_clipRatios = newValue
+            _clipRatios = newValue
         }
     }
     
@@ -263,6 +263,8 @@ public extension HEImageClipRatio {
     @objc static let all: [HEImageClipRatio] = [.custom, .circle, .wh1x1, .wh3x4, .wh4x3, .wh2x3, .wh3x2, .wh9x16, .wh16x9]
     
     @objc static let custom = HEImageClipRatio(title: "custom", whRatio: 0)
+    
+    @objc static let origin = HEImageClipRatio(title: "origin", whRatio: 0)
     
     @objc static let circle = HEImageClipRatio(title: "circle", whRatio: 1, isCircle: true)
     

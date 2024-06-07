@@ -19,10 +19,11 @@ extension HEClipImageViewController {
     }
 }
 
+typealias HEClipImageBottomToolViewBuilder = (HEClipImageViewController) -> (toolView: UIView, height: CGFloat)
+
 class HEClipImageViewController: UIViewController {
-    static let bottomToolViewH: CGFloat = 90
     
-    static let clipRatioItemSize  = CGSize(width: 60, height: 70)
+     static let clipRatioItemSize  = CGSize(width: 54, height: 84)
     
     var animateDismiss = true
     
@@ -42,8 +43,13 @@ class HEClipImageViewController: UIViewController {
     let clipRatios: [HEImageClipRatio]
     
     var editImage: UIImage
-    
-    var editRect: CGRect
+    /// 편집 영역
+    private(set) var editRect: CGRect
+    /// 편집 영역을 화면 안쪽으로 넣을 수 있음.
+    var editRectInsets: UIEdgeInsets = .init(top: 48,  // 상위뷰의 툴바 영역
+                                             left: 0,
+                                             bottom: 72, // 상위뷰의 탭바 영역
+                                             right: 0)
     
     var scrollView: UIScrollView!
     
@@ -51,27 +57,29 @@ class HEClipImageViewController: UIViewController {
     
     var imageView: UIImageView!
     
-    var shadowView: ZLClipShadowView!
+    var shadowView: HEClipShadowView!
     
-    var overlayView: ZLClipOverlayView!
+    var overlayView: HEClipOverlayView!
     
     var gridPanGes: UIPanGestureRecognizer!
     
-    var bottomToolView: UIView!
+    var bottomToolView: UIView?
+    private var bottomToolViewH: CGFloat = 0
     
     var bottomShadowLayer: CAGradientLayer!
     
-    var bottomToolLineView: UIView!
+//    var bottomToolLineView: UIView!
     
-    lazy var cancelBtn = HEEnlargeButton(type: .custom)
+//    lazy var cancelBtn = HEEnlargeButton(type: .custom)
+//    
+//    lazy var revertBtn = HEEnlargeButton(type: .custom)
+//    
+//    lazy var doneBtn = HEEnlargeButton(type: .custom)
     
-    lazy var revertBtn = HEEnlargeButton(type: .custom)
+//    lazy var rotateBtn = HEEnlargeButton(type: .custom)
     
-    lazy var doneBtn = HEEnlargeButton(type: .custom)
-    
-    lazy var rotateBtn = HEEnlargeButton(type: .custom)
-    
-    var clipRatioColView: UICollectionView!
+    /// 회전, 크롭 툴 아이템 뷰 
+    var clipRatioColView: UICollectionView?
     
     var shouldLayout = true
     
@@ -118,12 +126,14 @@ class HEClipImageViewController: UIViewController {
         deviceIsiPhone() ? .portrait : .all
     }
     
+    private var bottomToolViewBuilder: HEClipImageBottomToolViewBuilder?
+    
     deinit {
-        trace("ZLClipImageViewController deinit")
+        trace()
         self.cleanTimer()
     }
     
-    init(image: UIImage, status: HEClipStatus) {
+    init(image: UIImage, status: HEClipStatus, bottomToolViewBuilder: HEClipImageBottomToolViewBuilder?) {
         originalImage = image
         clipRatios = HEImageEditorConfiguration.default().clipRatios
         self.editRect = status.editRect
@@ -145,6 +155,8 @@ class HEClipImageViewController: UIViewController {
             selectedRatio = HEImageEditorConfiguration.default().clipRatios.first!
         }
         super.init(nibName: nil, bundle: nil)
+        self.bottomToolViewBuilder = bottomToolViewBuilder
+        
         if firstEnter {
             calculateClipRect()
         }
@@ -184,8 +196,7 @@ class HEClipImageViewController: UIViewController {
             cancelClipAnimateFrame = clipBoxFrame
             UIView.animate(withDuration: 0.25, animations: {
                 animateImageView.frame = self.clipBoxFrame
-                self.bottomToolView.alpha = 1
-                self.rotateBtn.alpha = 1
+                self.bottomToolView?.alpha = 1
             }) { _ in
                 UIView.animate(withDuration: 0.1, animations: {
                     self.scrollView.alpha = 1
@@ -195,8 +206,7 @@ class HEClipImageViewController: UIViewController {
                 }
             }
         } else {
-            bottomToolView.alpha = 1
-            rotateBtn.alpha = 1
+            bottomToolView?.alpha = 1
             scrollView.alpha = 1
             overlayView.alpha = 1
         }
@@ -213,18 +223,15 @@ class HEClipImageViewController: UIViewController {
         
         layoutInitialImage()
         
-        bottomToolView.frame = CGRect(x: 0, y: view.bounds.height - HEClipImageViewController.bottomToolViewH, width: view.bounds.width, height: HEClipImageViewController.bottomToolViewH)
-        bottomShadowLayer.frame = bottomToolView.bounds
+        let bottomToolFrame: CGRect
+        if let bottomToolView {
+            bottomToolView.frame = CGRect(x: 0, y: view.bounds.height - self.bottomToolViewH, width: view.bounds.width, height: self.bottomToolViewH)
+            bottomToolFrame = bottomToolView.frame
+        } else {
+            bottomToolFrame = CGRect(x: 0, y: view.bounds.height, width: view.bounds.width, height: 0)
+        }
         
-        bottomToolLineView.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: 1 / UIScreen.main.scale)
-        let toolBtnH: CGFloat = 25
-        let toolBtnY = (HEClipImageViewController.bottomToolViewH - toolBtnH) / 2 - 10
-        cancelBtn.frame = CGRect(x: 30, y: toolBtnY, width: toolBtnH, height: toolBtnH)
-        let revertBtnW = localLanguageTextValue(.revert).he.boundingRect(font: HEImageEditorLayout.bottomToolTitleFont, limitSize: CGSize(width: CGFloat.greatestFiniteMagnitude, height: toolBtnH)).width + 20
-        revertBtn.frame = CGRect(x: (view.bounds.width - revertBtnW) / 2, y: toolBtnY, width: revertBtnW, height: toolBtnH)
-        doneBtn.frame = CGRect(x: view.bounds.width - 30 - toolBtnH, y: toolBtnY, width: toolBtnH, height: toolBtnH)
-        
-        let ratioColViewY = bottomToolView.frame.minY - HEClipImageViewController.clipRatioItemSize.height - 5
+        let ratioColViewY = bottomToolFrame.minY - HEClipImageViewController.clipRatioItemSize.height
         rotateBtn.frame = CGRect(x: 30, y: ratioColViewY + (HEClipImageViewController.clipRatioItemSize.height - 25) / 2, width: 25, height: 25)
         let ratioColViewX = rotateBtn.frame.maxX + 15
         clipRatioColView.frame = CGRect(x: ratioColViewX, y: ratioColViewY, width: view.bounds.width - ratioColViewX, height: 70)
@@ -240,7 +247,7 @@ class HEClipImageViewController: UIViewController {
         maxClipFrame = calculateMaxClipFrame()
     }
     
-    func setupUI() {
+    private func setupUI() {
         view.backgroundColor = .black
         
         scrollView = UIScrollView()
@@ -248,11 +255,7 @@ class HEClipImageViewController: UIViewController {
         scrollView.alwaysBounceHorizontal = true
         scrollView.showsVerticalScrollIndicator = false
         scrollView.showsHorizontalScrollIndicator = false
-        if #available(iOS 11.0, *) {
-            self.scrollView.contentInsetAdjustmentBehavior = .never
-        } else {
-            // Fallback on earlier versions
-        }
+        scrollView.contentInsetAdjustmentBehavior = .never
         scrollView.delegate = self
         view.addSubview(scrollView)
         
@@ -264,49 +267,21 @@ class HEClipImageViewController: UIViewController {
         imageView.clipsToBounds = true
         containerView.addSubview(imageView)
         
-        shadowView = ZLClipShadowView()
+        shadowView = HEClipShadowView()
         shadowView.isUserInteractionEnabled = false
         shadowView.backgroundColor = UIColor.black.withAlphaComponent(0.3)
         view.addSubview(shadowView)
         
-        overlayView = ZLClipOverlayView()
+        overlayView = HEClipOverlayView()
         overlayView.isUserInteractionEnabled = false
         overlayView.isCircle = selectedRatio.isCircle
         view.addSubview(overlayView)
         
-        bottomToolView = UIView()
-        view.addSubview(bottomToolView)
-        
-        let color1 = UIColor.black.withAlphaComponent(0.15).cgColor
-        let color2 = UIColor.black.withAlphaComponent(0.35).cgColor
-        
-        bottomShadowLayer = CAGradientLayer()
-        bottomShadowLayer.colors = [color1, color2]
-        bottomShadowLayer.locations = [0, 1]
-        bottomToolView.layer.addSublayer(bottomShadowLayer)
-        
-        bottomToolLineView = UIView()
-        bottomToolLineView.backgroundColor = .he.rgba(240, 240, 240)
-        bottomToolView.addSubview(bottomToolLineView)
-        
-        cancelBtn.setImage(.he.getImage("zl_close"), for: .normal)
-        cancelBtn.adjustsImageWhenHighlighted = false
-        cancelBtn.enlargeInset = 20
-        cancelBtn.addTarget(self, action: #selector(cancelBtnClick), for: .touchUpInside)
-        bottomToolView.addSubview(cancelBtn)
-        
-        revertBtn.setTitleColor(.white, for: .normal)
-        revertBtn.setTitle(localLanguageTextValue(.revert), for: .normal)
-        revertBtn.enlargeInset = 20
-        revertBtn.titleLabel?.font = HEImageEditorLayout.bottomToolTitleFont
-        revertBtn.addTarget(self, action: #selector(revertBtnClick), for: .touchUpInside)
-        bottomToolView.addSubview(revertBtn)
-        
-        doneBtn.setImage(.he.getImage("zl_right"), for: .normal)
-        doneBtn.adjustsImageWhenHighlighted = false
-        doneBtn.enlargeInset = 20
-        doneBtn.addTarget(self, action: #selector(doneBtnClick), for: .touchUpInside)
-        bottomToolView.addSubview(doneBtn)
+        if let builder  = self.bottomToolViewBuilder?(self) {
+            view.addSubview(builder.toolView)
+            self.bottomToolView = builder.toolView
+            self.bottomToolViewH = builder.height
+        }
         
         rotateBtn.setImage(.he.getImage("zl_rotateimage"), for: .normal)
         rotateBtn.adjustsImageWhenHighlighted = false
@@ -334,7 +309,7 @@ class HEClipImageViewController: UIViewController {
         
         scrollView.alpha = 0
         overlayView.alpha = 0
-        bottomToolView.alpha = 0
+        bottomToolView?.alpha = 0
         rotateBtn.alpha = 0
     }
     
@@ -350,15 +325,16 @@ class HEClipImageViewController: UIViewController {
         thumbnailImage = editImage.he.resize(size)
     }
     
-    /// 计算做大裁剪范围
-    func calculateMaxClipFrame() -> CGRect {
-        var insets = deviceSafeAreaInsets()
-        insets.top += 20
+    /// Calculate the maximum cropping range
+    private func calculateMaxClipFrame() -> CGRect {
+        var editInsets = self.editRectInsets
+        let insets = deviceSafeAreaInsets()
+        editInsets.top += insets.top
         var rect = CGRect.zero
-        rect.origin.x = 15
+        rect.origin.x = editInsets.left
         rect.origin.y = insets.top
-        rect.size.width = UIScreen.main.bounds.width - 15 * 2
-        rect.size.height = UIScreen.main.bounds.height - insets.top - HEClipImageViewController.bottomToolViewH - HEClipImageViewController.clipRatioItemSize.height - 25
+        rect.size.width = UIScreen.main.bounds.width - editInsets.width
+        rect.size.height = UIScreen.main.bounds.height - editInsets.top - HEClipImageViewController.bottomToolViewH - HEClipImageViewController.clipRatioItemSize.height - 25
         return rect
     }
     
@@ -394,27 +370,28 @@ class HEClipImageViewController: UIViewController {
         containerView.frame = CGRect(origin: .zero, size: editImage.size)
         imageView.frame = containerView.bounds
         
-        // editRect比例，计算editRect所占frame
+        // editRect 비율, editRect가 차지하는 프레임을 계산.
         let editScale = min(maxClipRect.width / editSize.width, maxClipRect.height / editSize.height)
         let scaledSize = CGSize(width: floor(editSize.width * editScale), height: floor(editSize.height * editScale))
         
-        // 计算当前裁剪rect区域
+        // 현재 잘린 직사각형 영역을 계산.
         var frame = CGRect.zero
         frame.size = scaledSize
         frame.origin.x = maxClipRect.minX + floor((maxClipRect.width - frame.width) / 2)
         frame.origin.y = maxClipRect.minY + floor((maxClipRect.height - frame.height) / 2)
         
-        // 按照edit image进行计算最小缩放比例
+        // 편집 이미지에 따라 최소 줌 비율을 계산
         let originalScale = max(frame.width / editImage.size.width, frame.height / editImage.size.height)
         
-        // 将 edit rect 相对 originalScale 进行缩放，缩放到图片未放大时候的clip rect
+        // 원본을 기준으로 편집 사각형의 크기를 조정합니다.
+        // 사진이 확대되지 않은 경우 클립 사각형으로 크기를 조정합니다.
         let scaleEditSize = CGSize(width: editRect.width * originalScale, height: editRect.height * originalScale)
-        // 计算缩放后的clip rect相对maxClipRect的比例
+        // maxClipRect에 대한 크기 조정된 클립 직사각형의 비율을 계산합니다.
         let clipRectZoomScale = min(maxClipRect.width / scaleEditSize.width, maxClipRect.height / scaleEditSize.height)
         
         scrollView.minimumZoomScale = originalScale
         scrollView.maximumZoomScale = 10
-        // 设置当前zoom scale
+        // 현재 확대/축소 배율 설정
         let zoomScale = clipRectZoomScale * originalScale
         scrollView.zoomScale = zoomScale
         scrollView.contentSize = CGSize(width: editImage.size.width * zoomScale, height: editImage.size.height * zoomScale)
@@ -428,7 +405,7 @@ class HEClipImageViewController: UIViewController {
             scrollView.contentOffset = offset
         }
         
-        // edit rect 相对 image size 的 偏移量
+        // 이미지 크기에 따른 편집 직사각형의 오프셋
         let diffX = editRect.origin.x / editImage.size.width * scrollView.contentSize.width
         let diffY = editRect.origin.y / editImage.size.height * scrollView.contentSize.height
         scrollView.contentOffset = CGPoint(x: -scrollView.contentInset.left + diffX, y: -scrollView.contentInset.top + diffY)
@@ -466,7 +443,7 @@ class HEClipImageViewController: UIViewController {
         
         clipBoxFrame = frame
         shadowView.clearRect = frame
-        overlayView.frame = frame.insetBy(dx: -ZLClipOverlayView.cornerLineWidth, dy: -ZLClipOverlayView.cornerLineWidth)
+        overlayView.frame = frame.insetBy(dx: -HEClipOverlayView.cornerLineWidth, dy: -HEClipOverlayView.cornerLineWidth)
         
         scrollView.contentInset = UIEdgeInsets(top: frame.minY, left: frame.minX, bottom: scrollView.frame.maxY - frame.maxY, right: scrollView.frame.maxX - frame.maxX)
         
@@ -481,14 +458,15 @@ class HEClipImageViewController: UIViewController {
         scrollView.zoomScale = scrollView.zoomScale
     }
     
-    @objc func cancelBtnClick() {
+    func cancelEdit() {
         dismissAnimateFromRect = cancelClipAnimateFrame
         dismissAnimateImage = presentAnimateImage
         cancelClipBlock?()
         dismiss(animated: animateDismiss, completion: nil)
     }
     
-    @objc func revertBtnClick() {
+    /// 초기화
+    func revert() {
         angle = 0
         editImage = originalImage
         calculateClipRect()
@@ -499,7 +477,7 @@ class HEClipImageViewController: UIViewController {
         clipRatioColView.reloadData()
     }
     
-    @objc func doneBtnClick() {
+    func doneEdit() {
         let image = clipImage()
         dismissAnimateFromRect = clipBoxFrame
         dismissAnimateImage = image.clipImage
@@ -507,7 +485,7 @@ class HEClipImageViewController: UIViewController {
         dismiss(animated: animateDismiss, completion: nil)
     }
     
-    @objc func rotateBtnClick() {
+    @objc func rotate() {
         guard !isRotating else {
             return
         }
@@ -526,18 +504,17 @@ class HEClipImageViewController: UIViewController {
         view.addSubview(animateImageView)
         
         if selectedRatio.whRatio == 0 || selectedRatio.whRatio == 1 {
-            // 自由比例和1:1比例，进行edit rect转换
+            // 자유 비율 및 1:1 비율, 직사각형 변환 편집
             
-            // 将edit rect转换为相对edit image的rect
+            //편집 사각형을 편집 이미지에 상대적인 사각형으로 변환합니다.
             let rect = convertClipRectToEditImageRect()
-            // 旋转图片
             editImage = editImage.he.rotate(orientation: .left)
-            // 将rect进行旋转，转换到相对于旋转后的edit image的rect
+            // 직사각형을 회전하고 회전된 편집 이미지를 기준으로 직사각형으로 변환합니다.
             editRect = CGRect(x: rect.minY, y: editImage.size.height - rect.minX - rect.width, width: rect.height, height: rect.width)
         } else {
-            // 其他比例的裁剪框，旋转后都重置edit rect
+            // 다른 비율의 자르기 프레임은 회전 후 바로 편집할 수 있도록 재설정됩니다.
             
-            // 旋转图片
+            // 이미지 회전
             editImage = editImage.he.rotate(orientation: .left)
             calculateClipRect()
         }
@@ -562,7 +539,7 @@ class HEClipImageViewController: UIViewController {
         generateThumbnailImage()
         clipRatioColView.reloadData()
     }
-    
+    /// 그리드 가이드 패닝 
     @objc func gridGesPanAction(_ pan: UIPanGestureRecognizer) {
         let point = pan.location(in: view)
         if pan.state == .began {
@@ -860,18 +837,20 @@ class HEClipImageViewController: UIViewController {
         let contentSize = scrollView.contentSize
         let offset = scrollView.contentOffset
         let insets = scrollView.contentInset
+        let realImageWRatio = imageSize.width / contentSize.width
+        let realImageHRatio = imageSize.height / contentSize.height
         
         var frame = CGRect.zero
-        frame.origin.x = floor((offset.x + insets.left) * (imageSize.width / contentSize.width))
+        frame.origin.x = floor((offset.x + insets.left) * realImageWRatio)
         frame.origin.x = max(0, frame.origin.x)
         
-        frame.origin.y = floor((offset.y + insets.top) * (imageSize.height / contentSize.height))
+        frame.origin.y = floor((offset.y + insets.top) * realImageHRatio)
         frame.origin.y = max(0, frame.origin.y)
         
-        frame.size.width = ceil(clipBoxFrame.width * (imageSize.width / contentSize.width))
+        frame.size.width = ceil(clipBoxFrame.width * realImageWRatio)
         frame.size.width = min(imageSize.width, frame.width)
         
-        frame.size.height = ceil(clipBoxFrame.height * (imageSize.height / contentSize.height))
+        frame.size.height = ceil(clipBoxFrame.height * realImageHRatio)
         frame.size.height = min(imageSize.height, frame.height)
         
         return frame
@@ -983,9 +962,9 @@ class ZLImageClipRatioCell: UICollectionViewCell {
         setupUI()
     }
     
-    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        super.init(coder: coder)
+        setupUI()
     }
     
     override func layoutSubviews() {
@@ -1047,7 +1026,7 @@ class ZLImageClipRatioCell: UICollectionViewCell {
     }
 }
 
-class ZLClipShadowView: UIView {
+class HEClipShadowView: UIView {
     var clearRect: CGRect = .zero {
         didSet {
             self.setNeedsDisplay()
@@ -1074,9 +1053,9 @@ class ZLClipShadowView: UIView {
     }
 }
 
-// MARK: 裁剪网格视图
+// MARK: 자르기 오버레이 뷰
 
-class ZLClipOverlayView: UIView {
+class HEClipOverlayView: UIView {
     static let cornerLineWidth: CGFloat = 3
     
     var cornerBoldLines: [UIView] = []
@@ -1209,29 +1188,29 @@ class ZLClipOverlayView: UIView {
         
         if isCircle {
             let center = CGPoint(x: bounds.width / 2, y: bounds.height / 2)
-            let radius = rect.width / 2 - ZLClipOverlayView.cornerLineWidth
+            let radius = rect.width / 2 - HEClipOverlayView.cornerLineWidth
             if !isEditing {
                 // top left
-                context?.move(to: CGPoint(x: ZLClipOverlayView.cornerLineWidth, y: ZLClipOverlayView.cornerLineWidth))
+                context?.move(to: CGPoint(x: HEClipOverlayView.cornerLineWidth, y: HEClipOverlayView.cornerLineWidth))
                 context?.addLine(to: CGPoint(x: rect.width / 2, y: rect.origin.y + 3))
                 context?.addArc(center: center, radius: radius, startAngle: .pi * 1.5, endAngle: .pi, clockwise: true)
                 context?.closePath()
                 
                 // top right
-                context?.move(to: CGPoint(x: rect.width - ZLClipOverlayView.cornerLineWidth, y: ZLClipOverlayView.cornerLineWidth))
-                context?.addLine(to: CGPoint(x: rect.width - ZLClipOverlayView.cornerLineWidth, y: rect.height / 2))
+                context?.move(to: CGPoint(x: rect.width - HEClipOverlayView.cornerLineWidth, y: HEClipOverlayView.cornerLineWidth))
+                context?.addLine(to: CGPoint(x: rect.width - HEClipOverlayView.cornerLineWidth, y: rect.height / 2))
                 context?.addArc(center: center, radius: radius, startAngle: 0, endAngle: .pi * 1.5, clockwise: true)
                 context?.closePath()
                 
                 // bottom left
-                context?.move(to: CGPoint(x: ZLClipOverlayView.cornerLineWidth, y: rect.height - ZLClipOverlayView.cornerLineWidth))
-                context?.addLine(to: CGPoint(x: ZLClipOverlayView.cornerLineWidth, y: rect.height / 2))
+                context?.move(to: CGPoint(x: HEClipOverlayView.cornerLineWidth, y: rect.height - HEClipOverlayView.cornerLineWidth))
+                context?.addLine(to: CGPoint(x: HEClipOverlayView.cornerLineWidth, y: rect.height / 2))
                 context?.addArc(center: center, radius: radius, startAngle: .pi, endAngle: .pi / 2, clockwise: true)
                 context?.closePath()
                 
                 // bottom right
-                context?.move(to: CGPoint(x: rect.width - ZLClipOverlayView.cornerLineWidth, y: rect.height - ZLClipOverlayView.cornerLineWidth))
-                context?.addLine(to: CGPoint(x: rect.width / 2, y: rect.height - ZLClipOverlayView.cornerLineWidth))
+                context?.move(to: CGPoint(x: rect.width - HEClipOverlayView.cornerLineWidth, y: rect.height - HEClipOverlayView.cornerLineWidth))
+                context?.addLine(to: CGPoint(x: rect.width / 2, y: rect.height - HEClipOverlayView.cornerLineWidth))
                 context?.addArc(center: center, radius: radius, startAngle: .pi / 2, endAngle: 0, clockwise: true)
                 context?.closePath()
                 
@@ -1242,27 +1221,27 @@ class ZLClipOverlayView: UIView {
             context?.addArc(center: center, radius: radius, startAngle: 0, endAngle: .pi * 2, clockwise: false)
         }
         
-        let circleDiff: CGFloat = (3 - 2 * sqrt(2)) * (rect.width - 2 * ZLClipOverlayView.cornerLineWidth) / 6
+        let circleDiff: CGFloat = (3 - 2 * sqrt(2)) * (rect.width - 2 * HEClipOverlayView.cornerLineWidth) / 6
         
         var dw: CGFloat = 3
         for i in 0..<4 {
             let isInnerLine = isCircle && 1...2 ~= i
-            context?.move(to: CGPoint(x: rect.origin.x + dw, y: ZLClipOverlayView.cornerLineWidth + (isInnerLine ? circleDiff : 0)))
-            context?.addLine(to: CGPoint(x: rect.origin.x + dw, y: rect.height - ZLClipOverlayView.cornerLineWidth - (isInnerLine ? circleDiff : 0)))
+            context?.move(to: CGPoint(x: rect.origin.x + dw, y: HEClipOverlayView.cornerLineWidth + (isInnerLine ? circleDiff : 0)))
+            context?.addLine(to: CGPoint(x: rect.origin.x + dw, y: rect.height - HEClipOverlayView.cornerLineWidth - (isInnerLine ? circleDiff : 0)))
             dw += (rect.size.width - 6) / 3
         }
 
         var dh: CGFloat = 3
         for i in 0..<4 {
             let isInnerLine = isCircle && 1...2 ~= i
-            context?.move(to: CGPoint(x: ZLClipOverlayView.cornerLineWidth + (isInnerLine ? circleDiff : 0), y: rect.origin.y + dh))
-            context?.addLine(to: CGPoint(x: rect.width - ZLClipOverlayView.cornerLineWidth - (isInnerLine ? circleDiff : 0), y: rect.origin.y + dh))
+            context?.move(to: CGPoint(x: HEClipOverlayView.cornerLineWidth + (isInnerLine ? circleDiff : 0), y: rect.origin.y + dh))
+            context?.addLine(to: CGPoint(x: rect.width - HEClipOverlayView.cornerLineWidth - (isInnerLine ? circleDiff : 0), y: rect.origin.y + dh))
             dh += (rect.size.height - 6) / 3
         }
 
         context?.strokePath()
 
-        context?.setLineWidth(ZLClipOverlayView.cornerLineWidth)
+        context?.setLineWidth(HEClipOverlayView.cornerLineWidth)
 
         let boldLineLength: CGFloat = 20
         // 左上

@@ -170,7 +170,7 @@ open class HEEditImageViewController: UIViewController {
         btn.setImage(.he.getImage("zl_undo_disable"), for: .disabled)
         btn.setImage(.he.getImage("zl_undo"), for: .normal)
         btn.adjustsImageWhenHighlighted = false
-        btn.isEnabled = !editorManager.actions.isEmpty
+        btn.isEnabled = !actionManager.actions.isEmpty
         btn.enlargeInset = 8
         btn.addTarget(self, action: #selector(undoBtnClick), for: .touchUpInside)
         return btn
@@ -181,7 +181,7 @@ open class HEEditImageViewController: UIViewController {
         btn.setImage(.he.getImage("zl_redo"), for: .normal)
         btn.setImage(.he.getImage("zl_redo_disable"), for: .disabled)
         btn.adjustsImageWhenHighlighted = false
-        btn.isEnabled = editorManager.actions.count != editorManager.redoActions.count
+        btn.isEnabled = actionManager.actions.count != actionManager.redoActions.count
         btn.enlargeInset = 8
         btn.addTarget(self, action: #selector(redoBtnClick), for: .touchUpInside)
         return btn
@@ -335,7 +335,7 @@ open class HEEditImageViewController: UIViewController {
 
     private var preAdjustStatus: HEAdjustStatus
 
-    private var editorManager: HEEditorActionManager
+    private var actionManager: HEEditorActionManager
     
     private lazy var deleteDrawPaths: [HEDrawPath] = []
     
@@ -451,11 +451,11 @@ open class HEEditImageViewController: UIViewController {
         tools = ts
         adjustTools = HEImageEditorConfiguration.default().adjustTools
         selectedAdjustTool = adjustTools.first
-        editorManager = HEEditorActionManager(actions: editModel?.actions ?? [])
+        actionManager = HEEditorActionManager(actions: editModel?.actions ?? [])
         
         super.init(nibName: nil, bundle: nil)
         
-        editorManager.delegate = self
+        actionManager.delegate = self
         
         if !drawColors.contains(currentDrawColor) {
             currentDrawColor = drawColors.first!
@@ -770,7 +770,7 @@ open class HEEditImageViewController: UIViewController {
             }
             adjustSlider?.endAdjust = { [weak self] in
                 guard let `self` = self else { return }
-                self.editorManager.storeAction(
+                self.actionManager.storeAction(
                     .adjust(oldStatus: self.preAdjustStatus, newStatus: self.currentAdjustStatus)
                 )
                 self.hasAdjustedImage = true
@@ -899,15 +899,23 @@ open class HEEditImageViewController: UIViewController {
         }
     }
     
-    func clipBtnClick() {
-        preClipStatus = currentClipStatus
+    private func clipBtnClick() {
+        self.preClipStatus = self.currentClipStatus
         
         var currentEditImage = editImage
         autoreleasepool {
             currentEditImage = buildImage()
         }
         
-        let vc = HEClipImageViewController(image: currentEditImage, status: currentClipStatus)
+        let vc = HEClipImageViewController(image: currentEditImage, status: currentClipStatus,
+                                           bottomToolViewBuilder: { vc in
+            let toolView = HEClipBottomToolView()
+            toolView.cancelClickListener = { vc.cancelEdit() }
+            toolView.doneClickListener = { vc.doneEdit() }
+            toolView.revertClickListener = { vc.revert() }
+            return (toolView, HEClipBottomToolView.estimateHeight)
+        })
+        vc.bottomToolView = HEClipBottomToolView()
         let rect = mainScrollView.convert(containerView.frame, to: view)
         vc.presentAnimateFrame = rect
         vc.presentAnimateImage = currentEditImage.he
@@ -919,10 +927,10 @@ open class HEEditImageViewController: UIViewController {
         vc.modalPresentationStyle = .fullScreen
         
         vc.clipDoneBlock = { [weak self] angle, editRect, selectRatio in
-            guard let `self` = self else { return }
+            guard let self else { return }
             
             self.clipImage(status: HEClipStatus(editRect: editRect, angle: angle, ratio: selectRatio))
-            self.editorManager.storeAction(.clip(oldStatus: self.preClipStatus, newStatus: self.currentClipStatus))
+            self.actionManager.storeAction(.clip(oldStatus: self.preClipStatus, newStatus: self.currentClipStatus))
         }
         
         vc.cancelClipBlock = { [weak self] () in
@@ -1109,7 +1117,7 @@ open class HEEditImageViewController: UIViewController {
                     adjustStatus: currentAdjustStatus,
                     selectFilter: currentFilter,
                     stickers: stickerStates,
-                    actions: editorManager.actions
+                    actions: actionManager.actions
                 )
                 
                 hud.hide()
@@ -1119,11 +1127,11 @@ open class HEEditImageViewController: UIViewController {
     }
     
     @objc func undoBtnClick() {
-        editorManager.undoAction()
+        actionManager.undoAction()
     }
     
     @objc func redoBtnClick() {
-        editorManager.redoAction()
+        actionManager.redoAction()
     }
     
     @objc func tapAction(_ tap: UITapGestureRecognizer) {
@@ -1181,7 +1189,7 @@ open class HEEditImageViewController: UIViewController {
             } else if pan.state == .cancelled || pan.state == .ended {
                 setToolView(show: true, delay: 0.5)
                 if let path = drawPaths.last {
-                    editorManager.storeAction(.draw(path))
+                    actionManager.storeAction(.draw(path))
                 }
             }
         } else if selectedTool == .mosaic {
@@ -1211,7 +1219,7 @@ open class HEEditImageViewController: UIViewController {
             } else if pan.state == .cancelled || pan.state == .ended {
                 setToolView(show: true, delay: 0.5)
                 if let path = mosaicPaths.last {
-                    editorManager.storeAction(.mosaic(path))
+                    actionManager.storeAction(.mosaic(path))
                 }
                 generateNewMosaicImage()
             }
@@ -1278,7 +1286,7 @@ open class HEEditImageViewController: UIViewController {
         } else {
             eraserCircleView.isHidden = true
             if !deleteDrawPaths.isEmpty {
-                editorManager.storeAction(.eraser(deleteDrawPaths))
+                actionManager.storeAction(.eraser(deleteDrawPaths))
                 drawPaths.removeAll { deleteDrawPaths.contains($0) }
                 deleteDrawPaths.removeAll()
                 drawLine()
@@ -1441,7 +1449,7 @@ open class HEEditImageViewController: UIViewController {
         addSticker(imageSticker)
         view.layoutIfNeeded()
         
-        editorManager.storeAction(.sticker(oldState: nil, newState: imageSticker.state))
+        actionManager.storeAction(.sticker(oldState: nil, newState: imageSticker.state))
     }
     
     /// Add text sticker
@@ -1464,7 +1472,7 @@ open class HEEditImageViewController: UIViewController {
         )
         addSticker(textSticker)
         
-        editorManager.storeAction(.sticker(oldState: nil, newState: textSticker.state))
+        actionManager.storeAction(.sticker(oldState: nil, newState: textSticker.state))
     }
     
     private func addSticker(_ sticker: ZLBaseStickerView) {
@@ -1658,7 +1666,7 @@ open class HEEditImageViewController: UIViewController {
         return image
     }
     
-    func buildImage() -> UIImage {
+    private func buildImage() -> UIImage {
         let imageSize = originalImage.size
         
         let temp = UIGraphicsImageRenderer.he.renderImage(size: editImage.size) { format in
@@ -1866,7 +1874,7 @@ extension HEEditImageViewController: UICollectionViewDataSource, UICollectionVie
             switchEraserBtnStatus(false, reloadData: false)
         } else if collectionView == filterCollectionView {
             let filter = HEImageEditorConfiguration.default().filters[indexPath.row]
-            editorManager.storeAction(.filter(oldFilter: currentFilter, newFilter: filter))
+            actionManager.storeAction(.filter(oldFilter: currentFilter, newFilter: filter))
             changeFilter(filter)
         } else {
             let tool = adjustTools[indexPath.row]
@@ -1939,7 +1947,7 @@ extension HEEditImageViewController: ZLStickerViewDelegate {
             endState = nil
         }
         
-        editorManager.storeAction(.sticker(oldState: preStickerState, newState: endState))
+        actionManager.storeAction(.sticker(oldState: preStickerState, newState: endState))
         preStickerState = nil
         
         stickersContainer.subviews.forEach { view in
