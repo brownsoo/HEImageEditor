@@ -29,7 +29,7 @@ typealias HEClipImageBottomToolViewBuilder = (HEClipImageViewController) -> (too
 
 class HEClipImageViewController: UIViewController {
     
-     static let clipRatioItemSize  = CGSize(width: 54, height: 84)
+    static let clipActionColViewHeight: CGFloat = 84
     
     var animateDismiss = true
     
@@ -46,7 +46,8 @@ class HEClipImageViewController: UIViewController {
     
     let originalImage: UIImage
     
-    var actionItems: [ClipActionSection: [HEImageClipRatio]]
+    private var actionItems: [ClipActionSection: [HEImageClipRatio]]
+    private var clipActionColContentViewWidth: CGFloat
     
     var editImage: UIImage
     /// 편집 영역
@@ -146,6 +147,13 @@ class HEClipImageViewController: UIViewController {
         actionItems[.rotate] = [] // 회전
         actionItems[.separator] = [] // 구분 선
         actionItems[.crop] = HEImageEditorConfiguration.default().clipRatios // 크롭
+        
+        let spaceBetweenCell: CGFloat = 20
+        let numberOfClipItems: CGFloat = CGFloat(self.actionItems[.crop]?.count ?? 0)
+        let totalWidth = (ClipActionCell.itemSize.width * (numberOfClipItems + 1)) + ClipActionSeparatorCell.itemSize.width // 1 => rotate
+        let totalSpacingWidth = spaceBetweenCell * (numberOfClipItems - 1)
+        clipActionColContentViewWidth = totalWidth + totalSpacingWidth
+        
         self.editRect = status.editRect
         self.angle = status.angle
         if angle == -90 {
@@ -241,10 +249,10 @@ class HEClipImageViewController: UIViewController {
             bottomToolFrame = CGRect(x: 0, y: view.bounds.height, width: view.bounds.width, height: 0)
         }
         
-        let ratioColViewY = bottomToolFrame.minY - HEClipImageViewController.clipRatioItemSize.height
+        let ratioColViewY = bottomToolFrame.minY - HEClipImageViewController.clipActionColViewHeight
         //rotateBtn.frame = CGRect(x: 30, y: ratioColViewY + (HEClipImageViewController.clipRatioItemSize.height - 25) / 2, width: 25, height: 25)
         //let ratioColViewX = rotateBtn.frame.maxX + 15
-        clipActionColView.frame = CGRect(x: 0, y: ratioColViewY, width: view.bounds.width, height: HEClipImageViewController.clipRatioItemSize.height)
+        clipActionColView.frame = CGRect(x: 0, y: ratioColViewY, width: view.bounds.width, height: HEClipImageViewController.clipActionColViewHeight)
         
         if actionItems.count > 1, let index = actionItems[.crop]?.firstIndex(where: { $0 == self.selectedRatio }) {
             clipActionColView.scrollToItem(at: IndexPath(row: index, section: ClipActionSection.crop.rawValue), at: .centeredHorizontally, animated: false)
@@ -305,8 +313,8 @@ class HEClipImageViewController: UIViewController {
         clipActionColView.backgroundColor = .yellow.withAlphaComponent(0.1)
         clipActionColView.contentInsetAdjustmentBehavior = .scrollableAxes
         view.addSubview(clipActionColView)
-        clipActionColView.register(HEImageClipRatioCell.self, forCellWithReuseIdentifier: HEImageClipRatioCell.he.identifier)
-        clipActionColView.register(HEImageClipSeparatorCell.self,  forCellWithReuseIdentifier: HEImageClipSeparatorCell.he.identifier)
+        clipActionColView.register(ClipActionCell.self, forCellWithReuseIdentifier: ClipActionCell.he.identifier)
+        clipActionColView.register(ClipActionSeparatorCell.self,  forCellWithReuseIdentifier: ClipActionSeparatorCell.he.identifier)
         
         gridPanGes = UIPanGestureRecognizer(target: self, action: #selector(gridGesPanAction(_:)))
         gridPanGes.delegate = self
@@ -339,7 +347,7 @@ class HEClipImageViewController: UIViewController {
         rect.origin.x = editInsets.left
         rect.origin.y = insets.top
         rect.size.width = UIScreen.main.bounds.width - editInsets.width
-        rect.size.height = UIScreen.main.bounds.height - editInsets.top - self.bottomToolViewH - HEClipImageViewController.clipRatioItemSize.height - 25
+        rect.size.height = UIScreen.main.bounds.height - editInsets.top - self.bottomToolViewH - HEClipImageViewController.clipActionColViewHeight
         return rect
     }
     
@@ -898,7 +906,7 @@ extension HEClipImageViewController: UICollectionViewDataSource, UICollectionVie
         let ratios = actionItems[section] ?? []
         switch section {
         case .rotate, .crop:
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HEImageClipRatioCell.he.identifier, for: indexPath) as! HEImageClipRatioCell
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ClipActionCell.he.identifier, for: indexPath) as! ClipActionCell
             if section == .rotate {
                 cell.configureCell(title: localLanguageTextValue(.rotate),
                                    image: UIImage.he.getImage("icEditRotate"),
@@ -911,7 +919,7 @@ extension HEClipImageViewController: UICollectionViewDataSource, UICollectionVie
             }
             return cell
         case .separator:
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HEImageClipSeparatorCell.he.identifier, for: indexPath)
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ClipActionSeparatorCell.he.identifier, for: indexPath)
             return cell
         }
         
@@ -958,16 +966,28 @@ extension HEClipImageViewController: UICollectionViewDelegateFlowLayout {
         }
     }
     
-    
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         guard let section = ClipActionSection(rawValue: indexPath.section) else { return .zero }
         switch section {
         case .separator:
-            return CGSize(width: 33, height: 44)
+            return ClipActionSeparatorCell.itemSize
         default:
-            return CGSize(width: 54, height: 44)
+            return ClipActionCell.itemSize
         }
     }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
+        guard let section = ClipActionSection(rawValue: section) else { return .zero }
+        if section == .separator {
+            return .zero
+        }
+        let inset = (collectionView.frame.width - clipActionColContentViewWidth) / 2
+        if section == .rotate {
+            return UIEdgeInsets(top: 0, left: inset, bottom: 0, right: 0)
+        }
+        return UIEdgeInsets(top: 0, left: 0, bottom: 0, right: inset)
+    }
+    
 }
 
 
@@ -1012,7 +1032,10 @@ extension HEClipImageViewController: UIViewControllerTransitioningDelegate {
 
 // MARK: 액션 cell
 
-final class HEImageClipSeparatorCell: UICollectionViewCell {
+final class ClipActionSeparatorCell: UICollectionViewCell {
+    
+    static let itemSize  = CGSize(width: 33, height: 44)
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
@@ -1037,7 +1060,10 @@ final class HEImageClipSeparatorCell: UICollectionViewCell {
     
 }
 
-final class HEImageClipRatioCell: UICollectionViewCell {
+final class ClipActionCell: UICollectionViewCell {
+    
+    static let itemSize  = CGSize(width: 54, height: 44)
+    
     var imageView: UIImageView!
     
     var titleLabel: UILabel!
