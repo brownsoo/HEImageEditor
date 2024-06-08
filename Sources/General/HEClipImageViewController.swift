@@ -18,8 +18,9 @@ extension HEClipImageViewController {
         case bottomRight
     }
     
-    enum ClipAction {
+    enum ClipActionSection: Int {
         case rotate
+        case separator
         case crop
     }
 }
@@ -45,7 +46,7 @@ class HEClipImageViewController: UIViewController {
     
     let originalImage: UIImage
     
-    var actionItems: [(action: ClipAction, ratio: HEImageClipRatio)]
+    var actionItems: [ClipActionSection: [HEImageClipRatio]]
     
     var editImage: UIImage
     /// 편집 영역
@@ -141,8 +142,10 @@ class HEClipImageViewController: UIViewController {
     init(image: UIImage, status: HEClipStatus, bottomToolViewBuilder: HEClipImageBottomToolViewBuilder?) {
         originalImage = image
         
-        actionItems = [(.rotate, .origin)] // 회전
-        actionItems.append(contentsOf: HEImageEditorConfiguration.default().clipRatios.map { (.crop, $0) }) // 크롭
+        actionItems = [:]
+        actionItems[.rotate] = [] // 회전
+        actionItems[.separator] = [] // 구분 선
+        actionItems[.crop] = HEImageEditorConfiguration.default().clipRatios // 크롭
         self.editRect = status.editRect
         self.angle = status.angle
         if angle == -90 {
@@ -243,8 +246,8 @@ class HEClipImageViewController: UIViewController {
         //let ratioColViewX = rotateBtn.frame.maxX + 15
         clipActionColView.frame = CGRect(x: 0, y: ratioColViewY, width: view.bounds.width, height: HEClipImageViewController.clipRatioItemSize.height)
         
-        if actionItems.count > 1, let index = actionItems.firstIndex(where: { $0.1 == self.selectedRatio }) {
-            clipActionColView.scrollToItem(at: IndexPath(row: index, section: 0), at: .centeredHorizontally, animated: false)
+        if actionItems.count > 1, let index = actionItems[.crop]?.firstIndex(where: { $0 == self.selectedRatio }) {
+            clipActionColView.scrollToItem(at: IndexPath(row: index, section: ClipActionSection.crop.rawValue), at: .centeredHorizontally, animated: false)
         }
     }
     
@@ -291,18 +294,19 @@ class HEClipImageViewController: UIViewController {
         }
         
         let layout = UICollectionViewFlowLayout()
-        layout.estimatedItemSize = HEClipImageViewController.clipRatioItemSize
         layout.scrollDirection = .horizontal
-        layout.sectionInset = UIEdgeInsets(top: 0, left: 35, bottom: 0, right: 35)
-        layout.minimumInteritemSpacing = 10
+        layout.sectionInset = UIEdgeInsets(top: 0, left: 35, bottom: 4, right: 35)
         clipActionColView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         clipActionColView.delegate = self
         clipActionColView.dataSource = self
         clipActionColView.backgroundColor = .clear
         clipActionColView.isHidden = actionItems.count < 1
         clipActionColView.showsHorizontalScrollIndicator = false
+        clipActionColView.backgroundColor = .yellow.withAlphaComponent(0.1)
+        clipActionColView.contentInsetAdjustmentBehavior = .scrollableAxes
         view.addSubview(clipActionColView)
-        HEImageClipRatioCell.he.register(clipActionColView)
+        clipActionColView.register(HEImageClipRatioCell.self, forCellWithReuseIdentifier: HEImageClipRatioCell.he.identifier)
+        clipActionColView.register(HEImageClipSeparatorCell.self,  forCellWithReuseIdentifier: HEImageClipSeparatorCell.he.identifier)
         
         gridPanGes = UIPanGestureRecognizer(target: self, action: #selector(gridGesPanAction(_:)))
         gridPanGes.delegate = self
@@ -874,42 +878,98 @@ extension HEClipImageViewController: UIGestureRecognizerDelegate {
 
 // MARK: 액션 트레이 - UICollectionViewDataSource, UICollectionViewDelegate
 extension HEClipImageViewController: UICollectionViewDataSource, UICollectionViewDelegate {
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+    
+    func numberOfSections(in collectionView: UICollectionView) -> Int {
         return actionItems.count
     }
     
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        guard let section = ClipActionSection(rawValue: section) else { return 0 }
+        switch section {
+        case .rotate, .separator:
+            return 1
+        case .crop:
+            return actionItems[section]?.count ?? 0
+        }
+    }
+    
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HEImageClipRatioCell.he.identifier, for: indexPath) as! HEImageClipRatioCell
-        let item = actionItems[indexPath.row]
-        if item.action == .rotate {
-            cell.configureCell(title: localLanguageTextValue(.rotate),
-                               image: UIImage.he.getImage("icEditRotate"),
-                               ratio: item.ratio)
-        } else {
-            cell.configureCell(title: localLanguageTextValue(HELocalLanguageKey(rawValue: item.ratio.title)).uppercased(),
-                               image: UIImage.he.getImage(item.ratio.iconName),
-                               ratio: item.ratio)
+        guard let section = ClipActionSection(rawValue: indexPath.section) else { return UICollectionViewCell() }
+        let ratios = actionItems[section] ?? []
+        switch section {
+        case .rotate, .crop:
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HEImageClipRatioCell.he.identifier, for: indexPath) as! HEImageClipRatioCell
+            if section == .rotate {
+                cell.configureCell(title: localLanguageTextValue(.rotate),
+                                   image: UIImage.he.getImage("icEditRotate"),
+                                   ratio: .origin)
+            } else {
+                let ratio = ratios[indexPath.row]
+                cell.configureCell(title: localLanguageTextValue(HELocalLanguageKey(rawValue: ratio.title)).uppercased(),
+                                   image: UIImage.he.getImage(ratio.iconName),
+                                   ratio: ratio)
+            }
+            return cell
+        case .separator:
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HEImageClipSeparatorCell.he.identifier, for: indexPath)
+            return cell
         }
         
-        return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
+        guard let section = ClipActionSection(rawValue: indexPath.section) else { return false }
+        return section != .separator
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let item = actionItems[indexPath.row]
-        if item.action == .rotate {
+        guard let section = ClipActionSection(rawValue: indexPath.section) else { return }
+        if section == .separator {
+            return
+        }
+        if section == .rotate {
             self.rotate()
             return
         }
-        guard item.ratio != selectedRatio else {
+        let ratios = actionItems[section] ?? []
+        let ratio = ratios[indexPath.row]
+        guard ratio != selectedRatio else {
             return
         }
-        selectedRatio = item.ratio
+        selectedRatio = ratio
         clipActionColView.reloadData()
         clipActionColView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
         calculateClipRect()
         layoutInitialImage()
     }
 }
+
+extension HEClipImageViewController: UICollectionViewDelegateFlowLayout {
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
+        guard let section = ClipActionSection(rawValue: section) else { return 0 }
+        switch section {
+        case .crop:
+            return 20
+        case .rotate:
+            return 0
+        case .separator:
+            return 0
+        }
+    }
+    
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        guard let section = ClipActionSection(rawValue: indexPath.section) else { return .zero }
+        switch section {
+        case .separator:
+            return CGSize(width: 33, height: 44)
+        default:
+            return CGSize(width: 54, height: 44)
+        }
+    }
+}
+
 
 extension HEClipImageViewController: UIScrollViewDelegate {
     func viewForZooming(in scrollView: UIScrollView) -> UIView? {
@@ -952,7 +1012,32 @@ extension HEClipImageViewController: UIViewControllerTransitioningDelegate {
 
 // MARK: 액션 cell
 
-class HEImageClipRatioCell: UICollectionViewCell {
+final class HEImageClipSeparatorCell: UICollectionViewCell {
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupUI()
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setupUI()
+    }
+    private func setupUI() {
+        let line = UIView()
+        line.backgroundColor = .white//.withAlphaComponent(0.08)
+        contentView.addSubview(line)
+        line.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            line.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            line.topAnchor.constraint(equalTo: contentView.topAnchor),
+            line.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            line.widthAnchor.constraint(equalToConstant: 1)
+        ])
+    }
+    
+}
+
+final class HEImageClipRatioCell: UICollectionViewCell {
     var imageView: UIImageView!
     
     var titleLabel: UILabel!
@@ -1011,9 +1096,6 @@ class HEImageClipRatioCell: UICollectionViewCell {
         titleLabel.font = UIFont.systemFont(ofSize: 12)
         titleLabel.textColor = UIColor(white: 204 / 255.0, alpha: 1.0)
         titleLabel.textAlignment = .center
-        titleLabel.layer.shadowColor = UIColor.black.withAlphaComponent(0.3).cgColor
-        titleLabel.layer.shadowOffset = .zero
-        titleLabel.layer.shadowOpacity = 1
         
         
         let sv = UIStackView(arrangedSubviews: [imageView, titleLabel])
@@ -1022,12 +1104,15 @@ class HEImageClipRatioCell: UICollectionViewCell {
         sv.alignment = .center
         sv.distribution = .fill
         sv.translatesAutoresizingMaskIntoConstraints = false
+        sv.setContentHuggingPriority(.required, for: .vertical)
+        sv.setContentCompressionResistancePriority(.required, for: .vertical)
         contentView.addSubview(sv)
         NSLayoutConstraint.activate([
             sv.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             sv.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            sv.topAnchor.constraint(equalTo: contentView.topAnchor),
-            sv.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            sv.topAnchor.constraint(equalTo: contentView.topAnchor).withPriority(.defaultHigh),
+            sv.bottomAnchor.constraint(equalTo: contentView.bottomAnchor).withPriority(.defaultHigh),
+            sv.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
         ])
         
     }
