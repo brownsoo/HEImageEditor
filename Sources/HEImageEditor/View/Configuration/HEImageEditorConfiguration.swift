@@ -240,7 +240,7 @@ public extension HEImageEditorConfiguration {
 
 public class HEImageClipRatio: NSObject {
     @objc public var title: String
-    @objc public let whRatio: CGFloat
+    @objc public var whRatio: CGFloat
     @objc public let iconName: String
     @objc public let isCircle: Bool
     
