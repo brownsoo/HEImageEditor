@@ -412,7 +412,7 @@ class HEClipImageViewController: UIViewController {
         
         clipBoxFrame = frame
         shadowView.clearRect = frame
-        overlayView.frame = frame.insetBy(dx: -HEClipOverlayView.cornerLineWidth, dy: -HEClipOverlayView.cornerLineWidth)
+        overlayView.frame = frame// .insetBy(dx: -HEClipOverlayView.cornerLineWidth, dy: -HEClipOverlayView.cornerLineWidth)
         
         scrollView.contentInset = UIEdgeInsets(top: frame.minY, left: frame.minX, bottom: scrollView.frame.maxY - frame.maxY, right: scrollView.frame.maxX - frame.maxX)
         
@@ -842,6 +842,7 @@ extension HEClipImageViewController: UIGestureRecognizerDelegate {
         guard gestureRecognizer == gridPanGes else {
             return true
         }
+        // 그리드 드래그 제스쳐 
         let point = gestureRecognizer.location(in: view)
         let frame = overlayView.frame
         let innerFrame = frame.insetBy(dx: 22, dy: 22)
@@ -925,13 +926,9 @@ class HEClipShadowView: UIView {
 // MARK: 자르기 오버레이 뷰
 
 class HEClipOverlayView: UIView {
-    static let cornerLineWidth: CGFloat = 3
     
-    var cornerBoldLines: [UIView] = []
-    
-    var velLines: [UIView] = []
-    
-    var horLines: [UIView] = []
+    static let cornerLineWidth: CGFloat = 4
+    let cornerLineColor: CGColor = UIColor.he.rgba(71.0, 120.0, 222.0).cgColor
     
     var isCircle = false {
         didSet {
@@ -955,28 +952,6 @@ class HEClipOverlayView: UIView {
         super.init(frame: frame)
         backgroundColor = .clear
         clipsToBounds = false
-        // 两种方法实现裁剪框，drawrect动画效果 更好一点
-//        func line(_ isCorner: Bool) -> UIView {
-//            let line = UIView()
-//            line.backgroundColor = .white
-//            line.layer.shadowColor  = UIColor.black.cgColor
-//            if !isCorner {
-//                line.layer.shadowOffset = .zero
-//                line.layer.shadowRadius = 1.5
-//                line.layer.shadowOpacity = 0.8
-//            }
-//            self.addSubview(line)
-//            return line
-//        }
-//
-//        (0..<8).forEach { (_) in
-//            self.cornerBoldLines.append(line(true))
-//        }
-//
-//        (0..<4).forEach { (_) in
-//            self.velLines.append(line(false))
-//            self.horLines.append(line(false))
-//        }
     }
     
     @available(*, unavailable)
@@ -987,162 +962,108 @@ class HEClipOverlayView: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
         setNeedsDisplay()
-//        let borderLineLength: CGFloat = 20
-//        let borderLineWidth: CGFloat = ZLClipOverlayView.cornerLineWidth
-//        for (i, line) in self.cornerBoldLines.enumerated() {
-//            switch i {
-//            case 0:
-//                // 左上 hor
-//                line.frame = CGRect(x: -borderLineWidth, y: -borderLineWidth, width: borderLineLength, height: borderLineWidth)
-//            case 1:
-//                // 左上 vel
-//                line.frame = CGRect(x: -borderLineWidth, y: -borderLineWidth, width: borderLineWidth, height: borderLineLength)
-//            case 2:
-//                // 右上 hor
-//                line.frame = CGRect(x: self.bounds.width-borderLineLength+borderLineWidth, y: -borderLineWidth, width: borderLineLength, height: borderLineWidth)
-//            case 3:
-//                // 右上 vel
-//                line.frame = CGRect(x: self.bounds.width, y: -borderLineWidth, width: borderLineWidth, height: borderLineLength)
-//            case 4:
-//                // 左下 hor
-//                line.frame = CGRect(x: -borderLineWidth, y: self.bounds.height, width: borderLineLength, height: borderLineWidth)
-//            case 5:
-//                // 左下 vel
-//                line.frame = CGRect(x: -borderLineWidth, y: self.bounds.height-borderLineLength+borderLineWidth, width: borderLineWidth, height: borderLineLength)
-//            case 6:
-//                // 右下 hor
-//                line.frame = CGRect(x: self.bounds.width-borderLineLength+borderLineWidth, y: self.bounds.height, width: borderLineLength, height: borderLineWidth)
-//            case 7:
-//                line.frame = CGRect(x: self.bounds.width, y: self.bounds.height-borderLineLength+borderLineWidth, width: borderLineWidth, height: borderLineLength)
-//
-//            default:
-//                break
-//            }
-//        }
-//
-//        let normalLineWidth: CGFloat = 1
-//        var x: CGFloat = 0
-//        var y: CGFloat = -1
-//        // 横线
-//        for (index, line) in self.horLines.enumerated() {
-//            if index == 0 || index == 3 {
-//                x = borderLineLength-borderLineWidth
-//            } else  {
-//                x = 0
-//            }
-//            line.frame = CGRect(x: x, y: y, width: self.bounds.width - x * 2, height: normalLineWidth)
-//            y += (self.bounds.height + 1) / 3
-//        }
-//
-//        x = -1
-//        y = 0
-//        // 竖线
-//        for (index, line) in self.velLines.enumerated() {
-//            if index == 0 || index == 3 {
-//                y = borderLineLength-borderLineWidth
-//            } else  {
-//                y = 0
-//            }
-//            line.frame = CGRect(x: x, y: y, width: normalLineWidth, height: self.bounds.height - y * 2)
-//            x += (self.bounds.width + 1) / 3
-//        }
     }
     
     override func draw(_ rect: CGRect) {
-        let context = UIGraphicsGetCurrentContext()
+        guard let context = UIGraphicsGetCurrentContext() else { return }
         
-        context?.setStrokeColor(UIColor.white.cgColor)
-        context?.setLineWidth(1)
-        context?.beginPath()
+        context.setStrokeColor(UIColor.white.cgColor)
+        context.setLineWidth(1)
+        context.beginPath()
         
         if isCircle {
             let center = CGPoint(x: bounds.width / 2, y: bounds.height / 2)
             let radius = rect.width / 2 - HEClipOverlayView.cornerLineWidth
             if !isEditing {
                 // top left
-                context?.move(to: CGPoint(x: HEClipOverlayView.cornerLineWidth, y: HEClipOverlayView.cornerLineWidth))
-                context?.addLine(to: CGPoint(x: rect.width / 2, y: rect.origin.y + 3))
-                context?.addArc(center: center, radius: radius, startAngle: .pi * 1.5, endAngle: .pi, clockwise: true)
-                context?.closePath()
+                context.move(to: CGPoint(x: HEClipOverlayView.cornerLineWidth, y: HEClipOverlayView.cornerLineWidth))
+                context.addLine(to: CGPoint(x: rect.width / 2, y: rect.origin.y + 3))
+                context.addArc(center: center, radius: radius, startAngle: .pi * 1.5, endAngle: .pi, clockwise: true)
+                context.closePath()
                 
                 // top right
-                context?.move(to: CGPoint(x: rect.width - HEClipOverlayView.cornerLineWidth, y: HEClipOverlayView.cornerLineWidth))
-                context?.addLine(to: CGPoint(x: rect.width - HEClipOverlayView.cornerLineWidth, y: rect.height / 2))
-                context?.addArc(center: center, radius: radius, startAngle: 0, endAngle: .pi * 1.5, clockwise: true)
-                context?.closePath()
+                context.move(to: CGPoint(x: rect.width - HEClipOverlayView.cornerLineWidth, y: HEClipOverlayView.cornerLineWidth))
+                context.addLine(to: CGPoint(x: rect.width - HEClipOverlayView.cornerLineWidth, y: rect.height / 2))
+                context.addArc(center: center, radius: radius, startAngle: 0, endAngle: .pi * 1.5, clockwise: true)
+                context.closePath()
                 
                 // bottom left
-                context?.move(to: CGPoint(x: HEClipOverlayView.cornerLineWidth, y: rect.height - HEClipOverlayView.cornerLineWidth))
-                context?.addLine(to: CGPoint(x: HEClipOverlayView.cornerLineWidth, y: rect.height / 2))
-                context?.addArc(center: center, radius: radius, startAngle: .pi, endAngle: .pi / 2, clockwise: true)
-                context?.closePath()
+                context.move(to: CGPoint(x: HEClipOverlayView.cornerLineWidth, y: rect.height - HEClipOverlayView.cornerLineWidth))
+                context.addLine(to: CGPoint(x: HEClipOverlayView.cornerLineWidth, y: rect.height / 2))
+                context.addArc(center: center, radius: radius, startAngle: .pi, endAngle: .pi / 2, clockwise: true)
+                context.closePath()
                 
                 // bottom right
-                context?.move(to: CGPoint(x: rect.width - HEClipOverlayView.cornerLineWidth, y: rect.height - HEClipOverlayView.cornerLineWidth))
-                context?.addLine(to: CGPoint(x: rect.width / 2, y: rect.height - HEClipOverlayView.cornerLineWidth))
-                context?.addArc(center: center, radius: radius, startAngle: .pi / 2, endAngle: 0, clockwise: true)
-                context?.closePath()
+                context.move(to: CGPoint(x: rect.width - HEClipOverlayView.cornerLineWidth, y: rect.height - HEClipOverlayView.cornerLineWidth))
+                context.addLine(to: CGPoint(x: rect.width / 2, y: rect.height - HEClipOverlayView.cornerLineWidth))
+                context.addArc(center: center, radius: radius, startAngle: .pi / 2, endAngle: 0, clockwise: true)
+                context.closePath()
                 
-                context?.setFillColor(UIColor.black.withAlphaComponent(0.7).cgColor)
-                context?.fillPath()
+                context.setFillColor(UIColor.black.withAlphaComponent(0.7).cgColor)
+                context.fillPath()
             }
             
-            context?.addArc(center: center, radius: radius, startAngle: 0, endAngle: .pi * 2, clockwise: false)
+            context.addArc(center: center, radius: radius, startAngle: 0, endAngle: .pi * 2, clockwise: false)
         }
         
         let circleDiff: CGFloat = (3 - 2 * sqrt(2)) * (rect.width - 2 * HEClipOverlayView.cornerLineWidth) / 6
         
-        var dw: CGFloat = 3
-        for i in 0..<4 {
+        var dw: CGFloat = 1
+        let spanw = (rect.size.width - 2) / 3
+        for i in 0..<4 { // 세로선
             let isInnerLine = isCircle && 1...2 ~= i
-            context?.move(to: CGPoint(x: rect.origin.x + dw, y: HEClipOverlayView.cornerLineWidth + (isInnerLine ? circleDiff : 0)))
-            context?.addLine(to: CGPoint(x: rect.origin.x + dw, y: rect.height - HEClipOverlayView.cornerLineWidth - (isInnerLine ? circleDiff : 0)))
-            dw += (rect.size.width - 6) / 3
+            context.move(to: CGPoint(x: rect.origin.x + dw, y: (isInnerLine ? circleDiff : 0) + 1))
+            context.addLine(to: CGPoint(x: rect.origin.x + dw,
+                                        y: rect.height - (isInnerLine ? circleDiff : 0) - 1))
+            dw += spanw
         }
 
-        var dh: CGFloat = 3
-        for i in 0..<4 {
+        var dh: CGFloat = 1
+        let spanh = (rect.size.height - 2) / 3
+        for i in 0..<4 { // 가로선
             let isInnerLine = isCircle && 1...2 ~= i
-            context?.move(to: CGPoint(x: HEClipOverlayView.cornerLineWidth + (isInnerLine ? circleDiff : 0), y: rect.origin.y + dh))
-            context?.addLine(to: CGPoint(x: rect.width - HEClipOverlayView.cornerLineWidth - (isInnerLine ? circleDiff : 0), y: rect.origin.y + dh))
-            dh += (rect.size.height - 6) / 3
+            context.move(to: CGPoint(x: (isInnerLine ? circleDiff : 0) + 1, y: rect.origin.y + dh))
+            context.addLine(to: CGPoint(x: rect.width - (isInnerLine ? circleDiff : 0) - 1, y: rect.origin.y + dh))
+            dh += spanh
         }
 
-        context?.strokePath()
-
-        context?.setLineWidth(HEClipOverlayView.cornerLineWidth)
-
+        context.strokePath()
+        
+        
+        context.setStrokeColor(cornerLineColor)
+        context.setLineWidth(HEClipOverlayView.cornerLineWidth)
+        let boldLineHalfThickness: CGFloat = HEClipOverlayView.cornerLineWidth / 2
         let boldLineLength: CGFloat = 20
-        // 左上
-        context?.move(to: CGPoint(x: 0, y: 1.5))
-        context?.addLine(to: CGPoint(x: boldLineLength, y: 1.5))
+        // 좌상
+        context.move(to: CGPoint(x: 0, y: boldLineHalfThickness))
+        context.addLine(to: CGPoint(x: boldLineLength, y: boldLineHalfThickness))
 
-        context?.move(to: CGPoint(x: 1.5, y: 0))
-        context?.addLine(to: CGPoint(x: 1.5, y: boldLineLength))
+        context.move(to: CGPoint(x: boldLineHalfThickness, y: 0))
+        context.addLine(to: CGPoint(x: boldLineHalfThickness, y: boldLineLength))
 
-        // 右上
-        context?.move(to: CGPoint(x: rect.width - boldLineLength, y: 1.5))
-        context?.addLine(to: CGPoint(x: rect.width, y: 1.5))
+        // 우상
+        context.move(to: CGPoint(x: rect.width - boldLineLength, y: boldLineHalfThickness))
+        context.addLine(to: CGPoint(x: rect.width, y: boldLineHalfThickness))
 
-        context?.move(to: CGPoint(x: rect.width - 1.5, y: 0))
-        context?.addLine(to: CGPoint(x: rect.width - 1.5, y: boldLineLength))
+        context.move(to: CGPoint(x: rect.width - boldLineHalfThickness, y: 0))
+        context.addLine(to: CGPoint(x: rect.width - boldLineHalfThickness, y: boldLineLength))
 
-        // 左下
-        context?.move(to: CGPoint(x: 1.5, y: rect.height - boldLineLength))
-        context?.addLine(to: CGPoint(x: 1.5, y: rect.height))
+        // 좌하
+        context.move(to: CGPoint(x: boldLineHalfThickness, y: rect.height - boldLineLength))
+        context.addLine(to: CGPoint(x: boldLineHalfThickness, y: rect.height))
 
-        context?.move(to: CGPoint(x: 0, y: rect.height - 1.5))
-        context?.addLine(to: CGPoint(x: boldLineLength, y: rect.height - 1.5))
+        context.move(to: CGPoint(x: 0, y: rect.height - boldLineHalfThickness))
+        context.addLine(to: CGPoint(x: boldLineLength, y: rect.height - boldLineHalfThickness))
 
-        // 右下
-        context?.move(to: CGPoint(x: rect.width - boldLineLength, y: rect.height - 1.5))
-        context?.addLine(to: CGPoint(x: rect.width, y: rect.height - 1.5))
+        // 우하
+        context.move(to: CGPoint(x: rect.width - boldLineLength, y: rect.height - boldLineHalfThickness))
+        context.addLine(to: CGPoint(x: rect.width, y: rect.height - boldLineHalfThickness))
 
-        context?.move(to: CGPoint(x: rect.width - 1.5, y: rect.height - boldLineLength))
-        context?.addLine(to: CGPoint(x: rect.width - 1.5, y: rect.height))
+        context.move(to: CGPoint(x: rect.width - boldLineHalfThickness, y: rect.height - boldLineLength))
+        context.addLine(to: CGPoint(x: rect.width - boldLineHalfThickness, y: rect.height))
 
-        context?.strokePath()
+        context.strokePath()
 
-        context?.setShadow(offset: CGSize(width: 1, height: 1), blur: 0)
+        context.setShadow(offset: CGSize(width: 1, height: 1), blur: 0)
     }
 }
