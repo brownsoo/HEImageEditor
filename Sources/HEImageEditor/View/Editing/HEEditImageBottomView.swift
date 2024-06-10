@@ -85,7 +85,7 @@ open class HEEditImageBottomView: UIView, DebugLine {
         }
         let toolsWidth = (Self.itemSize.width + interitemSpacing) * toolsCount - interitemSpacing
         let inset = (fullSpace - toolsWidth) / 2
-        
+        trace("interitemSpacing \(interitemSpacing)")
         self.toolCollectionView.contentInset = UIEdgeInsets(top: 0,
                                                             left: max(inset, Self.padding.left),
                                                             bottom: 0,
@@ -95,10 +95,7 @@ open class HEEditImageBottomView: UIView, DebugLine {
     open override func layoutSubviews() {
         super.layoutSubviews()
         self.calculateCellWidth()
-        
-        
     }
-    
 }
 
 extension HEEditImageBottomView: UICollectionViewDelegate, UICollectionViewDataSource {

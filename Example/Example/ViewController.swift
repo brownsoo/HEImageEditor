@@ -291,12 +291,7 @@ class ViewController: UIViewController {
     
     func editImage(_ image: UIImage, editModel: HEEditImageModel?) {
         let insets = view.safeAreaInsets
-        let clipBottomView: HEClipImageBottomViewBuilder = { _ in
-            let empty = UIView()
-            empty.isUserInteractionEnabled = false
-            return (empty, 72 + insets.bottom)
-        }
-        HEEditImageViewController.showImageEditor(parent: self, image: image, editModel: editModel, clipImageBottomViewBuilder: clipBottomView) { [weak self] resImage, editModel in
+        HEEditImageViewController.showImageEditor(parent: self, image: image, editModel: editModel, clipImageBottomViewBuilder: nil) { [weak self] resImage, editModel in
             self?.resultImageView.image = resImage
             self?.resultImageEditModel = editModel
         }

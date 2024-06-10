@@ -164,9 +164,6 @@ public class HEImageEditorConfiguration: NSObject {
             _impactFeedbackStyle = .medium
         }
     }
-    
-    /// clip 툴 하나만 존재하고 이 값이 true 이면, 자르기 화면이 바로 보여진다.
-    @objc public var showClipDirectlyIfOnlyHasClipTool = false
 }
 
 public extension HEImageEditorConfiguration {

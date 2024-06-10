@@ -92,9 +92,4 @@ public extension HEImageEditorConfiguration {
         return self
     }
     
-    @discardableResult
-    func showClipDirectlyIfOnlyHasClipTool(_ value: Bool) -> HEImageEditorConfiguration {
-        showClipDirectlyIfOnlyHasClipTool = value
-        return self
-    }
 }
