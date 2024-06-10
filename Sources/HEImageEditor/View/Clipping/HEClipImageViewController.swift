@@ -63,9 +63,10 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
     
     var imageView: UIImageView!
     
+    /// 잘려진 부분을 희미하게 보이기 위한 레이어
     var shadowView: HEClipShadowView!
     
-    var overlayView: HEClipOverlayView!
+    var gridView: HEClipGridView!
     
     var gridPanGes: UIPanGestureRecognizer!
     
@@ -93,7 +94,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
     
     var selectedRatio: HEImageClipRatio {
         didSet {
-            overlayView.isCircle = selectedRatio.isCircle
+            gridView.isCircle = selectedRatio.isCircle
         }
     }
     
@@ -201,7 +202,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
             }) { _ in
                 UIView.animate(withDuration: 0.1, animations: {
                     self.scrollView.alpha = 1
-                    self.overlayView.alpha = 1
+                    self.gridView.alpha = 1
                 }) { _ in
                     animateImageView.removeFromSuperview()
                 }
@@ -209,7 +210,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         } else {
             bottomToolView?.alpha = 1
             scrollView.alpha = 1
-            overlayView.alpha = 1
+            gridView.alpha = 1
         }
     }
     
@@ -231,9 +232,9 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         } else {
             bottomToolFrame = CGRect(x: 0, y: view.bounds.height, width: view.bounds.width, height: 0)
         }
+        let clipToolViewY = bottomToolFrame.minY - HEClipActionToolView.viewHeight
         
-        let ratioColViewY = bottomToolFrame.minY - HEClipActionToolView.viewHeight
-        clipActionToolView.frame = CGRect(x: 0, y: ratioColViewY, width: view.bounds.width, height: HEClipActionToolView.viewHeight)
+        clipActionToolView.frame = CGRect(x: 0, y: clipToolViewY, width: view.bounds.width, height: HEClipActionToolView.viewHeight)
         clipActionToolView.selectRatio(self.selectedRatio, animated: false)
     }
     
@@ -247,6 +248,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         view.backgroundColor = .black
         
         scrollView = UIScrollView()
+        scrollView.backgroundColor = .black
         scrollView.alwaysBounceVertical = true
         scrollView.alwaysBounceHorizontal = true
         scrollView.showsVerticalScrollIndicator = false
@@ -268,10 +270,10 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         shadowView.backgroundColor = UIColor.black.withAlphaComponent(0.3)
         view.addSubview(shadowView)
         
-        overlayView = HEClipOverlayView()
-        overlayView.isUserInteractionEnabled = false
-        overlayView.isCircle = selectedRatio.isCircle
-        view.addSubview(overlayView)
+        gridView = HEClipGridView()
+        gridView.isUserInteractionEnabled = false
+        gridView.isCircle = selectedRatio.isCircle
+        view.addSubview(gridView)
         
         if let builder  = self.bottomToolViewBuilder?(self) {
             view.addSubview(builder.toolView)
@@ -287,7 +289,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         scrollView.panGestureRecognizer.require(toFail: gridPanGes)
         
         scrollView.alpha = 0
-        overlayView.alpha = 0
+        gridView.alpha = 0
         bottomToolView?.alpha = 0
     }
     
@@ -421,7 +423,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         
         clipBoxFrame = frame
         shadowView.clearRect = frame
-        overlayView.frame = frame// .insetBy(dx: -HEClipOverlayView.cornerLineWidth, dy: -HEClipOverlayView.cornerLineWidth)
+        gridView.frame = frame// .insetBy(dx: -HEClipOverlayView.cornerLineWidth, dy: -HEClipOverlayView.cornerLineWidth)
         
         scrollView.contentInset = UIEdgeInsets(top: frame.minY, left: frame.minX, bottom: scrollView.frame.maxY - frame.maxY, right: scrollView.frame.maxX - frame.maxX)
         
@@ -502,14 +504,14 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         
         let toFrame = view.convert(containerView.frame, from: scrollView)
         let transform = CGAffineTransform(rotationAngle: -CGFloat.pi / 2)
-        overlayView.alpha = 0
+        gridView.alpha = 0
         containerView.alpha = 0
         UIView.animate(withDuration: 0.3, animations: {
             animateImageView.transform = transform
             animateImageView.frame = toFrame
         }) { _ in
             animateImageView.removeFromSuperview()
-            self.overlayView.alpha = 1
+            self.gridView.alpha = 1
             self.containerView.alpha = 1
             self.isRotating = false
         }
@@ -716,7 +718,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
     func startEditing() {
         cleanTimer()
         shadowView.alpha = 0
-        overlayView.isEditing = true
+        gridView.isEditing = true
         if clipActionToolView.alpha != 0 {
             clipActionToolView.layer.removeAllAnimations()
             UIView.animate(withDuration: 0.2) {
@@ -726,7 +728,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
     }
     
     @objc func endEditing() {
-        overlayView.isEditing = false
+        gridView.isEditing = false
         moveClipContentToCenter()
     }
     
@@ -831,7 +833,7 @@ extension HEClipImageViewController: UIGestureRecognizerDelegate {
         }
         // 그리드 드래그 제스쳐
         let point = gestureRecognizer.location(in: view)
-        let frame = overlayView.frame
+        let frame = gridView.frame
         let innerFrame = frame.insetBy(dx: 22, dy: 22)
         let outerFrame = frame.insetBy(dx: -22, dy: -22)
         
@@ -912,7 +914,7 @@ class HEClipShadowView: UIView {
 
 // MARK: 자르기 오버레이 뷰
 
-class HEClipOverlayView: UIView {
+class HEClipGridView: UIView {
     
     static let cornerLineWidth: CGFloat = 4
     let cornerLineColor: CGColor = UIColor.he.rgba(71.0, 120.0, 222.0).cgColor
@@ -960,29 +962,29 @@ class HEClipOverlayView: UIView {
         
         if isCircle {
             let center = CGPoint(x: bounds.width / 2, y: bounds.height / 2)
-            let radius = rect.width / 2 - HEClipOverlayView.cornerLineWidth
+            let radius = rect.width / 2 - HEClipGridView.cornerLineWidth
             if !isEditing {
                 // top left
-                context.move(to: CGPoint(x: HEClipOverlayView.cornerLineWidth, y: HEClipOverlayView.cornerLineWidth))
+                context.move(to: CGPoint(x: HEClipGridView.cornerLineWidth, y: HEClipGridView.cornerLineWidth))
                 context.addLine(to: CGPoint(x: rect.width / 2, y: rect.origin.y + 3))
                 context.addArc(center: center, radius: radius, startAngle: .pi * 1.5, endAngle: .pi, clockwise: true)
                 context.closePath()
                 
                 // top right
-                context.move(to: CGPoint(x: rect.width - HEClipOverlayView.cornerLineWidth, y: HEClipOverlayView.cornerLineWidth))
-                context.addLine(to: CGPoint(x: rect.width - HEClipOverlayView.cornerLineWidth, y: rect.height / 2))
+                context.move(to: CGPoint(x: rect.width - HEClipGridView.cornerLineWidth, y: HEClipGridView.cornerLineWidth))
+                context.addLine(to: CGPoint(x: rect.width - HEClipGridView.cornerLineWidth, y: rect.height / 2))
                 context.addArc(center: center, radius: radius, startAngle: 0, endAngle: .pi * 1.5, clockwise: true)
                 context.closePath()
                 
                 // bottom left
-                context.move(to: CGPoint(x: HEClipOverlayView.cornerLineWidth, y: rect.height - HEClipOverlayView.cornerLineWidth))
-                context.addLine(to: CGPoint(x: HEClipOverlayView.cornerLineWidth, y: rect.height / 2))
+                context.move(to: CGPoint(x: HEClipGridView.cornerLineWidth, y: rect.height - HEClipGridView.cornerLineWidth))
+                context.addLine(to: CGPoint(x: HEClipGridView.cornerLineWidth, y: rect.height / 2))
                 context.addArc(center: center, radius: radius, startAngle: .pi, endAngle: .pi / 2, clockwise: true)
                 context.closePath()
                 
                 // bottom right
-                context.move(to: CGPoint(x: rect.width - HEClipOverlayView.cornerLineWidth, y: rect.height - HEClipOverlayView.cornerLineWidth))
-                context.addLine(to: CGPoint(x: rect.width / 2, y: rect.height - HEClipOverlayView.cornerLineWidth))
+                context.move(to: CGPoint(x: rect.width - HEClipGridView.cornerLineWidth, y: rect.height - HEClipGridView.cornerLineWidth))
+                context.addLine(to: CGPoint(x: rect.width / 2, y: rect.height - HEClipGridView.cornerLineWidth))
                 context.addArc(center: center, radius: radius, startAngle: .pi / 2, endAngle: 0, clockwise: true)
                 context.closePath()
                 
@@ -993,7 +995,7 @@ class HEClipOverlayView: UIView {
             context.addArc(center: center, radius: radius, startAngle: 0, endAngle: .pi * 2, clockwise: false)
         }
         
-        let circleDiff: CGFloat = (3 - 2 * sqrt(2)) * (rect.width - 2 * HEClipOverlayView.cornerLineWidth) / 6
+        let circleDiff: CGFloat = (3 - 2 * sqrt(2)) * (rect.width - 2 * HEClipGridView.cornerLineWidth) / 6
         
         var dw: CGFloat = 1
         let spanw = (rect.size.width - 2) / 3
@@ -1018,8 +1020,8 @@ class HEClipOverlayView: UIView {
         
         
         context.setStrokeColor(cornerLineColor)
-        context.setLineWidth(HEClipOverlayView.cornerLineWidth)
-        let boldLineHalfThickness: CGFloat = HEClipOverlayView.cornerLineWidth / 2
+        context.setLineWidth(HEClipGridView.cornerLineWidth)
+        let boldLineHalfThickness: CGFloat = HEClipGridView.cornerLineWidth / 2
         let boldLineLength: CGFloat = 20
         // 좌상
         context.move(to: CGPoint(x: 0, y: boldLineHalfThickness))
