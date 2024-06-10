@@ -63,7 +63,6 @@ class HEClipActionToolView: UIView {
         clipActionColView.isHidden = actionItems.count < 1
         clipActionColView.showsHorizontalScrollIndicator = false
         clipActionColView.backgroundColor = .yellow.withAlphaComponent(0.1)
-        clipActionColView.contentInsetAdjustmentBehavior = .scrollableAxes
         self.addSubview(clipActionColView)
         clipActionColView.register(ClipActionCell.self, forCellWithReuseIdentifier: ClipActionCell.he.identifier)
         clipActionColView.register(ClipActionSeparatorCell.self,  forCellWithReuseIdentifier: ClipActionSeparatorCell.he.identifier)
@@ -218,7 +217,6 @@ final class ClipActionCell: UICollectionViewCell {
     
     required init?(coder: NSCoder) {
         super.init(coder: coder)
-        setupUI()
     }
     
     private func setupUI() {
@@ -277,7 +275,7 @@ final class ClipActionSeparatorCell: UICollectionViewCell {
     }
     private func setupUI() {
         let line = UIView()
-        line.backgroundColor = .white//.withAlphaComponent(0.08)
+        line.backgroundColor = .white.withAlphaComponent(0.08)
         contentView.addSubview(line)
         line.translatesAutoresizingMaskIntoConstraints = false
         line.setContentHuggingPriority(.fittingSizeLevel, for: .vertical)

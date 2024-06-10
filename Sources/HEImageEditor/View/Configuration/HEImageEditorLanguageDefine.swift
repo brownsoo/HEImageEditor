@@ -77,3 +77,7 @@ func localLanguageTextValue(_ key: HELocalLanguageKey) -> String {
     
     return Bundle.heLocalizedString(key.rawValue)
 }
+
+func localLanguageTextValue(_ text: String) -> String {
+    return Bundle.heLocalizedString(text)
+}

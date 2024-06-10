@@ -8,14 +8,14 @@
 import Foundation
 
 public protocol HEImageViewPager {
-    var effectImageViews: [HEImageView] { get }
-    var selectedEffectImageView: HEImageView? { get }
+    var effectImageViews: [HEEditImageView] { get }
+    var selectedEffectImageView: HEEditImageView? { get }
     var currentPage: Int { get set }
     var pageCount: Int { get }
     
-    func addEffectImageView(imageView: HEImageView)
-    func removeEffectImageView(imageView: HEImageView)
-    func selectEffectImageView(imageView: HEImageView)
+    func addEffectImageView(imageView: HEEditImageView)
+    func removeEffectImageView(imageView: HEEditImageView)
+    func selectEffectImageView(imageView: HEEditImageView)
     func nextPage()
     func prevPage()
 }

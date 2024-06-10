@@ -106,7 +106,7 @@ public class HEImageEditorUIConfiguration: NSObject {
     @objc public var toolTitleTintColor = UIColor.white
 
     /// The highlighted color of the tool icon.
-    @objc public var toolIconHighlightedColor: UIColor?
+    @objc public var toolIconHighlightedColor: UIColor? = .he.rgba(71, 120, 222)
 }
 
 // MARK: Image source deploy

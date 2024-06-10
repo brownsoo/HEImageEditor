@@ -10,3 +10,10 @@
 "saturation" = "Saturation";
 "textStickerRemoveTips" = "Drag here to remove";
 "hudProcessing" = "Processing";
+"effect-draw"="Draw";
+"effect-clip"="Clip";
+"effect-imageSticker"="Sticker";
+"effect-textSticker"="Text";
+"effect-mosaic"="Mosaic";
+"effect-filter"="Filter";
+"effect-adjust"="Adjust";

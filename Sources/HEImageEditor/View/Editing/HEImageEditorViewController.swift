@@ -41,44 +41,11 @@ public struct HEAdjustStatus {
         self.saturation = saturation
     }
 }
-/// 편집 대상 모델
-public class HEEditImageModel: NSObject {
-    /// 드로잉스
-    public let drawPaths: [HEDrawPath]
-    /// 모자잌스
-    public let mosaicPaths: [HEMosaicPath]
-    
-    public let clipStatus: HEClipStatus?
-    /// 색조 적용 상태
-    public let adjustStatus: HEAdjustStatus
-    
-    public let selectFilter: HEFilter?
-    
-    public let stickers: [HEBaseStickertState]
-    
-    public let actions: [HEEditorAction]
-    
-    public init(
-        drawPaths: [HEDrawPath] = [],
-        mosaicPaths: [HEMosaicPath] = [],
-        clipStatus: HEClipStatus? = nil,
-        adjustStatus: HEAdjustStatus = HEAdjustStatus(),
-        selectFilter: HEFilter? = nil,
-        stickers: [HEBaseStickertState] = [],
-        actions: [HEEditorAction] = []
-    ) {
-        self.drawPaths = drawPaths
-        self.mosaicPaths = mosaicPaths
-        self.clipStatus = clipStatus
-        self.adjustStatus = adjustStatus
-        self.selectFilter = selectFilter
-        self.stickers = stickers
-        self.actions = actions
-        super.init()
-    }
-}
 
-open class HEEditImageViewController: UIViewController {
+public typealias HEEditImageBottomViewBuilder = (HEEditImageView) -> (toolView: UIView, height: CGFloat)
+
+
+open class HEEditImageViewController: UIViewController, HEEditImageView {
     static let maxDrawLineImageWidth: CGFloat = 600
     
     static let shadowColorFrom = UIColor.black.withAlphaComponent(0.35).cgColor
@@ -130,6 +97,7 @@ open class HEEditImageViewController: UIViewController {
         return layer
     }()
      
+    /// 하단 툴바 영역
     open lazy var bottomShadowView: HEPassThroughView = {
         let shadowView = HEPassThroughView()
         shadowView.findResponderSticker = findResponderSticker(_:)
@@ -150,18 +118,6 @@ open class HEEditImageViewController: UIViewController {
         btn.setTitle(localLanguageTextValue(.cancel), for: .normal)
         btn.addTarget(self, action: #selector(cancelBtnClick), for: .touchUpInside)
         btn.enlargeInset = 30
-        return btn
-    }()
-    
-    open lazy var doneBtn: UIButton = {
-        let btn = UIButton(type: .custom)
-        btn.titleLabel?.font = HEImageEditorLayout.bottomToolTitleFont
-        btn.backgroundColor = .he.editDoneBtnBgColor
-        btn.setTitle(localLanguageTextValue(.editFinish), for: .normal)
-        btn.setTitleColor(.he.editDoneBtnTitleColor, for: .normal)
-        btn.addTarget(self, action: #selector(doneBtnClick), for: .touchUpInside)
-        btn.layer.masksToBounds = true
-        btn.layer.cornerRadius = HEImageEditorLayout.bottomToolBtnCornerRadius
         return btn
     }()
     
@@ -187,22 +143,8 @@ open class HEEditImageViewController: UIViewController {
         return btn
     }()
     
-    open lazy var editToolCollectionView: UICollectionView = {
-        let layout = UICollectionViewFlowLayout()
-        layout.itemSize = CGSize(width: 30, height: 30)
-        layout.minimumLineSpacing = 20
-        layout.minimumInteritemSpacing = 20
-        layout.scrollDirection = .horizontal
-        
-        let view = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        view.backgroundColor = .clear
-        view.delegate = self
-        view.dataSource = self
-        view.showsHorizontalScrollIndicator = false
-        ZLEditToolCell.he.register(view)
-        
-        return view
-    }()
+    private var bottomView: UIView!
+    private var bottomViewHeight: CGFloat!
     
     open var drawColorCollectionView: UICollectionView?
     
@@ -350,7 +292,7 @@ open class HEEditImageViewController: UIViewController {
         return pan
     }()
     
-    /// 是否允许交换图片宽高
+    /// 이미지 너비와 높이의 교환 허용 여부
     private var shouldSwapSize: Bool {
         currentClipStatus.angle.he.toPi.truncatingRemainder(dividingBy: .pi) != 0
     }
@@ -369,6 +311,10 @@ open class HEEditImageViewController: UIViewController {
     
     @objc public var editFinishBlock: ((UIImage, HEEditImageModel?) -> Void)?
     
+    public var clipImageBottomViewBuilder: HEClipImageBottomViewBuilder?
+    
+    public var bottomViewBuilder: HEEditImageBottomViewBuilder
+    
     override open var prefersStatusBarHidden: Bool { true }
     
     override open var prefersHomeIndicatorAutoHidden: Bool { true }
@@ -382,11 +328,15 @@ open class HEEditImageViewController: UIViewController {
         trace()
     }
     
-    @objc public class func showEditImageVC(
-        parentVC: UIViewController?,
+    /// 에디터 시작 팩토리 함수
+    ///
+    public class func showImageEditor(
+        parent: UIViewController,
         animate: Bool = true,
         image: UIImage,
         editModel: HEEditImageModel? = nil,
+        bottomViewBuilder: HEEditImageBottomViewBuilder? = nil,
+        clipImageBottomViewBuilder: HEClipImageBottomViewBuilder? = nil,
         completion: ((UIImage, HEEditImageModel?) -> Void)?
     ) {
         let tools = HEImageEditorConfiguration.default().tools
@@ -394,13 +344,7 @@ open class HEEditImageViewController: UIViewController {
             let vc = HEClipImageViewController(
                 image: image,
                 status: editModel?.clipStatus ?? HEClipStatus(editRect: CGRect(origin: .zero, size: image.size)),
-                bottomToolViewBuilder: { vc in
-                    let toolView = HEClipBottomToolView()
-                    toolView.cancelClickListener = { vc.cancelEdit() }
-                    toolView.doneClickListener = { vc.doneEdit() }
-                    toolView.revertClickListener = { vc.revert() }
-                    return (toolView, HEClipBottomToolView.estimateHeight)
-                }
+                bottomViewBuilder: clipImageBottomViewBuilder
             )
             
             vc.clipDoneBlock = { angle, editRect, ratio in
@@ -417,19 +361,21 @@ open class HEEditImageViewController: UIViewController {
             }
             vc.animateDismiss = animate
             vc.modalPresentationStyle = .fullScreen
-            parentVC?.present(vc, animated: animate, completion: nil)
+            parent.present(vc, animated: animate, completion: nil)
         } else {
-            let vc = HEEditImageViewController(image: image, editModel: editModel)
+            let vc = HEEditImageViewController(image: image, editModel: editModel, bottomViewBuilder: bottomViewBuilder)
+            vc.clipImageBottomViewBuilder = clipImageBottomViewBuilder
             vc.editFinishBlock = { ei, editImageModel in
                 completion?(ei, editImageModel)
             }
             vc.animateDismiss = animate
             vc.modalPresentationStyle = .fullScreen
-            parentVC?.present(vc, animated: animate, completion: nil)
+            parent.present(vc, animated: animate, completion: nil)
         }
     }
     
-    @objc public init(image: UIImage, editModel: HEEditImageModel? = nil) {
+    /// 에디터 생성
+    public init(image: UIImage, editModel: HEEditImageModel? = nil,  bottomViewBuilder: HEEditImageBottomViewBuilder? = nil) {
         var image = image
         if image.scale != 1,
            let cgImage = image.cgImage {
@@ -459,6 +405,30 @@ open class HEEditImageViewController: UIViewController {
         adjustTools = HEImageEditorConfiguration.default().adjustTools
         selectedAdjustTool = adjustTools.first
         actionManager = HEEditorActionManager(actions: editModel?.actions ?? [])
+        
+        self.bottomViewBuilder = bottomViewBuilder ?? { editView in
+            // 기본 툴바
+            let toolbar = HEEditImageBottomView(tools: ts)
+            toolbar.toolSelectListener = { [weak editView] type in
+                switch type {
+                case .draw:
+                    editView?.drawBtnClick()
+                case .clip:
+                    editView?.startClipping()
+                case .imageSticker:
+                    editView?.imageStickerBtnClick()
+                case .textSticker:
+                    editView?.textStickerBtnClick()
+                case .mosaic:
+                    editView?.mosaicBtnClick()
+                case .filter:
+                    editView?.filterBtnClick()
+                case .adjust:
+                    editView?.adjustBtnClick()
+                }
+            }
+            return (toolbar, 76)
+        }
         
         super.init(nibName: nil, bundle: nil)
         
@@ -525,7 +495,7 @@ open class HEEditImageViewController: UIViewController {
         topShadowLayer.frame = topShadowView.bounds
         cancelBtn.frame = CGRect(x: 30, y: insets.top + 10, width: 28, height: 28)
         
-        bottomShadowView.frame = CGRect(x: 0, y: view.he.height - 150 - insets.bottom, width: view.he.width, height: 150 + insets.bottom)
+        bottomShadowView.frame = CGRect(x: 0, y: view.he.height - bottomViewHeight - insets.bottom, width: view.he.width, height: bottomViewHeight + insets.bottom)
         bottomShadowLayer.frame = bottomShadowView.bounds
         
         let cancelBtnW = localLanguageTextValue(.cancel)
@@ -571,13 +541,7 @@ open class HEEditImageViewController: UIViewController {
             height: 25
         )
         
-        let toolY: CGFloat = 95
-        
-        let doneBtnH = HEImageEditorLayout.bottomToolBtnH
-        let doneBtnW = localLanguageTextValue(.editFinish).he.boundingRect(font: HEImageEditorLayout.bottomToolTitleFont, limitSize: CGSize(width: CGFloat.greatestFiniteMagnitude, height: doneBtnH)).width + 20
-        doneBtn.frame = CGRect(x: view.he.width - 20 - doneBtnW, y: toolY - 2, width: doneBtnW, height: doneBtnH)
-        
-        editToolCollectionView.frame = CGRect(x: 20, y: toolY, width: view.he.width - 20 - 20 - doneBtnW - 20, height: 30)
+        bottomView.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: bottomViewHeight)
         
         if !drawPaths.isEmpty {
             drawLine()
@@ -681,9 +645,11 @@ open class HEEditImageViewController: UIViewController {
         topShadowView.addSubview(redoBtn)
         
         view.addSubview(bottomShadowView)
+        let builder = self.bottomViewBuilder(self)
+        bottomView = builder.toolView
+        bottomViewHeight = builder.height
         bottomShadowView.layer.addSublayer(bottomShadowLayer)
-        bottomShadowView.addSubview(editToolCollectionView)
-        bottomShadowView.addSubview(doneBtn)
+        bottomShadowView.addSubview(bottomView)
         
         if tools.contains(.draw) {
             bottomShadowView.addSubview(eraserBtnBgBlurView)
@@ -878,7 +844,7 @@ open class HEEditImageViewController: UIViewController {
         dismiss(animated: animateDismiss, completion: nil)
     }
     
-    func drawBtnClick() {
+    public func drawBtnClick() {
         let isSelected = selectedTool != .draw
         if isSelected {
             selectedTool = .draw
@@ -906,7 +872,7 @@ open class HEEditImageViewController: UIViewController {
         }
     }
     
-    private func clipBtnClick() {
+    public func startClipping() {
         self.preClipStatus = self.currentClipStatus
         
         var currentEditImage = editImage
@@ -915,14 +881,8 @@ open class HEEditImageViewController: UIViewController {
         }
         
         let vc = HEClipImageViewController(image: currentEditImage, status: currentClipStatus,
-                                           bottomToolViewBuilder: { vc in
-            let toolView = HEClipBottomToolView()
-            toolView.cancelClickListener = { vc.cancelEdit() }
-            toolView.doneClickListener = { vc.doneEdit() }
-            toolView.revertClickListener = { vc.revert() }
-            return (toolView, HEClipBottomToolView.estimateHeight)
-        })
-        vc.bottomToolView = HEClipBottomToolView()
+                                           bottomViewBuilder: self.clipImageBottomViewBuilder)
+        vc.bottomToolView = HEClipBottomView()
         let rect = mainScrollView.convert(containerView.frame, to: view)
         vc.presentAnimateFrame = rect
         vc.presentAnimateImage = currentEditImage.he
@@ -971,7 +931,7 @@ open class HEEditImageViewController: UIViewController {
         recalculateStickersFrame(oldContainerSize, oldAngle, status.angle)
     }
     
-    func imageStickerBtnClick() {
+    public func imageStickerBtnClick() {
         HEImageEditorConfiguration.default().imageStickerContainerView?.show(in: view)
         setToolView(show: false)
         imageStickerContainerIsHidden = false
@@ -982,7 +942,7 @@ open class HEEditImageViewController: UIViewController {
         setAdjustViews(hidden: true)
     }
     
-    func textStickerBtnClick() {
+    public func textStickerBtnClick() {
         if let fontChooserContainerView = HEImageEditorConfiguration.default().fontChooserContainerView {
             fontChooserContainerView.show(in: view)
             setToolView(show: false)
@@ -999,7 +959,7 @@ open class HEEditImageViewController: UIViewController {
         setAdjustViews(hidden: true)
     }
     
-    func mosaicBtnClick() {
+    public func mosaicBtnClick() {
         let isSelected = selectedTool != .mosaic
         if isSelected {
             selectedTool = .mosaic
@@ -1013,7 +973,7 @@ open class HEEditImageViewController: UIViewController {
         setAdjustViews(hidden: true)
     }
     
-    func filterBtnClick() {
+    public func filterBtnClick() {
         let isSelected = selectedTool != .filter
         if isSelected {
             selectedTool = .filter
@@ -1026,7 +986,7 @@ open class HEEditImageViewController: UIViewController {
         setAdjustViews(hidden: true)
     }
     
-    func adjustBtnClick() {
+    public func adjustBtnClick() {
         let isSelected = selectedTool != .adjust
         if isSelected {
             selectedTool = .adjust
@@ -1069,7 +1029,8 @@ open class HEEditImageViewController: UIViewController {
         }
     }
     
-    @objc func doneBtnClick() {
+    @objc 
+    public func done() {
         var stickerStates: [HEBaseStickertState] = []
         for view in stickersContainer.subviews {
             guard let view = view as? ZLBaseStickerView else { continue }
@@ -1150,7 +1111,7 @@ open class HEEditImageViewController: UIViewController {
     }
     
     @objc func drawAction(_ pan: UIPanGestureRecognizer) {
-        // 橡皮擦
+        // 지우개
         if selectedTool == .draw, eraserBtn.isSelected {
             eraserAction(pan)
             return
@@ -1234,7 +1195,7 @@ open class HEEditImageViewController: UIViewController {
     }
     
     private func eraserAction(_ pan: UIPanGestureRecognizer) {
-        // 相对于drawingImageView的point
+        // DrawingImageView를 기준으로 한 점
         let point = pan.location(in: drawingImageView)
         let originalRatio = min(mainScrollView.frame.width / originalImage.size.width, mainScrollView.frame.height / originalImage.size.height)
         let ratio = min(
@@ -1242,7 +1203,7 @@ open class HEEditImageViewController: UIViewController {
             mainScrollView.frame.height / currentClipStatus.editRect.height
         )
         let scale = ratio / originalRatio
-        // 缩放到最初的size
+        // 원본 크기로 조정
         var size = drawingImageView.frame.size
         size.width /= scale
         size.height /= scale
@@ -1256,7 +1217,7 @@ open class HEEditImageViewController: UIViewController {
         }
         
         let pointScale = ratio / originalRatio / toImageScale
-        // 转换为drawPath的point
+        // drawPath로 변환된 포인트
         let drawPoint = CGPoint(x: point.x / pointScale, y: point.y / pointScale)
         if pan.state == .began {
             eraserCircleView.isHidden = false
@@ -1301,7 +1262,7 @@ open class HEEditImageViewController: UIViewController {
         }
     }
     
-    // 生成一个没有调整参数前的图片
+    // 매개변수를 조정하지 않고 이미지 생성
     func generateAdjustImageRef() {
         editImageAdjustRef = generateNewMosaicImage(
             inputImage: editImageWithoutAdjust,
@@ -1788,9 +1749,7 @@ extension HEEditImageViewController: UIScrollViewDelegate {
 
 extension HEEditImageViewController: UICollectionViewDataSource, UICollectionViewDelegate {
     public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        if collectionView == editToolCollectionView {
-            return tools.count
-        } else if collectionView == drawColorCollectionView {
+        if collectionView == drawColorCollectionView {
             return drawColors.count
         } else if collectionView == filterCollectionView {
             return thumbnailFilterImages.count
@@ -1800,16 +1759,7 @@ extension HEEditImageViewController: UICollectionViewDataSource, UICollectionVie
     }
     
     public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        if collectionView == editToolCollectionView {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ZLEditToolCell.he.identifier, for: indexPath) as! ZLEditToolCell
-            
-            let toolType = tools[indexPath.row]
-            cell.icon.isHighlighted = false
-            cell.toolType = toolType
-            cell.icon.isHighlighted = toolType == selectedTool
-            
-            return cell
-        } else if collectionView == drawColorCollectionView {
+       if collectionView == drawColorCollectionView {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ZLDrawColorCell.he.identifier, for: indexPath) as! ZLDrawColorCell
             
             let c = drawColors[indexPath.row]
@@ -1858,25 +1808,7 @@ extension HEEditImageViewController: UICollectionViewDataSource, UICollectionVie
     }
     
     public func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        if collectionView == editToolCollectionView {
-            let toolType = tools[indexPath.row]
-            switch toolType {
-            case .draw:
-                drawBtnClick()
-            case .clip:
-                clipBtnClick()
-            case .imageSticker:
-                imageStickerBtnClick()
-            case .textSticker:
-                textStickerBtnClick()
-            case .mosaic:
-                mosaicBtnClick()
-            case .filter:
-                filterBtnClick()
-            case .adjust:
-                adjustBtnClick()
-            }
-        } else if collectionView == drawColorCollectionView {
+        if collectionView == drawColorCollectionView {
             currentDrawColor = drawColors[indexPath.row]
             switchEraserBtnStatus(false, reloadData: false)
         } else if collectionView == filterCollectionView {
@@ -2150,7 +2082,7 @@ extension HEEditImageViewController: HEEditorManagerDelegate {
 
 // MARK: 터치 포인트로 대상 찾기
 
-public class HEPassThroughView: UIView {
+public class HEPassThroughView: UIView, DebugLine {
     var findResponderSticker: ((CGPoint) -> UIView?)?
     
     override public func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {

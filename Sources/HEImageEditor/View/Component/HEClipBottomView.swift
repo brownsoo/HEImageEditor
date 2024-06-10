@@ -1,5 +1,5 @@
 //
-//  HEClipBottomToolView.swift
+//  HEClipBottomView.swift
 //  HEImageEditor
 //
 //  Created by 브라운수 on 6/7/24.
@@ -8,13 +8,16 @@
 import Foundation
 import UIKit
 
-final class HEClipBottomToolView: UIView {
+/// 자르기 화면 하단에 놓을 수 있는 작업뷰 예시
+///
+/// - 미사용 상태
+final public class HEClipBottomView: UIView {
     
-    static let estimateHeight: CGFloat = 72
+    public static let estimateHeight: CGFloat = 72
     
-    var cancelClickListener: (() -> Void)?
-    var revertClickListener: (() -> Void)?
-    var doneClickListener: (() -> Void)?
+    public var cancelClickListener: (() -> Void)?
+    public var revertClickListener: (() -> Void)?
+    public var doneClickListener: (() -> Void)?
     
     private lazy var shadowLayer: CAGradientLayer = {
         let layer = CAGradientLayer()
@@ -49,18 +52,17 @@ final class HEClipBottomToolView: UIView {
         buttonStack.distribution = .equalCentering
         self.addSubview(buttonStack)
         
-        cancelBtn.setImage(.he.getImage("zl_close"), for: .normal)
+        cancelBtn.setImage(UIImage(systemName: "xmark"), for: .normal)
         cancelBtn.adjustsImageWhenHighlighted = false
         cancelBtn.enlargeInset = 20
         cancelBtn.addTarget(self, action: #selector(cancelBtnClick), for: .touchUpInside)
         
-        revertBtn.setTitleColor(.white, for: .normal)
         revertBtn.setTitle(localLanguageTextValue(.revert), for: .normal)
         revertBtn.enlargeInset = 20
         revertBtn.titleLabel?.font = HEImageEditorLayout.bottomToolTitleFont
         revertBtn.addTarget(self, action: #selector(revertBtnClick), for: .touchUpInside)
         
-        doneBtn.setImage(.he.getImage("zl_right"), for: .normal)
+        doneBtn.setImage(UIImage(systemName: "checkmark"), for: .normal)
         doneBtn.adjustsImageWhenHighlighted = false
         doneBtn.enlargeInset = 20
         doneBtn.addTarget(self, action: #selector(doneBtnClick), for: .touchUpInside)
@@ -75,14 +77,14 @@ final class HEClipBottomToolView: UIView {
             lineView.heightAnchor.constraint(equalToConstant: 1),
             lineView.leadingAnchor.constraint(equalTo: self.leadingAnchor),
             lineView.trailingAnchor.constraint(equalTo: self.trailingAnchor),
-            buttonStack.leadingAnchor.constraint(equalTo: self.leadingAnchor),
-            buttonStack.trailingAnchor.constraint(equalTo: self.trailingAnchor),
+            buttonStack.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 30),
+            buttonStack.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -30),
             buttonStack.topAnchor.constraint(equalTo: self.topAnchor),
             buttonStack.bottomAnchor.constraint(equalTo: self.bottomAnchor).withPriority(.defaultHigh)
         ])
     }
     
-    override func layoutSubviews() {
+    public override func layoutSubviews() {
         super.layoutSubviews()
         shadowLayer.frame = self.bounds
     }

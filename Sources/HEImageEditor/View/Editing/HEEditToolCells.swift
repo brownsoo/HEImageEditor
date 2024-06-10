@@ -1,77 +1,9 @@
 //
-//  ZLEditToolCells.swift
+//  HEEditToolCells.swift
 //  HEImageEditor
 //
-//  Created by long on 2021/12/21.
-//
-//  Permission is hereby granted, free of charge, to any person obtaining a copy
-//  of this software and associated documentation files (the "Software"), to deal
-//  in the Software without restriction, including without limitation the rights
-//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//  copies of the Software, and to permit persons to whom the Software is
-//  furnished to do so, subject to the following conditions:
-//
-//  The above copyright notice and this permission notice shall be included in
-//  all copies or substantial portions of the Software.
-//
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-//  THE SOFTWARE.
 
 import UIKit
-
-// MARK: Edit tool cell
-
-class ZLEditToolCell: UICollectionViewCell {
-    var toolType: HEImageEditorConfiguration.EditTool = .draw {
-        didSet {
-            switch toolType {
-            case .draw:
-                icon.image = .he.getImage("zl_drawLine")
-                icon.highlightedImage = .he.getImage("zl_drawLine_selected")
-            case .clip:
-                icon.image = .he.getImage("zl_clip")
-                icon.highlightedImage = .he.getImage("zl_clip")
-            case .imageSticker:
-                icon.image = .he.getImage("zl_imageSticker")
-                icon.highlightedImage = .he.getImage("zl_imageSticker")
-            case .textSticker:
-                icon.image = .he.getImage("zl_textSticker")
-                icon.highlightedImage = .he.getImage("zl_textSticker")
-            case .mosaic:
-                icon.image = .he.getImage("zl_mosaic")
-                icon.highlightedImage = .he.getImage("zl_mosaic_selected")
-            case .filter:
-                icon.image = .he.getImage("zl_filter")
-                icon.highlightedImage = .he.getImage("zl_filter_selected")
-            case .adjust:
-                icon.image = .he.getImage("zl_adjust")
-                icon.highlightedImage = .he.getImage("zl_adjust_selected")
-            }
-            if let color = UIColor.he.toolIconHighlightedColor {
-                icon.highlightedImage = icon.highlightedImage?
-                    .he.fillColor(color)
-            }
-        }
-    }
-    
-    lazy var icon = UIImageView(frame: contentView.bounds)
-    
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        
-        contentView.addSubview(icon)
-    }
-    
-    @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-}
 
 // MARK: draw color cell
 

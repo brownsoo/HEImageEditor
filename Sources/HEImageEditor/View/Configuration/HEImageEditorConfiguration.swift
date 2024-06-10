@@ -165,12 +165,12 @@ public class HEImageEditorConfiguration: NSObject {
         }
     }
     
-    /// If image edit tools only has clip and this property is true. When you click edit, the cropping interface (i.e. ZLClipImageViewController) will be displayed. Defaults to false
+    /// clip 툴 하나만 존재하고 이 값이 true 이면, 자르기 화면이 바로 보여진다.
     @objc public var showClipDirectlyIfOnlyHasClipTool = false
 }
 
 public extension HEImageEditorConfiguration {
-    @objc enum EditTool: Int {
+    enum EditTool: String {
         case draw
         case clip
         case imageSticker
@@ -178,6 +178,10 @@ public extension HEImageEditorConfiguration {
         case mosaic
         case filter
         case adjust
+        
+        var label: String {
+            return localLanguageTextValue("effect-" + self.rawValue)
+        }
     }
     
     @objc enum AdjustTool: Int {

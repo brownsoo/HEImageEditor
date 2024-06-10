@@ -5,6 +5,17 @@
 
 import UIKit
 
+
+public typealias HEClipImageBottomViewBuilder = (HEClipImageView) -> (toolView: UIView, height: CGFloat)
+
+public protocol HEClipImageView: AnyObject {
+    func revertEdit()
+    func doneEdit()
+    func cancelEdit()
+    func rotate()
+    func clip(ratio: HEImageClipRatio)
+}
+
 extension HEClipImageViewController {
     enum ClipPanEdge {
         case none
@@ -19,9 +30,7 @@ extension HEClipImageViewController {
     }
 }
 
-typealias HEClipImageBottomToolViewBuilder = (HEClipImageViewController) -> (toolView: UIView, height: CGFloat)
-
-class HEClipImageViewController: UIViewController {
+class HEClipImageViewController: UIViewController, HEClipImageView {
     
     
     var animateDismiss = true
@@ -113,14 +122,14 @@ class HEClipImageViewController: UIViewController {
         deviceIsiPhone() ? .portrait : .all
     }
     
-    private var bottomToolViewBuilder: HEClipImageBottomToolViewBuilder?
+    private var bottomToolViewBuilder: HEClipImageBottomViewBuilder?
     
     deinit {
         trace()
         self.cleanTimer()
     }
     
-    init(image: UIImage, status: HEClipStatus, bottomToolViewBuilder: HEClipImageBottomToolViewBuilder?) {
+    init(image: UIImage, status: HEClipStatus, bottomViewBuilder: HEClipImageBottomViewBuilder?) {
         self.originalImage = image
         self.editRect = status.editRect
         self.angle = status.angle
@@ -144,7 +153,7 @@ class HEClipImageViewController: UIViewController {
         self.clipActionToolView = HEClipActionToolView(clipRatios: HEImageEditorConfiguration.default().clipRatios,
                                                        originImageSize: image.size,
                                                        selectedRatio: self.selectedRatio)
-        self.bottomToolViewBuilder = bottomToolViewBuilder
+        self.bottomToolViewBuilder = bottomViewBuilder
         
         super.init(nibName: nil, bundle: nil)
         
@@ -435,7 +444,7 @@ class HEClipImageViewController: UIViewController {
     }
     
     /// 초기화
-    func revert() {
+    func revertEdit() {
         angle = 0
         editImage = originalImage
         calculateClipRect()
@@ -454,7 +463,7 @@ class HEClipImageViewController: UIViewController {
         dismiss(animated: animateDismiss, completion: nil)
     }
     
-    @objc func rotate() {
+    func rotate() {
         guard !isRotating else {
             return
         }
@@ -506,9 +515,15 @@ class HEClipImageViewController: UIViewController {
         }
         
         generateThumbnailImage()
-        
     }
-    /// 그리드 가이드 패닝 
+    
+    func clip(ratio: HEImageClipRatio) {
+        self.selectedRatio = ratio
+        self.calculateClipRect()
+        self.layoutInitialImage()
+    }
+    
+    /// 그리드 패닝
     @objc func gridGesPanAction(_ pan: UIPanGestureRecognizer) {
         let point = pan.location(in: view)
         if pan.state == .began {
@@ -615,17 +630,10 @@ class HEClipImageViewController: UIViewController {
             
         case .topLeft:
             if ratio != 0 {
-//                if abs(diffX / ratio) >= abs(diffY) {
                 frame.origin.x = originFrame.minX + diffX
                 frame.size.width = originFrame.width - diffX
                 frame.origin.y = originFrame.minY + diffX / ratio
                 frame.size.height = originFrame.height - diffX / ratio
-//                } else {
-//                    frame.origin.y = originFrame.minY + diffY
-//                    frame.size.height = originFrame.height - diffY
-//                    frame.origin.x = originFrame.minX + diffY * ratio
-//                    frame.size.width = originFrame.width - diffY * ratio
-//                }
             } else {
                 frame.origin.x = originFrame.minX + diffX
                 frame.size.width = originFrame.width - diffX
@@ -635,15 +643,9 @@ class HEClipImageViewController: UIViewController {
             
         case .topRight:
             if ratio != 0 {
-//                if abs(diffX / ratio) >= abs(diffY) {
                 frame.size.width = originFrame.width + diffX
                 frame.origin.y = originFrame.minY - diffX / ratio
                 frame.size.height = originFrame.height + diffX / ratio
-//                } else {
-//                    frame.origin.y = originFrame.minY + diffY
-//                    frame.size.height = originFrame.height - diffY
-//                    frame.size.width = originFrame.width - diffY * ratio
-//                }
             } else {
                 frame.size.width = originFrame.width + diffX
                 frame.origin.y = originFrame.minY + diffY
@@ -652,15 +654,9 @@ class HEClipImageViewController: UIViewController {
             
         case .bottomLeft:
             if ratio != 0 {
-//                if abs(diffX / ratio) >= abs(diffY) {
                 frame.origin.x = originFrame.minX + diffX
                 frame.size.width = originFrame.width - diffX
                 frame.size.height = originFrame.height - diffX / ratio
-//                } else {
-//                    frame.origin.x = originFrame.minX - diffY * ratio
-//                    frame.size.width = originFrame.width + diffY * ratio
-//                    frame.size.height = originFrame.height + diffY
-//                }
             } else {
                 frame.origin.x = originFrame.minX + diffX
                 frame.size.width = originFrame.width - diffX
@@ -669,13 +665,8 @@ class HEClipImageViewController: UIViewController {
             
         case .bottomRight:
             if ratio != 0 {
-//                if abs(diffX / ratio) >= abs(diffY) {
                 frame.size.width = originFrame.width + diffX
                 frame.size.height = originFrame.height + diffX / ratio
-//                } else {
-//                    frame.size.width += diffY * ratio
-//                    frame.size.height += diffY
-//                }
             } else {
                 frame.size.width = originFrame.width + diffX
                 frame.size.height = originFrame.height + diffY
@@ -825,16 +816,12 @@ class HEClipImageViewController: UIViewController {
 
 extension HEClipImageViewController: HEClipToolViewDelegate {
     func clipRatioSelected(sender: HEClipActionToolView, ratio: HEImageClipRatio) {
-        self.selectedRatio = ratio
-        self.calculateClipRect()
-        self.layoutInitialImage()
+        self.clip(ratio: ratio)
     }
     
     func clipRotateSelected(sender: HEClipActionToolView) {
         self.rotate()
     }
-    
-    
 }
 
 extension HEClipImageViewController: UIGestureRecognizerDelegate {
@@ -842,7 +829,7 @@ extension HEClipImageViewController: UIGestureRecognizerDelegate {
         guard gestureRecognizer == gridPanGes else {
             return true
         }
-        // 그리드 드래그 제스쳐 
+        // 그리드 드래그 제스쳐
         let point = gestureRecognizer.location(in: view)
         let frame = overlayView.frame
         let innerFrame = frame.insetBy(dx: 22, dy: 22)

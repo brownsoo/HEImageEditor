@@ -5,7 +5,7 @@
 import UIKit
 
 struct HEImageEditorLayout {
-    static let bottomToolBtnH: CGFloat = 34
+    static let bottomToolBtnH: CGFloat = 72
     
     static let bottomToolTitleFont = UIFont.systemFont(ofSize: 17)
     

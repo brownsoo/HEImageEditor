@@ -212,7 +212,7 @@ class ViewController: UIViewController {
     func configImageEditor() {
         HEImageEditorConfiguration.default()
             .clipRatios([.origin, .custom, .wh1x1])
-            // Provide a image sticker container view
+            .editImageTools([.textSticker, .imageSticker, .clip])
             .imageStickerContainerView(ImageStickerContainerView())
             .fontChooserContainerView(FontChooserContainerView())
     }
@@ -290,9 +290,26 @@ class ViewController: UIViewController {
     }
     
     func editImage(_ image: UIImage, editModel: HEEditImageModel?) {
-        HEEditImageViewController.showEditImageVC(parentVC: self, image: image, editModel: editModel) { [weak self] resImage, editModel in
+        let insets = view.safeAreaInsets
+        let clipBottomView: HEClipImageBottomViewBuilder = { _ in
+            let empty = UIView()
+            empty.isUserInteractionEnabled = false
+            return (empty, 72 + insets.bottom)
+        }
+        HEEditImageViewController.showImageEditor(parent: self, image: image, editModel: editModel, clipImageBottomViewBuilder: clipBottomView) { [weak self] resImage, editModel in
             self?.resultImageView.image = resImage
             self?.resultImageEditModel = editModel
+        }
+    }
+    
+    
+    private func makeDefaultClipImageBottomToolBuilder() -> HEClipImageBottomViewBuilder {
+        return { (clipView: HEClipImageView) in
+            let toolView = HEClipBottomView()
+            toolView.cancelClickListener = { clipView.cancelEdit() }
+            toolView.doneClickListener = { clipView.doneEdit() }
+            toolView.revertClickListener = { clipView.revertEdit() }
+            return (toolView, HEClipBottomView.estimateHeight)
         }
     }
 }
