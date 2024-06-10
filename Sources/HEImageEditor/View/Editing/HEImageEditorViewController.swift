@@ -42,7 +42,7 @@ public struct HEAdjustStatus {
     }
 }
 
-public typealias HEEditImageBottomViewBuilder = (HEEditImageView) -> (toolView: UIView, height: CGFloat)
+public typealias HEEditImageBottomToolViewBuilder = (HEEditImageView) -> (toolView: UIView, height: CGFloat)
 
 
 open class HEEditImageViewController: UIViewController, HEEditImageView {
@@ -311,9 +311,10 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     @objc public var editFinishBlock: ((UIImage, HEEditImageModel?) -> Void)?
     
+    private lazy var editingContainer = UIView()
     public var clipImageBottomViewBuilder: HEClipImageBottomViewBuilder?
     
-    public var bottomViewBuilder: HEEditImageBottomViewBuilder
+    public var bottomViewBuilder: HEEditImageBottomToolViewBuilder
     
     override open var prefersStatusBarHidden: Bool { true }
     
@@ -335,47 +336,23 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         animate: Bool = true,
         image: UIImage,
         editModel: HEEditImageModel? = nil,
-        bottomViewBuilder: HEEditImageBottomViewBuilder? = nil,
+        bottomToolViewBuilder: HEEditImageBottomToolViewBuilder? = nil,
         clipImageBottomViewBuilder: HEClipImageBottomViewBuilder? = nil,
         completion: ((UIImage, HEEditImageModel?) -> Void)?
     ) {
         let tools = HEImageEditorConfiguration.default().tools
-        if HEImageEditorConfiguration.default().showClipDirectlyIfOnlyHasClipTool, tools.count == 1, tools.contains(.clip) {
-            let vc = HEClipImageViewController(
-                image: image,
-                status: editModel?.clipStatus ?? HEClipStatus(editRect: CGRect(origin: .zero, size: image.size)),
-                bottomViewBuilder: clipImageBottomViewBuilder
-            )
-            
-            vc.clipDoneBlock = { angle, editRect, ratio in
-                let m = HEEditImageModel(
-                    drawPaths: [],
-                    mosaicPaths: [],
-                    clipStatus: HEClipStatus(editRect: editRect, angle: angle, ratio: ratio),
-                    adjustStatus: HEAdjustStatus(),
-                    selectFilter: .normal,
-                    stickers: [],
-                    actions: []
-                )
-                completion?(image.he.clipImage(angle: angle, editRect: editRect, isCircle: ratio.isCircle) ?? image, m)
-            }
-            vc.animateDismiss = animate
-            vc.modalPresentationStyle = .fullScreen
-            parent.present(vc, animated: animate, completion: nil)
-        } else {
-            let vc = HEEditImageViewController(image: image, editModel: editModel, bottomViewBuilder: bottomViewBuilder)
-            vc.clipImageBottomViewBuilder = clipImageBottomViewBuilder
-            vc.editFinishBlock = { ei, editImageModel in
-                completion?(ei, editImageModel)
-            }
-            vc.animateDismiss = animate
-            vc.modalPresentationStyle = .fullScreen
-            parent.present(vc, animated: animate, completion: nil)
+        let vc = HEEditImageViewController(image: image, editModel: editModel, bottomViewBuilder: bottomToolViewBuilder)
+        vc.clipImageBottomViewBuilder = clipImageBottomViewBuilder
+        vc.editFinishBlock = { ei, editImageModel in
+            completion?(ei, editImageModel)
         }
+        vc.animateDismiss = animate
+        vc.modalPresentationStyle = .overFullScreen
+        parent.present(vc, animated: animate, completion: nil)
     }
     
     /// 에디터 생성
-    public init(image: UIImage, editModel: HEEditImageModel? = nil,  bottomViewBuilder: HEEditImageBottomViewBuilder? = nil) {
+    public init(image: UIImage, editModel: HEEditImageModel? = nil,  bottomViewBuilder: HEEditImageBottomToolViewBuilder? = nil) {
         var image = image
         if image.scale != 1,
            let cgImage = image.cgImage {
@@ -495,7 +472,10 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         topShadowLayer.frame = topShadowView.bounds
         cancelBtn.frame = CGRect(x: 30, y: insets.top + 10, width: 28, height: 28)
         
-        bottomShadowView.frame = CGRect(x: 0, y: view.he.height - bottomViewHeight - insets.bottom, width: view.he.width, height: bottomViewHeight + insets.bottom)
+        bottomShadowView.frame = CGRect(x: 0,
+                                        y: view.frame.height - bottomViewHeight - insets.bottom,
+                                        width: view.he.width,
+                                        height: bottomViewHeight + insets.bottom)
         bottomShadowLayer.frame = bottomShadowView.bounds
         
         let cancelBtnW = localLanguageTextValue(.cancel)
@@ -542,6 +522,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         )
         
         bottomView.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: bottomViewHeight)
+        editingContainer.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: bottomShadowView.frame.minY)
         
         if !drawPaths.isEmpty {
             drawLine()
@@ -763,6 +744,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         asbinTipLabel.numberOfLines = 2
         asbinTipLabel.lineBreakMode = .byCharWrapping
         ashbinView.addSubview(asbinTipLabel)
+        view.addSubview(editingContainer)
         
         if tools.contains(.mosaic) {
             mosaicImage = editImage.he.mosaicImage()
@@ -902,20 +884,46 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         
         vc.cancelClipBlock = { [weak self] () in
             self?.resetContainerViewFrame()
+            self?.removeFromContainer()
         }
         
-        present(vc, animated: false) {
-            self.mainScrollView.alpha = 0
-            self.topShadowView.alpha = 0
-            self.bottomShadowView.alpha = 0
-            self.adjustSlider?.alpha = 0
-        }
+        self.addToContainer(vc)
+        //
+        self.mainScrollView.alpha = 0
+        self.topShadowView.alpha = 0
+        self.bottomShadowView.alpha = 0
+        self.adjustSlider?.alpha = 0
+        
         
         selectedTool = nil
         setDrawViews(hidden: true)
         setFilterViews(hidden: true)
         setAdjustViews(hidden: true)
     }
+    
+    private var previousInContainer: UIViewController?
+    private func addToContainer(_ target: UIViewController) {
+        if let exist = self.previousInContainer {
+            exist.willMove(toParent: nil)
+            exist.view.removeFromSuperview()
+            exist.removeFromParent()
+        }
+        self.addChild(target)
+        editingContainer.addSubview(target.view)
+        target.view.frame = editingContainer.bounds
+        target.didMove(toParent: self)
+        self.previousInContainer = target
+    }
+    
+    private func removeFromContainer() {
+        if let exist = self.previousInContainer {
+            exist.willMove(toParent: nil)
+            exist.view.removeFromSuperview()
+            exist.removeFromParent()
+        }
+        self.previousInContainer = nil
+    }
+    
     
     private func clipImage(status: HEClipStatus) {
         let oldAngle = currentClipStatus.angle
