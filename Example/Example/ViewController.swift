@@ -290,8 +290,7 @@ class ViewController: UIViewController {
     }
     
     func editImage(_ image: UIImage, editModel: HEEditImageModel?) {
-        let insets = view.safeAreaInsets
-        HEEditImageViewController.showImageEditor(parent: self, image: image, editModel: editModel, clipImageBottomViewBuilder: nil) { [weak self] resImage, editModel in
+        HEEditImageViewController.showImageEditor(parent: self, image: image, editModel: editModel) { [weak self] resImage, editModel in
             self?.resultImageView.image = resImage
             self?.resultImageEditModel = editModel
         }

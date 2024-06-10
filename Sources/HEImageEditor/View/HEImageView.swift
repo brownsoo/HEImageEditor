@@ -11,6 +11,8 @@ import UIKit
 
 public protocol HEEditImageView: AnyObject {
     
+    var isImageEditing: Bool { get }
+    
     func done()
     func drawBtnClick()
     func startClipping()
@@ -19,6 +21,8 @@ public protocol HEEditImageView: AnyObject {
     func mosaicBtnClick()
     func filterBtnClick()
     func adjustBtnClick()
+    
+    func stopCurrentEditing()
     
 //    var image: HEImage { get }
 //    var effects: [HEEffect] { get }

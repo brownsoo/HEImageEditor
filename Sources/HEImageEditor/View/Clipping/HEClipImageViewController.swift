@@ -65,13 +65,14 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
     
     /// 잘려진 부분을 희미하게 보이기 위한 레이어
     var shadowView: HEClipShadowView!
+    private var gridView: HEClipGridView!
+    private var gridPanGes: UIPanGestureRecognizer!
     
-    var gridView: HEClipGridView!
-    
-    var gridPanGes: UIPanGestureRecognizer!
-    
-    var bottomToolView: UIView?
-    private var bottomToolViewH: CGFloat = 0
+    /// 툴바 아래에 놓을 수 있는 뷰.
+    ///
+    /// - HEClipImageBottomViewBuilder 에 의해 생성
+    private var bottomToolView: UIView?
+    private var bottomViewHeight: CGFloat = 0
     
     var bottomShadowLayer: CAGradientLayer!
     
@@ -110,8 +111,8 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
     
     var dismissAnimateImage: UIImage?
     
-    // Angle, edit rect, clip ratio
-    var clipDoneBlock: ((CGFloat, CGRect, HEImageClipRatio) -> Void)?
+    // Angle, edit rect,
+    var clipDoneBlock: ((_ angle: CGFloat, _ editRect: CGRect, _ selectRatio: HEImageClipRatio) -> Void)?
     
     var cancelClipBlock: (() -> Void)?
     
@@ -227,7 +228,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         
         let bottomToolFrame: CGRect
         if let bottomToolView {
-            bottomToolView.frame = CGRect(x: 0, y: view.bounds.height - self.bottomToolViewH, width: view.bounds.width, height: self.bottomToolViewH)
+            bottomToolView.frame = CGRect(x: 0, y: view.bounds.height - self.bottomViewHeight, width: view.bounds.width, height: self.bottomViewHeight)
             bottomToolFrame = bottomToolView.frame
         } else {
             bottomToolFrame = CGRect(x: 0, y: view.bounds.height, width: view.bounds.width, height: 0)
@@ -245,8 +246,6 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
     }
     
     private func setupUI() {
-        view.backgroundColor = .black
-        
         scrollView = UIScrollView()
         scrollView.backgroundColor = .black
         scrollView.alwaysBounceVertical = true
@@ -278,7 +277,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         if let builder  = self.bottomToolViewBuilder?(self) {
             view.addSubview(builder.toolView)
             self.bottomToolView = builder.toolView
-            self.bottomToolViewH = builder.height
+            self.bottomViewHeight = builder.height
         }
         
         view.addSubview(clipActionToolView)
@@ -314,7 +313,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         rect.origin.x = editInsets.left
         rect.origin.y = insets.top
         rect.size.width = UIScreen.main.bounds.width - editInsets.width
-        rect.size.height = UIScreen.main.bounds.height - editInsets.top - self.bottomToolViewH - HEClipActionToolView.viewHeight
+        rect.size.height = UIScreen.main.bounds.height - editInsets.top - self.bottomViewHeight - HEClipActionToolView.viewHeight
         return rect
     }
     
@@ -881,7 +880,7 @@ extension HEClipImageViewController: UIScrollViewDelegate {
 
 extension HEClipImageViewController: UIViewControllerTransitioningDelegate {
     func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
-        return ZLClipImageDismissAnimatedTransition()
+        return HEClipImageDismissAnimatedTransition()
     }
 }
 

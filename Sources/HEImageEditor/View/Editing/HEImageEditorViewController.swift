@@ -387,21 +387,26 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             // 기본 툴바
             let toolbar = HEEditImageBottomView(tools: ts)
             toolbar.toolSelectListener = { [weak editView] type in
+                guard let editView else { return }
+                if editView.isImageEditing {
+                    editView.stopCurrentEditing()
+                    return
+                }
                 switch type {
                 case .draw:
-                    editView?.drawBtnClick()
+                    editView.drawBtnClick()
                 case .clip:
-                    editView?.startClipping()
+                    editView.startClipping()
                 case .imageSticker:
-                    editView?.imageStickerBtnClick()
+                    editView.imageStickerBtnClick()
                 case .textSticker:
-                    editView?.textStickerBtnClick()
+                    editView.textStickerBtnClick()
                 case .mosaic:
-                    editView?.mosaicBtnClick()
+                    editView.mosaicBtnClick()
                 case .filter:
-                    editView?.filterBtnClick()
+                    editView.filterBtnClick()
                 case .adjust:
-                    editView?.adjustBtnClick()
+                    editView.adjustBtnClick()
                 }
             }
             return (toolbar, 76)
@@ -826,6 +831,10 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         dismiss(animated: animateDismiss, completion: nil)
     }
     
+    public var isImageEditing: Bool {
+        return self.currentEditController != nil
+    }
+    
     public func drawBtnClick() {
         let isSelected = selectedTool != .draw
         if isSelected {
@@ -854,6 +863,17 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         }
     }
     
+    public func stopCurrentEditing() {
+        guard let current = self.currentEditController else { return }
+        if let vc = current as? HEClipImageViewController {
+            self.clipImage(status: HEClipStatus(editRect: vc.editRect, angle: vc.angle, ratio: vc.selectedRatio))
+            self.actionManager.storeAction(.clip(oldStatus: self.preClipStatus, newStatus: self.currentClipStatus))
+            self.finishClipDismissAnimate()
+        }
+        
+        self.removeFromEditContainer()
+    }
+    
     public func startClipping() {
         self.preClipStatus = self.currentClipStatus
         
@@ -862,9 +882,10 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             currentEditImage = buildImage()
         }
         
-        let vc = HEClipImageViewController(image: currentEditImage, status: currentClipStatus,
+        let vc = HEClipImageViewController(image: currentEditImage, 
+                                           status: currentClipStatus,
                                            bottomViewBuilder: self.clipImageBottomViewBuilder)
-        vc.bottomToolView = HEClipBottomView()
+        
         let rect = mainScrollView.convert(containerView.frame, to: view)
         vc.presentAnimateFrame = rect
         vc.presentAnimateImage = currentEditImage.he
@@ -873,8 +894,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 editRect: currentClipStatus.editRect,
                 isCircle: currentClipStatus.ratio?.isCircle ?? false
             )
-        vc.modalPresentationStyle = .fullScreen
-        
         vc.clipDoneBlock = { [weak self] angle, editRect, selectRatio in
             guard let self else { return }
             
@@ -884,14 +903,14 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         
         vc.cancelClipBlock = { [weak self] () in
             self?.resetContainerViewFrame()
-            self?.removeFromContainer()
+            self?.removeFromEditContainer()
         }
         
-        self.addToContainer(vc)
+        self.addToEditContainer(vc)
         //
         self.mainScrollView.alpha = 0
-        self.topShadowView.alpha = 0
-        self.bottomShadowView.alpha = 0
+        //self.topShadowView.alpha = 0
+        //self.bottomShadowView.alpha = 0
         self.adjustSlider?.alpha = 0
         
         
@@ -901,9 +920,9 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         setAdjustViews(hidden: true)
     }
     
-    private var previousInContainer: UIViewController?
-    private func addToContainer(_ target: UIViewController) {
-        if let exist = self.previousInContainer {
+    private var currentEditController: UIViewController?
+    private func addToEditContainer(_ target: UIViewController) {
+        if let exist = self.currentEditController {
             exist.willMove(toParent: nil)
             exist.view.removeFromSuperview()
             exist.removeFromParent()
@@ -912,16 +931,16 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         editingContainer.addSubview(target.view)
         target.view.frame = editingContainer.bounds
         target.didMove(toParent: self)
-        self.previousInContainer = target
+        self.currentEditController = target
     }
     
-    private func removeFromContainer() {
-        if let exist = self.previousInContainer {
+    private func removeFromEditContainer() {
+        if let exist = self.currentEditController {
             exist.willMove(toParent: nil)
             exist.view.removeFromSuperview()
             exist.removeFromParent()
         }
-        self.previousInContainer = nil
+        self.currentEditController = nil
     }
     
     
