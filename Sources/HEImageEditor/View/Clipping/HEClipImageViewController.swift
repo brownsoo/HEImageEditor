@@ -10,7 +10,9 @@ public typealias HEClipImageBottomViewBuilder = (HEClipImageView) -> (toolView: 
 
 public protocol HEClipImageView: AnyObject {
     func revertEdit()
+    /// 편집 완료
     func doneEdit()
+    /// 편집 취소
     func cancelEdit()
     func rotate()
     func clip(ratio: HEImageClipRatio)
@@ -75,11 +77,13 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
     private var bottomViewHeight: CGFloat = 0
     
     var bottomShadowLayer: CAGradientLayer!
+    private var topView: UIView!
+    private var cancelButton: UIButton!
+    private var confirmButton: UIButton!
+    /// 회전, 크롭 툴 아이템 뷰
+    private var clipActionToolView: HEClipActionToolView!
     
-    /// 회전, 크롭 툴 아이템 뷰 
-    var clipActionToolView: HEClipActionToolView!
-    
-    var shouldLayout = true
+    private var shouldLayout = true
     
     var panEdge: HEClipImageViewController.ClipPanEdge = .none
     
@@ -115,6 +119,8 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
     var clipDoneBlock: ((_ angle: CGFloat, _ editRect: CGRect, _ selectRatio: HEImageClipRatio) -> Void)?
     
     var cancelClipBlock: (() -> Void)?
+    
+    var dismissCallback: (() -> Void)?
     
     override var prefersStatusBarHidden: Bool { true }
     
@@ -221,11 +227,6 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         guard shouldLayout else { return }
         shouldLayout = false
         
-        scrollView.frame = view.bounds
-        shadowView.frame = view.bounds
-        
-        layoutInitialImage()
-        
         let bottomToolFrame: CGRect
         if let bottomToolView {
             bottomToolView.frame = CGRect(x: 0, y: view.bounds.height - self.bottomViewHeight, width: view.bounds.width, height: self.bottomViewHeight)
@@ -233,10 +234,19 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         } else {
             bottomToolFrame = CGRect(x: 0, y: view.bounds.height, width: view.bounds.width, height: 0)
         }
-        let clipToolViewY = bottomToolFrame.minY - HEClipActionToolView.viewHeight
+        let toolViewTop = bottomToolFrame.minY - HEClipActionToolView.viewHeight
         
-        clipActionToolView.frame = CGRect(x: 0, y: clipToolViewY, width: view.bounds.width, height: HEClipActionToolView.viewHeight)
+        topView.frame = CGRect(x: 0, y: view.safeAreaInsets.top, width: view.bounds.width, height: 48)
+        confirmButton.frame.origin.x = view.bounds.width - 44
+        
+        clipActionToolView.frame = CGRect(x: 0, y: toolViewTop, width: view.bounds.width, height: HEClipActionToolView.viewHeight)
         clipActionToolView.selectRatio(self.selectedRatio, animated: false)
+        
+        scrollView.frame = view.bounds
+        shadowView.frame = view.bounds
+        
+        layoutInitialImage()
+        
     }
     
     override open func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
@@ -269,6 +279,8 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         shadowView.backgroundColor = UIColor.black.withAlphaComponent(0.3)
         view.addSubview(shadowView)
         
+        
+        
         gridView = HEClipGridView()
         gridView.isUserInteractionEnabled = false
         gridView.isCircle = selectedRatio.isCircle
@@ -280,6 +292,21 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
             self.bottomViewHeight = builder.height
         }
         
+        // 상단 툴바
+        cancelButton = UIButton(frame: CGRect(x: 0, y: 0, width: 48, height: 48))
+        cancelButton.setImage(.he.getImage("icClose24")?.withRenderingMode(.alwaysOriginal), for: .normal)
+        confirmButton = UIButton(frame: CGRect(x: 0, y: 0, width: 48, height: 48))
+        confirmButton.setImage(.he.getImage("icCheck")?.withRenderingMode(.alwaysOriginal), for: .normal)
+        topView = UIView()
+        topView.addSubview(cancelButton)
+        topView.addSubview(confirmButton)
+        view.addSubview(topView)
+        topView.backgroundColor = .yellow.withAlphaComponent(0.2)
+        
+        cancelButton.addAction(.init(handler: { [weak self] _ in self?.cancelEdit() }), for: .touchUpInside)
+        confirmButton.addAction(.init(handler: { [weak self] _ in self?.doneEdit() }), for: .touchUpInside)
+        
+        // 툴바
         view.addSubview(clipActionToolView)
         
         gridPanGes = UIPanGestureRecognizer(target: self, action: #selector(gridGesPanAction(_:)))
@@ -390,7 +417,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         scrollView.contentOffset = CGPoint(x: -scrollView.contentInset.left + diffX, y: -scrollView.contentInset.top + diffY)
     }
     
-    func changeClipBoxFrame(newFrame: CGRect) {
+    private func changeClipBoxFrame(newFrame: CGRect) {
         guard clipBoxFrame != newFrame else {
             return
         }
@@ -437,11 +464,54 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         scrollView.zoomScale = scrollView.zoomScale
     }
     
+    private func mimicAnimateDismiss(completion: @escaping (() -> Void)) {
+        guard let presentAnimateFrame else {
+            completion()
+            return
+        }
+        let imageView = UIImageView(frame: dismissAnimateFromRect)
+        imageView.contentMode = .scaleAspectFill
+        imageView.clipsToBounds = true
+        imageView.image = dismissAnimateImage
+        view.addSubview(imageView)
+        self.imageView.isHidden = true
+        self.gridView.isHidden = true
+        UIView.animate(withDuration: 0.3, animations: {
+            imageView.frame = presentAnimateFrame
+        }) { _ in
+            imageView.removeFromSuperview()
+            self.imageView.isHidden = false
+            self.gridView.isHidden = false
+            completion()
+        }
+    }
+    
     func cancelEdit() {
         dismissAnimateFromRect = cancelClipAnimateFrame
         dismissAnimateImage = presentAnimateImage
         cancelClipBlock?()
-        dismiss(animated: animateDismiss, completion: nil)
+        if self.presentingViewController is HEEditImageViewController {
+            dismiss(animated: animateDismiss, completion: dismissCallback)
+        } else {
+            mimicAnimateDismiss { [weak self] in
+                self?.dismissCallback?()
+            }
+        }
+    }
+    
+    
+    func doneEdit() {
+        let image = clipImage()
+        dismissAnimateFromRect = clipBoxFrame
+        dismissAnimateImage = image.clipImage
+        clipDoneBlock?(angle, image.editRect, selectedRatio)
+        if self.presentingViewController is HEEditImageViewController {
+            dismiss(animated: animateDismiss, completion: dismissCallback)
+        } else {
+            mimicAnimateDismiss { [weak self] in
+                self?.dismissCallback?()
+            }
+        }
     }
     
     /// 초기화
@@ -454,14 +524,6 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         
         generateThumbnailImage()
         
-    }
-    
-    func doneEdit() {
-        let image = clipImage()
-        dismissAnimateFromRect = clipBoxFrame
-        dismissAnimateImage = image.clipImage
-        clipDoneBlock?(angle, image.editRect, selectedRatio)
-        dismiss(animated: animateDismiss, completion: nil)
     }
     
     func rotate() {

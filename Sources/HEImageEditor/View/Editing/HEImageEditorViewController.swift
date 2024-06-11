@@ -285,7 +285,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     private var impactFeedback: UIImpactFeedbackGenerator?
     
-    private lazy var panGes: UIPanGestureRecognizer = {
+    private lazy var drawPanGes: UIPanGestureRecognizer = {
         let pan = UIPanGestureRecognizer(target: self, action: #selector(drawAction(_:)))
         pan.maximumNumberOfTouches = 1
         pan.delegate = self
@@ -340,7 +340,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         clipImageBottomViewBuilder: HEClipImageBottomViewBuilder? = nil,
         completion: ((UIImage, HEEditImageModel?) -> Void)?
     ) {
-        let tools = HEImageEditorConfiguration.default().tools
         let vc = HEEditImageViewController(image: image, editModel: editModel, bottomViewBuilder: bottomToolViewBuilder)
         vc.clipImageBottomViewBuilder = clipImageBottomViewBuilder
         vc.editFinishBlock = { ei, editImageModel in
@@ -792,12 +791,12 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             }
         }
         
-        let tapGes = UITapGestureRecognizer(target: self, action: #selector(tapAction(_:)))
-        tapGes.delegate = self
-        view.addGestureRecognizer(tapGes)
+//        let tapGes = UITapGestureRecognizer(target: self, action: #selector(tapAction(_:)))
+//        tapGes.delegate = self
+//        view.addGestureRecognizer(tapGes)
         
-        view.addGestureRecognizer(panGes)
-        mainScrollView.panGestureRecognizer.require(toFail: panGes)
+        view.addGestureRecognizer(drawPanGes)
+        mainScrollView.panGestureRecognizer.require(toFail: drawPanGes)
         
         stickers.forEach { self.addSticker($0) }
     }
@@ -901,18 +900,24 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             self.actionManager.storeAction(.clip(oldStatus: self.preClipStatus, newStatus: self.currentClipStatus))
         }
         
-        vc.cancelClipBlock = { [weak self] () in
+        vc.cancelClipBlock = { [weak self] in
             self?.resetContainerViewFrame()
-            self?.removeFromEditContainer()
         }
-        
+        vc.dismissCallback = { [weak self] in
+            self?.removeFromEditContainer()
+            self?.finishClipDismissAnimate()
+        }
         self.addToEditContainer(vc)
-        //
         self.mainScrollView.alpha = 0
-        //self.topShadowView.alpha = 0
-        //self.bottomShadowView.alpha = 0
         self.adjustSlider?.alpha = 0
         
+//        vc.modalPresentationStyle = .overFullScreen
+//        self.present(vc, animated: false) {
+//            self.mainScrollView.alpha = 0
+//            self.topShadowView.alpha = 0
+//            // self.bottomShadowView.alpha = 0
+//            self.adjustSlider?.alpha = 0
+//        }
         
         selectedTool = nil
         setDrawViews(hidden: true)
@@ -1129,6 +1134,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         actionManager.redoAction()
     }
     
+    // TODO: 제외
     @objc func tapAction(_ tap: UITapGestureRecognizer) {
         if bottomShadowView.alpha == 1 {
             setToolView(show: false)
@@ -1495,7 +1501,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         sticker.delegate = self
         mainScrollView.pinchGestureRecognizer?.require(toFail: sticker.pinchGes)
         mainScrollView.panGestureRecognizer.require(toFail: sticker.panGes)
-        panGes.require(toFail: sticker.panGes)
+        drawPanGes.require(toFail: sticker.panGes)
     }
     
     func recalculateStickersFrame(_ oldSize: CGSize, _ oldAngle: CGFloat, _ newAngle: CGFloat) {
@@ -1592,7 +1598,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         mosaicImageLayer?.mask = mosaicImageLayerMaskLayer
     }
     
-    /// 传入inputImage 和 inputMosaicImage则代表仅想要获取新生成的mosaic图片
+    /// inputImage 및 inputMosaicImage를 전달하면 새로 생성된 모자이크 이미지만 가져오겠다는 의미입니다.
     @discardableResult
     func generateNewMosaicImage(inputImage: UIImage? = nil, inputMosaicImage: UIImage? = nil) -> UIImage? {
         let renderRect = CGRect(origin: .zero, size: originalImage.size)
@@ -1687,6 +1693,9 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         return UIImage(cgImage: cgi, scale: editImage.scale, orientation: .up)
     }
     
+    /// 클립 편집이 끝나면,
+    ///
+    /// - HEClipImageDismissAnimatedTransition 에서도 호출
     func finishClipDismissAnimate() {
         mainScrollView.alpha = 1
         UIView.animate(withDuration: 0.1) {

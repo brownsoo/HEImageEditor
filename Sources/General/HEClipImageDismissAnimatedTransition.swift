@@ -11,7 +11,8 @@ class HEClipImageDismissAnimatedTransition: NSObject, UIViewControllerAnimatedTr
     }
     
     func animateTransition(using transitionContext: UIViewControllerContextTransitioning) {
-        guard let fromVC = transitionContext.viewController(forKey: .from) as? HEClipImageViewController, let toVC = transitionContext.viewController(forKey: .to) as? HEEditImageViewController else {
+        guard let fromVC = transitionContext.viewController(forKey: .from) as? HEClipImageViewController, 
+                let toVC = transitionContext.viewController(forKey: .to) as? HEEditImageViewController else {
             transitionContext.completeTransition(!transitionContext.transitionWasCancelled)
             return
         }
