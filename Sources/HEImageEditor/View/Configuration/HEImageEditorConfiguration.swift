@@ -30,14 +30,14 @@ public class HEImageEditorConfiguration: NSObject {
         HEImageEditorConfiguration.single = HEImageEditorConfiguration()
     }
     
-    private var _tools: [HEImageEditorConfiguration.EditTool] = [.draw, .clip, .imageSticker, .textSticker, .mosaic, .filter, .adjust]
+    private var _tools: [HEImageEditorConfiguration.EditTool] = [.textSticker,  .imageSticker, .clip]
     
-    /// Edit image tools. (Default order is draw, clip, imageSticker, textSticker, mosaic, filtter)
+    /// Edit image tools.
     /// - warning: If you want to use the image sticker feature, you must provide a view that implements HEImageStickerContainerDelegate.
     public var tools: [HEImageEditorConfiguration.EditTool] {
         get {
             if _tools.isEmpty {
-                return [.draw, .clip, .imageSticker, .textSticker, .mosaic, .filter, .adjust]
+                return [.textSticker,  .imageSticker, .clip]
             } else {
                 return _tools
             }

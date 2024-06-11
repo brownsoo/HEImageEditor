@@ -212,7 +212,6 @@ class ViewController: UIViewController {
     func configImageEditor() {
         HEImageEditorConfiguration.default()
             .clipRatios([.origin, .custom, .wh1x1])
-            .editImageTools([.textSticker, .imageSticker, .clip])
             .imageStickerContainerView(ImageStickerContainerView())
             .fontChooserContainerView(FontChooserContainerView())
     }
@@ -296,7 +295,7 @@ class ViewController: UIViewController {
         }
     }
     
-    
+    // ex
     private func makeDefaultClipImageBottomToolBuilder() -> HEClipImageBottomViewBuilder {
         return { (clipView: HEClipImageView) in
             let toolView = HEClipBottomView()

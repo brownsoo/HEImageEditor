@@ -29,7 +29,7 @@ class HEClipImageDismissAnimatedTransition: NSObject, UIViewControllerAnimatedTr
         UIView.animate(withDuration: 0.3, animations: {
             imageView.frame = toVC.originalFrame
         }) { _ in
-            toVC.finishClipDismissAnimate()
+            toVC.finishEditingDismissAnimate()
             imageView.removeFromSuperview()
             transitionContext.completeTransition(!transitionContext.transitionWasCancelled)
         }

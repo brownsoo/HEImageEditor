@@ -271,7 +271,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
 
     private var preClipStatus: HEClipStatus
 
-    private var preStickerState: HEBaseStickertState?
+    private var preStickerState: HEStickerEffect?
 
     private var currentAdjustStatus: HEAdjustStatus
 
@@ -617,6 +617,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     func setupUI() {
         view.backgroundColor = .black
         
+        view.addSubview(editingContainer)
+        
         view.addSubview(mainScrollView)
         mainScrollView.addSubview(containerView)
         containerView.addSubview(imageView)
@@ -748,7 +750,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         asbinTipLabel.numberOfLines = 2
         asbinTipLabel.lineBreakMode = .byCharWrapping
         ashbinView.addSubview(asbinTipLabel)
-        view.addSubview(editingContainer)
+        
         
         if tools.contains(.mosaic) {
             mosaicImage = editImage.he.mosaicImage()
@@ -867,9 +869,9 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         if let vc = current as? HEClipImageViewController {
             self.clipImage(status: HEClipStatus(editRect: vc.editRect, angle: vc.angle, ratio: vc.selectedRatio))
             self.actionManager.storeAction(.clip(oldStatus: self.preClipStatus, newStatus: self.currentClipStatus))
-            self.finishClipDismissAnimate()
         }
         
+        self.finishEditingDismissAnimate()
         self.removeFromEditContainer()
     }
     
@@ -905,19 +907,10 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         }
         vc.dismissCallback = { [weak self] in
             self?.removeFromEditContainer()
-            self?.finishClipDismissAnimate()
+            self?.finishEditingDismissAnimate()
         }
         self.addToEditContainer(vc)
-        self.mainScrollView.alpha = 0
-        self.adjustSlider?.alpha = 0
-        
-//        vc.modalPresentationStyle = .overFullScreen
-//        self.present(vc, animated: false) {
-//            self.mainScrollView.alpha = 0
-//            self.topShadowView.alpha = 0
-//            // self.bottomShadowView.alpha = 0
-//            self.adjustSlider?.alpha = 0
-//        }
+        self.beginEditingStartAnimate()
         
         selectedTool = nil
         setDrawViews(hidden: true)
@@ -1063,7 +1056,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     @objc 
     public func done() {
-        var stickerStates: [HEBaseStickertState] = []
+        var stickerStates: [HEStickerEffect] = []
         for view in stickersContainer.subviews {
             guard let view = view as? ZLBaseStickerView else { continue }
             stickerStates.append(view.state)
@@ -1693,15 +1686,27 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         return UIImage(cgImage: cgi, scale: editImage.scale, orientation: .up)
     }
     
-    /// 클립 편집이 끝나면,
+    private func beginEditingStartAnimate() {
+        self.topShadowView.alpha = 0
+        self.topShadowView.isUserInteractionEnabled = false
+        self.mainScrollView.alpha = 0
+        self.mainScrollView.isUserInteractionEnabled = false
+        self.adjustSlider?.alpha = 0
+        self.adjustSlider?.isUserInteractionEnabled = false
+    }
+    
+    /// 편집 container 작업이 끝나면,
     ///
     /// - HEClipImageDismissAnimatedTransition 에서도 호출
-    func finishClipDismissAnimate() {
+    func finishEditingDismissAnimate() {
         mainScrollView.alpha = 1
-        UIView.animate(withDuration: 0.1) {
+        UIView.animate(withDuration: 0.1, animations: {
             self.topShadowView.alpha = 1
             self.bottomShadowView.alpha = 1
             self.adjustSlider?.alpha = 1
+        }) { _ in
+            self.topShadowView.isUserInteractionEnabled = true
+            self.mainScrollView.isUserInteractionEnabled = true
         }
     }
 }
@@ -1915,7 +1920,7 @@ extension HEEditImageViewController: ZLStickerViewDelegate {
         ashbinView.layer.removeAllAnimations()
         ashbinView.isHidden = true
         
-        var endState: HEBaseStickertState? = sticker.state
+        var endState: HEStickerEffect? = sticker.state
         let point = panGes.location(in: view)
         if ashbinView.frame.contains(point) {
             sticker.moveToAshbin()
@@ -2044,7 +2049,7 @@ extension HEEditImageViewController: HEEditorManagerDelegate {
         generateNewMosaicImage()
     }
     
-    private func undoSticker(_ oldState: HEBaseStickertState?, _ newState: HEBaseStickertState?) {
+    private func undoSticker(_ oldState: HEStickerEffect?, _ newState: HEStickerEffect?) {
         guard let oldState else {
             removeSticker(id: newState?.id)
             return
@@ -2056,7 +2061,7 @@ extension HEEditImageViewController: HEEditorManagerDelegate {
         }
     }
     
-    private func redoSticker(_ oldState: HEBaseStickertState?, _ newState: HEBaseStickertState?) {
+    private func redoSticker(_ oldState: HEStickerEffect?, _ newState: HEStickerEffect?) {
         guard let newState else {
             removeSticker(id: oldState?.id)
             return

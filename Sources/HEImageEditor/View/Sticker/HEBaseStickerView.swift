@@ -83,7 +83,7 @@ public class ZLBaseStickerView: UIView, UIGestureRecognizerDelegate {
         return pan
     }()
     
-    var state: HEBaseStickertState {
+    var state: HEStickerEffect {
         fatalError()
     }
     
@@ -97,10 +97,10 @@ public class ZLBaseStickerView: UIView, UIGestureRecognizerDelegate {
         cleanTimer()
     }
     
-    class func initWithState(_ state: HEBaseStickertState) -> ZLBaseStickerView? {
-        if let state = state as? ZLTextStickerState {
+    class func initWithState(_ effect: HEStickerEffect) -> ZLBaseStickerView? {
+        if let state = effect as? HETextStickerEffect {
             return ZLTextStickerView(state: state)
-        } else if let state = state as? ZLImageStickerState {
+        } else if let state = effect as? HEImageStickerEffect {
             return ZLImageStickerView(state: state)
         } else {
             return nil

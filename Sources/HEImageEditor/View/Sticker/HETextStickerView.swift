@@ -53,8 +53,8 @@ class ZLTextStickerView: ZLBaseStickerView {
     }
     
     // Convert all states to model.
-    override var state: ZLTextStickerState {
-        return ZLTextStickerState(
+    override var state: HETextStickerEffect {
+        return HETextStickerEffect(
             id: id,
             text: text,
             textColor: textColor,
@@ -74,7 +74,7 @@ class ZLTextStickerView: ZLBaseStickerView {
         trace("ZLTextStickerView deinit")
     }
     
-    convenience init(state: ZLTextStickerState) {
+    convenience init(state: HETextStickerEffect) {
         self.init(
             id: state.id,
             text: state.text,

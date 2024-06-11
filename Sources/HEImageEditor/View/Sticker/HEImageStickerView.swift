@@ -39,8 +39,8 @@ class ZLImageStickerView: ZLBaseStickerView {
     }()
     
     // Convert all states to model.
-    override var state: ZLImageStickerState {
-        return ZLImageStickerState(
+    override var state: HEImageStickerEffect {
+        return HEImageStickerEffect(
             id: id,
             image: image,
             originScale: originScale,
@@ -56,7 +56,7 @@ class ZLImageStickerView: ZLBaseStickerView {
         trace("ZLImageStickerView deinit")
     }
     
-    convenience init(state: ZLImageStickerState) {
+    convenience init(state: HEImageStickerEffect) {
         self.init(
             id: state.id,
             image: state.image,

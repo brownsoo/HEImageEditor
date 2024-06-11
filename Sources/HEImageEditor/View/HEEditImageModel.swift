@@ -20,7 +20,7 @@ public class HEEditImageModel: NSObject {
     
     public let selectFilter: HEFilter?
     
-    public let stickers: [HEBaseStickertState]
+    public let stickers: [HEStickerEffect]
     
     public let actions: [HEEditorAction]
     
@@ -30,7 +30,7 @@ public class HEEditImageModel: NSObject {
         clipStatus: HEClipStatus? = nil,
         adjustStatus: HEAdjustStatus = HEAdjustStatus(),
         selectFilter: HEFilter? = nil,
-        stickers: [HEBaseStickertState] = [],
+        stickers: [HEStickerEffect] = [],
         actions: [HEEditorAction] = []
     ) {
         self.drawPaths = drawPaths

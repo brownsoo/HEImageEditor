@@ -10,7 +10,7 @@ public enum HEEditorAction {
     case draw(HEDrawPath)
     case eraser([HEDrawPath])
     case clip(oldStatus: HEClipStatus, newStatus: HEClipStatus)
-    case sticker(oldState: HEBaseStickertState?, newState: HEBaseStickertState?)
+    case sticker(oldState: HEStickerEffect?, newState: HEStickerEffect?)
     case mosaic(HEMosaicPath)
     case filter(oldFilter: HEFilter?, newFilter: HEFilter?)
     case adjust(oldStatus: HEAdjustStatus, newStatus: HEAdjustStatus)
