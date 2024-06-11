@@ -138,16 +138,25 @@ class HEEditToolCell: UICollectionViewCell {
     
     var toolType: HEImageEditorConfiguration.EditTool = .draw {
         didSet {
+            badgeView.isHidden = true
             switch toolType {
             case .draw:
                 iconView.image = UIImage(systemName: "pencil.line")?.withRenderingMode(.alwaysOriginal)
                 iconView.highlightedImage = UIImage(systemName: "pencil.line")
             case .clip:
-                iconView.image = .he.getImage("icEditMnCutting")?.withRenderingMode(.alwaysOriginal) ?? UIImage(systemName: "crop")
-                iconView.highlightedImage = .he.getImage("icEditMnCutting") ?? UIImage(systemName: "crop")
+                let icon = .he.getImage("icEditMnCutting") ?? UIImage(systemName: "crop")
+                iconView.image = icon
+                iconView.highlightedImage = icon
             case .imageSticker:
-                iconView.image = .he.getImage("icEditMnSticker")?.withRenderingMode(.alwaysOriginal) ?? UIImage(systemName: "face.smiling")
-                iconView.highlightedImage = .he.getImage("icEditMnSticker") ?? UIImage(systemName: "face.smiling")
+                let icon = .he.getImage("icEditMnSticker") ?? UIImage(systemName: "face.smiling")
+                iconView.image = icon
+                iconView.highlightedImage = icon
+                badgeView.image = .he.getImage("editBadgeAi")
+                badgeView.frame = CGRect(x: 0, y: 0, width: 20, height: 16)
+                // 아이콘 중앙에서 5, -2 에 위치
+                badgeBottomConstraint.constant = -2
+                badgeLeftConstraint.constant = 5
+                badgeView.isHidden = false
             case .textSticker:
                 iconView.image = UIImage.he.getImage("icEditMnText") ?? UIImage(systemName: "t.square.fill")
                 iconView.highlightedImage = UIImage.he.getImage("icEditMnText") ?? UIImage(systemName: "t.square.fill")
@@ -169,8 +178,8 @@ class HEEditToolCell: UICollectionViewCell {
             titleLabel.text = toolType.label
         }
     }
-    
-    lazy var iconView = UIImageView(frame: .zero)
+    lazy var badgeView = UIImageView()
+    lazy var iconView = UIImageView()
     lazy var titleLabel: UILabel = {
         let lb = UILabel()
         lb.textColor = .he.rgba(204, 204, 204)
@@ -179,19 +188,33 @@ class HEEditToolCell: UICollectionViewCell {
         return lb
     }()
     
+    private var badgeBottomConstraint: NSLayoutConstraint!
+    private var badgeLeftConstraint: NSLayoutConstraint!
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         
-        contentView.addSubview(iconView)
         contentView.addSubview(titleLabel)
+        contentView.addSubview(iconView)
+        contentView.addSubview(badgeView)
+        badgeView.isHidden = true
+        
         iconView.translatesAutoresizingMaskIntoConstraints = false
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        badgeView.translatesAutoresizingMaskIntoConstraints = false
+        
         titleLabel.setContentHuggingPriority(.required, for: .vertical)
         titleLabel.setContentCompressionResistancePriority(.required, for: .vertical)
+        
+        badgeBottomConstraint = badgeView.bottomAnchor.constraint(equalTo: iconView.centerYAnchor)
+        badgeLeftConstraint = badgeView.leftAnchor.constraint(equalTo: iconView.centerXAnchor)
+        
         NSLayoutConstraint.activate([
             iconView.widthAnchor.constraint(equalToConstant: 28),
             iconView.heightAnchor.constraint(equalToConstant: 28),
             iconView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            badgeBottomConstraint,
+            badgeLeftConstraint,
             titleLabel.topAnchor.constraint(equalTo: iconView.bottomAnchor, constant: 6),
             titleLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -4),
             titleLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
