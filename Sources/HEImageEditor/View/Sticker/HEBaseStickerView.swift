@@ -50,6 +50,7 @@ public class HEBaseStickerView: UIView, UIGestureRecognizerDelegate {
     let originAngle: CGFloat
     
     var maxGesScale: CGFloat
+    var minGesScale: CGFloat
     
     var originTransform: CGAffineTransform = .identity
     
@@ -121,7 +122,10 @@ public class HEBaseStickerView: UIView, UIGestureRecognizerDelegate {
         self.originScale = originScale
         self.originAngle = originAngle
         self.originFrame = originFrame
-        maxGesScale = 4 / originScale
+        // 최대 스케일 설정 - 최대 사이즈 512 , 기본 사이즈 150
+        self.maxGesScale = CGFloat(512.0 / 150.0) / originScale
+        // 최소 스케일 설정 - 최소 사이즈 50 , 기본 사이즈 150
+        self.minGesScale = CGFloat(50.0 / 150.0) / originScale
         super.init(frame: .zero)
         
         self.gesScale = gesScale
@@ -191,7 +195,6 @@ public class HEBaseStickerView: UIView, UIGestureRecognizerDelegate {
     func setupUIFrameWhenFirstLayout() {}
     
     private func direction(for angle: CGFloat) -> HEBaseStickerView.Direction {
-        // 将角度转换为0~360，并对360取余
         let angle = ((Int(angle) % 360) + 360) % 360
         return HEBaseStickerView.Direction(rawValue: angle) ?? .up
     }
@@ -206,7 +209,7 @@ public class HEBaseStickerView: UIView, UIGestureRecognizerDelegate {
     @objc func pinchAction(_ ges: UIPinchGestureRecognizer) {
         guard gesIsEnabled else { return }
         
-        let scale = min(maxGesScale, gesScale * ges.scale)
+        let scale = max(minGesScale, min(maxGesScale, gesScale * ges.scale))
         ges.scale = 1
         
         var scaleChanged = false
@@ -389,5 +392,6 @@ extension HEBaseStickerView: HEStickerViewAdditional {
         
         gesScale *= scale
         maxGesScale *= scale
+        minGesScale *= scale
     }
 }

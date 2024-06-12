@@ -36,16 +36,6 @@ public class HEImageStickerTrayView: UIView, HEImageStickerTray {
         fatalError("init(coder:) has not been implemented")
     }
     
-    public override func layoutSubviews() {
-        super.layoutSubviews()
-//        
-//        let path = UIBezierPath(rect: CGRect(x: 0, y: 0, width: self.frame.width, height: HEImageStickerTrayView.baseViewH))
-//        self.baseView.layer.mask = nil
-//        let maskLayer = CAShapeLayer()
-//        maskLayer.path = path.cgPath
-//        self.baseView.layer.mask = maskLayer
-    }
-    
     func setupUI() {
         self.clipsToBounds = true
         self.backgroundColor = .yellow.withAlphaComponent(0.2)

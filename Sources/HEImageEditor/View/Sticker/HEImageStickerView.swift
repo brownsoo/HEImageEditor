@@ -8,7 +8,7 @@ import UIKit
 class HEImageStickerView: HEBaseStickerView {
     private let image: UIImage
     
-    private static let edgeInset: CGFloat = 20
+    private static let edgeInset: CGFloat = 9
     
     private lazy var imageView: UIImageView = {
         let view = UIImageView(image: image)
@@ -84,17 +84,19 @@ class HEImageStickerView: HEBaseStickerView {
         imageView.frame = bounds.insetBy(dx: Self.edgeInset, dy: Self.edgeInset)
     }
     
-    class func calculateSize(image: UIImage, width: CGFloat) -> CGSize {
-        let maxSide = width / 2
-        let minSide: CGFloat = 100
+    class func calculateSize(image: UIImage, containerWidth: CGFloat) -> CGSize {
+        //let maxSide: CGFloat = 512 //min(512, containerWidth / 2)
+        // let minSide: CGFloat = 50
         let whRatio = image.size.width / image.size.height
         var size: CGSize = .zero
         if whRatio >= 1 {
-            let w = min(maxSide, max(minSide, image.size.width))
+            //let w = min(maxSide, max(minSide, image.size.width))
+            let w = CGFloat(150) // 기본 크기 
             let h = w / whRatio
             size = CGSize(width: w, height: h)
         } else {
-            let h = min(maxSide, max(minSide, image.size.width))
+            // let h = min(maxSide, max(minSide, image.size.width))
+            let h = CGFloat(150)
             let w = h * whRatio
             size = CGSize(width: w, height: h)
         }

@@ -1449,7 +1449,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         showDetailViewController(vc, sender: nil)
     }
     
-    func getStickerOriginFrame(_ size: CGSize) -> CGRect {
+    /// 스티커를 중앙 위치
+    private func getStickerOriginFrame(_ size: CGSize) -> CGRect {
         let scale = mainScrollView.zoomScale
         // Calculate the display rect of container view.
         let x = (mainScrollView.contentOffset.x - containerView.frame.minX) / scale
@@ -1472,7 +1473,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         }
         let image = sticker.image
         let scale = mainScrollView.zoomScale
-        let size = HEImageStickerView.calculateSize(image: image, width: view.frame.width)
+        let size = HEImageStickerView.calculateSize(image: image, containerWidth: view.frame.width)
         let originFrame = getStickerOriginFrame(size)
         
         let imageSticker = HEImageStickerView(image: image, originScale: 1 / scale, originAngle: -currentClipStatus.angle, originFrame: originFrame)
