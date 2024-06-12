@@ -17,7 +17,7 @@ public protocol HEEditImageView: AnyObject {
     func drawBtnClick()
     func startClipping()
     func startImageSticker()
-    func textStickerBtnClick()
+    func startTextSticker()
     func mosaicBtnClick()
     func filterBtnClick()
     func adjustBtnClick()

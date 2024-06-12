@@ -20,6 +20,7 @@
 		17189EAC2C1041DB00270F4D /* TransformBoxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17189E9D2C1041DB00270F4D /* TransformBoxView.swift */; };
 		17189EBA2C10461E00270F4D /* UIKit+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17189EB92C10461E00270F4D /* UIKit+.swift */; };
 		17189EBC2C105BE500270F4D /* Trace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17189EBB2C105BE500270F4D /* Trace.swift */; };
+		174095612C19FC1C00A4B18D /* Foundation+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 174095602C19FC1C00A4B18D /* Foundation+.swift */; };
 		17C8ED8A2C148390006F390A /* HEClipActionToolView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17C8ED892C148390006F390A /* HEClipActionToolView.swift */; };
 		17D691982C12EC32007443EC /* HEClipBottomView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D691972C12EC32007443EC /* HEClipBottomView.swift */; };
 		17D691992C167D0B007443EC /* TextStickerEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17189E932C1041DB00270F4D /* TextStickerEffect.swift */; };
@@ -88,6 +89,7 @@
 		17189EB72C1041EB00270F4D /* effect.puml */ = {isa = PBXFileReference; lastKnownFileType = text; path = effect.puml; sourceTree = "<group>"; };
 		17189EB92C10461E00270F4D /* UIKit+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIKit+.swift"; sourceTree = "<group>"; };
 		17189EBB2C105BE500270F4D /* Trace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Trace.swift; sourceTree = "<group>"; };
+		174095602C19FC1C00A4B18D /* Foundation+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Foundation+.swift"; sourceTree = "<group>"; };
 		17C8ED892C148390006F390A /* HEClipActionToolView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEClipActionToolView.swift; sourceTree = "<group>"; };
 		17D691972C12EC32007443EC /* HEClipBottomView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEClipBottomView.swift; sourceTree = "<group>"; };
 		17D6919A2C167D18007443EC /* HEColor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HEColor.swift; sourceTree = "<group>"; };
@@ -258,6 +260,7 @@
 				17189EBB2C105BE500270F4D /* Trace.swift */,
 				17D6919F2C16976B007443EC /* DebugLine.swift */,
 				17D691D92C184616007443EC /* Also.swift */,
+				174095602C19FC1C00A4B18D /* Foundation+.swift */,
 			);
 			path = Util;
 			sourceTree = "<group>";
@@ -484,6 +487,7 @@
 				FDE1A559282E580900178B0F /* HEImageEditorUIConfiguration.swift in Sources */,
 				17D691DA2C184616007443EC /* Also.swift in Sources */,
 				FDE1A561282E61B500178B0F /* HEEnlargeButton.swift in Sources */,
+				174095612C19FC1C00A4B18D /* Foundation+.swift in Sources */,
 				FDE1A55B282E58E700178B0F /* HEImageEditorUIConfiguration+Chaining.swift in Sources */,
 				FDBD955E2B148C74005EE2F8 /* UIGraphicsImageRenderer+.swift in Sources */,
 				FD7E7508284E134600EF34DD /* HEProgressHUD.swift in Sources */,

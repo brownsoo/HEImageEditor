@@ -116,7 +116,7 @@ public class HEBaseStickerView: UIView, UIGestureRecognizerDelegate {
         gesScale: CGFloat = 1,
         gesRotation: CGFloat = 0,
         totalTranslationPoint: CGPoint = .zero,
-        showBorder: Bool = true
+        showBorder: Bool = false
     ) {
         self.id = id
         self.originScale = originScale

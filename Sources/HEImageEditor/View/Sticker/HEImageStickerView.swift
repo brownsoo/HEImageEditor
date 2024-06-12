@@ -84,17 +84,18 @@ class HEImageStickerView: HEBaseStickerView {
         imageView.frame = bounds.insetBy(dx: Self.edgeInset, dy: Self.edgeInset)
     }
     // TODO: containerWidth 처리 
-    class func calculateSize(image: UIImage, containerWidth: CGFloat) -> CGSize {
-        let maxSide: CGFloat = 512 / image.scale // 512 pixel
-        let minSide: CGFloat = 50 / image.scale // 50 pixel
+    class func calculateSize(image: UIImage, container: UIView) -> CGSize {
+        let scale = (container.window?.windowScene?.screen.scale ?? image.scale)
+        let startSide: CGFloat = 150 / scale // 150 pixel
+        let minSide: CGFloat = 50 / scale // 150 pixel
         let whRatio = image.size.width / image.size.height
         var size: CGSize = .zero
         if whRatio >= 1 {
-            let w = min(maxSide, max(minSide, image.size.width))
+            let w = min(startSide, max(minSide, image.size.width))
             let h = w / whRatio
             size = CGSize(width: w, height: h)
         } else {
-            let h = min(maxSide, max(minSide, image.size.width))
+            let h = min(startSide, max(minSide, image.size.width))
             let w = h * whRatio
             size = CGSize(width: w, height: h)
         }
