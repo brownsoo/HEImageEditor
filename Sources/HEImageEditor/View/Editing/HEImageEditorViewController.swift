@@ -1498,8 +1498,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                     if let sticker = imageStickerTray.randomSticker(inSection: 0) {
                         let image = sticker.image
                         let scale = mainScrollView.zoomScale
-                        let size = data.frame.size //HEImageStickerView.calculateSize(image: image, containerWidth: view.frame.width)
-                        let originFrame = getStickerOriginFrame(size, stickerFrame: data.frame)
+                        let size = HEImageStickerView.calculateSize(image: image, containerWidth: view.frame.width)
+                        let originFrame = getStickerOriginFrame(size, stickerOrigin: data.frame.origin)
                         let imageSticker = HEImageStickerView(image: image, originScale: 1 / scale, originAngle: -currentClipStatus.angle, originFrame: originFrame)
                         addSticker(imageSticker)
                     }
@@ -1515,16 +1515,25 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     }
     
     /// 스티커를 해당 프레임으로 위치
-    private func getStickerOriginFrame(_ size: CGSize, stickerFrame: CGRect) -> CGRect {
+    private func getStickerOriginFrame(_ size: CGSize, stickerOrigin: CGPoint) -> CGRect {
         let scale = mainScrollView.zoomScale
         // Calculate the display rect of container view.
         let x = (mainScrollView.contentOffset.x - containerView.frame.minX) / scale
         let y = (mainScrollView.contentOffset.y - containerView.frame.minY) / scale
         let w = view.frame.width / scale
         let h = view.frame.height / scale
+        
         // Convert to text stickers container view.
         let r = containerView.convert(CGRect(x: x, y: y, width: w, height: h), to: stickersContainer)
-        let originFrame = CGRect(x: r.minX + (r.width - size.width) / 2, y: r.minY + (r.height - size.height) / 2, width: size.width, height: size.height)
+        
+        let rr = imageView.bounds.width / editImage.size.width
+        let rx = stickerOrigin.x * rr
+        let ry = stickerOrigin.y * rr
+        
+        let originFrame = CGRect(x: rx,
+                                 y: ry,
+                                 width: size.width,
+                                 height: size.height)
         return originFrame
     }
     
