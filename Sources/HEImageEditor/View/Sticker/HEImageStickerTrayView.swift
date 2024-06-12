@@ -12,6 +12,7 @@ public protocol HEImageStickerTrayViewDataSource {
     @objc optional func numberOfSections(in trayView: HEImageStickerTrayView) -> Int
     @objc func imageStickerTrayView(_ trayView: HEImageStickerTrayView, numberOfItemsInSection section: Int) -> Int
     @objc func imageStickerTrayView(_ trayView: HEImageStickerTrayView, stickerForItemAt indexPath: IndexPath) -> HEImageSticker
+    @objc optional func allStickers(_ trayView: HEImageStickerTrayView, numberOfItemsInSection section: Int) -> [HEImageSticker]
 }
 
 public class HEImageStickerTrayView: UIView, HEImageStickerTray {
@@ -121,8 +122,17 @@ public class HEImageStickerTrayView: UIView, HEImageStickerTray {
 
     }
     
-    private func loadStickers() {
+    public func randomSticker(inSection section: Int) -> HEImageSticker? {
+        guard let dataSource else { return nil }
+        if let allStickers = dataSource.allStickers?(self, numberOfItemsInSection: section).filter({ !$0.isSpecialSticker }) {
+            return allStickers.randomElement()
+        }
         
+        let total = dataSource.imageStickerTrayView(self, numberOfItemsInSection: section)
+        if let random = [0..<total].randomElement()?.first {
+            return dataSource.imageStickerTrayView(self, stickerForItemAt: IndexPath(row: random, section: section))
+        }
+        return nil
     }
     
 }

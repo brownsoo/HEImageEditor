@@ -281,29 +281,34 @@ public extension HEImageClipRatio {
 @objc public class HEImageSticker: NSObject {
     
     public static var faceAiIcon: HEImageSticker = {
-        HEImageSticker(id: "editStickerFaceAi", image: UIImage.he.getImage("editStickerFaceAi") ?? UIImage(systemName: "faceid")!)
+        HEImageSticker(id: idFaceAi, image: UIImage.he.getImage("editStickerFaceAi") ?? UIImage(systemName: "faceid")!)
         
     }()
     
     public static var mosaicIcon: HEImageSticker = {
-        HEImageSticker(id: "editStickerMosaic", image: UIImage.he.getImage("editStickerMosaic") ?? UIImage(systemName: "mosaic")!)
+        HEImageSticker(id: idMosaic, image: UIImage.he.getImage("editStickerMosaic") ?? UIImage(systemName: "mosaic")!)
     }()
+    static let idFaceAi = "editStickerFaceAi"
+    static let idMosaic = "editStickerMosaic"
+    
+    public var isSpecialSticker: Bool { self.id == Self.idMosaic || self.id == Self.idFaceAi }
     
     public let id: String
     public let image: UIImage
     
     public init(id: String, image: UIImage) {
         self.id = id
-        self.image = image
+        self.image = image // TODO: lazy loading
     }
 }
 
 /// 이미지 스티커 뷰 대상
 @objc public protocol HEImageStickerTray {
-    @objc var selectImageBlock: ((HEImageSticker) -> Void)? { get set }
-    @objc var hideBlock: (() -> Void)? { get set }
-    @objc func show(in parent: UIView, frame: CGRect)
-    @objc func hide()
+    var selectImageBlock: ((HEImageSticker) -> Void)? { get set }
+    var hideBlock: (() -> Void)? { get set }
+    func show(in parent: UIView, frame: CGRect)
+    func hide()
+    func randomSticker(inSection section: Int) -> HEImageSticker?
 }
 
 /// Provide an text font choose view that conform to this protocol must be a subclass of UIView

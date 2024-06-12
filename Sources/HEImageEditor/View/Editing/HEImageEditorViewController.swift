@@ -1464,8 +1464,9 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     }
     
     /// Add image sticker
-    func addImageStickerView(_ sticker: HEImageSticker) {
+    private func addImageStickerView(_ sticker: HEImageSticker) {
         if sticker.id == HEImageSticker.faceAiIcon.id {
+            addImageStickersOnFaces()
             return
         } else if sticker.id == HEImageSticker.mosaicIcon.id {
           
@@ -1483,8 +1484,53 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         actionManager.storeAction(.sticker(oldState: nil, newState: imageSticker.state))
     }
     
+    private func addImageStickersOnFaces() {
+        guard let imageStickerTray else {
+            // TODO: 스티커 준비 안됨 얼럿
+            return
+        }
+        // TODO: 로딩 표시
+        Task {
+            do {
+                let results = try await HEFaceDetection().detect(from: editImage, orientation: editImage.imageOrientation)
+                results.forEach { data in
+                    trace(data.frame)
+                    if let sticker = imageStickerTray.randomSticker(inSection: 0) {
+                        let image = sticker.image
+                        let scale = mainScrollView.zoomScale
+                        let size = data.frame.size //HEImageStickerView.calculateSize(image: image, containerWidth: view.frame.width)
+                        let originFrame = getStickerOriginFrame(size, stickerFrame: data.frame)
+                        let imageSticker = HEImageStickerView(image: image, originScale: 1 / scale, originAngle: -currentClipStatus.angle, originFrame: originFrame)
+                        addSticker(imageSticker)
+                    }
+                }
+                
+                view.layoutIfNeeded()
+                // TODO: 액션 저장??
+            } catch {
+                trace("Vision Error ----")
+                trace(error)
+            }
+        }
+    }
+    
+    /// 스티커를 해당 프레임으로 위치
+    private func getStickerOriginFrame(_ size: CGSize, stickerFrame: CGRect) -> CGRect {
+        let scale = mainScrollView.zoomScale
+        // Calculate the display rect of container view.
+        let x = (mainScrollView.contentOffset.x - containerView.frame.minX) / scale
+        let y = (mainScrollView.contentOffset.y - containerView.frame.minY) / scale
+        let w = view.frame.width / scale
+        let h = view.frame.height / scale
+        // Convert to text stickers container view.
+        let r = containerView.convert(CGRect(x: x, y: y, width: w, height: h), to: stickersContainer)
+        let originFrame = CGRect(x: r.minX + (r.width - size.width) / 2, y: r.minY + (r.height - size.height) / 2, width: size.width, height: size.height)
+        return originFrame
+    }
+    
+    
     /// Add text sticker
-    func addTextStickersView(_ text: String, textColor: UIColor, font: UIFont, image: UIImage?, style: ZLInputTextStyle) {
+    private func addTextStickersView(_ text: String, textColor: UIColor, font: UIFont, image: UIImage?, style: ZLInputTextStyle) {
         guard !text.isEmpty, let image = image else { return }
         
         let scale = mainScrollView.zoomScale
