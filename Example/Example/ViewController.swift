@@ -209,12 +209,43 @@ class ViewController: UIViewController {
         }
     }
     
+    private var imageStickers: [HEImageSticker] = []
+    
     func configImageEditor() {
+        
+        let stickerTray = HEImageStickerTrayView()
+        stickerTray.dataSource = self
+        
+        imageStickers.append(HEImageSticker.faceAiIcon)
+        imageStickers.append(HEImageSticker.mosaicIcon)
+        imageStickers.append(contentsOf: (1...18).map { (v) -> String in
+            "imageSticker" + String(v)
+        }.compactMap {
+            HEImageSticker(id: $0, image: UIImage(named: $0) ?? UIImage())
+        })
+        
         HEImageEditorConfiguration.default()
             .clipRatios([.origin, .custom, .wh1x1])
-            .imageStickerContainerView(ImageStickerContainerView())
+            .imageStickerTray(stickerTray)
             .fontChooserContainerView(FontChooserContainerView())
     }
+    
+    
+}
+
+extension ViewController: HEImageStickerTrayViewDataSource {
+    func imageStickerTrayView(_ trayView: HEImageEditor.HEImageStickerTrayView, numberOfItemsInSection section: Int) -> Int {
+        imageStickers.count
+    }
+    
+    func imageStickerTrayView(_ trayView: HEImageEditor.HEImageStickerTrayView, stickerForItemAt indexPath: IndexPath) -> HEImageSticker {
+        imageStickers[indexPath.row]
+    }
+    
+    
+}
+
+extension ViewController {
     
     @objc func pickImage() {
         let picker = UIImagePickerController()

@@ -59,7 +59,7 @@ final public class HEClipBottomView: UIView {
         
         revertBtn.setTitle(localLanguageTextValue(.revert), for: .normal)
         revertBtn.enlargeInset = 20
-        revertBtn.titleLabel?.font = HEImageEditorLayout.bottomToolTitleFont
+        revertBtn.titleLabel?.font = .systemFont(ofSize: 17)
         revertBtn.addTarget(self, action: #selector(revertBtnClick), for: .touchUpInside)
         
         doneBtn.setImage(UIImage(systemName: "checkmark"), for: .normal)

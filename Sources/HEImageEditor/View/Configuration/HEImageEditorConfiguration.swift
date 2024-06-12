@@ -33,7 +33,7 @@ public class HEImageEditorConfiguration: NSObject {
     private var _tools: [HEImageEditorConfiguration.EditTool] = [.textSticker,  .imageSticker, .clip]
     
     /// Edit image tools.
-    /// - warning: If you want to use the image sticker feature, you must provide a view that implements HEImageStickerContainerDelegate.
+    /// - warning: 이미지스티커를 포함할 경우, imageStickerTray: HEImageStickerTray를 꼭 설정해야 함.
     public var tools: [HEImageEditorConfiguration.EditTool] {
         get {
             if _tools.isEmpty {
@@ -120,7 +120,7 @@ public class HEImageEditorConfiguration: NSObject {
         }
     }
     
-    @objc public var imageStickerContainerView: (UIView & HEImageStickerContainerDelegate)?
+    @objc public var imageStickerTray: (UIView & HEImageStickerTray)?
 
     @objc public var fontChooserContainerView: (UIView & HETextFontChooserDelegate)?
 
@@ -277,13 +277,33 @@ public extension HEImageClipRatio {
     @objc static let wh16x9 = HEImageClipRatio(title: "16 : 9", whRatio: 16.0 / 9.0, iconName: "icEditThumSquare")
 }
 
-/// Provide an image sticker container view that conform to this protocol must be a subclass of UIView
-@objc public protocol HEImageStickerContainerDelegate {
-    @objc var selectImageBlock: ((UIImage) -> Void)? { get set }
+/// 이미지 스티커 원본
+@objc public class HEImageSticker: NSObject {
     
+    public static var faceAiIcon: HEImageSticker = {
+        HEImageSticker(id: "editStickerFaceAi", image: UIImage.he.getImage("editStickerFaceAi") ?? UIImage(systemName: "faceid")!)
+        
+    }()
+    
+    public static var mosaicIcon: HEImageSticker = {
+        HEImageSticker(id: "editStickerMosaic", image: UIImage.he.getImage("editStickerMosaic") ?? UIImage(systemName: "mosaic")!)
+    }()
+    
+    public let id: String
+    public let image: UIImage
+    
+    public init(id: String, image: UIImage) {
+        self.id = id
+        self.image = image
+    }
+}
+
+/// 이미지 스티커 뷰 대상
+@objc public protocol HEImageStickerTray {
+    @objc var selectImageBlock: ((HEImageSticker) -> Void)? { get set }
     @objc var hideBlock: (() -> Void)? { get set }
-    
-    @objc func show(in view: UIView)
+    @objc func show(in parent: UIView, frame: CGRect)
+    @objc func hide()
 }
 
 /// Provide an text font choose view that conform to this protocol must be a subclass of UIView

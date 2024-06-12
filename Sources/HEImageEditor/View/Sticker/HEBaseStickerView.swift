@@ -5,23 +5,23 @@
 
 import UIKit
 
-protocol ZLStickerViewDelegate: NSObject {
+protocol HEStickerViewDelegate: NSObject {
     /// Called when scale or rotate or move.
-    func stickerBeginOperation(_ sticker: ZLBaseStickerView)
+    func stickerBeginOperation(_ sticker: HEBaseStickerView)
     
     /// Called during scale or rotate or move.
-    func stickerOnOperation(_ sticker: ZLBaseStickerView, panGes: UIPanGestureRecognizer)
+    func stickerOnOperation(_ sticker: HEBaseStickerView, panGes: UIPanGestureRecognizer)
     
     /// Called after scale or rotate or move.
-    func stickerEndOperation(_ sticker: ZLBaseStickerView, panGes: UIPanGestureRecognizer)
+    func stickerEndOperation(_ sticker: HEBaseStickerView, panGes: UIPanGestureRecognizer)
     
     /// Called when tap sticker.
-    func stickerDidTap(_ sticker: ZLBaseStickerView)
+    func stickerDidTap(_ sticker: HEBaseStickerView)
     
-    func sticker(_ textSticker: ZLTextStickerView, editText text: String)
+    func sticker(_ textSticker: HETextStickerView, editText text: String)
 }
 
-protocol ZLStickerViewAdditional: NSObject {
+protocol HEStickerViewAdditional: NSObject {
     var gesIsEnabled: Bool { get set }
     
     func resetState()
@@ -31,7 +31,7 @@ protocol ZLStickerViewAdditional: NSObject {
     func addScale(_ scale: CGFloat)
 }
 
-public class ZLBaseStickerView: UIView, UIGestureRecognizerDelegate {
+public class HEBaseStickerView: UIView, UIGestureRecognizerDelegate {
     private enum Direction: Int {
         case up = 0
         case right = 90
@@ -91,17 +91,17 @@ public class ZLBaseStickerView: UIView, UIGestureRecognizerDelegate {
         return self
     }
     
-    weak var delegate: ZLStickerViewDelegate?
+    weak var delegate: HEStickerViewDelegate?
     
     deinit {
         cleanTimer()
     }
     
-    class func initWithState(_ effect: HEStickerEffect) -> ZLBaseStickerView? {
+    class func initWithState(_ effect: HEStickerEffect) -> HEBaseStickerView? {
         if let state = effect as? HETextStickerEffect {
-            return ZLTextStickerView(state: state)
+            return HETextStickerView(state: state)
         } else if let state = effect as? HEImageStickerEffect {
-            return ZLImageStickerView(state: state)
+            return HEImageStickerView(state: state)
         } else {
             return nil
         }
@@ -190,10 +190,10 @@ public class ZLBaseStickerView: UIView, UIGestureRecognizerDelegate {
     
     func setupUIFrameWhenFirstLayout() {}
     
-    private func direction(for angle: CGFloat) -> ZLBaseStickerView.Direction {
+    private func direction(for angle: CGFloat) -> HEBaseStickerView.Direction {
         // 将角度转换为0~360，并对360取余
         let angle = ((Int(angle) % 360) + 360) % 360
-        return ZLBaseStickerView.Direction(rawValue: angle) ?? .up
+        return HEBaseStickerView.Direction(rawValue: angle) ?? .up
     }
     
     @objc func tapAction(_ ges: UITapGestureRecognizer) {
@@ -332,7 +332,7 @@ public class ZLBaseStickerView: UIView, UIGestureRecognizerDelegate {
     }
 }
 
-extension ZLBaseStickerView: ZLStickerViewAdditional {
+extension HEBaseStickerView: HEStickerViewAdditional {
     func resetState() {
         onOperation = false
         cleanTimer()

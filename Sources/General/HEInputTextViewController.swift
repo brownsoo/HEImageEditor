@@ -11,7 +11,7 @@ class HEInputTextViewController: UIViewController {
     
     private var text: String
 
-    private var font: UIFont = .boldSystemFont(ofSize: ZLTextStickerView.fontSize)
+    private var font: UIFont = .boldSystemFont(ofSize: HETextStickerView.fontSize)
     
     private var currentColor: UIColor {
         didSet {
@@ -37,7 +37,6 @@ class HEInputTextViewController: UIViewController {
     private lazy var cancelBtn: UIButton = {
         let btn = UIButton(type: .custom)
         btn.setTitle(localLanguageTextValue(.cancel), for: .normal)
-        btn.titleLabel?.font = HEImageEditorLayout.bottomToolTitleFont
         btn.addTarget(self, action: #selector(cancelBtnClick), for: .touchUpInside)
         return btn
     }()
@@ -47,10 +46,9 @@ class HEInputTextViewController: UIViewController {
         btn.setTitle(localLanguageTextValue(.done), for: .normal)
         btn.setTitleColor(.he.editDoneBtnTitleColor, for: .normal)
         btn.backgroundColor = .he.editDoneBtnBgColor
-        btn.titleLabel?.font = HEImageEditorLayout.bottomToolTitleFont
         btn.addTarget(self, action: #selector(doneBtnClick), for: .touchUpInside)
         btn.layer.masksToBounds = true
-        btn.layer.cornerRadius = HEImageEditorLayout.bottomToolBtnCornerRadius
+        btn.layer.cornerRadius = 5
         return btn
     }()
     
@@ -127,7 +125,7 @@ class HEInputTextViewController: UIViewController {
         self.image = image
         self.text = text ?? ""
         if let font = font {
-            self.font = font.withSize(ZLTextStickerView.fontSize)
+            self.font = font.withSize(HETextStickerView.fontSize)
         }
         if let textColor = textColor {
             currentColor = textColor
@@ -180,11 +178,11 @@ class HEInputTextViewController: UIViewController {
         coverView.frame = bgImageView.bounds
         
         let btnY = max(deviceSafeAreaInsets().top, 20) + 20
-        let cancelBtnW = localLanguageTextValue(.cancel).he.boundingRect(font: HEImageEditorLayout.bottomToolTitleFont, limitSize: CGSize(width: .greatestFiniteMagnitude, height: HEImageEditorLayout.bottomToolBtnH)).width + 20
-        cancelBtn.frame = CGRect(x: 15, y: btnY, width: cancelBtnW, height: HEImageEditorLayout.bottomToolBtnH)
+        let cancelBtnW = localLanguageTextValue(.cancel).he.boundingRect(font: .systemFont(ofSize: 17), limitSize: CGSize(width: .greatestFiniteMagnitude, height: HEImageEditorLayout.bottomToolBtnHeight)).width + 20
+        cancelBtn.frame = CGRect(x: 15, y: btnY, width: cancelBtnW, height: HEImageEditorLayout.bottomToolBtnHeight)
         
-        let doneBtnW = localLanguageTextValue(.done).he.boundingRect(font: HEImageEditorLayout.bottomToolTitleFont, limitSize: CGSize(width: .greatestFiniteMagnitude, height: HEImageEditorLayout.bottomToolBtnH)).width + 20
-        doneBtn.frame = CGRect(x: view.he.width - 20 - doneBtnW, y: btnY, width: doneBtnW, height: HEImageEditorLayout.bottomToolBtnH)
+        let doneBtnW = localLanguageTextValue(.done).he.boundingRect(font: .systemFont(ofSize: 17), limitSize: CGSize(width: .greatestFiniteMagnitude, height: HEImageEditorLayout.bottomToolBtnHeight)).width + 20
+        doneBtn.frame = CGRect(x: view.he.width - 20 - doneBtnW, y: btnY, width: doneBtnW, height: HEImageEditorLayout.bottomToolBtnHeight)
         
         textView.frame = CGRect(x: 10, y: doneBtn.he.bottom + 30, width: view.he.width - 20, height: 200)
         

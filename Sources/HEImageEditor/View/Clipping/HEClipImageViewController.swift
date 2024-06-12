@@ -5,7 +5,6 @@
 
 import UIKit
 
-
 public typealias HEClipImageBottomViewBuilder = (HEClipImageView) -> (toolView: UIView, height: CGFloat)
 
 public protocol HEClipImageView: AnyObject {
@@ -35,7 +34,7 @@ extension HEClipImageViewController {
 class HEClipImageViewController: UIViewController, HEClipImageView {
     
     
-    var animateDismiss = true
+    private var animateDismiss = true
     
     /// Animation starting frame when first enter
     var presentAnimateFrame: CGRect?
@@ -44,36 +43,34 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
     var presentAnimateImage: UIImage?
     
     /// Animation starting frame when cancel clip
-    var cancelClipAnimateFrame: CGRect = .zero
+    private var cancelClipAnimateFrame: CGRect = .zero
     
-    var viewDidAppearCount = 0
+    private var viewDidAppearCount = 0
     
-    let originalImage: UIImage
+    private let originalImage: UIImage
     
-    var editImage: UIImage
+    private var editImage: UIImage
     /// 편집 영역
     private(set) var editRect: CGRect
     /// 편집 영역을 화면 안쪽으로 넣을 수 있음.
-    var editRectInsets: UIEdgeInsets = .init(top: 48,  // 상위뷰의 툴바 영역
+    private var editRectInsets: UIEdgeInsets = .init(top: 48,  // 상위뷰의 툴바 영역
                                              left: 0,
-                                             bottom: 72, // 상위뷰의 탭바 영역
+                                             bottom: 72, // 하위 탭바 영역
                                              right: 0)
     
-    var scrollView: UIScrollView!
-    
-    var containerView: UIView!
-    
-    var imageView: UIImageView!
+    private var scrollView: UIScrollView!
+    private var containerView: UIView!
+    private var imageView: UIImageView!
     
     /// 잘려진 부분을 희미하게 보이기 위한 레이어
-    var shadowView: HEClipShadowView!
+    private var dimView: HEClipShadowView!
     private var gridView: HEClipGridView!
     private var gridPanGes: UIPanGestureRecognizer!
     
     /// 툴바 아래에 놓을 수 있는 뷰.
     ///
     /// - HEClipImageBottomViewBuilder 에 의해 생성
-    private var bottomToolView: UIView?
+    private var bottomView: UIView?
     private var bottomViewHeight: CGFloat = 0
     
     var bottomShadowLayer: CAGradientLayer!
@@ -95,7 +92,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
     
     var isRotating = false
     
-    var angle: CGFloat = 0
+    private(set) var angle: CGFloat = 0
     
     var selectedRatio: HEImageClipRatio {
         didSet {
@@ -130,7 +127,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         deviceIsiPhone() ? .portrait : .all
     }
     
-    private var bottomToolViewBuilder: HEClipImageBottomViewBuilder?
+    private var bottomViewBuilder: HEClipImageBottomViewBuilder?
     
     deinit {
         trace()
@@ -161,13 +158,13 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         self.clipActionToolView = HEClipActionToolView(clipRatios: HEImageEditorConfiguration.default().clipRatios,
                                                        originImageSize: image.size,
                                                        selectedRatio: self.selectedRatio)
-        self.bottomToolViewBuilder = bottomViewBuilder
+        self.bottomViewBuilder = bottomViewBuilder
         
         super.init(nibName: nil, bundle: nil)
         
         self.clipActionToolView.delegate = self
         if firstEnter {
-            calculateClipRect()
+            calculateEditRect()
         }
     }
     
@@ -180,7 +177,9 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         super.viewDidLoad()
         
         setupUI()
-        generateThumbnailImage()
+        Task.detached {
+            await self.generateThumbnailImage()
+        }
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -205,7 +204,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
             cancelClipAnimateFrame = clipBoxFrame
             UIView.animate(withDuration: 0.25, animations: {
                 animateImageView.frame = self.clipBoxFrame
-                self.bottomToolView?.alpha = 1
+                self.bottomView?.alpha = 1
             }) { _ in
                 UIView.animate(withDuration: 0.1, animations: {
                     self.scrollView.alpha = 1
@@ -215,7 +214,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
                 }
             }
         } else {
-            bottomToolView?.alpha = 1
+            bottomView?.alpha = 1
             scrollView.alpha = 1
             gridView.alpha = 1
         }
@@ -228,9 +227,9 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         shouldLayout = false
         
         let bottomToolFrame: CGRect
-        if let bottomToolView {
-            bottomToolView.frame = CGRect(x: 0, y: view.bounds.height - self.bottomViewHeight, width: view.bounds.width, height: self.bottomViewHeight)
-            bottomToolFrame = bottomToolView.frame
+        if let bottomView {
+            bottomView.frame = CGRect(x: 0, y: view.bounds.height - self.bottomViewHeight, width: view.bounds.width, height: self.bottomViewHeight)
+            bottomToolFrame = bottomView.frame
         } else {
             bottomToolFrame = CGRect(x: 0, y: view.bounds.height, width: view.bounds.width, height: 0)
         }
@@ -243,7 +242,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         clipActionToolView.selectRatio(self.selectedRatio, animated: false)
         
         scrollView.frame = view.bounds
-        shadowView.frame = view.bounds
+        dimView.frame = view.bounds
         
         layoutInitialImage()
         
@@ -274,21 +273,19 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         imageView.clipsToBounds = true
         containerView.addSubview(imageView)
         
-        shadowView = HEClipShadowView()
-        shadowView.isUserInteractionEnabled = false
-        shadowView.backgroundColor = UIColor.black.withAlphaComponent(0.3)
-        view.addSubview(shadowView)
-        
-        
+        dimView = HEClipShadowView()
+        dimView.isUserInteractionEnabled = false
+        dimView.backgroundColor = UIColor.black.withAlphaComponent(0.3)
+        view.addSubview(dimView)
         
         gridView = HEClipGridView()
         gridView.isUserInteractionEnabled = false
         gridView.isCircle = selectedRatio.isCircle
         view.addSubview(gridView)
         
-        if let builder  = self.bottomToolViewBuilder?(self) {
+        if let builder  = self.bottomViewBuilder?(self) {
             view.addSubview(builder.toolView)
-            self.bottomToolView = builder.toolView
+            self.bottomView = builder.toolView
             self.bottomViewHeight = builder.height
         }
         
@@ -316,7 +313,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         
         scrollView.alpha = 0
         gridView.alpha = 0
-        bottomToolView?.alpha = 0
+        bottomView?.alpha = 0
     }
     
     func generateThumbnailImage() {
@@ -340,11 +337,11 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         rect.origin.x = editInsets.left
         rect.origin.y = insets.top
         rect.size.width = UIScreen.main.bounds.width - editInsets.width
-        rect.size.height = UIScreen.main.bounds.height - editInsets.top - self.bottomViewHeight - HEClipActionToolView.viewHeight
+        rect.size.height = UIScreen.main.bounds.height - editInsets.top - self.bottomViewHeight - HEClipActionToolView.viewHeight - insets.bottom
         return rect
     }
     
-    func calculateClipRect() {
+    private func calculateEditRect() {
         if selectedRatio.whRatio == 0 {
             editRect = CGRect(origin: .zero, size: editImage.size)
         } else {
@@ -364,7 +361,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         }
     }
     
-    func layoutInitialImage() {
+    private func layoutInitialImage() {
         scrollView.minimumZoomScale = 1
         scrollView.maximumZoomScale = 1
         scrollView.zoomScale = 1
@@ -448,7 +445,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
 //        frame.size.height = floor(max(self.minClipSize.height, min(frame.height, maxH)))
         
         clipBoxFrame = frame
-        shadowView.clearRect = frame
+        dimView.clearRect = frame
         gridView.frame = frame// .insetBy(dx: -HEClipOverlayView.cornerLineWidth, dy: -HEClipOverlayView.cornerLineWidth)
         
         scrollView.contentInset = UIEdgeInsets(top: frame.minY, left: frame.minX, bottom: scrollView.frame.maxY - frame.maxY, right: scrollView.frame.maxX - frame.maxX)
@@ -518,7 +515,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
     func revertEdit() {
         angle = 0
         editImage = originalImage
-        calculateClipRect()
+        calculateEditRect()
         imageView.image = editImage
         layoutInitialImage()
         
@@ -557,7 +554,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
             
             // 이미지 회전
             editImage = editImage.he.rotate(orientation: .left)
-            calculateClipRect()
+            calculateEditRect()
         }
         
         imageView.image = editImage
@@ -582,7 +579,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
     
     func clip(ratio: HEImageClipRatio) {
         self.selectedRatio = ratio
-        self.calculateClipRect()
+        self.calculateEditRect()
         self.layoutInitialImage()
     }
     
@@ -778,7 +775,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
     
     func startEditing() {
         cleanTimer()
-        shadowView.alpha = 0
+        dimView.alpha = 0
         gridView.isEditing = true
         if clipActionToolView.alpha != 0 {
             clipActionToolView.layer.removeAllAnimations()
@@ -841,7 +838,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
                 self.scrollView.contentOffset = offset
             }
             self.clipActionToolView.alpha = 1
-            self.shadowView.alpha = 1
+            self.dimView.alpha = 1
             self.changeClipBoxFrame(newFrame: clipRect)
         }
     }

@@ -26,7 +26,7 @@
 
 import UIKit
 
-class ZLTextStickerView: ZLBaseStickerView {
+class HETextStickerView: HEBaseStickerView {
     static let fontSize: CGFloat = 32
     
     private static let edgeInset: CGFloat = 10

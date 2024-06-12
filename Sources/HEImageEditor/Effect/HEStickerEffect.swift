@@ -37,7 +37,8 @@ public class HEStickerEffect: NSObject {
     }
 }
 
-public class HEImageStickerEffect: HEStickerEffect { }
+public class HEImageStickerEffect: HEStickerEffect {
+}
 
 public class HETextStickerEffect: HEStickerEffect {
     let text: String

@@ -4,12 +4,11 @@
 //
 import UIKit
 
-struct HEImageEditorLayout {
-    static let bottomToolBtnH: CGFloat = 72
+public struct HEImageEditorLayout {
     
-    static let bottomToolTitleFont = UIFont.systemFont(ofSize: 17)
+    public static let imageStickerTrayHeight: CGFloat = 156
     
-    static let bottomToolBtnCornerRadius: CGFloat = 5
+    static let bottomToolBtnHeight: CGFloat = 72
 }
 
 func deviceIsiPhone() -> Bool {

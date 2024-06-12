@@ -61,8 +61,8 @@ public extension HEImageEditorConfiguration {
     }
     
     @discardableResult
-    func imageStickerContainerView(_ view: (UIView & HEImageStickerContainerDelegate)?) -> HEImageEditorConfiguration {
-        imageStickerContainerView = view
+    func imageStickerTray(_ view: (UIView & HEImageStickerTray)?) -> HEImageEditorConfiguration {
+        self.imageStickerTray = view
         return self
     }
 

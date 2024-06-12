@@ -98,7 +98,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     }()
      
     /// 하단 툴바 영역
-    open lazy var bottomShadowView: HEPassThroughView = {
+    open lazy var bottomTabBarView: HEPassThroughView = {
         let shadowView = HEPassThroughView()
         shadowView.findResponderSticker = findResponderSticker(_:)
         return shadowView
@@ -113,7 +113,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     open lazy var cancelBtn: HEEnlargeButton = {
         let btn = HEEnlargeButton(type: .custom)
-        btn.titleLabel?.font = HEImageEditorLayout.bottomToolTitleFont
         btn.setTitleColor(.white, for: .normal)
         btn.setTitle(localLanguageTextValue(.cancel), for: .normal)
         btn.addTarget(self, action: #selector(cancelBtnClick), for: .touchUpInside)
@@ -145,6 +144,10 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     private var bottomView: UIView!
     private var bottomViewHeight: CGFloat!
+    
+    private var imageStickerTray: (UIView & HEImageStickerTray)? {
+        HEImageEditorConfiguration.default().imageStickerTray
+    }
     
     open var drawColorCollectionView: UICollectionView?
     
@@ -257,7 +260,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     var currentFilter: HEFilter
     
-    var stickers: [ZLBaseStickerView] = []
+    var stickers: [HEBaseStickerView] = []
     
     var isScrolling = false
     
@@ -374,7 +377,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         preAdjustStatus = currentAdjustStatus
         
         var ts = HEImageEditorConfiguration.default().tools
-        if ts.contains(.imageSticker), HEImageEditorConfiguration.default().imageStickerContainerView == nil {
+        if ts.contains(.imageSticker), HEImageEditorConfiguration.default().imageStickerTray == nil {
             ts.removeAll { $0 == .imageSticker }
         }
         tools = ts
@@ -397,7 +400,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 case .clip:
                     editView.startClipping()
                 case .imageSticker:
-                    editView.imageStickerBtnClick()
+                    editView.startImageSticker()
                 case .textSticker:
                     editView.textStickerBtnClick()
                 case .mosaic:
@@ -420,7 +423,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         }
         
         stickers = editModel?.stickers.compactMap {
-            ZLBaseStickerView.initWithState($0)
+            HEBaseStickerView.initWithState($0)
         } ?? []
     }
     
@@ -476,15 +479,15 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         topShadowLayer.frame = topShadowView.bounds
         cancelBtn.frame = CGRect(x: 30, y: insets.top + 10, width: 28, height: 28)
         
-        bottomShadowView.frame = CGRect(x: 0,
+        bottomTabBarView.frame = CGRect(x: 0,
                                         y: view.frame.height - bottomViewHeight - insets.bottom,
                                         width: view.he.width,
                                         height: bottomViewHeight + insets.bottom)
-        bottomShadowLayer.frame = bottomShadowView.bounds
+        bottomShadowLayer.frame = bottomTabBarView.bounds
         
         let cancelBtnW = localLanguageTextValue(.cancel)
             .he.boundingRect(
-                font: HEImageEditorLayout.bottomToolTitleFont,
+                font: .systemFont(ofSize: 17),
                 limitSize: CGSize(width: CGFloat.greatestFiniteMagnitude, height: 28)
             ).width
         cancelBtn.frame = CGRect(x: 20, y: 60, width: cancelBtnW, height: 30)
@@ -504,7 +507,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             let sliderWidth = UIDevice.current.userInterfaceIdiom == .phone ? view.he.width - 100 : view.he.width / 2
             adjustSlider?.frame = CGRect(
                 x: (view.he.width - sliderWidth) / 2,
-                y: bottomShadowView.he.top - sliderHeight,
+                y: bottomTabBarView.he.top - sliderHeight,
                 width: sliderWidth,
                 height: sliderHeight
             )
@@ -526,7 +529,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         )
         
         bottomView.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: bottomViewHeight)
-        editingContainer.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: bottomShadowView.frame.minY)
+        editingContainer.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: bottomTabBarView.frame.minY)
         
         if !drawPaths.isEmpty {
             drawLine()
@@ -631,17 +634,17 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         topShadowView.addSubview(undoBtn)
         topShadowView.addSubview(redoBtn)
         
-        view.addSubview(bottomShadowView)
+        view.addSubview(bottomTabBarView)
         let builder = self.bottomViewBuilder(self)
         bottomView = builder.toolView
         bottomViewHeight = builder.height
-        bottomShadowView.layer.addSublayer(bottomShadowLayer)
-        bottomShadowView.addSubview(bottomView)
+        bottomTabBarView.layer.addSublayer(bottomShadowLayer)
+        bottomTabBarView.addSubview(bottomView)
         
         if tools.contains(.draw) {
-            bottomShadowView.addSubview(eraserBtnBgBlurView)
-            bottomShadowView.addSubview(eraserBtn)
-            bottomShadowView.addSubview(eraserLineView)
+            bottomTabBarView.addSubview(eraserBtnBgBlurView)
+            bottomTabBarView.addSubview(eraserBtn)
+            bottomTabBarView.addSubview(eraserLineView)
             containerView.addSubview(eraserCircleView)
             
             impactFeedback = UIImpactFeedbackGenerator(style: .light)
@@ -660,7 +663,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             drawCV.delegate = self
             drawCV.dataSource = self
             drawCV.isHidden = true
-            bottomShadowView.addSubview(drawCV)
+            bottomTabBarView.addSubview(drawCV)
             
             ZLDrawColorCell.he.register(drawCV)
             drawColorCollectionView = drawCV
@@ -686,7 +689,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             filterCV.delegate = self
             filterCV.dataSource = self
             filterCV.isHidden = true
-            bottomShadowView.addSubview(filterCV)
+            bottomTabBarView.addSubview(filterCV)
             
             ZLFilterImageCell.he.register(filterCV)
             filterCollectionView = filterCV
@@ -712,7 +715,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             adjustCV.dataSource = self
             adjustCV.isHidden = true
             adjustCV.showsHorizontalScrollIndicator = false
-            bottomShadowView.addSubview(adjustCV)
+            bottomTabBarView.addSubview(adjustCV)
             
             ZLAdjustToolCell.he.register(adjustCV)
             adjustCollectionView = adjustCV
@@ -769,13 +772,14 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             mosaicImageLayer?.mask = mosaicImageLayerMaskLayer
         }
         
-        if tools.contains(.imageSticker) {
-            HEImageEditorConfiguration.default().imageStickerContainerView?.hideBlock = { [weak self] in
+        if tools.contains(.imageSticker), let imageStickerView = self.imageStickerTray {
+            
+            imageStickerView.hideBlock = { [weak self] in
                 self?.setToolView(show: true)
                 self?.imageStickerContainerIsHidden = true
             }
             
-            HEImageEditorConfiguration.default().imageStickerContainerView?.selectImageBlock = { [weak self] image in
+            imageStickerView.selectImageBlock = { [weak self] image in
                 self?.addImageStickerView(image)
             }
         }
@@ -807,7 +811,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     ///
     /// - point 는 컨트롤러의 view 좌표계
     func findResponderSticker(_ point: CGPoint) -> UIView? {
-        // 倒序查找subview
         for sticker in stickersContainer.subviews.reversed() {
             let rect = stickersContainer.convert(sticker.frame, to: view)
             if rect.contains(point) {
@@ -833,7 +836,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     }
     
     public var isImageEditing: Bool {
-        return self.currentEditController != nil
+        return self.currentEditController != nil || self.selectedTool != nil
     }
     
     public func drawBtnClick() {
@@ -865,14 +868,33 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     }
     
     public func stopCurrentEditing() {
-        guard let current = self.currentEditController else { return }
-        if let vc = current as? HEClipImageViewController {
-            self.clipImage(status: HEClipStatus(editRect: vc.editRect, angle: vc.angle, ratio: vc.selectedRatio))
-            self.actionManager.storeAction(.clip(oldStatus: self.preClipStatus, newStatus: self.currentClipStatus))
-        }
         
-        self.finishEditingDismissAnimate()
-        self.removeFromEditContainer()
+        switch self.selectedTool {
+        case .draw:
+            break
+        case .clip:
+            break
+        case .imageSticker:
+            self.imageStickerTray?.hide()
+            break
+        case .textSticker:
+            break
+        case .mosaic:
+            break
+        case .filter:
+            break
+        case .adjust:
+            break
+        case .none:
+            break
+        }
+        self.selectedTool = nil
+        
+        guard let current = self.currentEditController else { return }
+        // TODO: 브레이크
+        if let vc = current as? HEClipImageViewController {
+            vc.doneEdit()
+        }
     }
     
     public func startClipping() {
@@ -906,20 +928,23 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             self?.resetContainerViewFrame()
         }
         vc.dismissCallback = { [weak self] in
-            self?.removeFromEditContainer()
+            self?.removeEditController()
             self?.finishEditingDismissAnimate()
+            self?.selectedTool = nil
         }
-        self.addToEditContainer(vc)
+        
+        self.addToEditController(vc)
         self.beginEditingStartAnimate()
         
-        selectedTool = nil
+        selectedTool = .clip
         setDrawViews(hidden: true)
         setFilterViews(hidden: true)
         setAdjustViews(hidden: true)
     }
     
     private var currentEditController: UIViewController?
-    private func addToEditContainer(_ target: UIViewController) {
+    
+    private func addToEditController(_ target: UIViewController) {
         if let exist = self.currentEditController {
             exist.willMove(toParent: nil)
             exist.view.removeFromSuperview()
@@ -932,7 +957,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         self.currentEditController = target
     }
     
-    private func removeFromEditContainer() {
+    private func removeEditController() {
         if let exist = self.currentEditController {
             exist.willMove(toParent: nil)
             exist.view.removeFromSuperview()
@@ -956,12 +981,16 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         recalculateStickersFrame(oldContainerSize, oldAngle, status.angle)
     }
     
-    public func imageStickerBtnClick() {
-        HEImageEditorConfiguration.default().imageStickerContainerView?.show(in: view)
-        setToolView(show: false)
+    public func startImageSticker() {
+        let trayFrame = CGRect(x: 0, y: bottomTabBarView.frame.minY - HEImageEditorLayout.imageStickerTrayHeight,
+                               width: view.bounds.width,
+                               height: HEImageEditorLayout.imageStickerTrayHeight)
+        HEImageEditorConfiguration.default().imageStickerTray?.show(in: view, frame: trayFrame)
+        // setToolView(show: false)
         imageStickerContainerIsHidden = false
         
-        selectedTool = nil
+        selectedTool = .imageSticker
+        
         setDrawViews(hidden: true)
         setFilterViews(hidden: true)
         setAdjustViews(hidden: true)
@@ -1058,7 +1087,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     public func done() {
         var stickerStates: [HEStickerEffect] = []
         for view in stickersContainer.subviews {
-            guard let view = view as? ZLBaseStickerView else { continue }
+            guard let view = view as? HEBaseStickerView else { continue }
             stickerStates.append(view.state)
         }
         
@@ -1129,7 +1158,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     // TODO: 제외
     @objc func tapAction(_ tap: UITapGestureRecognizer) {
-        if bottomShadowView.alpha == 1 {
+        if bottomTabBarView.alpha == 1 {
             setToolView(show: false)
         } else {
             setToolView(show: true)
@@ -1354,14 +1383,14 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     func setToolView(show: Bool, delay: TimeInterval? = nil) {
         cleanToolViewStateTimer()
         if let delay = delay {
-            toolViewStateTimer = Timer.scheduledTimer(timeInterval: delay, target: HEWeakProxy(target: self), selector: #selector(setToolViewShow_timerFunc(show:)), userInfo: ["show": show], repeats: false)
+            toolViewStateTimer = Timer.scheduledTimer(timeInterval: delay, target: HEWeakProxy(target: self), selector: #selector(setToolViewShowInTimer(show:)), userInfo: ["show": show], repeats: false)
             RunLoop.current.add(toolViewStateTimer!, forMode: .common)
         } else {
-            setToolViewShow_timerFunc(show: show)
+            setToolViewShowInTimer(show: show)
         }
     }
     
-    @objc private func setToolViewShow_timerFunc(show: Bool) {
+    @objc private func setToolViewShowInTimer(show: Bool) {
         var flag = show
         if let toolViewStateTimer = toolViewStateTimer {
             let userInfo = toolViewStateTimer.userInfo as? [String: Any]
@@ -1369,18 +1398,18 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             cleanToolViewStateTimer()
         }
         topShadowView.layer.removeAllAnimations()
-        bottomShadowView.layer.removeAllAnimations()
+        bottomTabBarView.layer.removeAllAnimations()
         adjustSlider?.layer.removeAllAnimations()
         if flag {
             UIView.animate(withDuration: 0.25) {
                 self.topShadowView.alpha = 1
-                self.bottomShadowView.alpha = 1
+                self.bottomTabBarView.alpha = 1
                 self.adjustSlider?.alpha = 1
             }
         } else {
             UIView.animate(withDuration: 0.25) {
                 self.topShadowView.alpha = 0
-                self.bottomShadowView.alpha = 0
+                self.bottomTabBarView.alpha = 0
                 self.adjustSlider?.alpha = 0
             }
         }
@@ -1434,12 +1463,19 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     }
     
     /// Add image sticker
-    func addImageStickerView(_ image: UIImage) {
+    func addImageStickerView(_ sticker: HEImageSticker) {
+        if sticker.id == HEImageSticker.faceAiIcon.id {
+            return
+        } else if sticker.id == HEImageSticker.mosaicIcon.id {
+          
+            return
+        }
+        let image = sticker.image
         let scale = mainScrollView.zoomScale
-        let size = ZLImageStickerView.calculateSize(image: image, width: view.frame.width)
+        let size = HEImageStickerView.calculateSize(image: image, width: view.frame.width)
         let originFrame = getStickerOriginFrame(size)
         
-        let imageSticker = ZLImageStickerView(image: image, originScale: 1 / scale, originAngle: -currentClipStatus.angle, originFrame: originFrame)
+        let imageSticker = HEImageStickerView(image: image, originScale: 1 / scale, originAngle: -currentClipStatus.angle, originFrame: originFrame)
         addSticker(imageSticker)
         view.layoutIfNeeded()
         
@@ -1451,10 +1487,10 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         guard !text.isEmpty, let image = image else { return }
         
         let scale = mainScrollView.zoomScale
-        let size = ZLTextStickerView.calculateSize(image: image)
+        let size = HETextStickerView.calculateSize(image: image)
         let originFrame = getStickerOriginFrame(size)
         
-        let textSticker = ZLTextStickerView(
+        let textSticker = HETextStickerView(
             text: text,
             textColor: textColor,
             font: font,
@@ -1469,7 +1505,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         actionManager.storeAction(.sticker(oldState: nil, newState: textSticker.state))
     }
     
-    private func addSticker(_ sticker: ZLBaseStickerView) {
+    private func addSticker(_ sticker: HEBaseStickerView) {
         stickersContainer.addSubview(sticker)
         sticker.frame = sticker.originFrame
         configSticker(sticker)
@@ -1479,18 +1515,18 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         guard let id else { return }
         
         for sticker in stickersContainer.subviews.reversed() {
-            guard let stickerID = (sticker as? ZLBaseStickerView)?.id,
+            guard let stickerID = (sticker as? HEBaseStickerView)?.id,
                   stickerID == id else {
                 continue
             }
             
-            (sticker as? ZLBaseStickerView)?.moveToAshbin()
+            (sticker as? HEBaseStickerView)?.moveToAshbin()
             
             break
         }
     }
     
-    private func configSticker(_ sticker: ZLBaseStickerView) {
+    private func configSticker(_ sticker: HEBaseStickerView) {
         sticker.delegate = self
         mainScrollView.pinchGestureRecognizer?.require(toFail: sticker.pinchGes)
         mainScrollView.panGestureRecognizer.require(toFail: sticker.panGes)
@@ -1507,7 +1543,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         }
         
         stickersContainer.subviews.forEach { view in
-            (view as? ZLStickerViewAdditional)?.addScale(scale)
+            (view as? HEStickerViewAdditional)?.addScale(scale)
         }
     }
     
@@ -1672,7 +1708,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             if !stickersContainer.subviews.isEmpty {
                 let scale = self.imageSize.width / stickersContainer.frame.width
                 stickersContainer.subviews.forEach { view in
-                    (view as? ZLStickerViewAdditional)?.resetState()
+                    (view as? HEStickerViewAdditional)?.resetState()
                 }
                 context.concatenate(CGAffineTransform(scaleX: scale, y: scale))
                 stickersContainer.layer.render(in: context)
@@ -1702,7 +1738,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         mainScrollView.alpha = 1
         UIView.animate(withDuration: 0.1, animations: {
             self.topShadowView.alpha = 1
-            self.bottomShadowView.alpha = 1
+            self.bottomTabBarView.alpha = 1
             self.adjustSlider?.alpha = 1
         }) { _ in
             self.topShadowView.isUserInteractionEnabled = true
@@ -1717,10 +1753,10 @@ extension HEEditImageViewController: UIGestureRecognizerDelegate {
             return false
         }
         if gestureRecognizer is UITapGestureRecognizer {
-            if bottomShadowView.alpha == 1 {
+            if bottomTabBarView.alpha == 1 {
                 let p = gestureRecognizer.location(in: view)
-                let convertP = bottomShadowView.convert(p, from: view)
-                for subview in bottomShadowView.subviews {
+                let convertP = bottomTabBarView.convert(p, from: view)
+                for subview in bottomTabBarView.subviews {
                     if !subview.isHidden,
                        subview.alpha != 0,
                        subview.frame.contains(convertP) {
@@ -1867,8 +1903,8 @@ extension HEEditImageViewController: UICollectionViewDataSource, UICollectionVie
     }
 }
 
-extension HEEditImageViewController: ZLStickerViewDelegate {
-    func stickerBeginOperation(_ sticker: ZLBaseStickerView) {
+extension HEEditImageViewController: HEStickerViewDelegate {
+    func stickerBeginOperation(_ sticker: HEBaseStickerView) {
         stickersContainer.bringSubviewToFront(sticker)
         preStickerState = sticker.state
         
@@ -1886,13 +1922,13 @@ extension HEEditImageViewController: ZLStickerViewDelegate {
         
         stickersContainer.subviews.forEach { view in
             if view !== sticker {
-                (view as? ZLStickerViewAdditional)?.resetState()
-                (view as? ZLStickerViewAdditional)?.gesIsEnabled = false
+                (view as? HEStickerViewAdditional)?.resetState()
+                (view as? HEStickerViewAdditional)?.gesIsEnabled = false
             }
         }
     }
     
-    func stickerOnOperation(_ sticker: ZLBaseStickerView, panGes: UIPanGestureRecognizer) {
+    func stickerOnOperation(_ sticker: HEBaseStickerView, panGes: UIPanGestureRecognizer) {
         let point = panGes.location(in: view)
         if ashbinView.frame.contains(point) {
             ashbinView.backgroundColor = .he.ashbinTintBgColor
@@ -1915,7 +1951,7 @@ extension HEEditImageViewController: ZLStickerViewDelegate {
         }
     }
     
-    func stickerEndOperation(_ sticker: ZLBaseStickerView, panGes: UIPanGestureRecognizer) {
+    func stickerEndOperation(_ sticker: HEBaseStickerView, panGes: UIPanGestureRecognizer) {
         setToolView(show: true)
         ashbinView.layer.removeAllAnimations()
         ashbinView.isHidden = true
@@ -1931,20 +1967,20 @@ extension HEEditImageViewController: ZLStickerViewDelegate {
         preStickerState = nil
         
         stickersContainer.subviews.forEach { view in
-            (view as? ZLStickerViewAdditional)?.gesIsEnabled = true
+            (view as? HEStickerViewAdditional)?.gesIsEnabled = true
         }
     }
     
-    func stickerDidTap(_ sticker: ZLBaseStickerView) {
+    func stickerDidTap(_ sticker: HEBaseStickerView) {
         stickersContainer.bringSubviewToFront(sticker)
         stickersContainer.subviews.forEach { view in
             if view !== sticker {
-                (view as? ZLStickerViewAdditional)?.resetState()
+                (view as? HEStickerViewAdditional)?.resetState()
             }
         }
     }
     
-    func sticker(_ textSticker: ZLTextStickerView, editText text: String) {
+    func sticker(_ textSticker: HETextStickerView, editText text: String) {
         showInputTextVC(text, textColor: textSticker.textColor, font: textSticker.font, style: textSticker.style) { text, textColor, font, image, style in
             guard let image = image, !text.isEmpty else {
                 textSticker.moveToAshbin()
@@ -1960,7 +1996,7 @@ extension HEEditImageViewController: ZLStickerViewDelegate {
             textSticker.style = style
             textSticker.image = image
             textSticker.font = font
-            let newSize = ZLTextStickerView.calculateSize(image: image)
+            let newSize = HETextStickerView.calculateSize(image: image)
             textSticker.changeSize(to: newSize)
         }
     }
@@ -2056,7 +2092,7 @@ extension HEEditImageViewController: HEEditorManagerDelegate {
         }
         
         removeSticker(id: oldState.id)
-        if let sticker = ZLBaseStickerView.initWithState(oldState) {
+        if let sticker = HEBaseStickerView.initWithState(oldState) {
             addSticker(sticker)
         }
     }
@@ -2068,7 +2104,7 @@ extension HEEditImageViewController: HEEditorManagerDelegate {
         }
         
         removeSticker(id: newState.id)
-        if let sticker = ZLBaseStickerView.initWithState(newState) {
+        if let sticker = HEBaseStickerView.initWithState(newState) {
             addSticker(sticker)
         }
     }
