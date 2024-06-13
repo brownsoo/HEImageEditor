@@ -242,7 +242,9 @@ extension ViewController: HEImageStickerTrayViewDataSource {
         imageStickers[indexPath.row]
     }
     
-    
+    func allStickers(_ trayView: HEImageStickerTrayView, numberOfItemsInSection section: Int) -> [HEImageSticker] {
+        return imageStickers
+    }
 }
 
 extension ViewController {

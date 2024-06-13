@@ -122,10 +122,11 @@ public class HEBaseStickerView: UIView, UIGestureRecognizerDelegate {
         self.originScale = originScale
         self.originAngle = originAngle
         self.originFrame = originFrame
+        
         // 최대 스케일 설정 - 최대 사이즈 512 , 기본 사이즈 150
-        self.maxGesScale = CGFloat(512.0 / 150.0) / originScale
+        self.maxGesScale = CGFloat(512.0 / 150.0)
         // 최소 스케일 설정 - 최소 사이즈 50 , 기본 사이즈 150
-        self.minGesScale = CGFloat(50.0 / 150.0) / originScale
+        self.minGesScale = CGFloat(50.0 / 150.0)
         super.init(frame: .zero)
         
         self.gesScale = gesScale

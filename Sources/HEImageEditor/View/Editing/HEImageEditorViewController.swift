@@ -161,6 +161,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     open var adjustCollectionView: UICollectionView?
     
+    private lazy var loadingView = LoadingView()
+    
     open lazy var eraserBtn: HEEnlargeButton = {
         let btn = HEEnlargeButton(type: .custom)
         btn.setImage(.he.getImage("zl_eraser"), for: .normal)
@@ -1489,21 +1491,38 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             return
         }
         // TODO: 로딩 표시
+        loadingView.show(inCenterOf: self.view)
+        
         Task { @MainActor in
             do {
+                for sticker in stickersContainer.subviews.reversed() {
+                    if let stickerView = (sticker as? HEImageStickerView),
+                       stickerView.type == "ai-face" {
+                        removeSticker(id: stickerView.id)
+                    }
+                }
+                
                 let results = try await HEFaceDetection().detect(from: editImage, orientation: editImage.imageOrientation)
-                let animeDuration = TimeInterval(min(results.count, 3))
+                let animeDuration = TimeInterval(min(Double(results.count) * 2, 1.6))
                 var i: Double = 0
                 let count = Double(results.count)
                 let halfPi = Double.pi / 2
                 for result in results {
-                    trace(result.frame)
+                    trace(result)
                     if let sticker = imageStickerTray.randomSticker(inSection: 0) {
                         let image = sticker.image
                         let scale = mainScrollView.zoomScale
                         // let size = HEImageStickerView.calculateSize(image: image, container: view)
                         let originFrame = getStickerOriginFrame(stickerFrame: result.frame)
-                        let imageSticker = HEImageStickerView(image: image, originScale: 1 / scale, originAngle: -currentClipStatus.angle, originFrame: originFrame)
+                        let imageSticker = HEImageStickerView(
+                            id: sticker.id,
+                            type: "ai-face",
+                            image: image,
+                            originScale: 1 / scale,
+                            originAngle: -currentClipStatus.angle,
+                            originFrame: originFrame,
+                            gesRotation:  -CGFloat(result.roll ?? 0.0)
+                        )
                         
                         let delay = sin(halfPi * i / count) * animeDuration
                         addSticker(imageSticker, delay: delay)
@@ -1516,6 +1535,10 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                         i += 1.0
                     }
                 }
+                
+                try? await Task.sleep(nanoseconds: animeDuration.nanoseconds)
+                self.loadingView.hide()
+                
             } catch {
                 trace("Vision Error ----")
                 trace(error)
@@ -1585,7 +1608,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         let transform = sticker.originTransform.scaledBy(x: 1.4, y: 1.4)
         sticker.transform = transform
         sticker.alpha = 0
-        UIView.animate(withDuration: 0.6, delay: delay, usingSpringWithDamping: 0.4, initialSpringVelocity: 0.4) {
+        UIView.animate(withDuration: 0.6, delay: delay, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.4) {
             sticker.alpha = 1
             sticker.transform = sticker.originTransform
         }

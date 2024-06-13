@@ -11,7 +11,14 @@ import UIKit
 
 public actor HEFaceDetection {
     
-    func detect(from image: UIImage, orientation: UIImage.Orientation) async throws -> [(id: UUID, frame: CGRect, quality: Float?)] {
+    struct Result {
+        let id: UUID
+        let frame: CGRect
+        let quality: Float?
+        let roll: Float?
+    }
+    
+    func detect(from image: UIImage, orientation: UIImage.Orientation) async throws -> [Result] {
         guard let cgImage = image.cgImage else { return [] }
         let handler = VNImageRequestHandler(cgImage: cgImage,
                                             orientation: orientation.toCGOrientation(),
@@ -49,7 +56,8 @@ public actor HEFaceDetection {
         let finalTransform = coordTransform.scaledBy(x: 1, y: -1).translatedBy(x: 0, y: -1)
         return observations.map { face in
             let frame = face.boundingBox.applying(finalTransform)
-            return (id: face.uuid, frame: frame, quality: face.faceCaptureQuality)
+            // FIXME: yaw, pitch, roll 의 2D 보정
+            return Result(id: face.uuid, frame: frame, quality: face.faceCaptureQuality, roll: face.roll?.floatValue)
         }
     }
     

@@ -31,6 +31,7 @@
 		17D691D72C183A80007443EC /* HEImageStickerTrayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D691D62C183A80007443EC /* HEImageStickerTrayView.swift */; };
 		17D691DA2C184616007443EC /* Also.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D691D92C184616007443EC /* Also.swift */; };
 		17D691DC2C198C68007443EC /* HEFaceDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D691DB2C198C68007443EC /* HEFaceDetection.swift */; };
+		17D691DE2C1AA941007443EC /* LoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D691DD2C1AA941007443EC /* LoadingView.swift */; };
 		E40208DC256B9BA60077F5DC /* HEImageEditor.h in Headers */ = {isa = PBXBuildFile; fileRef = E40208DA256B9BA60077F5DC /* HEImageEditor.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E40208EB256B9F9C0077F5DC /* HEImageEditorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E40208E4256B9F9C0077F5DC /* HEImageEditorViewController.swift */; };
 		E40208EC256B9F9C0077F5DC /* HEImageStickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E40208E5256B9F9C0077F5DC /* HEImageStickerView.swift */; };
@@ -99,6 +100,7 @@
 		17D691D62C183A80007443EC /* HEImageStickerTrayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEImageStickerTrayView.swift; sourceTree = "<group>"; };
 		17D691D92C184616007443EC /* Also.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Also.swift; sourceTree = "<group>"; };
 		17D691DB2C198C68007443EC /* HEFaceDetection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEFaceDetection.swift; sourceTree = "<group>"; };
+		17D691DD2C1AA941007443EC /* LoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingView.swift; sourceTree = "<group>"; };
 		E40208D7256B9BA60077F5DC /* HEImageEditor.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = HEImageEditor.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E40208DA256B9BA60077F5DC /* HEImageEditor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HEImageEditor.h; sourceTree = "<group>"; };
 		E40208DB256B9BA60077F5DC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -305,6 +307,7 @@
 			children = (
 				FD7E7507284E134600EF34DD /* HEProgressHUD.swift */,
 				17D691972C12EC32007443EC /* HEClipBottomView.swift */,
+				17D691DD2C1AA941007443EC /* LoadingView.swift */,
 			);
 			path = Component;
 			sourceTree = "<group>";
@@ -482,6 +485,7 @@
 				17D691982C12EC32007443EC /* HEClipBottomView.swift in Sources */,
 				FD8EFA54277206D30067ADF1 /* HEEditToolCells.swift in Sources */,
 				FD1551CA28BE2C720043D844 /* UIView+.swift in Sources */,
+				17D691DE2C1AA941007443EC /* LoadingView.swift in Sources */,
 				E40208FF256BA0080077F5DC /* Bundle.swift in Sources */,
 				E40208F0256B9F9C0077F5DC /* HEClipImageViewController.swift in Sources */,
 				FDE1A559282E580900178B0F /* HEImageEditorUIConfiguration.swift in Sources */,

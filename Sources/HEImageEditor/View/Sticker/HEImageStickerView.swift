@@ -6,8 +6,9 @@
 import UIKit
 
 class HEImageStickerView: HEBaseStickerView {
-    private let image: UIImage
     
+    private let image: UIImage
+    private(set) var type: String?
     private static let edgeInset: CGFloat = 9
     
     private lazy var imageView: UIImageView = {
@@ -51,6 +52,7 @@ class HEImageStickerView: HEBaseStickerView {
     
     init(
         id: String = UUID().uuidString,
+        type: String? = nil,
         image: UIImage,
         originScale: CGFloat,
         originAngle: CGFloat,
@@ -61,6 +63,7 @@ class HEImageStickerView: HEBaseStickerView {
         showBorder: Bool = true
     ) {
         self.image = image
+        self.type = type
         super.init(
             id: id,
             originScale: originScale,
@@ -83,7 +86,8 @@ class HEImageStickerView: HEBaseStickerView {
     override func setupUIFrameWhenFirstLayout() {
         imageView.frame = bounds.insetBy(dx: Self.edgeInset, dy: Self.edgeInset)
     }
-    // TODO: containerWidth 처리 
+    
+    // TODO: containerWidth 처리
     class func calculateSize(image: UIImage, container: UIView) -> CGSize {
         let scale = (container.window?.windowScene?.screen.scale ?? image.scale)
         let startSide: CGFloat = 150 / scale // 150 pixel

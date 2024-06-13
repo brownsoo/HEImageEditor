@@ -129,7 +129,7 @@ public class HEImageStickerTrayView: UIView, HEImageStickerTray {
         }
         
         let total = dataSource.imageStickerTrayView(self, numberOfItemsInSection: section)
-        if let random = [0..<total].randomElement()?.first {
+        if let random = (0..<total).randomElement() {
             return dataSource.imageStickerTrayView(self, stickerForItemAt: IndexPath(row: random, section: section))
         }
         return nil
