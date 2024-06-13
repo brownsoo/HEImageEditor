@@ -90,7 +90,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         return view
     }()
     
-    open lazy var topToolView: HEPassThroughView = {
+    open lazy var topView: HEPassThroughView = {
         let shadowView = HEPassThroughView()
         shadowView.findResponderSticker = findResponderSticker(_:)
         return shadowView
@@ -119,9 +119,21 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     open lazy var cancelBtn: HEEnlargeButton = {
         let btn = HEEnlargeButton(type: .custom)
-        btn.setTitleColor(.white, for: .normal)
-        btn.setTitle(localLanguageTextValue(.cancel), for: .normal)
+        let icon = UIImage.he.getImage("ic_arrow_right") ?? UIImage(systemName: "chevron.backward")?.withTintColor(.white)
+        btn.setImage(icon, for: .normal)
+        btn.setImage(icon?.withTintColor(.lightGray), for: .disabled)
+        btn.adjustsImageWhenHighlighted = false
+        btn.isEnabled = !actionManager.actions.isEmpty
+        btn.enlargeInset = 8
         btn.addTarget(self, action: #selector(cancelBtnClick), for: .touchUpInside)
+        return btn
+    }()
+    
+    open lazy var doneBtn: HEEnlargeButton = {
+        let btn = HEEnlargeButton(type: .custom)
+        btn.setTitleColor(.white, for: .normal)
+        btn.setTitle(localLanguageTextValue(.done), for: .normal)
+        // btn.addTarget(self, action: #selector(cancelBtnClick), for: .touchUpInside)
         btn.enlargeInset = 30
         return btn
     }()
@@ -322,11 +334,16 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     var hasAdjustedImage = false
     
     @objc public var editFinishBlock: ((UIImage, HEEditImageModel?) -> Void)?
-    
+    /// 뷰 컨트롤러를 담는 뷰
     private lazy var editingVCContainer = UIView()
-    public var clipImageBottomViewBuilder: HEClipImageBottomViewBuilder?
     
-    public var bottomViewBuilder: HEEditImageBottomToolViewBuilder
+    
+    /// 자르기 화면의 하단에 무언가 놓을 수 있다.. (없애버릴까..)
+    public var clipImageBottomViewBuilder: HEClipImageBottomViewBuilder?
+    /// 편집 상태에서 사용하는 탑뷰
+    private lazy var editingTopView = HETopConfirmBarView()
+    /// 하단 툴뷰 구성자
+    public var bottomToolViewBuilder: HEEditImageBottomToolViewBuilder
     
     override open var prefersStatusBarHidden: Bool { true }
     
@@ -394,7 +411,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         selectedAdjustTool = adjustTools.first
         actionManager = HEEditorActionManager(actions: editModel?.actions ?? [])
         
-        self.bottomViewBuilder = bottomViewBuilder ?? { editView in
+        self.bottomToolViewBuilder = bottomViewBuilder ?? { editView in
             // 기본 툴바
             let toolbar = HEEditImageBottomView(tools: ts)
             toolbar.toolSelectListener = { [weak editView] type in
@@ -484,15 +501,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         mainScrollView.frame = view.bounds
         resetContainerViewFrame()
         
-        topToolView.frame = CGRect(x: 0, y: 0, width: view.he.width, height: 150)
-        topShadowLayer.frame = topToolView.bounds
-        cancelBtn.frame = CGRect(x: 30, y: insets.top + 10, width: 28, height: 28)
-        
-        bottomTabBarView.frame = CGRect(x: 0,
-                                        y: view.frame.height - bottomViewHeight - insets.bottom,
-                                        width: view.he.width,
-                                        height: bottomViewHeight + insets.bottom)
-        bottomShadowLayer.frame = bottomTabBarView.bounds
+        topView.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: insets.top + 44)
+        topShadowLayer.frame = topView.bounds
         
         let cancelBtnW = localLanguageTextValue(.cancel)
             .he.boundingRect(
@@ -502,6 +512,12 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         cancelBtn.frame = CGRect(x: 20, y: 60, width: cancelBtnW, height: 30)
         redoBtn.frame = CGRect(x: view.he.width - 15 - 30, y: 60, width: 30, height: 30)
         undoBtn.frame = CGRect(x: redoBtn.he.left - 15 - 30, y: 60, width: 30, height: 30)
+        
+        bottomTabBarView.frame = CGRect(x: 0,
+                                        y: view.frame.height - bottomViewHeight - insets.bottom,
+                                        width: view.he.width,
+                                        height: bottomViewHeight + insets.bottom)
+        bottomShadowLayer.frame = bottomTabBarView.bounds
         
         eraserBtn.frame = CGRect(x: 20, y: 30 + (drawColViewH - 36) / 2, width: 36, height: 36)
         eraserBtnBgBlurView.frame = eraserBtn.frame
@@ -539,7 +555,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         
         bottomView.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: bottomViewHeight)
         editingVCContainer.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: bottomTabBarView.frame.minY)
-        
+        editingTopView.frame = CGRect(x: 0, y: insets.top, width: view.bounds.width, height: 48)
         if !drawPaths.isEmpty {
             drawLine()
         }
@@ -634,21 +650,26 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         
         view.addSubview(editingVCContainer)
         
+        // 메인 컨텐츠
         view.addSubview(mainScrollView)
         mainScrollView.addSubview(containerView)
-        
         containerView.addSubview(imageView)
         containerView.addSubview(drawingImageView)
         containerView.addSubview(stickersContainer)
+        // 편집용 상단 툴바
+        view.addSubview(editingTopView)
+        editingTopView.isHidden = true
         
-        view.addSubview(topToolView)
-        topToolView.layer.addSublayer(topShadowLayer)
-        topToolView.addSubview(cancelBtn)
-        topToolView.addSubview(undoBtn)
-        topToolView.addSubview(redoBtn)
+        // 상단 툴바
+        view.addSubview(topView)
+        topView.layer.addSublayer(topShadowLayer)
+        topView.addSubview(cancelBtn)
+        topView.addSubview(undoBtn)
+        topView.addSubview(redoBtn)
         
+        // 하단 툴바
         view.addSubview(bottomTabBarView)
-        let builder = self.bottomViewBuilder(self)
+        let builder = self.bottomToolViewBuilder(self)
         bottomView = builder.toolView
         bottomViewHeight = builder.height
         bottomTabBarView.layer.addSublayer(bottomShadowLayer)
@@ -936,7 +957,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         }
         
         self.addToEditController(vc)
-        self.beginEditingStartAnimate()
+        self.startAnimateInEditController()
         
         selectedTool = .clip
         setDrawViews(hidden: true)
@@ -1410,18 +1431,18 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             flag = userInfo?["show"] as? Bool ?? true
             cleanToolViewStateTimer()
         }
-        topToolView.layer.removeAllAnimations()
+        topView.layer.removeAllAnimations()
         bottomTabBarView.layer.removeAllAnimations()
         adjustSlider?.layer.removeAllAnimations()
         if flag {
             UIView.animate(withDuration: 0.25) {
-                self.topToolView.alpha = 1
+                self.topView.alpha = 1
                 self.bottomTabBarView.alpha = 1
                 self.adjustSlider?.alpha = 1
             }
         } else {
             UIView.animate(withDuration: 0.25) {
-                self.topToolView.alpha = 0
+                self.topView.alpha = 0
                 self.bottomTabBarView.alpha = 0
                 self.adjustSlider?.alpha = 0
             }
@@ -1826,13 +1847,18 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         return UIImage(cgImage: cgi, scale: editImage.scale, orientation: .up)
     }
     
-    private func beginEditingStartAnimate() {
-        self.topToolView.alpha = 0
-        self.topToolView.isUserInteractionEnabled = false
-        self.mainScrollView.alpha = 0
-        self.mainScrollView.isUserInteractionEnabled = false
-        self.adjustSlider?.alpha = 0
-        self.adjustSlider?.isUserInteractionEnabled = false
+    private func startAnimateInEditController() {
+        let top = view.safeAreaInsets.top - 10
+        UIView.animate(withDuration: 0.2, animations: {
+            self.topView.frame.origin = CGPoint(x: 0, y: top)
+            self.topView.alpha = 0
+            self.adjustSlider?.alpha = 0
+        }) { _ in
+            self.topView.isHidden = true
+            self.mainScrollView.isHidden = true
+            self.adjustSlider?.isHidden = true
+            
+        }
     }
     
     /// 편집 container 작업이 끝나면,
@@ -1840,14 +1866,17 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     /// - HEClipImageDismissAnimatedTransition 에서도 호출
     func finishEditingDismissAnimate() {
         mainScrollView.alpha = 1
-        UIView.animate(withDuration: 0.1, animations: {
-            self.topToolView.alpha = 1
-            self.bottomTabBarView.alpha = 1
+        mainScrollView.isHidden = false
+        topView.alpha = 0
+        topView.isHidden = false
+        adjustSlider?.alpha = 0
+        adjustSlider?.isHidden = false
+        let top = view.safeAreaInsets.top
+        UIView.animate(withDuration: 0.2, animations: {
+            self.topView.frame.origin = CGPoint(x: 0, y: top)
+            self.topView.alpha = 1
             self.adjustSlider?.alpha = 1
-        }) { _ in
-            self.topToolView.isUserInteractionEnabled = true
-            self.mainScrollView.isUserInteractionEnabled = true
-        }
+        })
     }
 }
 
