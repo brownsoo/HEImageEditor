@@ -94,10 +94,10 @@ public class HEImageEditorUIConfiguration: NSObject {
     @objc public var editDoneBtnTitleColor = UIColor.white
     
     /// The normal background color of ashbin.
-    @objc public var ashbinNormalBgColor: UIColor = .he.rgba(40, 40, 40, 0.8)
+    @objc public var ashbinNormalBgColor: UIColor = .he.rgba(248, 9, 9, 0.62)
     
     /// The tint background color of ashbin.
-    @objc public var ashbinTintBgColor: UIColor = .he.rgba(241, 79, 79, 0.98)
+    @objc public var ashbinTintBgColor: UIColor = .he.rgba(248, 9, 9, 0.88)
     
     /// The normal color of the title below the various tools in the image editor.
     @objc public var toolTitleNormalColor: UIColor = .he.rgba(160, 160, 160)

@@ -36,6 +36,40 @@ class ViewController: UIViewController {
     
     let config = HEImageEditorConfiguration.default()
     
+    
+    private var editCancelBtn: UIButton = {
+        let btn = UIButton(type: .custom)
+        let icon = UIImage(systemName: "chevron.backward")?.withTintColor(.white)
+        btn.setImage(icon, for: .normal)
+        btn.setImage(icon?.withTintColor(.lightGray), for: .disabled)
+        btn.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
+        return btn
+    }()
+    
+    private var editDoneBtn: HEEnlargeButton = {
+        let btn = HEEnlargeButton(type: .custom)
+        btn.setTitleColor(.white, for: .normal)
+        btn.setTitle("완료", for: .normal)
+        btn.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
+        return btn
+    }()
+    
+    private var editUndoBtn: HEEnlargeButton = {
+        let btn = HEEnlargeButton(type: .custom)
+        btn.setImage(UIImage(systemName: "arrow.uturn.backward.circle"), for: .normal)
+        btn.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
+        return btn
+    }()
+    
+    private var editRedoBtn: HEEnlargeButton = {
+        let btn = HEEnlargeButton(type: .custom)
+        btn.setImage(UIImage(systemName: "arrow.uturn.forward.circle"), for: .normal)
+        btn.adjustsImageWhenHighlighted = false
+        btn.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
+        return btn
+    }()
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -43,6 +77,201 @@ class ViewController: UIViewController {
         configImageEditor()
     }
     
+    
+    var imageStickers: [HEImageSticker] = []
+    
+    func configImageEditor() {
+        
+        let stickerTray = HEImageStickerTrayView()
+        stickerTray.dataSource = self
+        
+        imageStickers.append(HEImageSticker.faceAiIcon)
+        imageStickers.append(HEImageSticker.mosaicIcon)
+        imageStickers.append(contentsOf: (1...18).map { (v) -> String in
+            "imageSticker" + String(v)
+        }.compactMap {
+            HEImageSticker(id: $0, image: UIImage(named: $0) ?? UIImage())
+        })
+        
+        HEImageEditorConfiguration.default()
+            .clipRatios([.origin, .custom, .wh1x1])
+            .imageStickerTray(stickerTray)
+            .fontChooserContainerView(FontChooserContainerView())
+    }
+    
+    
+}
+
+extension ViewController: HEImageStickerTrayViewDataSource {
+    func imageStickerTrayView(_ trayView: HEImageEditor.HEImageStickerTrayView, numberOfItemsInSection section: Int) -> Int {
+        imageStickers.count
+    }
+    
+    func imageStickerTrayView(_ trayView: HEImageEditor.HEImageStickerTrayView, stickerForItemAt indexPath: IndexPath) -> HEImageSticker {
+        imageStickers[indexPath.row]
+    }
+    
+    func allStickers(_ trayView: HEImageStickerTrayView, numberOfItemsInSection section: Int) -> [HEImageSticker] {
+        return imageStickers
+    }
+}
+
+extension ViewController {
+    
+    @objc func pickImage() {
+        let picker = UIImagePickerController()
+        picker.delegate = self
+        picker.sourceType = .photoLibrary
+        picker.mediaTypes = ["public.image"]
+        showDetailViewController(picker, sender: nil)
+    }
+    
+    @objc func drawToolChanged() {
+        if config.tools.contains(.draw) {
+            config.tools.removeAll { $0 == .draw }
+        } else {
+            config.tools.append(.draw)
+        }
+    }
+    
+    @objc func clipToolChanged() {
+        if config.tools.contains(.clip) {
+            config.tools.removeAll { $0 == .clip }
+        } else {
+            config.tools.append(.clip)
+        }
+    }
+    
+    @objc func imageStickerToolChanged() {
+        if config.tools.contains(.imageSticker) {
+            config.tools.removeAll { $0 == .imageSticker }
+        } else {
+            config.tools.append(.imageSticker)
+        }
+    }
+    
+    @objc func textStickerToolChanged() {
+        if config.tools.contains(.textSticker) {
+            config.tools.removeAll { $0 == .textSticker }
+        } else {
+            config.tools.append(.textSticker)
+        }
+    }
+    
+    @objc func mosaicToolChanged() {
+        if config.tools.contains(.mosaic) {
+            config.tools.removeAll { $0 == .mosaic }
+        } else {
+            config.tools.append(.mosaic)
+        }
+    }
+    
+    @objc func filterToolChanged() {
+        if config.tools.contains(.filter) {
+            config.tools.removeAll { $0 == .filter }
+        } else {
+            config.tools.append(.filter)
+        }
+    }
+    
+    @objc func adjustToolChanged() {
+        if config.tools.contains(.adjust) {
+            config.tools.removeAll { $0 == .adjust }
+        } else {
+            config.tools.append(.adjust)
+        }
+    }
+    
+    @objc func continueEditImage() {
+        guard let oi = originalImage else {
+            return
+        }
+        
+        startEditSingleImage(oi, editModel: resultImageEditModel)
+    }
+    
+    func startEditSingleImage(_ image: UIImage, editModel: HEEditImageModel?) {
+        HEEditImageViewController.showImageEditor(
+            parent: self,
+            image: image,
+            editModel: editModel,
+            topToolViewBuilder: makeTopToolBuilder()
+        ) { [weak self] resImage, editModel in
+            self?.resultImageView.image = resImage
+            self?.resultImageEditModel = editModel
+        }
+    }
+   
+    // ex
+    private func makeTopToolBuilder() -> HEEditImageTopToolViewBuilder {
+        return { [weak self] editView in
+            let toolView = HEMainTopBarView()
+            if let self {
+                toolView.addLeadingView(editCancelBtn)
+                toolView.addTrailingView(editUndoBtn)
+                toolView.addTrailingView(editRedoBtn)
+                toolView.addTrailingView(editDoneBtn)
+                
+                editCancelBtn.addAction(.init(handler: { _ in
+                    editView.cancel()
+                }), for: .touchUpInside)
+                
+                editUndoBtn.addAction(.init(handler: { _ in
+                    editView.undo()
+                }), for: .touchUpInside)
+                
+                editRedoBtn.addAction(.init(handler: { _ in
+                    editView.redo()
+                }), for: .touchUpInside)
+                
+                editDoneBtn.addAction(.init(handler: { _ in
+                    editView.done()
+                }), for: .touchUpInside)
+                
+                editView.addActionChangedListener(self)
+            }
+            return (toolView, 44)
+        }
+    }
+    
+    // ex
+    private func makeDefaultClipImageBottomToolBuilder() -> HEClipImageBottomViewBuilder {
+        return { (clipView: HEClipImageView) in
+            let toolView = HEClipBottomView()
+            toolView.cancelClickListener = { clipView.cancelEdit() }
+            toolView.doneClickListener = { clipView.doneEdit() }
+            toolView.revertClickListener = { clipView.revertEdit() }
+            return (toolView, HEClipBottomView.estimateHeight)
+        }
+    }
+}
+
+extension ViewController: HEEditorActionListener {
+    func didUpdatedActions(_ actions: [HEEditorAction], redoActions: [HEEditorAction]) {
+        editUndoBtn.isEnabled = !actions.isEmpty
+        editRedoBtn.isEnabled = actions.count != redoActions.count
+    }
+}
+
+extension ViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        picker.dismiss(animated: true, completion: nil)
+    }
+    
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+        picker.dismiss(animated: true) {
+            guard var image = info[.originalImage] as? UIImage else { return }
+            let w = min(1500, image.he.width)
+            let h = w * image.he.height / image.he.width
+            image = image.he.resize(CGSize(width: w, height: h)) ?? image
+            self.originalImage = image
+            self.startEditSingleImage(image, editModel: nil)
+        }
+    }
+}
+
+
+extension ViewController {
     func setupUI() {
         title = "Main"
         view.backgroundColor = .white
@@ -209,150 +438,4 @@ class ViewController: UIViewController {
         }
     }
     
-    private var imageStickers: [HEImageSticker] = []
-    
-    func configImageEditor() {
-        
-        let stickerTray = HEImageStickerTrayView()
-        stickerTray.dataSource = self
-        
-        imageStickers.append(HEImageSticker.faceAiIcon)
-        imageStickers.append(HEImageSticker.mosaicIcon)
-        imageStickers.append(contentsOf: (1...18).map { (v) -> String in
-            "imageSticker" + String(v)
-        }.compactMap {
-            HEImageSticker(id: $0, image: UIImage(named: $0) ?? UIImage())
-        })
-        
-        HEImageEditorConfiguration.default()
-            .clipRatios([.origin, .custom, .wh1x1])
-            .imageStickerTray(stickerTray)
-            .fontChooserContainerView(FontChooserContainerView())
-    }
-    
-    
-}
-
-extension ViewController: HEImageStickerTrayViewDataSource {
-    func imageStickerTrayView(_ trayView: HEImageEditor.HEImageStickerTrayView, numberOfItemsInSection section: Int) -> Int {
-        imageStickers.count
-    }
-    
-    func imageStickerTrayView(_ trayView: HEImageEditor.HEImageStickerTrayView, stickerForItemAt indexPath: IndexPath) -> HEImageSticker {
-        imageStickers[indexPath.row]
-    }
-    
-    func allStickers(_ trayView: HEImageStickerTrayView, numberOfItemsInSection section: Int) -> [HEImageSticker] {
-        return imageStickers
-    }
-}
-
-extension ViewController {
-    
-    @objc func pickImage() {
-        let picker = UIImagePickerController()
-        picker.delegate = self
-        picker.sourceType = .photoLibrary
-        picker.mediaTypes = ["public.image"]
-        showDetailViewController(picker, sender: nil)
-    }
-    
-    @objc func drawToolChanged() {
-        if config.tools.contains(.draw) {
-            config.tools.removeAll { $0 == .draw }
-        } else {
-            config.tools.append(.draw)
-        }
-    }
-    
-    @objc func clipToolChanged() {
-        if config.tools.contains(.clip) {
-            config.tools.removeAll { $0 == .clip }
-        } else {
-            config.tools.append(.clip)
-        }
-    }
-    
-    @objc func imageStickerToolChanged() {
-        if config.tools.contains(.imageSticker) {
-            config.tools.removeAll { $0 == .imageSticker }
-        } else {
-            config.tools.append(.imageSticker)
-        }
-    }
-    
-    @objc func textStickerToolChanged() {
-        if config.tools.contains(.textSticker) {
-            config.tools.removeAll { $0 == .textSticker }
-        } else {
-            config.tools.append(.textSticker)
-        }
-    }
-    
-    @objc func mosaicToolChanged() {
-        if config.tools.contains(.mosaic) {
-            config.tools.removeAll { $0 == .mosaic }
-        } else {
-            config.tools.append(.mosaic)
-        }
-    }
-    
-    @objc func filterToolChanged() {
-        if config.tools.contains(.filter) {
-            config.tools.removeAll { $0 == .filter }
-        } else {
-            config.tools.append(.filter)
-        }
-    }
-    
-    @objc func adjustToolChanged() {
-        if config.tools.contains(.adjust) {
-            config.tools.removeAll { $0 == .adjust }
-        } else {
-            config.tools.append(.adjust)
-        }
-    }
-    
-    @objc func continueEditImage() {
-        guard let oi = originalImage else {
-            return
-        }
-        
-        editImage(oi, editModel: resultImageEditModel)
-    }
-    
-    func editImage(_ image: UIImage, editModel: HEEditImageModel?) {
-        HEEditImageViewController.showImageEditor(parent: self, image: image, editModel: editModel) { [weak self] resImage, editModel in
-            self?.resultImageView.image = resImage
-            self?.resultImageEditModel = editModel
-        }
-    }
-    
-    // ex
-    private func makeDefaultClipImageBottomToolBuilder() -> HEClipImageBottomViewBuilder {
-        return { (clipView: HEClipImageView) in
-            let toolView = HEClipBottomView()
-            toolView.cancelClickListener = { clipView.cancelEdit() }
-            toolView.doneClickListener = { clipView.doneEdit() }
-            toolView.revertClickListener = { clipView.revertEdit() }
-            return (toolView, HEClipBottomView.estimateHeight)
-        }
-    }
-}
-
-extension ViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-        picker.dismiss(animated: true, completion: nil)
-    }
-    
-    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
-        picker.dismiss(animated: true) {
-            guard var image = info[.originalImage] as? UIImage else { return }
-            let w = min(1500, image.he.width)
-            let h = w * image.he.height / image.he.width
-            image = image.he.resize(CGSize(width: w, height: h)) ?? image
-            self.originalImage = image
-            self.editImage(image, editModel: nil)
-        }
-    }
 }

@@ -1,5 +1,5 @@
 //
-//  HEImageView.swift
+//  HEEditImageView.swift
 //  HiImageEditor
 //
 //  Created by 브라운수 on 6/4/24.
@@ -9,21 +9,35 @@ import Foundation
 import Photos
 import UIKit
 
+
+
+
+public protocol HEEditorActionListener: Equatable {
+    func didUpdatedActions(_ actions: [HEEditorAction], redoActions: [HEEditorAction])
+}
+
 public protocol HEEditImageView: AnyObject {
     
     var isImageEditing: Bool { get }
     
+    func cancel()
     func done()
-    func drawBtnClick()
+    func undo()
+    func redo()
+    
     func startClipping()
     func startImageSticker()
     func startTextSticker()
     func mosaicBtnClick()
     func filterBtnClick()
     func adjustBtnClick()
+    func drawBtnClick()
     
     func stopCurrentEditing()
     
+    func addActionChangedListener<T: HEEditorActionListener>(_ listener: T)
+    func removeActionChangedListener<T: HEEditorActionListener>(_ listener: T)
+    func clearAllActionChangedListeners()
 //    var image: HEImage { get }
 //    var effects: [HEEffect] { get }
 //    var selectedEffect: HEEffect? { get }

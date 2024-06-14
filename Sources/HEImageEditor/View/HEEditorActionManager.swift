@@ -1,5 +1,5 @@
 //
-//  ZLEditorManager.swift
+//  HEEditorActionManager.swift
 //  HEImageEditor
 //
 
@@ -26,6 +26,7 @@ protocol HEEditorManagerDelegate: AnyObject {
 
 /// 액션 되돌리기, 다시실행 관리
 class HEEditorActionManager {
+    
     private(set) var actions: [HEEditorAction] = []
     private(set) var redoActions: [HEEditorAction] = []
     

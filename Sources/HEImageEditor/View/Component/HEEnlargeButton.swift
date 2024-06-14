@@ -5,8 +5,8 @@
 
 import UIKit
 
+/// 선택 영역을 확장한 버튼
 open class HEEnlargeButton: UIButton {
-    /// 선택 영역
     public var enlargeInsets: UIEdgeInsets = .zero
     
     public var enlargeInset: CGFloat = 0 {

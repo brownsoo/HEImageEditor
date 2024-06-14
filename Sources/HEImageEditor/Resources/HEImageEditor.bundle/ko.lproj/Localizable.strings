@@ -8,7 +8,6 @@
 "brightness" = "밝기";
 "contrast" = "대비";
 "saturation" = "채도";
-"textStickerRemoveTips" = "제거하려면 여기로 드래그하세요";
 "hudProcessing" = "처리 중";
 "effect-draw"="그리기";
 "effect-clip"="자르기,회전";

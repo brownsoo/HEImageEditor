@@ -22,12 +22,14 @@ extension DebugLine {
             for child in self.subviews {
                 if let s = child as? UIStackView {
                     s.arrangedSubviews.forEach {
-                        ($0 as? DebugLine)?.drawDebugOutline(color, fill: fill, isFirst: false)
+                        $0.drawDebugOutline(color, fill: fill, isFirst: false)
                     }
                 } else {
-                    (child as? DebugLine)?.drawDebugOutline(color, fill: fill, isFirst: false)
+                    child.drawDebugOutline(color, fill: fill, isFirst: false)
                 }
             }
         }
     }
 }
+
+extension UIView: DebugLine {}

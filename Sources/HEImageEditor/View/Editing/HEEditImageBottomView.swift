@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 
-open class HEEditImageBottomView: UIView, DebugLine {
+open class HEEditImageBottomView: UIView {
     
     public static let height: CGFloat = 72
     public static let itemSize = CGSize(width: 54, height: 56)

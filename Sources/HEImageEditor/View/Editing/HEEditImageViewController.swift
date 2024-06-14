@@ -45,6 +45,7 @@ public struct HEAdjustStatus {
 
 public typealias HEEditImageBottomToolViewBuilder = (HEEditImageView) -> (toolView: UIView, height: CGFloat)
 
+public typealias HEEditImageTopToolViewBuilder = (HEEditImageView) -> (toolView: HEMainTopBarView, height: CGFloat)
 
 open class HEEditImageViewController: UIViewController, HEEditImageView {
     static let maxDrawLineImageWidth: CGFloat = 600
@@ -59,7 +60,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     public var adjustColViewH: CGFloat = 60
     
-    public var ashbinSize = CGSize(width: 160, height: 80)
+    public var ashbinSize = CGSize(width: 56, height: 56)
     
     /// 메인 컨테이터 뷰
     open lazy var mainScrollView: UIScrollView = {
@@ -90,13 +91,10 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         return view
     }()
     
-    open lazy var topView: HEPassThroughView = {
-        let shadowView = HEPassThroughView()
-        shadowView.findResponderSticker = findResponderSticker(_:)
-        return shadowView
-    }()
+    private var topView: HEMainTopBarView?
+    private var topViewHeight: CGFloat = 0
     
-    open lazy var topShadowLayer: CAGradientLayer = {
+    private lazy var topShadowLayer: CAGradientLayer = {
         let layer = CAGradientLayer()
         layer.colors = [HEEditImageViewController.shadowColorFrom, HEEditImageViewController.shadowColorTo]
         layer.locations = [0, 1]
@@ -104,60 +102,17 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     }()
      
     /// 하단 툴바 영역
-    open lazy var bottomTabBarView: HEPassThroughView = {
+    private lazy var bottomViewContainer: HEPassThroughView = {
         let shadowView = HEPassThroughView()
         shadowView.findResponderSticker = findResponderSticker(_:)
         return shadowView
     }()
     
-    open lazy var bottomShadowLayer: CAGradientLayer = {
+    private lazy var bottomShadowLayer: CAGradientLayer = {
         let layer = CAGradientLayer()
         layer.colors = [HEEditImageViewController.shadowColorTo, HEEditImageViewController.shadowColorFrom]
         layer.locations = [0, 1]
         return layer
-    }()
-    
-    open lazy var cancelBtn: HEEnlargeButton = {
-        let btn = HEEnlargeButton(type: .custom)
-        let icon = UIImage.he.getImage("ic_arrow_right") ?? UIImage(systemName: "chevron.backward")?.withTintColor(.white)
-        btn.setImage(icon, for: .normal)
-        btn.setImage(icon?.withTintColor(.lightGray), for: .disabled)
-        btn.adjustsImageWhenHighlighted = false
-        btn.isEnabled = !actionManager.actions.isEmpty
-        btn.enlargeInset = 8
-        btn.addTarget(self, action: #selector(cancelBtnClick), for: .touchUpInside)
-        return btn
-    }()
-    
-    open lazy var doneBtn: HEEnlargeButton = {
-        let btn = HEEnlargeButton(type: .custom)
-        btn.setTitleColor(.white, for: .normal)
-        btn.setTitle(localLanguageTextValue(.done), for: .normal)
-        // btn.addTarget(self, action: #selector(cancelBtnClick), for: .touchUpInside)
-        btn.enlargeInset = 30
-        return btn
-    }()
-    
-    open lazy var undoBtn: HEEnlargeButton = {
-        let btn = HEEnlargeButton(type: .custom)
-        btn.setImage(UIImage(systemName: "arrow.uturn.backward.circle")?.withTintColor(.white), for: .normal)
-        btn.setImage(UIImage(systemName: "arrow.uturn.backward.circle")?.withTintColor(.lightGray), for: .disabled)
-        btn.adjustsImageWhenHighlighted = false
-        btn.isEnabled = !actionManager.actions.isEmpty
-        btn.enlargeInset = 8
-        btn.addTarget(self, action: #selector(undoBtnClick), for: .touchUpInside)
-        return btn
-    }()
-    
-    open lazy var redoBtn: HEEnlargeButton = {
-        let btn = HEEnlargeButton(type: .custom)
-        btn.setImage(UIImage(systemName: "arrow.uturn.forward.circle")?.withTintColor(.white), for: .normal)
-        btn.setImage(UIImage(systemName: "arrow.uturn.forward.circle")?.withTintColor(.lightGray), for: .disabled)
-        btn.adjustsImageWhenHighlighted = false
-        btn.isEnabled = actionManager.actions.count != actionManager.redoActions.count
-        btn.enlargeInset = 8
-        btn.addTarget(self, action: #selector(redoBtnClick), for: .touchUpInside)
-        return btn
     }()
     
     private var bottomView: UIView!
@@ -168,12 +123,11 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     }
     
     open var drawColorCollectionView: UICollectionView?
-    
     open var filterCollectionView: UICollectionView?
-    
     open var adjustCollectionView: UICollectionView?
-    
     private lazy var loadingView = LoadingView()
+    private var actionListeners: [any HEEditorActionListener] = []
+    
     
     open lazy var eraserBtn: HEEnlargeButton = {
         let btn = HEEnlargeButton(type: .custom)
@@ -216,7 +170,9 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         return view
     }()
     
-    open lazy var ashbinImgView = UIImageView(image: .he.getImage("zl_ashbin"), highlightedImage: .he.getImage("zl_ashbin_open"))
+    open lazy var ashbinImgView: UIImageView = {
+        UIImageView(image: .he.getImage("ic_delete") ?? UIImage(systemName: "trash"))
+    }()
     
     var adjustSlider: ZLAdjustSlider?
     
@@ -329,15 +285,14 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         }
     }
     
-    var toolViewStateTimer: Timer?
+    private var toolViewStateTimer: Timer?
     
-    var hasAdjustedImage = false
-    
+    private var hasAdjustedImage = false
+    // 편집 종료 TODO: Change to delegate
     @objc public var editFinishBlock: ((UIImage, HEEditImageModel?) -> Void)?
+    
     /// 뷰 컨트롤러를 담는 뷰
-    private lazy var editingVCContainer = UIView()
-    
-    
+    private lazy var subEditingContainer = UIView()
     /// 자르기 화면의 하단에 무언가 놓을 수 있다.. (없애버릴까..)
     public var clipImageBottomViewBuilder: HEClipImageBottomViewBuilder?
     /// 편집 상태에서 사용하는 탑뷰
@@ -365,11 +320,12 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         animate: Bool = true,
         image: UIImage,
         editModel: HEEditImageModel? = nil,
+        topToolViewBuilder: HEEditImageTopToolViewBuilder? = nil,
         bottomToolViewBuilder: HEEditImageBottomToolViewBuilder? = nil,
         clipImageBottomViewBuilder: HEClipImageBottomViewBuilder? = nil,
         completion: ((UIImage, HEEditImageModel?) -> Void)?
     ) {
-        let vc = HEEditImageViewController(image: image, editModel: editModel, bottomViewBuilder: bottomToolViewBuilder)
+        let vc = HEEditImageViewController(image: image, editModel: editModel, topToolViewBuilder: topToolViewBuilder, bottomToolViewBuilder: bottomToolViewBuilder)
         vc.clipImageBottomViewBuilder = clipImageBottomViewBuilder
         vc.editFinishBlock = { ei, editImageModel in
             completion?(ei, editImageModel)
@@ -380,7 +336,10 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     }
     
     /// 에디터 생성
-    public init(image: UIImage, editModel: HEEditImageModel? = nil,  bottomViewBuilder: HEEditImageBottomToolViewBuilder? = nil) {
+    public init(image: UIImage, 
+                editModel: HEEditImageModel? = nil,
+                topToolViewBuilder: HEEditImageTopToolViewBuilder? = nil,
+                bottomToolViewBuilder: HEEditImageBottomToolViewBuilder? = nil) {
         var image = image
         if image.scale != 1,
            let cgImage = image.cgImage {
@@ -411,7 +370,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         selectedAdjustTool = adjustTools.first
         actionManager = HEEditorActionManager(actions: editModel?.actions ?? [])
         
-        self.bottomToolViewBuilder = bottomViewBuilder ?? { editView in
+        self.bottomToolViewBuilder = bottomToolViewBuilder ?? { editView in
             // 기본 툴바
             let toolbar = HEEditImageBottomView(tools: ts)
             toolbar.toolSelectListener = { [weak editView] type in
@@ -441,6 +400,11 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         }
         
         super.init(nibName: nil, bundle: nil)
+        
+        if let builder = topToolViewBuilder?(self) {
+            self.topView = builder.toolView
+            self.topViewHeight = builder.height
+        }
         
         actionManager.delegate = self
         
@@ -501,23 +465,16 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         mainScrollView.frame = view.bounds
         resetContainerViewFrame()
         
-        topView.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: insets.top + 44)
-        topShadowLayer.frame = topView.bounds
+        if let topView {
+            topView.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: insets.top + topViewHeight)
+            topShadowLayer.frame = topView.bounds
+        }
         
-        let cancelBtnW = localLanguageTextValue(.cancel)
-            .he.boundingRect(
-                font: .systemFont(ofSize: 17),
-                limitSize: CGSize(width: CGFloat.greatestFiniteMagnitude, height: 28)
-            ).width
-        cancelBtn.frame = CGRect(x: 20, y: 60, width: cancelBtnW, height: 30)
-        redoBtn.frame = CGRect(x: view.he.width - 15 - 30, y: 60, width: 30, height: 30)
-        undoBtn.frame = CGRect(x: redoBtn.he.left - 15 - 30, y: 60, width: 30, height: 30)
-        
-        bottomTabBarView.frame = CGRect(x: 0,
+        bottomViewContainer.frame = CGRect(x: 0,
                                         y: view.frame.height - bottomViewHeight - insets.bottom,
                                         width: view.he.width,
                                         height: bottomViewHeight + insets.bottom)
-        bottomShadowLayer.frame = bottomTabBarView.bounds
+        bottomShadowLayer.frame = bottomViewContainer.bounds
         
         eraserBtn.frame = CGRect(x: 20, y: 30 + (drawColViewH - 36) / 2, width: 36, height: 36)
         eraserBtnBgBlurView.frame = eraserBtn.frame
@@ -532,7 +489,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             let sliderWidth = UIDevice.current.userInterfaceIdiom == .phone ? view.he.width - 100 : view.he.width / 2
             adjustSlider?.frame = CGRect(
                 x: (view.he.width - sliderWidth) / 2,
-                y: bottomTabBarView.he.top - sliderHeight,
+                y: bottomViewContainer.he.top - sliderHeight,
                 width: sliderWidth,
                 height: sliderHeight
             )
@@ -542,20 +499,16 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
          
         ashbinView.frame = CGRect(
             x: (view.he.width - ashbinSize.width) / 2,
-            y: view.he.height - ashbinSize.height - 40,
+            y: currentClipStatus.editRect.maxY - ashbinSize.height + 18,
             width: ashbinSize.width,
             height: ashbinSize.height
         )
-        ashbinImgView.frame = CGRect(
-            x: (ashbinSize.width - 25) / 2,
-            y: 15,
-            width: 25,
-            height: 25
-        )
+        ashbinImgView.frame = CGRect(x: (ashbinSize.width - 24) / 2, y: (ashbinSize.height - 24) / 2, width: 24, height: 24)
         
         bottomView.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: bottomViewHeight)
-        editingVCContainer.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: bottomTabBarView.frame.minY)
-        editingTopView.frame = CGRect(x: 0, y: insets.top, width: view.bounds.width, height: 48)
+        subEditingContainer.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: bottomViewContainer.frame.minY)
+        editingTopView.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: 48 + insets.top)
+        
         if !drawPaths.isEmpty {
             drawLine()
         }
@@ -571,6 +524,20 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     override open func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
         shouldLayout = true
+    }
+    
+    // MARK: --- lifecycle --
+    
+    public func addActionChangedListener<T: HEEditorActionListener>(_ listener: T) {
+        actionListeners.append(listener)
+        
+    }
+    public func removeActionChangedListener<T: HEEditorActionListener>(_ listener: T) {
+        actionListeners.removeAll { ($0 as? T) == listener }
+    }
+    
+    public func clearAllActionChangedListeners() {
+        actionListeners.removeAll()
     }
     
     func generateFilterImages() {
@@ -645,10 +612,10 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         isScrolling = false
     }
     
-    func setupUI() {
+    private func setupUI() {
         view.backgroundColor = .black
         
-        view.addSubview(editingVCContainer)
+        view.addSubview(subEditingContainer)
         
         // 메인 컨텐츠
         view.addSubview(mainScrollView)
@@ -658,27 +625,26 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         containerView.addSubview(stickersContainer)
         // 편집용 상단 툴바
         view.addSubview(editingTopView)
-        editingTopView.isHidden = true
+        editingTopView.hide(animate: false)
         
         // 상단 툴바
-        view.addSubview(topView)
-        topView.layer.addSublayer(topShadowLayer)
-        topView.addSubview(cancelBtn)
-        topView.addSubview(undoBtn)
-        topView.addSubview(redoBtn)
+        if let topView {
+            view.addSubview(topView)
+            topView.layer.addSublayer(topShadowLayer)
+        }
         
         // 하단 툴바
-        view.addSubview(bottomTabBarView)
+        view.addSubview(bottomViewContainer)
         let builder = self.bottomToolViewBuilder(self)
         bottomView = builder.toolView
         bottomViewHeight = builder.height
-        bottomTabBarView.layer.addSublayer(bottomShadowLayer)
-        bottomTabBarView.addSubview(bottomView)
+        bottomViewContainer.layer.addSublayer(bottomShadowLayer)
+        bottomViewContainer.addSubview(bottomView)
         
         if tools.contains(.draw) {
-            bottomTabBarView.addSubview(eraserBtnBgBlurView)
-            bottomTabBarView.addSubview(eraserBtn)
-            bottomTabBarView.addSubview(eraserLineView)
+            bottomViewContainer.addSubview(eraserBtnBgBlurView)
+            bottomViewContainer.addSubview(eraserBtn)
+            bottomViewContainer.addSubview(eraserLineView)
             containerView.addSubview(eraserCircleView)
             
             impactFeedback = UIImpactFeedbackGenerator(style: .light)
@@ -697,9 +663,9 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             drawCV.delegate = self
             drawCV.dataSource = self
             drawCV.isHidden = true
-            bottomTabBarView.addSubview(drawCV)
+            bottomViewContainer.addSubview(drawCV)
             
-            ZLDrawColorCell.he.register(drawCV)
+            HEDrawColorCell.he.register(drawCV)
             drawColorCollectionView = drawCV
         }
         
@@ -723,9 +689,9 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             filterCV.delegate = self
             filterCV.dataSource = self
             filterCV.isHidden = true
-            bottomTabBarView.addSubview(filterCV)
+            bottomViewContainer.addSubview(filterCV)
             
-            ZLFilterImageCell.he.register(filterCV)
+            HEFilterImageCell.he.register(filterCV)
             filterCollectionView = filterCV
         }
         
@@ -749,9 +715,9 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             adjustCV.dataSource = self
             adjustCV.isHidden = true
             adjustCV.showsHorizontalScrollIndicator = false
-            bottomTabBarView.addSubview(adjustCV)
+            bottomViewContainer.addSubview(adjustCV)
             
-            ZLAdjustToolCell.he.register(adjustCV)
+            HEAdjustToolCell.he.register(adjustCV)
             adjustCollectionView = adjustCV
             
             adjustSlider = ZLAdjustSlider()
@@ -778,16 +744,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         
         view.addSubview(ashbinView)
         ashbinView.addSubview(ashbinImgView)
-        
-        let asbinTipLabel = UILabel(frame: CGRect(x: 0, y: ashbinSize.height - 34, width: ashbinSize.width, height: 34))
-        asbinTipLabel.font = UIFont.systemFont(ofSize: 12)
-        asbinTipLabel.textAlignment = .center
-        asbinTipLabel.textColor = .white
-        asbinTipLabel.text = localLanguageTextValue(.textStickerRemoveTips)
-        asbinTipLabel.numberOfLines = 2
-        asbinTipLabel.lineBreakMode = .byCharWrapping
-        ashbinView.addSubview(asbinTipLabel)
-        
         
         if tools.contains(.mosaic) {
             mosaicImage = editImage.he.mosaicImage()
@@ -853,12 +809,16 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         stickersContainer.transform = transform
     }
     
-    @objc func cancelBtnClick() {
+    public func cancel() {
         dismiss(animated: animateDismiss, completion: nil)
     }
     
     public var isImageEditing: Bool {
         return self.currentEditController != nil || self.selectedTool != nil
+    }
+    
+    private var isInSubEditController: Bool {
+        self.currentEditController != nil
     }
     
     public func drawBtnClick() {
@@ -974,8 +934,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             exist.removeFromParent()
         }
         self.addChild(target)
-        editingVCContainer.addSubview(target.view)
-        target.view.frame = editingVCContainer.bounds
+        subEditingContainer.addSubview(target.view)
+        target.view.frame = subEditingContainer.bounds
         target.didMove(toParent: self)
         self.currentEditController = target
     }
@@ -1007,26 +967,33 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     // MARK: -- startImageSticker
     public func startImageSticker() {
         guard let imageStickerTray else { return }
-        let trayFrame = CGRect(x: 0, y: bottomTabBarView.frame.minY - HEImageEditorLayout.imageStickerTrayHeight,
-                               width: view.bounds.width,
-                               height: HEImageEditorLayout.imageStickerTrayHeight)
-        imageStickerTray.show(in: view, frame: trayFrame)
         imageStickerTray.hideBlock = { [weak self] in
             self?.setToolView(show: true)
+            self?.editingTopView.hide()
             self?.imageStickerContainerIsHidden = true
         }
         
         imageStickerTray.selectImageBlock = { [weak self] image in
             self?.addImageStickerView(image)
         }
-        // setToolView(show: false)
+        
+        imageStickerTray.show(in: view, frame: calculateImageStickerTrayFrame())
         imageStickerContainerIsHidden = false
-        
         selectedTool = .imageSticker
+        editingTopView.show()
         
+        setToolView(show: false)
         setDrawViews(hidden: true)
         setFilterViews(hidden: true)
         setAdjustViews(hidden: true)
+        
+    }
+    
+    private func calculateImageStickerTrayFrame() -> CGRect {
+        let trayFrame = CGRect(x: 0, y: bottomViewContainer.frame.minY - HEImageEditorLayout.imageStickerTrayHeight,
+                               width: view.bounds.width,
+                               height: HEImageEditorLayout.imageStickerTrayHeight)
+        return trayFrame
     }
     
     // MARK: -- startTextSticker
@@ -1182,17 +1149,17 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         }
     }
     
-    @objc func undoBtnClick() {
+    public func undo() {
         actionManager.undoAction()
     }
     
-    @objc func redoBtnClick() {
+    public func redo() {
         actionManager.redoAction()
     }
     
     // TODO: 제외
     @objc func tapAction(_ tap: UITapGestureRecognizer) {
-        if bottomTabBarView.alpha == 1 {
+        if bottomViewContainer.alpha == 1 {
             setToolView(show: false)
         } else {
             setToolView(show: true)
@@ -1431,19 +1398,19 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             flag = userInfo?["show"] as? Bool ?? true
             cleanToolViewStateTimer()
         }
-        topView.layer.removeAllAnimations()
-        bottomTabBarView.layer.removeAllAnimations()
+        topView?.layer.removeAllAnimations()
+        //bottomTabBarView.layer.removeAllAnimations()
         adjustSlider?.layer.removeAllAnimations()
         if flag {
+            self.topView?.show()
             UIView.animate(withDuration: 0.25) {
-                self.topView.alpha = 1
-                self.bottomTabBarView.alpha = 1
+                //self.bottomTabBarView.alpha = 1
                 self.adjustSlider?.alpha = 1
             }
         } else {
+            self.topView?.hide()
             UIView.animate(withDuration: 0.25) {
-                self.topView.alpha = 0
-                self.bottomTabBarView.alpha = 0
+                //self.bottomTabBarView.alpha = 0
                 self.adjustSlider?.alpha = 0
             }
         }
@@ -1511,7 +1478,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             // TODO: 스티커 준비 안됨 얼럿
             return
         }
-        // TODO: 로딩 표시
+        // 로딩 표시
         loadingView.show(inCenterOf: self.view)
         
         Task { @MainActor in
@@ -1848,13 +1815,10 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     }
     
     private func startAnimateInEditController() {
-        let top = view.safeAreaInsets.top - 10
+        self.topView?.hide()
         UIView.animate(withDuration: 0.2, animations: {
-            self.topView.frame.origin = CGPoint(x: 0, y: top)
-            self.topView.alpha = 0
             self.adjustSlider?.alpha = 0
         }) { _ in
-            self.topView.isHidden = true
             self.mainScrollView.isHidden = true
             self.adjustSlider?.isHidden = true
             
@@ -1867,14 +1831,10 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     func finishEditingDismissAnimate() {
         mainScrollView.alpha = 1
         mainScrollView.isHidden = false
-        topView.alpha = 0
-        topView.isHidden = false
         adjustSlider?.alpha = 0
         adjustSlider?.isHidden = false
-        let top = view.safeAreaInsets.top
+        topView?.show()
         UIView.animate(withDuration: 0.2, animations: {
-            self.topView.frame.origin = CGPoint(x: 0, y: top)
-            self.topView.alpha = 1
             self.adjustSlider?.alpha = 1
         })
     }
@@ -1886,10 +1846,10 @@ extension HEEditImageViewController: UIGestureRecognizerDelegate {
             return false
         }
         if gestureRecognizer is UITapGestureRecognizer {
-            if bottomTabBarView.alpha == 1 {
+            if bottomViewContainer.alpha == 1 {
                 let p = gestureRecognizer.location(in: view)
-                let convertP = bottomTabBarView.convert(p, from: view)
-                for subview in bottomTabBarView.subviews {
+                let convertP = bottomViewContainer.convert(p, from: view)
+                for subview in bottomViewContainer.subviews {
                     if !subview.isHidden,
                        subview.alpha != 0,
                        subview.frame.contains(convertP) {
@@ -1970,7 +1930,7 @@ extension HEEditImageViewController: UICollectionViewDataSource, UICollectionVie
     
     public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
        if collectionView == drawColorCollectionView {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ZLDrawColorCell.he.identifier, for: indexPath) as! ZLDrawColorCell
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HEDrawColorCell.he.identifier, for: indexPath) as! HEDrawColorCell
             
             let c = drawColors[indexPath.row]
             cell.color = c
@@ -1982,7 +1942,7 @@ extension HEEditImageViewController: UICollectionViewDataSource, UICollectionVie
             
             return cell
         } else if collectionView == filterCollectionView {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ZLFilterImageCell.he.identifier, for: indexPath) as! ZLFilterImageCell
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HEFilterImageCell.he.identifier, for: indexPath) as! HEFilterImageCell
             
             let image = thumbnailFilterImages[indexPath.row]
             let filter = HEImageEditorConfiguration.default().filters[indexPath.row]
@@ -1998,7 +1958,7 @@ extension HEEditImageViewController: UICollectionViewDataSource, UICollectionVie
             
             return cell
         } else {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ZLAdjustToolCell.he.identifier, for: indexPath) as! ZLAdjustToolCell
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HEAdjustToolCell.he.identifier, for: indexPath) as! HEAdjustToolCell
             
             let tool = adjustTools[indexPath.row]
             
@@ -2036,6 +1996,8 @@ extension HEEditImageViewController: UICollectionViewDataSource, UICollectionVie
     }
 }
 
+
+// MARK: HEStickerViewDelegate
 extension HEEditImageViewController: HEStickerViewDelegate {
     func stickerBeginOperation(_ sticker: HEBaseStickerView) {
         stickersContainer.bringSubviewToFront(sticker)
@@ -2044,14 +2006,22 @@ extension HEEditImageViewController: HEStickerViewDelegate {
         setToolView(show: false)
         ashbinView.layer.removeAllAnimations()
         ashbinView.isHidden = false
+        ashbinView.alpha = 0
         var frame = ashbinView.frame
-        let diff = view.frame.height - frame.minY
-        frame.origin.y += diff
+        let visibleMaxY = min(
+            bottomViewContainer.frame.minY - 20,
+            containerView.convert(imageView.frame, to: view).maxY
+        )
+        frame.origin.y = visibleMaxY - ashbinSize.height + 18
+        let target = frame
+        frame.origin.y = frame.origin.y + 15
         ashbinView.frame = frame
-        frame.origin.y -= diff
-        UIView.animate(withDuration: 0.25) {
-            self.ashbinView.frame = frame
+        UIView.animate(withDuration: 0.25, delay: 0.2) {
+            self.ashbinView.frame = target
+            self.ashbinView.alpha = 1
         }
+        
+        imageStickerTray?.hide()
         
         stickersContainer.subviews.forEach { view in
             if view !== sticker {
@@ -2085,7 +2055,12 @@ extension HEEditImageViewController: HEStickerViewDelegate {
     }
     
     func stickerEndOperation(_ sticker: HEBaseStickerView, panGes: UIPanGestureRecognizer) {
-        setToolView(show: true)
+        if selectedTool == nil {
+            setToolView(show: true)
+        } else if selectedTool == .imageSticker {
+            imageStickerTray?.show(in: view, frame: calculateImageStickerTrayFrame())
+        }
+        
         ashbinView.layer.removeAllAnimations()
         ashbinView.isHidden = true
         
@@ -2139,8 +2114,7 @@ extension HEEditImageViewController: HEStickerViewDelegate {
 
 extension HEEditImageViewController: HEEditorManagerDelegate {
     func editorManager(_ manager: HEEditorActionManager, didUpdateActions actions: [HEEditorAction], redoActions: [HEEditorAction]) {
-        undoBtn.isEnabled = !actions.isEmpty
-        redoBtn.isEnabled = actions.count != redoActions.count
+        self.actionListeners.forEach({ $0.didUpdatedActions(actions, redoActions: redoActions) })
     }
     
     func editorManager(_ manager: HEEditorActionManager, undoAction action: HEEditorAction) {
@@ -2287,32 +2261,5 @@ extension HEEditImageViewController: HEEditorManagerDelegate {
         adjustCollectionView.selectItem(at: indexPath, animated: true, scrollPosition: .centeredHorizontally)
         adjustCollectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
         adjustCollectionView.reloadData()
-    }
-}
-
-// MARK: 터치 포인트로 대상 찾기
-
-public class HEPassThroughView: UIView, DebugLine {
-    var findResponderSticker: ((CGPoint) -> UIView?)?
-    
-    override public func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
-        guard bounds.contains(point) else {
-            return super.hitTest(point, with: event)
-        }
-        
-        for view in subviews.reversed() {
-            let point = convert(point, to: view)
-            if !view.isHidden,
-               view.alpha != 0,
-               view.bounds.contains(point) {
-                return view.hitTest(point, with: event)
-            }
-        }
-        
-        if let sticker = findResponderSticker?(convert(point, to: superview)) {
-            return sticker.hitTest(point, with: event)
-        }
-        
-        return super.hitTest(point, with: event)
     }
 }

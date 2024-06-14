@@ -7,7 +7,7 @@ import UIKit
 
 // MARK: draw color cell
 
-class ZLDrawColorCell: UICollectionViewCell {
+class HEDrawColorCell: UICollectionViewCell {
     lazy var colorView: UIView = {
         let view = UIView()
         view.layer.cornerRadius = 10
@@ -53,7 +53,7 @@ class ZLDrawColorCell: UICollectionViewCell {
 
 // MARK: filter cell
 
-class ZLFilterImageCell: UICollectionViewCell {
+class HEFilterImageCell: UICollectionViewCell {
     lazy var nameLabel: UILabel = {
         let label = UILabel()
         label.frame = CGRect(x: 0, y: bounds.height - 20, width: bounds.width, height: 20)
@@ -91,7 +91,7 @@ class ZLFilterImageCell: UICollectionViewCell {
 
 // MARK: adjust tool cell
 
-class ZLAdjustToolCell: UICollectionViewCell {
+class HEAdjustToolCell: UICollectionViewCell {
     lazy var nameLabel: UILabel = {
         let label = UILabel()
         label.frame = CGRect(x: 0, y: bounds.height - 30, width: bounds.width, height: 30)

@@ -74,21 +74,21 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
     private var bottomViewHeight: CGFloat = 0
     
     var bottomShadowLayer: CAGradientLayer!
-    private var topView: UIView!
+    private lazy var topView = HETopConfirmBarView()
     /// 회전, 크롭 툴 아이템 뷰
     private var clipActionToolView: HEClipActionToolView!
     
     private var shouldLayout = true
     
-    var panEdge: HEClipImageViewController.ClipPanEdge = .none
+    private var panEdge: HEClipImageViewController.ClipPanEdge = .none
     
-    var beginPanPoint: CGPoint = .zero
+    private var beginPanPoint: CGPoint = .zero
     
-    var clipBoxFrame: CGRect = .zero
+    private var clipBoxFrame: CGRect = .zero
     
-    var clipOriginFrame: CGRect = .zero
+    private var clipOriginFrame: CGRect = .zero
     
-    var isRotating = false
+    private var isRotating = false
     
     private(set) var angle: CGFloat = 0
     
@@ -104,7 +104,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
     
     var minClipSize = CGSize(width: 45, height: 45)
     
-    var resetTimer: Timer?
+    private var resetTimer: Timer?
     
     var dismissAnimateFromRect: CGRect = .zero
     
@@ -191,7 +191,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         guard viewDidAppearCount == 1 else {
             return
         }
-        let top = view.safeAreaInsets.top
+        
         if let frame = presentAnimateFrame, let image = presentAnimateImage {
             let animateImageView = UIImageView(image: image)
             animateImageView.contentMode = .scaleAspectFill
@@ -210,18 +210,13 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
                 }) { _ in
                     animateImageView.removeFromSuperview()
                 }
-                self.topView?.frame.origin.y = top - 10
-                UIView.animate(withDuration: 0.2, delay: 0.1, options: [.curveEaseOut]) {
-                    self.topView?.frame.origin.y = top
-                    self.topView?.alpha = 1
-                }
+                self.topView.show()
             }
         } else {
             bottomView?.alpha = 1
             scrollView.alpha = 1
             gridView.alpha = 1
-            topView?.alpha = 1
-            topView?.frame.origin.y = top
+            topView.show(animate: false)
         }
     }
     
@@ -240,7 +235,8 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         }
         let toolViewTop = bottomToolFrame.minY - HEClipActionToolView.viewHeight
         
-        topView.frame = CGRect(x: 0, y: view.safeAreaInsets.top, width: view.bounds.width, height: 48)
+        topView.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: 48 + view.safeAreaInsets.top)
+        topView.hide(animate: false)
         
         clipActionToolView.frame = CGRect(x: 0, y: toolViewTop, width: view.bounds.width, height: HEClipActionToolView.viewHeight)
         clipActionToolView.selectRatio(self.selectedRatio, animated: false)
@@ -294,9 +290,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         }
         
         // 상단 툴바
-        let topView = HETopConfirmBarView()
         view.addSubview(topView)
-        self.topView = topView
         topView.cancelClickCallback = self.cancelEdit
         topView.confirmClickCallback = self.doneEdit
         
@@ -308,7 +302,6 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         view.addGestureRecognizer(gridPanGes)
         scrollView.panGestureRecognizer.require(toFail: gridPanGes)
         
-        topView.alpha = 0
         scrollView.alpha = 0
         gridView.alpha = 0
         bottomView?.alpha = 0
@@ -471,6 +464,9 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         view.addSubview(imageView)
         self.imageView.isHidden = true
         self.gridView.isHidden = true
+        
+        self.topView.hide()
+        
         UIView.animate(withDuration: 0.3, animations: {
             imageView.frame = presentAnimateFrame
         }) { _ in

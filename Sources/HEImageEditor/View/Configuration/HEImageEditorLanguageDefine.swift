@@ -63,9 +63,6 @@ public struct HELocalLanguageKey: Hashable {
     /// Saturation
     public static let saturation = HELocalLanguageKey(rawValue: "saturation")
     
-    /// Drag here to remove
-    public static let textStickerRemoveTips = HELocalLanguageKey(rawValue: "textStickerRemoveTips")
-    
     /// Processing
     public static let hudProcessing = HELocalLanguageKey(rawValue: "hudProcessing")
 }

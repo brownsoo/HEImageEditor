@@ -97,7 +97,7 @@ class HEInputTextViewController: UIViewController {
         collectionView.backgroundColor = .clear
         collectionView.delegate = self
         collectionView.dataSource = self
-        ZLDrawColorCell.he.register(collectionView)
+        HEDrawColorCell.he.register(collectionView)
         
         return collectionView
     }()
@@ -333,7 +333,7 @@ extension HEInputTextViewController: UICollectionViewDelegate, UICollectionViewD
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ZLDrawColorCell.he.identifier, for: indexPath) as! ZLDrawColorCell
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HEDrawColorCell.he.identifier, for: indexPath) as! HEDrawColorCell
         
         let c = HEImageEditorConfiguration.default().textStickerTextColors[indexPath.row]
         cell.color = c
