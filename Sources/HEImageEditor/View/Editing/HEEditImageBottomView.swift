@@ -14,11 +14,12 @@ open class HEEditImageBottomView: UIView {
     public static let itemSize = CGSize(width: 54, height: 56)
     public static let padding = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
     public static let minimumInterspacing: CGFloat = 20
+    
     public let tools: [HEImageEditorConfiguration.EditTool]
     public var toolSelectListener: ((HEImageEditorConfiguration.EditTool) -> Void)?
     public private(set) var selectedTool: HEImageEditorConfiguration.EditTool?
     
-    public var interitemSpacing: CGFloat = 20
+    var interitemSpacing: CGFloat = 20
     
     public init(tools: [HEImageEditorConfiguration.EditTool]) {
         self.tools = tools
@@ -35,6 +36,16 @@ open class HEEditImageBottomView: UIView {
     open override func encode(with coder: NSCoder) {
         coder.encode(tools, forKey: "tools")
         super.encode(with: coder)
+    }
+    
+    open func selectTool(_ tool: HEImageEditorConfiguration.EditTool) {
+        selectedTool = tool
+        toolCollectionView.reloadData()
+    }
+    
+    open func unselectTool() {
+        selectedTool = nil
+        toolCollectionView.reloadData()
     }
     
     private var toolCollectionView: UICollectionView = {

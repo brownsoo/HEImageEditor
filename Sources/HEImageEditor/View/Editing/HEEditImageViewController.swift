@@ -43,7 +43,7 @@ public struct HEAdjustStatus {
     }
 }
 
-public typealias HEEditImageBottomToolViewBuilder = (HEEditImageView) -> (toolView: UIView, height: CGFloat)
+public typealias HEEditImageBottomToolViewBuilder = (HEEditImageView) -> (toolView: HEEditImageBottomView, height: CGFloat)
 
 public typealias HEEditImageTopToolViewBuilder = (HEEditImageView) -> (toolView: HEMainTopBarView, height: CGFloat)
 
@@ -60,7 +60,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     public var adjustColViewH: CGFloat = 60
     
-    public var ashbinSize = CGSize(width: 56, height: 56)
+    public var trashbinSize = CGSize(width: 56, height: 56)
     
     /// 메인 컨테이터 뷰
     open lazy var mainScrollView: UIScrollView = {
@@ -91,8 +91,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         return view
     }()
     
-    private var topView: HEMainTopBarView?
-    private var topViewHeight: CGFloat = 0
+    private var topBarView: HEMainTopBarView?
+    private var topBarViewHeight: CGFloat = 0
     
     private lazy var topShadowLayer: CAGradientLayer = {
         let layer = CAGradientLayer()
@@ -102,7 +102,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     }()
      
     /// 하단 툴바 영역
-    private lazy var bottomViewContainer: HEPassThroughView = {
+    private lazy var bottomToolViewContainer: HEPassThroughView = {
         let shadowView = HEPassThroughView()
         shadowView.findResponderSticker = findResponderSticker(_:)
         return shadowView
@@ -115,8 +115,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         return layer
     }()
     
-    private var bottomView: UIView!
-    private var bottomViewHeight: CGFloat!
+    private var bottomToolView: HEEditImageBottomView!
+    private var bottomToolViewHeight: CGFloat!
     
     private var imageStickerTray: (UIView & HEImageStickerTray)? {
         HEImageEditorConfiguration.default().imageStickerTray
@@ -214,7 +214,13 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     /// mosaicImageLayer 마스킹 레이어
     var mosaicImageLayerMaskLayer: CAShapeLayer?
     
-    var selectedTool: HEImageEditorConfiguration.EditTool?
+    var selectedTool: HEImageEditorConfiguration.EditTool? {
+        didSet {
+            if selectedTool == nil {
+                bottomToolView.unselectTool()
+            }
+        }
+    }
     
     var selectedAdjustTool: HEImageEditorConfiguration.AdjustTool?
     
@@ -244,25 +250,15 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     var shouldLayout = true
     
     var imageStickerContainerIsHidden = true
-
     var fontChooserContainerIsHidden = true
-    
     private var currentClipStatus: HEClipStatus
-
     private var preClipStatus: HEClipStatus
-
     private var preStickerState: HEStickerEffect?
-
     private var currentAdjustStatus: HEAdjustStatus
-
     private var preAdjustStatus: HEAdjustStatus
-
     private var actionManager: HEEditorActionManager
-    
     private lazy var deleteDrawPaths: [HEDrawPath] = []
-    
     private var defaultDrawPathWidth: CGFloat = 0
-    
     private var impactFeedback: UIImpactFeedbackGenerator?
     
     private lazy var drawPanGes: UIPanGestureRecognizer = {
@@ -402,8 +398,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         super.init(nibName: nil, bundle: nil)
         
         if let builder = topToolViewBuilder?(self) {
-            self.topView = builder.toolView
-            self.topViewHeight = builder.height
+            self.topBarView = builder.toolView
+            self.topBarViewHeight = builder.height
         }
         
         actionManager.delegate = self
@@ -465,16 +461,16 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         mainScrollView.frame = view.bounds
         resetContainerViewFrame()
         
-        if let topView {
-            topView.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: insets.top + topViewHeight)
-            topShadowLayer.frame = topView.bounds
+        if let topBarView {
+            topBarView.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: insets.top + topBarViewHeight)
+            topShadowLayer.frame = topBarView.bounds
         }
         
-        bottomViewContainer.frame = CGRect(x: 0,
-                                        y: view.frame.height - bottomViewHeight - insets.bottom,
+        bottomToolViewContainer.frame = CGRect(x: 0,
+                                        y: view.frame.height - bottomToolViewHeight - insets.bottom,
                                         width: view.he.width,
-                                        height: bottomViewHeight + insets.bottom)
-        bottomShadowLayer.frame = bottomViewContainer.bounds
+                                        height: bottomToolViewHeight + insets.bottom)
+        bottomShadowLayer.frame = bottomToolViewContainer.bounds
         
         eraserBtn.frame = CGRect(x: 20, y: 30 + (drawColViewH - 36) / 2, width: 36, height: 36)
         eraserBtnBgBlurView.frame = eraserBtn.frame
@@ -489,7 +485,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             let sliderWidth = UIDevice.current.userInterfaceIdiom == .phone ? view.he.width - 100 : view.he.width / 2
             adjustSlider?.frame = CGRect(
                 x: (view.he.width - sliderWidth) / 2,
-                y: bottomViewContainer.he.top - sliderHeight,
+                y: bottomToolViewContainer.he.top - sliderHeight,
                 width: sliderWidth,
                 height: sliderHeight
             )
@@ -498,15 +494,15 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         filterCollectionView?.frame = CGRect(x: 20, y: 0, width: view.he.width - 40, height: filterColViewH)
          
         ashbinView.frame = CGRect(
-            x: (view.he.width - ashbinSize.width) / 2,
-            y: currentClipStatus.editRect.maxY - ashbinSize.height + 18,
-            width: ashbinSize.width,
-            height: ashbinSize.height
+            x: (view.he.width - trashbinSize.width) / 2,
+            y: currentClipStatus.editRect.maxY - trashbinSize.height + 18,
+            width: trashbinSize.width,
+            height: trashbinSize.height
         )
-        ashbinImgView.frame = CGRect(x: (ashbinSize.width - 24) / 2, y: (ashbinSize.height - 24) / 2, width: 24, height: 24)
+        ashbinImgView.frame = CGRect(x: (trashbinSize.width - 24) / 2, y: (trashbinSize.height - 24) / 2, width: 24, height: 24)
         
-        bottomView.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: bottomViewHeight)
-        subEditingContainer.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: bottomViewContainer.frame.minY)
+        bottomToolView.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: bottomToolViewHeight)
+        subEditingContainer.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: bottomToolViewContainer.frame.minY)
         editingTopView.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: 48 + insets.top)
         
         if !drawPaths.isEmpty {
@@ -628,23 +624,23 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         editingTopView.hide(animate: false)
         
         // 상단 툴바
-        if let topView {
-            view.addSubview(topView)
-            topView.layer.addSublayer(topShadowLayer)
+        if let topBarView {
+            view.addSubview(topBarView)
+            topBarView.layer.addSublayer(topShadowLayer)
         }
         
         // 하단 툴바
-        view.addSubview(bottomViewContainer)
+        view.addSubview(bottomToolViewContainer)
         let builder = self.bottomToolViewBuilder(self)
-        bottomView = builder.toolView
-        bottomViewHeight = builder.height
-        bottomViewContainer.layer.addSublayer(bottomShadowLayer)
-        bottomViewContainer.addSubview(bottomView)
+        bottomToolView = builder.toolView
+        bottomToolViewHeight = builder.height
+        bottomToolViewContainer.layer.addSublayer(bottomShadowLayer)
+        bottomToolViewContainer.addSubview(bottomToolView)
         
         if tools.contains(.draw) {
-            bottomViewContainer.addSubview(eraserBtnBgBlurView)
-            bottomViewContainer.addSubview(eraserBtn)
-            bottomViewContainer.addSubview(eraserLineView)
+            bottomToolViewContainer.addSubview(eraserBtnBgBlurView)
+            bottomToolViewContainer.addSubview(eraserBtn)
+            bottomToolViewContainer.addSubview(eraserLineView)
             containerView.addSubview(eraserCircleView)
             
             impactFeedback = UIImpactFeedbackGenerator(style: .light)
@@ -663,7 +659,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             drawCV.delegate = self
             drawCV.dataSource = self
             drawCV.isHidden = true
-            bottomViewContainer.addSubview(drawCV)
+            bottomToolViewContainer.addSubview(drawCV)
             
             HEDrawColorCell.he.register(drawCV)
             drawColorCollectionView = drawCV
@@ -689,7 +685,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             filterCV.delegate = self
             filterCV.dataSource = self
             filterCV.isHidden = true
-            bottomViewContainer.addSubview(filterCV)
+            bottomToolViewContainer.addSubview(filterCV)
             
             HEFilterImageCell.he.register(filterCV)
             filterCollectionView = filterCV
@@ -715,7 +711,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             adjustCV.dataSource = self
             adjustCV.isHidden = true
             adjustCV.showsHorizontalScrollIndicator = false
-            bottomViewContainer.addSubview(adjustCV)
+            bottomToolViewContainer.addSubview(adjustCV)
             
             HEAdjustToolCell.he.register(adjustCV)
             adjustCollectionView = adjustCV
@@ -990,7 +986,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     }
     
     private func calculateImageStickerTrayFrame() -> CGRect {
-        let trayFrame = CGRect(x: 0, y: bottomViewContainer.frame.minY - HEImageEditorLayout.imageStickerTrayHeight,
+        let trayFrame = CGRect(x: 0, y: bottomToolViewContainer.frame.minY - HEImageEditorLayout.imageStickerTrayHeight,
                                width: view.bounds.width,
                                height: HEImageEditorLayout.imageStickerTrayHeight)
         return trayFrame
@@ -1159,7 +1155,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     // TODO: 제외
     @objc func tapAction(_ tap: UITapGestureRecognizer) {
-        if bottomViewContainer.alpha == 1 {
+        if bottomToolViewContainer.alpha == 1 {
             setToolView(show: false)
         } else {
             setToolView(show: true)
@@ -1398,17 +1394,17 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             flag = userInfo?["show"] as? Bool ?? true
             cleanToolViewStateTimer()
         }
-        topView?.layer.removeAllAnimations()
+        topBarView?.layer.removeAllAnimations()
         //bottomTabBarView.layer.removeAllAnimations()
         adjustSlider?.layer.removeAllAnimations()
         if flag {
-            self.topView?.show()
+            self.topBarView?.show()
             UIView.animate(withDuration: 0.25) {
                 //self.bottomTabBarView.alpha = 1
                 self.adjustSlider?.alpha = 1
             }
         } else {
-            self.topView?.hide()
+            self.topBarView?.hide()
             UIView.animate(withDuration: 0.25) {
                 //self.bottomTabBarView.alpha = 0
                 self.adjustSlider?.alpha = 0
@@ -1815,7 +1811,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     }
     
     private func startAnimateInEditController() {
-        self.topView?.hide()
+        self.topBarView?.hide()
         UIView.animate(withDuration: 0.2, animations: {
             self.adjustSlider?.alpha = 0
         }) { _ in
@@ -1833,7 +1829,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         mainScrollView.isHidden = false
         adjustSlider?.alpha = 0
         adjustSlider?.isHidden = false
-        topView?.show()
+        topBarView?.show()
         UIView.animate(withDuration: 0.2, animations: {
             self.adjustSlider?.alpha = 1
         })
@@ -1846,10 +1842,10 @@ extension HEEditImageViewController: UIGestureRecognizerDelegate {
             return false
         }
         if gestureRecognizer is UITapGestureRecognizer {
-            if bottomViewContainer.alpha == 1 {
+            if bottomToolViewContainer.alpha == 1 {
                 let p = gestureRecognizer.location(in: view)
-                let convertP = bottomViewContainer.convert(p, from: view)
-                for subview in bottomViewContainer.subviews {
+                let convertP = bottomToolViewContainer.convert(p, from: view)
+                for subview in bottomToolViewContainer.subviews {
                     if !subview.isHidden,
                        subview.alpha != 0,
                        subview.frame.contains(convertP) {
@@ -2009,10 +2005,10 @@ extension HEEditImageViewController: HEStickerViewDelegate {
         ashbinView.alpha = 0
         var frame = ashbinView.frame
         let visibleMaxY = min(
-            bottomViewContainer.frame.minY - 20,
+            bottomToolViewContainer.frame.minY - 20,
             containerView.convert(imageView.frame, to: view).maxY
         )
-        frame.origin.y = visibleMaxY - ashbinSize.height + 18
+        frame.origin.y = visibleMaxY - trashbinSize.height + 18
         let target = frame
         frame.origin.y = frame.origin.y + 15
         ashbinView.frame = frame
