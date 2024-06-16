@@ -289,10 +289,11 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     /// 뷰 컨트롤러를 담는 뷰
     private lazy var subEditingContainer = UIView()
+    /// 편집 상태에서 사용하는 탑뷰
+    private lazy var subEditingTopView = HETopConfirmBarView()
+    
     /// 자르기 화면의 하단에 무언가 놓을 수 있다.. (없애버릴까..)
     public var clipImageBottomViewBuilder: HEClipImageBottomViewBuilder?
-    /// 편집 상태에서 사용하는 탑뷰
-    private lazy var editingTopView = HETopConfirmBarView()
     /// 하단 툴뷰 구성자
     public var bottomToolViewBuilder: HEEditImageBottomToolViewBuilder
     
@@ -424,6 +425,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         setupUI()
         
         rotationImageView()
+        
         if tools.contains(.filter) {
             generateFilterImages()
         }
@@ -503,7 +505,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         
         bottomToolView.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: bottomToolViewHeight)
         subEditingContainer.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: bottomToolViewContainer.frame.minY)
-        editingTopView.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: 48 + insets.top)
+        subEditingTopView.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: 48 + insets.top)
         
         if !drawPaths.isEmpty {
             drawLine()
@@ -620,8 +622,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         containerView.addSubview(drawingImageView)
         containerView.addSubview(stickersContainer)
         // 편집용 상단 툴바
-        view.addSubview(editingTopView)
-        editingTopView.hide(animate: false)
+        view.addSubview(subEditingTopView)
+        subEditingTopView.hide(animate: false)
         
         // 상단 툴바
         if let topBarView {
@@ -965,7 +967,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         guard let imageStickerTray else { return }
         imageStickerTray.hideBlock = { [weak self] in
             self?.setToolView(show: true)
-            self?.editingTopView.hide()
+            self?.subEditingTopView.hide()
             self?.imageStickerContainerIsHidden = true
         }
         
@@ -976,7 +978,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         imageStickerTray.show(in: view, frame: calculateImageStickerTrayFrame())
         imageStickerContainerIsHidden = false
         selectedTool = .imageSticker
-        editingTopView.show()
+        subEditingTopView.show()
         
         setToolView(show: false)
         setDrawViews(hidden: true)
