@@ -1,5 +1,5 @@
 //
-//  ZLWeakProxy.swift
+//  HEWeakProxy.swift
 //  HEImageEditor
 //
 
@@ -7,7 +7,7 @@
 
 import UIKit
 
-class ZLWeakProxy: NSObject {
+class HEWeakProxy: NSObject {
     private weak var target: NSObjectProtocol?
     
     init(target: NSObjectProtocol) {
@@ -15,8 +15,8 @@ class ZLWeakProxy: NSObject {
         super.init()
     }
     
-    class func proxy(target: NSObjectProtocol) -> ZLWeakProxy {
-        return ZLWeakProxy(target: target)
+    class func proxy(target: NSObjectProtocol) -> HEWeakProxy {
+        return HEWeakProxy(target: target)
     }
     
     override func forwardingTarget(for aSelector: Selector!) -> Any? {

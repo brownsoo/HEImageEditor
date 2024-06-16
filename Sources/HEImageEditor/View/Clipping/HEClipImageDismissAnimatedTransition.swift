@@ -1,5 +1,5 @@
 //
-//  ZLClipImageDismissAnimatedTransition.swift
+//  HEClipImageDismissAnimatedTransition.swift
 //  HEImageEditor
 //
 

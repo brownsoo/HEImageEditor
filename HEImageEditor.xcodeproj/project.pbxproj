@@ -201,6 +201,7 @@
 		17189E9A2C1041DB00270F4D /* View */ = {
 			isa = PBXGroup;
 			children = (
+				17CA7C732C1ECD1C00E24D68 /* Drawing */,
 				17D691D52C18301E007443EC /* Sticker */,
 				17D6919E2C168ABC007443EC /* Editing */,
 				17C8ED842C147A35006F390A /* Clipping */,
@@ -208,7 +209,6 @@
 				17C8ED6A2C11905E006F390A /* Configuration */,
 				17189E9B2C1041DB00270F4D /* HEImageViewPager.swift */,
 				FD3073362AD80D0000CFB618 /* HEEditorActionManager.swift */,
-				17189E9D2C1041DB00270F4D /* TransformBoxView.swift */,
 				17D6919C2C168A9C007443EC /* HEEditImageModel.swift */,
 			);
 			path = View;
@@ -262,6 +262,9 @@
 		17189EB82C10460300270F4D /* Util */ = {
 			isa = PBXGroup;
 			children = (
+				FDC144952BABE0B4004C2BCD /* HEWeakProxy.h */,
+				FDC144942BABE0B4004C2BCD /* HEWeakProxy.m */,
+				FDB3113228752F7300845756 /* HEWeakProxy.swift */,
 				E40208FB256BA0080077F5DC /* Bundle.swift */,
 				17189EB92C10461E00270F4D /* UIKit+.swift */,
 				17189EBB2C105BE500270F4D /* Trace.swift */,
@@ -310,6 +313,8 @@
 		17C8ED6B2C11D848006F390A /* Component */ = {
 			isa = PBXGroup;
 			children = (
+				17189E9D2C1041DB00270F4D /* TransformBoxView.swift */,
+				FD8EFA512772026D0067ADF1 /* HEAdjustSlider.swift */,
 				17D691E92C1BDF41007443EC /* HEPassThroughView.swift */,
 				FDE1A560282E61B500178B0F /* HEEnlargeButton.swift */,
 				FD7E7507284E134600EF34DD /* HEProgressHUD.swift */,
@@ -324,10 +329,19 @@
 		17C8ED842C147A35006F390A /* Clipping */ = {
 			isa = PBXGroup;
 			children = (
+				E40208F3256B9FA70077F5DC /* HEClipImageDismissAnimatedTransition.swift */,
 				E40208E9256B9F9C0077F5DC /* HEClipImageViewController.swift */,
 				17C8ED892C148390006F390A /* HEClipActionToolView.swift */,
 			);
 			path = Clipping;
+			sourceTree = "<group>";
+		};
+		17CA7C732C1ECD1C00E24D68 /* Drawing */ = {
+			isa = PBXGroup;
+			children = (
+				FD3073382AD80D4000CFB618 /* HEPaths.swift */,
+			);
+			path = Drawing;
 			sourceTree = "<group>";
 		};
 		17D6919E2C168ABC007443EC /* Editing */ = {
@@ -348,6 +362,7 @@
 				E40208E5256B9F9C0077F5DC /* HEImageStickerView.swift */,
 				E40208E6256B9F9C0077F5DC /* HETextStickerView.swift */,
 				17D691D62C183A80007443EC /* HEImageStickerTrayView.swift */,
+				E40208E8256B9F9C0077F5DC /* HEInputTextViewController.swift */,
 			);
 			path = Sticker;
 			sourceTree = "<group>";
@@ -383,13 +398,6 @@
 		E4020902256BA00D0077F5DC /* General */ = {
 			isa = PBXGroup;
 			children = (
-				E40208E8256B9F9C0077F5DC /* HEInputTextViewController.swift */,
-				FD8EFA512772026D0067ADF1 /* HEAdjustSlider.swift */,
-				FD3073382AD80D4000CFB618 /* HEPaths.swift */,
-				E40208F3256B9FA70077F5DC /* HEClipImageDismissAnimatedTransition.swift */,
-				FDC144952BABE0B4004C2BCD /* HEWeakProxy.h */,
-				FDC144942BABE0B4004C2BCD /* HEWeakProxy.m */,
-				FDB3113228752F7300845756 /* HEWeakProxy.swift */,
 			);
 			path = General;
 			sourceTree = "<group>";

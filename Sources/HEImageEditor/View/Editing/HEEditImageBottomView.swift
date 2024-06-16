@@ -150,40 +150,43 @@ class HEEditToolCell: UICollectionViewCell {
     var toolType: HEImageEditorConfiguration.EditTool = .draw {
         didSet {
             badgeView.isHidden = true
+            var icon: UIImage?
             switch toolType {
             case .draw:
-                iconView.image = UIImage(systemName: "pencil.line")?.withRenderingMode(.alwaysOriginal)
-                iconView.highlightedImage = UIImage(systemName: "pencil.line")
+                icon = UIImage(systemName: "pencil.line")?.withTintColor(.white, renderingMode: .alwaysOriginal)
+                
             case .clip:
-                let icon = .he.getImage("icEditMnCutting") ?? UIImage(systemName: "crop")
-                iconView.image = icon
-                iconView.highlightedImage = icon
+                icon = .he.getImage("icEditMnCutting") ?? UIImage(systemName: "crop")?.withTintColor(.white, renderingMode: .alwaysOriginal)
+                
             case .imageSticker:
-                let icon = .he.getImage("icEditMnSticker") ?? UIImage(systemName: "face.smiling")
-                iconView.image = icon
-                iconView.highlightedImage = icon
+                icon = .he.getImage("icEditMnSticker") ?? UIImage(systemName: "face.smiling")?.withTintColor(.white, renderingMode: .alwaysOriginal)
                 badgeView.image = .he.getImage("editBadgeAi")
                 badgeView.frame = CGRect(x: 0, y: 0, width: 20, height: 16)
                 // 아이콘 중앙에서 5, -2 에 위치
                 badgeBottomConstraint.constant = -2
                 badgeLeftConstraint.constant = 5
                 badgeView.isHidden = false
+                
             case .textSticker:
-                iconView.image = UIImage.he.getImage("icEditMnText") ?? UIImage(systemName: "t.square.fill")
-                iconView.highlightedImage = UIImage.he.getImage("icEditMnText") ?? UIImage(systemName: "t.square.fill")
+                icon = UIImage.he.getImage("icEditMnText") ?? UIImage(systemName: "t.square.fill")?.withTintColor(.white, renderingMode: .alwaysOriginal)
+                
             case .mosaic:
-                iconView.image = UIImage(systemName: "mosaic")
-                iconView.highlightedImage = UIImage(systemName: "mosaic")
+                icon = UIImage(systemName: "mosaic")?.withTintColor(.white, renderingMode: .alwaysOriginal)
+                
             case .filter:
-                iconView.image = UIImage(systemName: "camera.filters")
-                iconView.highlightedImage = UIImage(systemName: "camera.filters")
+                icon = UIImage(systemName: "camera.filters")?.withTintColor(.white, renderingMode: .alwaysOriginal)
+                
             case .adjust:
-                iconView.image = UIImage(systemName: "slider.vertical.3")
-                iconView.highlightedImage = UIImage(systemName: "slider.vertical.3")
+                icon = UIImage(systemName: "slider.vertical.3")?.withTintColor(.white, renderingMode: .alwaysOriginal)
             }
+            
+            iconView.image = icon
+            
             if let color = UIColor.he.toolIconHighlightedColor {
-                iconView.highlightedImage = iconView.highlightedImage?.withTintColor(color)
+                iconView.highlightedImage = icon?.withTintColor(color)
                 titleLabel.highlightedTextColor = color
+            } else {
+                iconView.highlightedImage = icon
             }
             
             titleLabel.text = toolType.label

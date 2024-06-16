@@ -118,23 +118,24 @@ class HEAdjustToolCell: UICollectionViewCell {
     
     var adjustTool: HEImageEditorConfiguration.AdjustTool = .brightness {
         didSet {
+            var icon: UIImage?
             switch adjustTool {
             case .brightness:
-                imageView.image = .he.getImage("zl_brightness")
-                imageView.highlightedImage = .he.getImage("zl_brightness_selected")
+                icon = UIImage(systemName: "circle.circle")
                 nameLabel.text = localLanguageTextValue(.brightness)
             case .contrast:
-                imageView.image = .he.getImage("zl_contrast")
-                imageView.highlightedImage = .he.getImage("zl_contrast_selected")
+                icon = UIImage(systemName: "circle.slash")
                 nameLabel.text = localLanguageTextValue(.contrast)
             case .saturation:
-                imageView.image = .he.getImage("zl_saturation")
-                imageView.highlightedImage = .he.getImage("zl_saturation_selected")
+                icon = UIImage(systemName: "drop.circle")
                 nameLabel.text = localLanguageTextValue(.saturation)
             }
+            
+            imageView.image = icon?.withTintColor(.white, renderingMode: .alwaysOriginal)
             if let color = UIColor.he.toolIconHighlightedColor {
-                imageView.highlightedImage = imageView.highlightedImage?
-                    .he.fillColor(color)
+                imageView.highlightedImage = icon?.he.fillColor(color)
+            } else {
+                imageView.highlightedImage = icon
             }
         }
     }

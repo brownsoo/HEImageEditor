@@ -131,7 +131,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     open lazy var eraserBtn: HEEnlargeButton = {
         let btn = HEEnlargeButton(type: .custom)
-        btn.setImage(.he.getImage("zl_eraser"), for: .normal)
+        btn.setImage(UIImage(systemName: "eraser"), for: .normal)
         btn.addTarget(self, action: #selector(eraserBtnClick), for: .touchUpInside)
         btn.isHidden = true
         btn.layer.cornerRadius = 18
@@ -161,7 +161,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         return iv
     }()
 
-    open lazy var ashbinView: UIView = {
+    open lazy var trashbinView: UIView = {
         let view = UIView()
         view.backgroundColor = .he.ashbinNormalBgColor
         view.layer.cornerRadius = 15
@@ -170,11 +170,11 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         return view
     }()
     
-    open lazy var ashbinImgView: UIImageView = {
+    open lazy var trashbinImgView: UIImageView = {
         UIImageView(image: .he.getImage("ic_delete") ?? UIImage(systemName: "trash"))
     }()
     
-    var adjustSlider: ZLAdjustSlider?
+    var adjustSlider: HEAdjustSlider?
     
     var animateDismiss = true
     
@@ -210,7 +210,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     /// mosaicImage 표시 레이어
     var mosaicImageLayer: CALayer?
-    
+
     /// mosaicImageLayer 마스킹 레이어
     var mosaicImageLayerMaskLayer: CAShapeLayer?
     
@@ -250,7 +250,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     var shouldLayout = true
     
     var imageStickerContainerIsHidden = true
-    var fontChooserContainerIsHidden = true
+    
     private var currentClipStatus: HEClipStatus
     private var preClipStatus: HEClipStatus
     private var preStickerState: HEStickerEffect?
@@ -495,13 +495,13 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         
         filterCollectionView?.frame = CGRect(x: 20, y: 0, width: view.he.width - 40, height: filterColViewH)
          
-        ashbinView.frame = CGRect(
+        trashbinView.frame = CGRect(
             x: (view.he.width - trashbinSize.width) / 2,
             y: currentClipStatus.editRect.maxY - trashbinSize.height + 18,
             width: trashbinSize.width,
             height: trashbinSize.height
         )
-        ashbinImgView.frame = CGRect(x: (trashbinSize.width - 24) / 2, y: (trashbinSize.height - 24) / 2, width: 24, height: 24)
+        trashbinImgView.frame = CGRect(x: (trashbinSize.width - 24) / 2, y: (trashbinSize.height - 24) / 2, width: 24, height: 24)
         
         bottomToolView.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: bottomToolViewHeight)
         subEditingContainer.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: bottomToolViewContainer.frame.minY)
@@ -707,7 +707,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             adjustLayout.scrollDirection = .horizontal
             
             let adjustCV = UICollectionView(frame: .zero, collectionViewLayout: adjustLayout)
-            
             adjustCV.backgroundColor = .clear
             adjustCV.delegate = self
             adjustCV.dataSource = self
@@ -718,7 +717,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             HEAdjustToolCell.he.register(adjustCV)
             adjustCollectionView = adjustCV
             
-            adjustSlider = ZLAdjustSlider()
+            adjustSlider = HEAdjustSlider()
             if let selectedAdjustTool = selectedAdjustTool {
                 changeAdjustTool(selectedAdjustTool)
             }
@@ -730,7 +729,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 self?.adjustValueChanged(value)
             }
             adjustSlider?.endAdjust = { [weak self] in
-                guard let `self` = self else { return }
+                guard let self else { return }
                 self.actionManager.storeAction(
                     .adjust(oldStatus: self.preAdjustStatus, newStatus: self.currentAdjustStatus)
                 )
@@ -740,8 +739,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             view.addSubview(adjustSlider!)
         }
         
-        view.addSubview(ashbinView)
-        ashbinView.addSubview(ashbinImgView)
+        view.addSubview(trashbinView)
+        trashbinView.addSubview(trashbinImgView)
         
         if tools.contains(.mosaic) {
             mosaicImage = editImage.he.mosaicImage()
@@ -758,19 +757,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             imageView.layer.addSublayer(mosaicImageLayerMaskLayer!)
             
             mosaicImageLayer?.mask = mosaicImageLayerMaskLayer
-        }
-
-        if tools.contains(.textSticker) {
-            HEImageEditorConfiguration.default().fontChooserContainerView?.hideBlock = { [weak self] in
-                self?.setToolView(show: true)
-                self?.fontChooserContainerIsHidden = true
-            }
-
-            HEImageEditorConfiguration.default().fontChooserContainerView?.selectFontBlock = { [weak self] font in
-                self?.showInputTextVC(font: font, completion: { [weak self] text, textColor, font, image, style in
-                    self?.addTextStickersView(text, textColor: textColor, font: font, image: image, style: style)
-                })
-            }
         }
         
 //        let tapGes = UITapGestureRecognizer(target: self, action: #selector(tapAction(_:)))
@@ -996,14 +982,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     // MARK: -- startTextSticker
     public func startTextSticker() {
-        if let fontChooserContainerView = HEImageEditorConfiguration.default().fontChooserContainerView {
-            fontChooserContainerView.show(in: view)
-            setToolView(show: false)
-            fontChooserContainerIsHidden = false
-        } else {
-            showInputTextVC(font: HEImageEditorConfiguration.default().textStickerDefaultFont) { [weak self] text, textColor, font, image, style in
-                self?.addTextStickersView(text, textColor: textColor, font: font, image: image, style: style)
-            }
+        showInputTextVC(font: HEImageEditorConfiguration.default().textStickerDefaultFont) { [weak self] text, textColor, font, image, style in
+            self?.addTextStickersView(text, textColor: textColor, font: font, image: image, style: style)
         }
         
         selectedTool = nil
@@ -1164,7 +1144,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         }
     }
     
-    @objc func drawAction(_ pan: UIPanGestureRecognizer) {
+    @objc
+    private func drawAction(_ pan: UIPanGestureRecognizer) {
         // 지우개
         if selectedTool == .draw, eraserBtn.isSelected {
             eraserAction(pan)
@@ -1317,14 +1298,15 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     }
     
     // 매개변수를 조정하지 않고 이미지 생성
-    func generateAdjustImageRef() {
+    private func generateAdjustImageRef() {
         editImageAdjustRef = generateNewMosaicImage(
             inputImage: editImageWithoutAdjust,
-            inputMosaicImage: editImageWithoutAdjust.he.mosaicImage()
+            inputMosaicImage: editImageWithoutAdjust.he.mosaicImage(),
+            skipEditImage: true
         )
     }
     
-    func adjustValueChanged(_ value: Float) {
+    private func adjustValueChanged(_ value: Float) {
         guard let selectedAdjustTool else {
             return
         }
@@ -1717,9 +1699,17 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         mosaicImageLayer?.mask = mosaicImageLayerMaskLayer
     }
     
-    /// inputImage 및 inputMosaicImage를 전달하면 새로 생성된 모자이크 이미지만 가져오겠다는 의미입니다.
     @discardableResult
-    func generateNewMosaicImage(inputImage: UIImage? = nil, inputMosaicImage: UIImage? = nil) -> UIImage? {
+    /// 모자이크 이미지 생성 후 editImage, imageView 에 반영한다.
+    ///
+    /// - Parameters:
+    ///   - inputImage: 원본 이미지 대신에 이 이미지에 대한 모자이크를 처리한다.
+    ///   - inputMosaicImage: 기본 모자이크된 이미지 대신에 이 이미지를 사용된다.
+    ///   - skipEditImage: editImage, imageView 에 반영하지 않고 생성된 모자이크된 이미지만 반환한다.
+    /// - Returns: 새로 생성된 모자이크 이미지
+    func generateNewMosaicImage(inputImage: UIImage? = nil,
+                                inputMosaicImage: UIImage? = nil,
+                                skipEditImage: Bool = false) -> UIImage? {
         let renderRect = CGRect(origin: .zero, size: originalImage.size)
         
         var midImage = UIGraphicsImageRenderer.he.renderImage(size: originalImage.size) { format in
@@ -1729,6 +1719,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 inputImage?.draw(in: renderRect)
             } else {
                 var drawImage: UIImage?
+                // 필터 적용
                 if tools.contains(.filter), let image = filterImages[currentFilter.name] {
                     drawImage = image
                 } else {
@@ -1736,6 +1727,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 }
                 
                 drawImage?.draw(at: .zero)
+                // HSB 적용
                 if tools.contains(.adjust), !currentAdjustStatus.allValueIsZero {
                     drawImage = drawImage?.he.adjust(
                         brightness: currentAdjustStatus.brightness,
@@ -1746,7 +1738,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 
                 drawImage?.draw(in: renderRect)
             }
-            
+            // 모자잌 패스로 지움
             mosaicPaths.forEach { path in
                 context.move(to: path.startPoint)
                 path.linePoints.forEach { point in
@@ -1766,7 +1758,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         let temp = UIGraphicsImageRenderer.he.renderImage(size: originalImage.size) { format in
             format.scale = self.originalImage.scale
         } imageActions: { _ in
-            // 由于生成的mosaic图片可能在边缘区域出现空白部分，导致合成后会有黑边，所以在最下面先画一张原图
+            // 생성된 모자이크 이미지는 가장자리 부분에 빈 부분이 있어 합성 후 가장자리가 검은색이 될 수 있으므로 하단에 원본 이미지를 먼저 그려줌.
             originalImage.draw(in: renderRect)
             (inputMosaicImage ?? mosaicImage)?.draw(in: renderRect)
             midImage.draw(at: .zero)
@@ -1775,7 +1767,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         guard let cgi = temp.cgImage else { return nil }
         let image = UIImage(cgImage: cgi, scale: editImage.scale, orientation: .up)
         
-        if inputImage != nil {
+        if skipEditImage {
             return image
         }
         
@@ -1840,7 +1832,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
 
 extension HEEditImageViewController: UIGestureRecognizerDelegate {
     public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-        guard imageStickerContainerIsHidden, fontChooserContainerIsHidden else {
+        guard imageStickerContainerIsHidden else {
             return false
         }
         if gestureRecognizer is UITapGestureRecognizer {
@@ -1983,7 +1975,7 @@ extension HEEditImageViewController: UICollectionViewDataSource, UICollectionVie
             let filter = HEImageEditorConfiguration.default().filters[indexPath.row]
             actionManager.storeAction(.filter(oldFilter: currentFilter, newFilter: filter))
             changeFilter(filter)
-        } else {
+        } else { // adjust tools
             let tool = adjustTools[indexPath.row]
             if tool != selectedAdjustTool {
                 changeAdjustTool(tool)
@@ -2002,10 +1994,10 @@ extension HEEditImageViewController: HEStickerViewDelegate {
         preStickerState = sticker.state
         
         setToolView(show: false)
-        ashbinView.layer.removeAllAnimations()
-        ashbinView.isHidden = false
-        ashbinView.alpha = 0
-        var frame = ashbinView.frame
+        trashbinView.layer.removeAllAnimations()
+        trashbinView.isHidden = false
+        trashbinView.alpha = 0
+        var frame = trashbinView.frame
         let visibleMaxY = min(
             bottomToolViewContainer.frame.minY - 20,
             containerView.convert(imageView.frame, to: view).maxY
@@ -2013,10 +2005,10 @@ extension HEEditImageViewController: HEStickerViewDelegate {
         frame.origin.y = visibleMaxY - trashbinSize.height + 18
         let target = frame
         frame.origin.y = frame.origin.y + 15
-        ashbinView.frame = frame
+        trashbinView.frame = frame
         UIView.animate(withDuration: 0.25, delay: 0.2) {
-            self.ashbinView.frame = target
-            self.ashbinView.alpha = 1
+            self.trashbinView.frame = target
+            self.trashbinView.alpha = 1
         }
         
         imageStickerTray?.hide()
@@ -2031,9 +2023,9 @@ extension HEEditImageViewController: HEStickerViewDelegate {
     
     func stickerOnOperation(_ sticker: HEBaseStickerView, panGes: UIPanGestureRecognizer) {
         let point = panGes.location(in: view)
-        if ashbinView.frame.contains(point) {
-            ashbinView.backgroundColor = .he.ashbinTintBgColor
-            ashbinImgView.isHighlighted = true
+        if trashbinView.frame.contains(point) {
+            trashbinView.backgroundColor = .he.ashbinTintBgColor
+            trashbinImgView.isHighlighted = true
             if sticker.alpha == 1 {
                 sticker.layer.removeAllAnimations()
                 UIView.animate(withDuration: 0.25) {
@@ -2041,8 +2033,8 @@ extension HEEditImageViewController: HEStickerViewDelegate {
                 }
             }
         } else {
-            ashbinView.backgroundColor = .he.ashbinNormalBgColor
-            ashbinImgView.isHighlighted = false
+            trashbinView.backgroundColor = .he.ashbinNormalBgColor
+            trashbinImgView.isHighlighted = false
             if sticker.alpha != 1 {
                 sticker.layer.removeAllAnimations()
                 UIView.animate(withDuration: 0.25) {
@@ -2059,12 +2051,12 @@ extension HEEditImageViewController: HEStickerViewDelegate {
             imageStickerTray?.show(in: view, frame: calculateImageStickerTrayFrame())
         }
         
-        ashbinView.layer.removeAllAnimations()
-        ashbinView.isHidden = true
+        trashbinView.layer.removeAllAnimations()
+        trashbinView.isHidden = true
         
         var endState: HEStickerEffect? = sticker.state
         let point = panGes.location(in: view)
-        if ashbinView.frame.contains(point) {
+        if trashbinView.frame.contains(point) {
             sticker.moveToAshbin()
             endState = nil
         }

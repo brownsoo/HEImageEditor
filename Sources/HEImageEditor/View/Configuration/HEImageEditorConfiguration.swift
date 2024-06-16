@@ -99,7 +99,6 @@ public class HEImageEditorConfiguration: NSObject {
     @objc public var textStickerDefaultTextColor = UIColor.white
     
     /// The default font of text sticker.
-    /// - Note: This property is ignored when using fontChooserContainerView.
     @objc public var textStickerDefaultFont: UIFont?
     
     /// Whether text sticker allows line break.
@@ -121,8 +120,6 @@ public class HEImageEditorConfiguration: NSObject {
     }
     
     @objc public var imageStickerTray: (UIView & HEImageStickerTray)?
-
-    @objc public var fontChooserContainerView: (UIView & HETextFontChooserDelegate)?
 
     private var _adjustTools: [HEImageEditorConfiguration.AdjustTool] = [.brightness, .contrast, .saturation]
     /// Adjust image tools. (Default order is brightness, contrast, saturation)
@@ -309,13 +306,4 @@ public extension HEImageClipRatio {
     func show(in parent: UIView, frame: CGRect)
     func hide()
     func randomSticker(inSection section: Int) -> HEImageSticker?
-}
-
-/// Provide an text font choose view that conform to this protocol must be a subclass of UIView
-@objc public protocol HETextFontChooserDelegate {
-    @objc var selectFontBlock: ((UIFont) -> Void)? { get set }
-
-    @objc var hideBlock: (() -> Void)? { get set }
-
-    @objc func show(in view: UIView)
 }

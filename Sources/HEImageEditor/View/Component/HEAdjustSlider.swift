@@ -1,30 +1,11 @@
 //
-//  ZLAdjustSlider.swift
+//  HEAdjustSlider.swift
 //  HEImageEditor
 //
-//  Created by long on 2021/12/17.
-//
-//  Permission is hereby granted, free of charge, to any person obtaining a copy
-//  of this software and associated documentation files (the "Software"), to deal
-//  in the Software without restriction, including without limitation the rights
-//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//  copies of the Software, and to permit persons to whom the Software is
-//  furnished to do so, subject to the following conditions:
-//
-//  The above copyright notice and this permission notice shall be included in
-//  all copies or substantial portions of the Software.
-//
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-//  THE SOFTWARE.
 
 import UIKit
 
-class ZLAdjustSlider: UIView {
+class HEAdjustSlider: UIView {
     static let maximumValue: Float = 1
     
     static let minimumValue: Float = -1
@@ -141,7 +122,7 @@ class ZLAdjustSlider: UIView {
     private func calculateTintFrame() -> CGRect {
         if isVertical {
             let totalH = he.height / 2
-            let tintH = totalH * abs(CGFloat(value)) / CGFloat(ZLAdjustSlider.maximumValue)
+            let tintH = totalH * abs(CGFloat(value)) / CGFloat(HEAdjustSlider.maximumValue)
             if value > 0 {
                 return CGRect(x: 0, y: totalH - tintH, width: sliderWidth, height: tintH)
             } else {
@@ -149,7 +130,7 @@ class ZLAdjustSlider: UIView {
             }
         } else {
             let totalW = he.width / 2
-            let tintW = totalW * abs(CGFloat(value)) / CGFloat(ZLAdjustSlider.maximumValue)
+            let tintW = totalW * abs(CGFloat(value)) / CGFloat(HEAdjustSlider.maximumValue)
             if value > 0 {
                 return CGRect(x: totalW, y: 0, width: tintW, height: sliderWidth)
             } else {
@@ -168,7 +149,7 @@ class ZLAdjustSlider: UIView {
             let transValue = isVertical ? -translation.y : translation.x
             let totalLength = isVertical ? he.height / 2 : he.width / 2
             var temp = valueForPanBegan + Float(transValue / totalLength)
-            temp = max(ZLAdjustSlider.minimumValue, min(ZLAdjustSlider.maximumValue, temp))
+            temp = max(HEAdjustSlider.minimumValue, min(HEAdjustSlider.maximumValue, temp))
             
             if (-0.0049..<0.005) ~= temp {
                 temp = 0

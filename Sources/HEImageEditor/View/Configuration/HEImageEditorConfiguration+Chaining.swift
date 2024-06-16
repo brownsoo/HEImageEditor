@@ -65,12 +65,6 @@ public extension HEImageEditorConfiguration {
         self.imageStickerTray = view
         return self
     }
-
-    @discardableResult
-    func fontChooserContainerView(_ view: (UIView & HETextFontChooserDelegate)?) -> HEImageEditorConfiguration {
-        fontChooserContainerView = view
-        return self
-    }
     
     @discardableResult
     func adjustTools(_ tools: [HEImageEditorConfiguration.AdjustTool]) -> HEImageEditorConfiguration {
