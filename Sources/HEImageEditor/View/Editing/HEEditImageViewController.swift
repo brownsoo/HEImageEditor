@@ -205,14 +205,18 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     // Show text and image stickers.
     lazy var stickersContainer = UIView()
     
+    private var stickers: [HEBaseStickerView] = []
+    
+    /// 모자이크 스티커 표시뷰
+    lazy var mosicStikcersContainer = UIView()
     /// 모자이크 된 이미지
     var mosaicImage: UIImage?
-    
     /// mosaicImage 표시 레이어
     var mosaicImageLayer: CALayer?
-
     /// mosaicImageLayer 마스킹 레이어
     var mosaicImageLayerMaskLayer: CAShapeLayer?
+    var mosaicPaths: [HEMosaicPath]
+    var mosaicLineWidth: CGFloat = 25
     
     var selectedTool: HEImageEditorConfiguration.EditTool? {
         didSet {
@@ -232,9 +236,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     var drawLineWidth: CGFloat = 6
     
-    var mosaicPaths: [HEMosaicPath]
     
-    var mosaicLineWidth: CGFloat = 25
     
     var thumbnailFilterImages: [UIImage] = []
     
@@ -243,13 +245,11 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     var currentFilter: HEFilter
     
-    var stickers: [HEBaseStickerView] = []
     
-    var isScrolling = false
     
-    var shouldLayout = true
-    
-    var imageStickerContainerIsHidden = true
+    private var isScrolling = false
+    private var shouldLayout = true
+    private var imageStickerContainerIsHidden = true
     
     private var currentClipStatus: HEClipStatus
     private var preClipStatus: HEClipStatus

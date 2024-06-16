@@ -29,7 +29,6 @@
 		985A2D7A282A85B5007AE0C6 /* BLANCH_CONDENSED.otf in Resources */ = {isa = PBXBuildFile; fileRef = 985A2D67282A85B5007AE0C6 /* BLANCH_CONDENSED.otf */; };
 		985A2D7B282A85B5007AE0C6 /* vevey.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 985A2D68282A85B5007AE0C6 /* vevey.ttf */; };
 		985A2D7C282A85B5007AE0C6 /* Arvil_Sans.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 985A2D69282A85B5007AE0C6 /* Arvil_Sans.ttf */; };
-		985A2D7E282A8BC5007AE0C6 /* FontChooserContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 985A2D7D282A8BC5007AE0C6 /* FontChooserContainerView.swift */; };
 		E4020928256BA9D70077F5DC /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4020927256BA9D70077F5DC /* AppDelegate.swift */; };
 		E402092C256BA9D70077F5DC /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E402092B256BA9D70077F5DC /* ViewController.swift */; };
 		E402092F256BA9D70077F5DC /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E402092D256BA9D70077F5DC /* Main.storyboard */; };
@@ -73,7 +72,6 @@
 		985A2D67282A85B5007AE0C6 /* BLANCH_CONDENSED.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = BLANCH_CONDENSED.otf; sourceTree = "<group>"; };
 		985A2D68282A85B5007AE0C6 /* vevey.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = vevey.ttf; sourceTree = "<group>"; };
 		985A2D69282A85B5007AE0C6 /* Arvil_Sans.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Arvil_Sans.ttf; sourceTree = "<group>"; };
-		985A2D7D282A8BC5007AE0C6 /* FontChooserContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FontChooserContainerView.swift; sourceTree = "<group>"; };
 		E4020924256BA9D70077F5DC /* Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E4020927256BA9D70077F5DC /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		E402092B256BA9D70077F5DC /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -181,7 +179,6 @@
 				985A2D56282A85B4007AE0C6 /* Fonts */,
 				E4020927256BA9D70077F5DC /* AppDelegate.swift */,
 				E402092B256BA9D70077F5DC /* ViewController.swift */,
-				985A2D7D282A8BC5007AE0C6 /* FontChooserContainerView.swift */,
 				E4CAF826256CACE800C7B04E /* CustomFilter.swift */,
 				FD88C1F628C739C100C0C0F2 /* Example-bridge.h */,
 				E402092D256BA9D70077F5DC /* Main.storyboard */,
@@ -316,7 +313,6 @@
 				E4CAF827256CACE800C7B04E /* CustomFilter.swift in Sources */,
 				E402092C256BA9D70077F5DC /* ViewController.swift in Sources */,
 				E4020928256BA9D70077F5DC /* AppDelegate.swift in Sources */,
-				985A2D7E282A8BC5007AE0C6 /* FontChooserContainerView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

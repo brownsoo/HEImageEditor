@@ -96,7 +96,6 @@ class ViewController: UIViewController {
         HEImageEditorConfiguration.default()
             .clipRatios([.origin, .custom, .wh1x1])
             .imageStickerTray(stickerTray)
-            .fontChooserContainerView(FontChooserContainerView())
     }
     
     

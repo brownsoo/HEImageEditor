@@ -13,7 +13,6 @@
 		17189EA42C1041DB00270F4D /* BlurStickerEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17189E942C1041DB00270F4D /* BlurStickerEffect.swift */; };
 		17189EA52C1041DB00270F4D /* FilterEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17189E952C1041DB00270F4D /* FilterEffect.swift */; };
 		17189EA62C1041DB00270F4D /* CropEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17189E962C1041DB00270F4D /* CropEffect.swift */; };
-		17189EA72C1041DB00270F4D /* MosaicStickerEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17189E972C1041DB00270F4D /* MosaicStickerEffect.swift */; };
 		17189EA82C1041DB00270F4D /* TransformEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17189E982C1041DB00270F4D /* TransformEffect.swift */; };
 		17189EAA2C1041DB00270F4D /* HEImageViewPager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17189E9B2C1041DB00270F4D /* HEImageViewPager.swift */; };
 		17189EAB2C1041DB00270F4D /* HEEditImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17189E9C2C1041DB00270F4D /* HEEditImageView.swift */; };
@@ -80,7 +79,6 @@
 		17189E942C1041DB00270F4D /* BlurStickerEffect.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BlurStickerEffect.swift; sourceTree = "<group>"; };
 		17189E952C1041DB00270F4D /* FilterEffect.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FilterEffect.swift; sourceTree = "<group>"; };
 		17189E962C1041DB00270F4D /* CropEffect.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CropEffect.swift; sourceTree = "<group>"; };
-		17189E972C1041DB00270F4D /* MosaicStickerEffect.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MosaicStickerEffect.swift; sourceTree = "<group>"; };
 		17189E982C1041DB00270F4D /* TransformEffect.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TransformEffect.swift; sourceTree = "<group>"; };
 		17189E9B2C1041DB00270F4D /* HEImageViewPager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HEImageViewPager.swift; sourceTree = "<group>"; };
 		17189E9C2C1041DB00270F4D /* HEEditImageView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HEEditImageView.swift; sourceTree = "<group>"; };
@@ -192,7 +190,6 @@
 				17189E942C1041DB00270F4D /* BlurStickerEffect.swift */,
 				17189E952C1041DB00270F4D /* FilterEffect.swift */,
 				17189E962C1041DB00270F4D /* CropEffect.swift */,
-				17189E972C1041DB00270F4D /* MosaicStickerEffect.swift */,
 				17189E982C1041DB00270F4D /* TransformEffect.swift */,
 			);
 			path = Effect;
@@ -494,7 +491,6 @@
 				17189EAC2C1041DB00270F4D /* TransformBoxView.swift in Sources */,
 				17189EA42C1041DB00270F4D /* BlurStickerEffect.swift in Sources */,
 				17189EBC2C105BE500270F4D /* Trace.swift in Sources */,
-				17189EA72C1041DB00270F4D /* MosaicStickerEffect.swift in Sources */,
 				FD3073372AD80D0000CFB618 /* HEEditorActionManager.swift in Sources */,
 				FD3073352AD80B7700CFB618 /* HEStickerEffect.swift in Sources */,
 				17189EA52C1041DB00270F4D /* FilterEffect.swift in Sources */,

@@ -37,6 +37,29 @@ public class HEStickerEffect: NSObject {
     }
 }
 
+public class HEMosaicStickerEffect: HEStickerEffect {
+    public init(
+        id: String,
+        originScale: CGFloat,
+        originAngle: CGFloat,
+        originFrame: CGRect,
+        gesScale: CGFloat,
+        gesRotation: CGFloat,
+        totalTranslationPoint: CGPoint
+    ) {
+        super.init(
+            id: id,
+            image: UIImage(),
+            originScale: originScale,
+            originAngle: originAngle,
+            originFrame: originFrame,
+            gesScale: gesScale,
+            gesRotation: gesRotation,
+            totalTranslationPoint: totalTranslationPoint
+        )
+    }
+}
+
 public class HEImageStickerEffect: HEStickerEffect {
 }
 
