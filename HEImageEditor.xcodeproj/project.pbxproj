@@ -386,17 +386,9 @@
 			children = (
 				17189E8B2C1041DB00270F4D /* HEImageEditor */,
 				E40208DA256B9BA60077F5DC /* HEImageEditor.h */,
-				E4020902256BA00D0077F5DC /* General */,
 				E40208DB256B9BA60077F5DC /* Info.plist */,
 			);
 			path = Sources;
-			sourceTree = "<group>";
-		};
-		E4020902256BA00D0077F5DC /* General */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = General;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

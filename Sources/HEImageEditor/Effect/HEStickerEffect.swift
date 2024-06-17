@@ -7,6 +7,7 @@ import UIKit
 
 public class HEStickerEffect: NSObject {
     let id: String
+    let kind: HEImageSticker.Kind
     let image: UIImage
     let originScale: CGFloat
     let originAngle: CGFloat
@@ -17,6 +18,7 @@ public class HEStickerEffect: NSObject {
     
     public init(
         id: String,
+        kind: HEImageSticker.Kind,
         image: UIImage,
         originScale: CGFloat,
         originAngle: CGFloat,
@@ -26,6 +28,7 @@ public class HEStickerEffect: NSObject {
         totalTranslationPoint: CGPoint
     ) {
         self.id = id
+        self.kind = kind
         self.image = image
         self.originScale = originScale
         self.originAngle = originAngle
@@ -89,6 +92,7 @@ public class HETextStickerEffect: HEStickerEffect {
         self.style = style
         super.init(
             id: id,
+            kind: .default,
             image: image,
             originScale: originScale,
             originAngle: originAngle,

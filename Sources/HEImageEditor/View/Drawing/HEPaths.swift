@@ -122,7 +122,7 @@ public class HEMosaicPath: NSObject {
     let ratio: CGFloat
     
     let startPoint: CGPoint
-    
+    /// 원본 이미지 영역 내 포인트 
     var linePoints: [CGPoint] = []
     
     init(pathWidth: CGFloat, ratio: CGFloat, startPoint: CGPoint) {

@@ -7,7 +7,7 @@ import UIKit
 
 class HEImageStickerView: HEBaseStickerView {
     
-    private static let edgeInset: CGFloat = 9
+    static let edgeInset: CGFloat = 5
     private let image: UIImage
     
     private lazy var imageView: UIImageView = {
@@ -21,6 +21,7 @@ class HEImageStickerView: HEBaseStickerView {
     override var state: HEImageStickerEffect {
         return HEImageStickerEffect(
             id: id,
+            kind: kind,
             image: image,
             originScale: originScale,
             originAngle: originAngle,
@@ -42,6 +43,7 @@ class HEImageStickerView: HEBaseStickerView {
     convenience init(state: HEImageStickerEffect) {
         self.init(
             id: state.id,
+            kind: state.kind,
             image: state.image,
             originScale: state.originScale,
             originAngle: state.originAngle,
@@ -55,7 +57,7 @@ class HEImageStickerView: HEBaseStickerView {
     
     init(
         id: String = UUID().uuidString,
-        kind: HEImageSticker.Kind? = nil,
+        kind: HEImageSticker.Kind = .default,
         image: UIImage,
         originScale: CGFloat,
         originAngle: CGFloat,
@@ -68,7 +70,7 @@ class HEImageStickerView: HEBaseStickerView {
         self.image = image
         super.init(
             id: id,
-            kind: kind ?? .default,
+            kind: kind,
             originScale: originScale,
             originAngle: originAngle,
             originFrame: originFrame,
@@ -91,10 +93,10 @@ class HEImageStickerView: HEBaseStickerView {
     }
     
     // TODO: containerWidth 처리
-    class func calculateSize(image: UIImage, container: UIView) -> CGSize {
+    class func constraintSize(image: UIImage, container: UIView) -> CGSize {
         let scale = (container.window?.windowScene?.screen.scale ?? image.scale)
         let startSide: CGFloat = 150 / scale // 150 pixel
-        let minSide: CGFloat = 50 / scale // 150 pixel
+        let minSide: CGFloat = 50 / scale // 50 pixel
         let whRatio = image.size.width / image.size.height
         var size: CGSize = .zero
         if whRatio >= 1 {
