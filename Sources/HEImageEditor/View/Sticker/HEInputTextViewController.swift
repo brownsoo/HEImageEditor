@@ -19,7 +19,7 @@ class HEInputTextViewController: UIViewController {
         }
     }
     
-    private var textStyle: ZLInputTextStyle
+    private var textStyle: HEInputTextStyle
     
     private lazy var bgImageView: UIImageView = {
         let view = UIImageView(image: image?.he.blurImage(level: 4))
@@ -111,7 +111,7 @@ class HEInputTextViewController: UIViewController {
     private let maxTextCount = 100
     
     /// text, textColor, font, image, style
-    var endInput: ((String, UIColor, UIFont, UIImage?, ZLInputTextStyle) -> Void)?
+    var endInput: ((String, UIColor, UIFont, UIImage?, HEInputTextStyle) -> Void)?
     
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
         deviceIsiPhone() ? .portrait : .all
@@ -121,7 +121,7 @@ class HEInputTextViewController: UIViewController {
         return true
     }
     
-    init(image: UIImage?, text: String? = nil, font: UIFont? = nil, textColor: UIColor? = nil, style: ZLInputTextStyle = .normal) {
+    init(image: UIImage?, text: String? = nil, font: UIFont? = nil, textColor: UIColor? = nil, style: HEInputTextStyle = .normal) {
         self.image = image
         self.text = text ?? ""
         if let font = font {
@@ -505,7 +505,7 @@ extension HEInputTextViewController: NSLayoutManagerDelegate {
     }
 }
 
-public enum ZLInputTextStyle {
+public enum HEInputTextStyle {
     case normal
     case bg
     

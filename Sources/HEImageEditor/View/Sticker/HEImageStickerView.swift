@@ -7,9 +7,8 @@ import UIKit
 
 class HEImageStickerView: HEBaseStickerView {
     
-    private let image: UIImage
-    private(set) var type: String?
     private static let edgeInset: CGFloat = 9
+    private let image: UIImage
     
     private lazy var imageView: UIImageView = {
         let view = UIImageView(image: image)
@@ -32,6 +31,10 @@ class HEImageStickerView: HEBaseStickerView {
         )
     }
     
+    var isMosaic: Bool {
+        self.kind == .mosaic
+    }
+    
     deinit {
         trace()
     }
@@ -52,7 +55,7 @@ class HEImageStickerView: HEBaseStickerView {
     
     init(
         id: String = UUID().uuidString,
-        type: String? = nil,
+        kind: HEImageSticker.Kind? = nil,
         image: UIImage,
         originScale: CGFloat,
         originAngle: CGFloat,
@@ -63,9 +66,9 @@ class HEImageStickerView: HEBaseStickerView {
         showBorder: Bool = true
     ) {
         self.image = image
-        self.type = type
         super.init(
             id: id,
+            kind: kind ?? .default,
             originScale: originScale,
             originAngle: originAngle,
             originFrame: originFrame,

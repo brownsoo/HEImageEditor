@@ -44,7 +44,7 @@ class HETextStickerView: HEBaseStickerView {
 
     var font: UIFont?
     
-    var style: ZLInputTextStyle
+    var style: HEInputTextStyle
     
     var image: UIImage {
         didSet {
@@ -97,7 +97,7 @@ class HETextStickerView: HEBaseStickerView {
         text: String,
         textColor: UIColor,
         font: UIFont? = nil,
-        style: ZLInputTextStyle,
+        style: HEInputTextStyle,
         image: UIImage,
         originScale: CGFloat,
         originAngle: CGFloat,
@@ -114,6 +114,7 @@ class HETextStickerView: HEBaseStickerView {
         self.image = image
         super.init(
             id: id,
+            kind: .default,
             originScale: originScale,
             originAngle: originAngle,
             originFrame: originFrame,

@@ -170,7 +170,7 @@ class HEEditToolCell: UICollectionViewCell {
             case .textSticker:
                 icon = UIImage.he.getImage("icEditMnText") ?? UIImage(systemName: "t.square.fill")?.withTintColor(.white, renderingMode: .alwaysOriginal)
                 
-            case .mosaic:
+            case .mosaicDraw:
                 icon = UIImage(systemName: "mosaic")?.withTintColor(.white, renderingMode: .alwaysOriginal)
                 
             case .filter:

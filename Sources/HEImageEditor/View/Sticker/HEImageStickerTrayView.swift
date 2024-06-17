@@ -9,9 +9,10 @@ import UIKit
 
 @objc
 public protocol HEImageStickerTrayViewDataSource {
-    @objc optional func numberOfSections(in trayView: HEImageStickerTrayView) -> Int
+    @objc func hasMosaicSticker(_ trayView: HEImageStickerTrayView) -> Bool
     @objc func imageStickerTrayView(_ trayView: HEImageStickerTrayView, numberOfItemsInSection section: Int) -> Int
     @objc func imageStickerTrayView(_ trayView: HEImageStickerTrayView, stickerForItemAt indexPath: IndexPath) -> HEImageSticker
+    @objc optional func numberOfSections(in trayView: HEImageStickerTrayView) -> Int
     @objc optional func allStickers(_ trayView: HEImageStickerTrayView, numberOfItemsInSection section: Int) -> [HEImageSticker]
 }
 
@@ -19,9 +20,14 @@ public class HEImageStickerTrayView: UIView, HEImageStickerTray {
     
     static let baseViewH: CGFloat = HEImageEditorLayout.imageStickerTrayHeight
     
-    public var selectImageBlock: ((HEImageSticker) -> Void)?
+    public var selectImageStickerBlock: ((HEImageSticker) -> Void)?
     public var hideBlock: (() -> Void)?
+    public var hasMosaicSticker: Bool {
+        return dataSource?.hasMosaicSticker(self) ?? false
+    }
+    
     public weak var dataSource: HEImageStickerTrayViewDataSource?
+    
     
     private var baseView: UIView!
     private var collectionView: UICollectionView!
@@ -176,7 +182,7 @@ extension HEImageStickerTrayView: UICollectionViewDataSource, UICollectionViewDe
         guard let sticker = self.dataSource?.imageStickerTrayView(self, stickerForItemAt: indexPath) else {
             return
         }
-        self.selectImageBlock?(sticker)
+        self.selectImageStickerBlock?(sticker)
     }
     
 }

@@ -26,7 +26,7 @@ protocol HEStickerViewAdditional: NSObject {
     
     func resetState()
     
-    func moveToAshbin()
+    func moveToTrashbin()
     
     func addScale(_ scale: CGFloat)
 }
@@ -40,6 +40,8 @@ public class HEBaseStickerView: UIView, UIGestureRecognizerDelegate {
     }
     
     var id: String
+    
+    let kind: HEImageSticker.Kind
     
     var borderWidth = 1 / UIScreen.main.scale
     
@@ -110,6 +112,7 @@ public class HEBaseStickerView: UIView, UIGestureRecognizerDelegate {
     
     init(
         id: String = UUID().uuidString,
+        kind: HEImageSticker.Kind,
         originScale: CGFloat,
         originAngle: CGFloat,
         originFrame: CGRect,
@@ -119,6 +122,7 @@ public class HEBaseStickerView: UIView, UIGestureRecognizerDelegate {
         showBorder: Bool = false
     ) {
         self.id = id
+        self.kind = kind
         self.originScale = originScale
         self.originAngle = originAngle
         self.originFrame = originFrame
@@ -202,7 +206,6 @@ public class HEBaseStickerView: UIView, UIGestureRecognizerDelegate {
     
     @objc func tapAction(_ ges: UITapGestureRecognizer) {
         guard gesIsEnabled else { return }
-        
         delegate?.stickerDidTap(self)
         startTimer()
     }
@@ -226,7 +229,7 @@ public class HEBaseStickerView: UIView, UIGestureRecognizerDelegate {
                 updateTransform()
             }
         } else if ges.state == .ended || ges.state == .cancelled {
-            // 当有拖动时，在panAction中执行setOperation(false)
+            // 드래그가 있는 경우 panAction에서 setOperation(false)이 실행됩니다.
             if gesTranslationPoint == .zero {
                 setOperation(false)
             }
@@ -235,6 +238,7 @@ public class HEBaseStickerView: UIView, UIGestureRecognizerDelegate {
     
     @objc func rotationAction(_ ges: UIRotationGestureRecognizer) {
         guard gesIsEnabled else { return }
+        guard kind != .mosaic else { return }
         
         gesRotation += ges.rotation
         ges.rotation = 0
@@ -343,7 +347,7 @@ extension HEBaseStickerView: HEStickerViewAdditional {
         hideBorder()
     }
     /// 제거 
-    func moveToAshbin() {
+    func moveToTrashbin() {
         cleanTimer()
         removeFromSuperview()
     }

@@ -169,7 +169,7 @@ public extension HEImageEditorConfiguration {
         case clip
         case imageSticker
         case textSticker
-        case mosaic
+        case mosaicDraw
         case filter
         case adjust
         
@@ -274,35 +274,44 @@ public extension HEImageClipRatio {
     @objc static let wh16x9 = HEImageClipRatio(title: "16 : 9", whRatio: 16.0 / 9.0, iconName: "icEditThumSquare")
 }
 
-/// 이미지 스티커 원본
-@objc public class HEImageSticker: NSObject {
+/// 이미지 스티커 소스
+public class HEImageSticker: NSObject {
+    
+    public enum Kind: String {
+        case mosaic
+        case faceAI
+        case `default`
+    }
     
     public static var faceAiIcon: HEImageSticker = {
-        HEImageSticker(id: idFaceAi, image: UIImage.he.getImage("editStickerFaceAi") ?? UIImage(systemName: "faceid")!)
+        HEImageSticker(id: UUID().uuidString, image: UIImage.he.getImage("editStickerFaceAi") ?? UIImage(systemName: "faceid")!, kind: .faceAI)
         
     }()
     
     public static var mosaicIcon: HEImageSticker = {
-        HEImageSticker(id: idMosaic, image: UIImage.he.getImage("editStickerMosaic") ?? UIImage(systemName: "mosaic")!)
+        HEImageSticker(id: UUID().uuidString, image: UIImage.he.getImage("editStickerMosaic") ?? UIImage(systemName: "mosaic")!, kind: .mosaic)
     }()
-    static let idFaceAi = "editStickerFaceAi"
-    static let idMosaic = "editStickerMosaic"
     
-    public var isSpecialSticker: Bool { self.id == Self.idMosaic || self.id == Self.idFaceAi }
+    public var isSpecialSticker: Bool { self.kind == .faceAI || self.kind == .mosaic }
     
     public let id: String
     public let image: UIImage
+    public let kind: Kind
     
-    public init(id: String, image: UIImage) {
+    public init(id: String, image: UIImage, kind: Kind = .default) {
         self.id = id
         self.image = image // TODO: lazy loading
+        self.kind = kind
     }
 }
 
 /// 이미지 스티커 뷰 대상
 @objc public protocol HEImageStickerTray {
-    var selectImageBlock: ((HEImageSticker) -> Void)? { get set }
+    
+    var selectImageStickerBlock: ((HEImageSticker) -> Void)? { get set }
     var hideBlock: (() -> Void)? { get set }
+    var hasMosaicSticker: Bool { get }
+    
     func show(in parent: UIView, frame: CGRect)
     func hide()
     func randomSticker(inSection section: Int) -> HEImageSticker?

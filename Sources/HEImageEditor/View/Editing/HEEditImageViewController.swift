@@ -203,22 +203,30 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     }()
     
     // Show text and image stickers.
-    lazy var stickersContainer = UIView()
+    private lazy var stickersContainer = UIView()
     
-    private var stickers: [HEBaseStickerView] = []
+    private var initialStickers: [HEBaseStickerView]
     
-    /// 모자이크 스티커 표시뷰
-    lazy var mosicStikcersContainer = UIView()
     /// 모자이크 된 이미지
-    var mosaicImage: UIImage?
+    private var mosaicImage: UIImage?
     /// mosaicImage 표시 레이어
-    var mosaicImageLayer: CALayer?
-    /// mosaicImageLayer 마스킹 레이어
-    var mosaicImageLayerMaskLayer: CAShapeLayer?
-    var mosaicPaths: [HEMosaicPath]
-    var mosaicLineWidth: CGFloat = 25
+    private var mosaicImageLayer: CALayer?
+    /// mosaicImageLayer 마스킹 레이어 - 제스쳐가 동작하는 동안 활용
+    @available(*, deprecated)
+    private var mosaicDrawImageLayerMaskLayer: CAShapeLayer?
+    private var mosaicDrawPaths: [HEMosaicPath]
+    private var mosaicDrawLineWidth: CGFloat = 25
     
-    var selectedTool: HEImageEditorConfiguration.EditTool? {
+    private var mosaicStickers: [HEImageStickerView] {
+        stickersContainer.subviews.compactMap({
+            if let v = $0 as? HEImageStickerView, v.kind == .mosaic {
+                return v
+            }
+            return nil
+        })
+    }
+    
+    private var selectedTool: HEImageEditorConfiguration.EditTool? {
         didSet {
             if selectedTool == nil {
                 bottomToolView.unselectTool()
@@ -354,7 +362,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         drawColors = HEImageEditorConfiguration.default().drawColors
         currentFilter = editModel?.selectFilter ?? .normal
         drawPaths = editModel?.drawPaths ?? []
-        mosaicPaths = editModel?.mosaicPaths ?? []
+        mosaicDrawPaths = editModel?.mosaicPaths ?? []
         currentAdjustStatus = editModel?.adjustStatus ?? HEAdjustStatus()
         preAdjustStatus = currentAdjustStatus
         
@@ -385,7 +393,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                     editView.startImageSticker()
                 case .textSticker:
                     editView.startTextSticker()
-                case .mosaic:
+                case .mosaicDraw:
                     editView.mosaicBtnClick()
                 case .filter:
                     editView.filterBtnClick()
@@ -395,6 +403,11 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             }
             return (toolbar, 76)
         }
+        
+        
+        initialStickers = editModel?.stickers.compactMap {
+            HEBaseStickerView.initWithState($0)
+        } ?? []
         
         super.init(nibName: nil, bundle: nil)
         
@@ -408,10 +421,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         if !drawColors.contains(currentDrawColor) {
             currentDrawColor = drawColors.first!
         }
-        
-        stickers = editModel?.stickers.compactMap {
-            HEBaseStickerView.initWithState($0)
-        } ?? []
     }
     
     @available(*, unavailable)
@@ -510,7 +519,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         if !drawPaths.isEmpty {
             drawLine()
         }
-        if !mosaicPaths.isEmpty {
+        if !mosaicDrawPaths.isEmpty || !mosaicStickers.isEmpty {
             generateNewMosaicImage()
         }
         
@@ -592,7 +601,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         let scaleImageSize = CGSize(width: imageSize.width * ratio, height: imageSize.height * ratio)
         imageView.frame = CGRect(origin: scaleImageOrigin, size: scaleImageSize)
         mosaicImageLayer?.frame = imageView.bounds
-        mosaicImageLayerMaskLayer?.frame = imageView.bounds
+        mosaicDrawImageLayerMaskLayer?.frame = imageView.bounds
         drawingImageView.frame = imageView.frame
         stickersContainer.frame = imageView.frame
         
@@ -742,21 +751,21 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         view.addSubview(trashbinView)
         trashbinView.addSubview(trashbinImgView)
         
-        if tools.contains(.mosaic) {
+        if tools.contains(.mosaicDraw) || self.imageStickerTray?.hasMosaicSticker == true {
             mosaicImage = editImage.he.mosaicImage()
             
             mosaicImageLayer = CALayer()
             mosaicImageLayer?.contents = mosaicImage?.cgImage
             imageView.layer.addSublayer(mosaicImageLayer!)
             
-            mosaicImageLayerMaskLayer = CAShapeLayer()
-            mosaicImageLayerMaskLayer?.strokeColor = UIColor.blue.cgColor
-            mosaicImageLayerMaskLayer?.fillColor = nil
-            mosaicImageLayerMaskLayer?.lineCap = .round
-            mosaicImageLayerMaskLayer?.lineJoin = .round
-            imageView.layer.addSublayer(mosaicImageLayerMaskLayer!)
+            mosaicDrawImageLayerMaskLayer = CAShapeLayer()
+            mosaicDrawImageLayerMaskLayer?.strokeColor = UIColor.blue.cgColor
+            mosaicDrawImageLayerMaskLayer?.fillColor = nil
+            mosaicDrawImageLayerMaskLayer?.lineCap = .round
+            mosaicDrawImageLayerMaskLayer?.lineJoin = .round
+            imageView.layer.addSublayer(mosaicDrawImageLayerMaskLayer!)
             
-            mosaicImageLayer?.mask = mosaicImageLayerMaskLayer
+            mosaicImageLayer?.mask = mosaicDrawImageLayerMaskLayer
         }
         
 //        let tapGes = UITapGestureRecognizer(target: self, action: #selector(tapAction(_:)))
@@ -766,7 +775,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         view.addGestureRecognizer(drawPanGes)
         mainScrollView.panGestureRecognizer.require(toFail: drawPanGes)
         
-        stickers.forEach { self.addSticker($0) }
+        initialStickers.forEach { self.addSticker($0) }
     }
     
     /// point로 스티커 찾기
@@ -845,7 +854,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             break
         case .textSticker:
             break
-        case .mosaic:
+        case .mosaicDraw:
             break
         case .filter:
             break
@@ -957,7 +966,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             self?.imageStickerContainerIsHidden = true
         }
         
-        imageStickerTray.selectImageBlock = { [weak self] image in
+        imageStickerTray.selectImageStickerBlock = { [weak self] image in
             self?.addImageStickerView(image)
         }
         
@@ -993,9 +1002,9 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     }
     
     public func mosaicBtnClick() {
-        let isSelected = selectedTool != .mosaic
+        let isSelected = selectedTool != .mosaicDraw
         if isSelected {
-            selectedTool = .mosaic
+            selectedTool = .mosaicDraw
         } else {
             selectedTool = nil
         }
@@ -1074,7 +1083,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         if drawPaths.isEmpty,
            currentClipStatus.editRect.size == imageSize,
            currentClipStatus.angle == 0,
-           mosaicPaths.isEmpty,
+           mosaicDrawPaths.isEmpty,
            stickerStates.isEmpty,
            currentFilter.applier == nil,
            currentAdjustStatus.allValueIsZero {
@@ -1113,7 +1122,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 
                 editModel = HEEditImageModel(
                     drawPaths: drawPaths,
-                    mosaicPaths: mosaicPaths,
+                    mosaicPaths: mosaicDrawPaths,
                     clipStatus: currentClipStatus,
                     adjustStatus: currentAdjustStatus,
                     selectFilter: currentFilter,
@@ -1195,7 +1204,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                     actionManager.storeAction(.draw(path))
                 }
             }
-        } else if selectedTool == .mosaic {
+        } else if selectedTool == .mosaicDraw {
             let point = pan.location(in: imageView)
             if pan.state == .began {
                 setToolView(show: false)
@@ -1209,19 +1218,19 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                     mainScrollView.frame.height / currentClipStatus.editRect.height
                 )
                 
-                let pathW = mosaicLineWidth / mainScrollView.zoomScale
+                let pathW = mosaicDrawLineWidth / mainScrollView.zoomScale
                 let path = HEMosaicPath(pathWidth: pathW, ratio: ratio, startPoint: point)
                 
-                mosaicImageLayerMaskLayer?.lineWidth = pathW
-                mosaicImageLayerMaskLayer?.path = path.path.cgPath
-                mosaicPaths.append(path)
+                mosaicDrawImageLayerMaskLayer?.lineWidth = pathW
+                mosaicDrawImageLayerMaskLayer?.path = path.path.cgPath
+                mosaicDrawPaths.append(path)
             } else if pan.state == .changed {
-                let path = mosaicPaths.last
+                let path = mosaicDrawPaths.last
                 path?.addLine(to: point)
-                mosaicImageLayerMaskLayer?.path = path?.path.cgPath
+                mosaicDrawImageLayerMaskLayer?.path = path?.path.cgPath
             } else if pan.state == .cancelled || pan.state == .ended {
                 setToolView(show: true, delay: 0.5)
-                if let path = mosaicPaths.last {
+                if let path = mosaicDrawPaths.last {
                     actionManager.storeAction(.mosaic(path))
                 }
                 generateNewMosaicImage()
@@ -1353,10 +1362,10 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             hasAdjustedImage = false
         }
         
-        guard tools.contains(.mosaic), hasAdjustedImage else { return }
+        guard tools.contains(.mosaicDraw), hasAdjustedImage else { return }
         generateNewMosaicImageLayer()
         
-        if !mosaicPaths.isEmpty {
+        if !mosaicDrawPaths.isEmpty {
             generateNewMosaicImage()
         }
     }
@@ -1401,7 +1410,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         toolViewStateTimer = nil
     }
     
-    private func showInputTextVC(_ text: String? = nil, textColor: UIColor? = nil, font: UIFont? = nil, style: ZLInputTextStyle = .normal, completion: @escaping (String, UIColor, UIFont, UIImage?, ZLInputTextStyle) -> Void) {
+    private func showInputTextVC(_ text: String? = nil, textColor: UIColor? = nil, font: UIFont? = nil, style: HEInputTextStyle = .normal, completion: @escaping (String, UIColor, UIFont, UIImage?, HEInputTextStyle) -> Void) {
         var bgImage: UIImage?
         autoreleasepool {
             // Calculate image displayed frame on the screen.
@@ -1432,21 +1441,26 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     
     // TODO: 스티커 갯수 제한, 제스쳐 100도 문제
+    // MARK: 스티커를 뷰로 추가
     /// 스티커를 뷰로 추가
     private func addImageStickerView(_ sticker: HEImageSticker) {
         if sticker.id == HEImageSticker.faceAiIcon.id {
             addImageStickersOnFaces()
             return
-        } else if sticker.id == HEImageSticker.mosaicIcon.id {
-          
-            return
         }
-        let image = sticker.image
+        let image: UIImage
+        if sticker.kind == .mosaic {
+            let scale = (view.window?.windowScene?.screen.scale ?? 1.0)
+            let startSide: CGFloat = 150 / scale // 150 pixel
+            image = UIImage().he.solid(.yellow.withAlphaComponent(0.2), width: startSide, height: startSide).he.circle()
+        } else {
+            image = sticker.image
+        }
         let scale = mainScrollView.zoomScale
         let size = HEImageStickerView.calculateSize(image: image, container: view)
         let originFrame = getStickerOriginFrame(size)
         
-        let imageSticker = HEImageStickerView(image: image, originScale: 1 / scale, originAngle: -currentClipStatus.angle, originFrame: originFrame)
+        let imageSticker = HEImageStickerView(kind: sticker.kind, image: image, originScale: 1 / scale, originAngle: -currentClipStatus.angle, originFrame: originFrame)
         addSticker(imageSticker)
         view.layoutIfNeeded()
         
@@ -1455,7 +1469,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     private func addImageStickersOnFaces() {
         guard let imageStickerTray else {
-            // TODO: 스티커 준비 안됨 얼럿
+            showAlert("스티커 사용 구성이 되지 않았습니다.")
             return
         }
         // 로딩 표시
@@ -1464,8 +1478,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         Task { @MainActor in
             do {
                 for sticker in stickersContainer.subviews.reversed() {
-                    if let stickerView = (sticker as? HEImageStickerView),
-                       stickerView.type == "ai-face" {
+                    if let stickerView = (sticker as? HEImageStickerView), stickerView.kind == .faceAI {
                         removeSticker(id: stickerView.id)
                     }
                 }
@@ -1484,7 +1497,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                         let originFrame = getStickerOriginFrame(stickerFrame: result.frame)
                         let imageSticker = HEImageStickerView(
                             id: sticker.id,
-                            type: "ai-face",
+                            kind: .faceAI,
                             image: image,
                             originScale: 1 / scale,
                             originAngle: -currentClipStatus.angle,
@@ -1498,7 +1511,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                         
                         // 액션 저장
                         actionManager.storeAction(.sticker(oldState: nil, newState: imageSticker.state))
-                        //try? await Task.sleep(nanoseconds: delay.nanoseconds)
                         
                         i += 1.0
                     }
@@ -1545,7 +1557,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     
     /// Add text sticker
-    private func addTextStickersView(_ text: String, textColor: UIColor, font: UIFont, image: UIImage?, style: ZLInputTextStyle) {
+    private func addTextStickersView(_ text: String, textColor: UIColor, font: UIFont, image: UIImage?, style: HEInputTextStyle) {
         guard !text.isEmpty, let image = image else { return }
         
         let scale = mainScrollView.zoomScale
@@ -1573,26 +1585,25 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         sticker.frame = sticker.originFrame
         configSticker(sticker)
         
-        let transform = sticker.originTransform.scaledBy(x: 1.4, y: 1.4)
-        sticker.transform = transform
-        sticker.alpha = 0
-        UIView.animate(withDuration: 0.6, delay: delay, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.4) {
-            sticker.alpha = 1
-            sticker.transform = sticker.originTransform
+        if sticker.kind != .mosaic {
+            let transform = sticker.originTransform.scaledBy(x: 1.4, y: 1.4)
+            sticker.transform = transform
+            sticker.alpha = 0
+            UIView.animate(withDuration: 0.6, delay: delay, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.4) {
+                sticker.alpha = 1
+                sticker.transform = sticker.originTransform
+            }
         }
     }
     
     private func removeSticker(id: String?) {
         guard let id else { return }
-        
         for sticker in stickersContainer.subviews.reversed() {
             guard let stickerID = (sticker as? HEBaseStickerView)?.id,
                   stickerID == id else {
                 continue
             }
-            
-            (sticker as? HEBaseStickerView)?.moveToAshbin()
-            
+            (sticker as? HEBaseStickerView)?.moveToTrashbin()
             break
         }
     }
@@ -1673,10 +1684,10 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             filterImages[currentFilter.name] = image
         }
         
-        if tools.contains(.mosaic) {
+        if tools.contains(.mosaicDraw) {
             generateNewMosaicImageLayer()
             
-            if mosaicPaths.isEmpty {
+            if mosaicDrawPaths.isEmpty {
                 imageView.image = editImage
             } else {
                 generateNewMosaicImage()
@@ -1694,12 +1705,11 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         mosaicImageLayer = CALayer()
         mosaicImageLayer?.frame = imageView.bounds
         mosaicImageLayer?.contents = mosaicImage?.cgImage
-        imageView.layer.insertSublayer(mosaicImageLayer!, below: mosaicImageLayerMaskLayer)
+        imageView.layer.insertSublayer(mosaicImageLayer!, below: mosaicDrawImageLayerMaskLayer)
         
-        mosaicImageLayer?.mask = mosaicImageLayerMaskLayer
+        mosaicImageLayer?.mask = mosaicDrawImageLayerMaskLayer
     }
     
-    @discardableResult
     /// 모자이크 이미지 생성 후 editImage, imageView 에 반영한다.
     ///
     /// - Parameters:
@@ -1707,7 +1717,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     ///   - inputMosaicImage: 기본 모자이크된 이미지 대신에 이 이미지를 사용된다.
     ///   - skipEditImage: editImage, imageView 에 반영하지 않고 생성된 모자이크된 이미지만 반환한다.
     /// - Returns: 새로 생성된 모자이크 이미지
-    func generateNewMosaicImage(inputImage: UIImage? = nil,
+    @discardableResult
+    private func generateNewMosaicImage(inputImage: UIImage? = nil,
                                 inputMosaicImage: UIImage? = nil,
                                 skipEditImage: Bool = false) -> UIImage? {
         let renderRect = CGRect(origin: .zero, size: originalImage.size)
@@ -1727,7 +1738,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 }
                 
                 drawImage?.draw(at: .zero)
-                // HSB 적용
+                // CSB 적용
                 if tools.contains(.adjust), !currentAdjustStatus.allValueIsZero {
                     drawImage = drawImage?.he.adjust(
                         brightness: currentAdjustStatus.brightness,
@@ -1739,7 +1750,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 drawImage?.draw(in: renderRect)
             }
             // 모자잌 패스로 지움
-            mosaicPaths.forEach { path in
+            mosaicDrawPaths.forEach { path in
                 context.move(to: path.startPoint)
                 path.linePoints.forEach { point in
                     context.addLine(to: point)
@@ -1749,6 +1760,19 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 context.setLineJoin(.round)
                 context.setBlendMode(.clear)
                 context.strokePath()
+            }
+            // 모자잌 스티커로 지움
+            let stickers = stickersContainer.subviews.compactMap { $0 as? HEBaseStickerView }.filter { $0.kind  == .mosaic }
+            stickers.forEach { v in
+                let frame = v.frame
+                context.addEllipse(in: CGRect(x: frame.minX * 3,
+                                              y: frame.minY * 3,
+                                              width: frame.width * 3,
+                                              height: frame.height * 3))
+                context.setLineWidth(0)
+                context.setBlendMode(.clear)
+                context.setFillColor(UIColor.blue.cgColor)
+                context.fillPath()
             }
         }
         
@@ -1773,7 +1797,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         
         editImage = image
         imageView.image = image
-        mosaicImageLayerMaskLayer?.path = nil
+        mosaicDrawImageLayerMaskLayer?.path = nil
         
         return image
     }
@@ -1854,7 +1878,7 @@ extension HEEditImageViewController: UIGestureRecognizerDelegate {
             guard let st = selectedTool else {
                 return false
             }
-            return (st == .draw || st == .mosaic) && !isScrolling
+            return (st == .draw || st == .mosaicDraw) && !isScrolling
         }
         
         return true
@@ -2057,7 +2081,7 @@ extension HEEditImageViewController: HEStickerViewDelegate {
         var endState: HEStickerEffect? = sticker.state
         let point = panGes.location(in: view)
         if trashbinView.frame.contains(point) {
-            sticker.moveToAshbin()
+            sticker.moveToTrashbin()
             endState = nil
         }
         
@@ -2066,6 +2090,10 @@ extension HEEditImageViewController: HEStickerViewDelegate {
         
         stickersContainer.subviews.forEach { view in
             (view as? HEStickerViewAdditional)?.gesIsEnabled = true
+        }
+        
+        if sticker.kind == .mosaic {
+            generateNewMosaicImage()
         }
     }
     
@@ -2081,7 +2109,7 @@ extension HEEditImageViewController: HEStickerViewDelegate {
     func sticker(_ textSticker: HETextStickerView, editText text: String) {
         showInputTextVC(text, textColor: textSticker.textColor, font: textSticker.font, style: textSticker.style) { text, textColor, font, image, style in
             guard let image = image, !text.isEmpty else {
-                textSticker.moveToAshbin()
+                textSticker.moveToTrashbin()
                 return
             }
             
@@ -2173,12 +2201,12 @@ extension HEEditImageViewController: HEEditorManagerDelegate {
     }
     
     private func undoMosaic(_ path: HEMosaicPath) {
-        mosaicPaths.removeLast()
+        mosaicDrawPaths.removeLast()
         generateNewMosaicImage()
     }
     
     private func redoMosaic(_ path: HEMosaicPath) {
-        mosaicPaths.append(path)
+        mosaicDrawPaths.append(path)
         generateNewMosaicImage()
     }
     

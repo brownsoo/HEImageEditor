@@ -102,6 +102,11 @@ class ViewController: UIViewController {
 }
 
 extension ViewController: HEImageStickerTrayViewDataSource {
+    
+    func hasMosaicSticker(_ trayView: HEImageStickerTrayView) -> Bool {
+        true
+    }
+    
     func imageStickerTrayView(_ trayView: HEImageEditor.HEImageStickerTrayView, numberOfItemsInSection section: Int) -> Int {
         imageStickers.count
     }
@@ -158,10 +163,10 @@ extension ViewController {
     }
     
     @objc func mosaicToolChanged() {
-        if config.tools.contains(.mosaic) {
-            config.tools.removeAll { $0 == .mosaic }
+        if config.tools.contains(.mosaicDraw) {
+            config.tools.removeAll { $0 == .mosaicDraw }
         } else {
-            config.tools.append(.mosaic)
+            config.tools.append(.mosaicDraw)
         }
     }
     
@@ -365,7 +370,7 @@ extension ViewController {
         }
         
         editImageMosaicToolSwitch = UISwitch()
-        editImageMosaicToolSwitch.isOn = config.tools.contains(.mosaic)
+        editImageMosaicToolSwitch.isOn = config.tools.contains(.mosaicDraw)
         editImageMosaicToolSwitch.addTarget(self, action: #selector(mosaicToolChanged), for: .valueChanged)
         editImageToolView.addSubview(editImageMosaicToolSwitch)
         editImageMosaicToolSwitch.snp.makeConstraints { make in
