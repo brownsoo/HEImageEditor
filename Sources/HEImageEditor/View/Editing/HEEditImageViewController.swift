@@ -181,7 +181,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     var originalImage: UIImage
     
     // The frame after first layout, used in dismiss animation.
-    /// 전체 화면 좌표계에서 containerView 프레임
+    /// self.view 좌표계에서 containerView 프레임
     var originalFrame: CGRect = .zero
     
     let tools: [HEImageEditorConfiguration.EditTool]
@@ -202,17 +202,17 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         return view
     }()
     
-    // Show text and image stickers.
+    /// 텍스트, 이미지 스티커 컨테이너
     private lazy var stickersContainer = UIView()
-    
-    private var initialStickers: [HEBaseStickerView]
+    /// 모자이크 스티커의 이동 중에만 활용
+    private lazy var mosaicStickerActiveContainer = UIView()
     
     /// 모자이크 된 이미지
     private var mosaicImage: UIImage?
     /// mosaicImage 표시 레이어
-    private var mosaicImageLayer: CALayer?
+    private lazy var mosaicImageLayer = CALayer()
     /// mosaicImageLayer 마스킹 레이어 - 제스쳐가 동작하는 동안 활용
-    private lazy var mosaicDrawImageLayerMaskLayer = CAShapeLayer()
+    private lazy var mosaicImageLayerMaskLayer = CAShapeLayer()
     private var mosaicDrawPaths: [HEMosaicPath]
     private var mosaicDrawLineWidth: CGFloat = 25
     
@@ -257,7 +257,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     private var isScrolling = false
     private var shouldLayout = true
     private var imageStickerContainerIsHidden = true
-    
+    private var initialStickers: [HEBaseStickerView]
     private var currentClipStatus: HEClipStatus
     private var preClipStatus: HEClipStatus
     private var preStickerState: HEStickerEffect?
@@ -269,7 +269,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     private var impactFeedback: UIImpactFeedbackGenerator?
     
     private lazy var drawPanGes: UIPanGestureRecognizer = {
-        let pan = UIPanGestureRecognizer(target: self, action: #selector(drawAction(_:)))
+        let pan = UIPanGestureRecognizer(target: self, action: #selector(panGestureAction(_:)))
         pan.maximumNumberOfTouches = 1
         pan.delegate = self
         return pan
@@ -599,10 +599,13 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         let scaleImageOrigin = CGPoint(x: -editRect.origin.x * ratio, y: -editRect.origin.y * ratio)
         let scaleImageSize = CGSize(width: imageSize.width * ratio, height: imageSize.height * ratio)
         imageView.frame = CGRect(origin: scaleImageOrigin, size: scaleImageSize)
-        mosaicImageLayer?.frame = imageView.bounds
-        mosaicDrawImageLayerMaskLayer.frame = imageView.bounds
+        
+        mosaicImageLayer.frame = imageView.bounds
+        mosaicImageLayerMaskLayer.frame = imageView.bounds
+        
         drawingImageView.frame = imageView.frame
         stickersContainer.frame = imageView.frame
+        mosaicStickerActiveContainer.frame = imageView.frame
         
         // Optimization for long pictures.
         if (editRect.height / editRect.width) > (view.frame.height / view.frame.width * 1.1) {
@@ -629,6 +632,9 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         containerView.addSubview(imageView)
         containerView.addSubview(drawingImageView)
         containerView.addSubview(stickersContainer)
+        containerView.addSubview(mosaicStickerActiveContainer)
+        mosaicStickerActiveContainer.isHidden = true
+        
         // 편집용 상단 툴바
         view.addSubview(subEditingTopView)
         subEditingTopView.hide(animate: false)
@@ -752,18 +758,10 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         
         if hasMosaicFeatures() {
             mosaicImage = editImage.he.mosaicImage()
-            
-            mosaicImageLayer = CALayer()
-            mosaicImageLayer?.contents = mosaicImage?.cgImage
-            imageView.layer.addSublayer(mosaicImageLayer!)
-            
-            mosaicDrawImageLayerMaskLayer.strokeColor = UIColor.blue.cgColor
-            mosaicDrawImageLayerMaskLayer.fillColor = nil
-            mosaicDrawImageLayerMaskLayer.lineCap = .round
-            mosaicDrawImageLayerMaskLayer.lineJoin = .round
-            imageView.layer.addSublayer(mosaicDrawImageLayerMaskLayer)
-            
-            mosaicImageLayer?.mask = mosaicDrawImageLayerMaskLayer
+            mosaicImageLayer.contents = mosaicImage?.cgImage
+            imageView.layer.addSublayer(mosaicImageLayer)
+            imageView.layer.addSublayer(mosaicImageLayerMaskLayer)
+            mosaicImageLayer.mask = mosaicImageLayerMaskLayer
         }
         
 //        let tapGes = UITapGestureRecognizer(target: self, action: #selector(tapAction(_:)))
@@ -1153,85 +1151,110 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     }
     
     /// 패닝 제스쳐를 드로잉 작업으로 처리
-    @objc private func drawAction(_ pan: UIPanGestureRecognizer) {
+    @objc private func panGestureAction(_ pan: UIPanGestureRecognizer) {
         // 지우개
         if selectedTool == .draw, eraserBtn.isSelected {
-            eraserAction(pan)
+            eraserGestureAction(pan)
             return
         }
         
         if selectedTool == .draw {
-            let point = pan.location(in: drawingImageView)
-            if pan.state == .began {
-                setToolView(show: false)
-                
-                let originalRatio = min(mainScrollView.frame.width / originalImage.size.width, mainScrollView.frame.height / originalImage.size.height)
-                let ratio = min(
-                    mainScrollView.frame.width / currentClipStatus.editRect.width,
-                    mainScrollView.frame.height / currentClipStatus.editRect.height
-                )
-                let scale = ratio / originalRatio
-                // Zoom to original size
-                var size = drawingImageView.frame.size
-                size.width /= scale
-                size.height /= scale
-                if shouldSwapSize {
-                    swap(&size.width, &size.height)
-                }
-                
-                var toImageScale = HEEditImageViewController.maxDrawLineImageWidth / size.width
-                if editImage.size.width / editImage.size.height > 1 {
-                    toImageScale = HEEditImageViewController.maxDrawLineImageWidth / size.height
-                }
-                
-                let path = HEDrawPath(
-                    pathColor: currentDrawColor,
-                    pathWidth: drawLineWidth / mainScrollView.zoomScale,
-                    defaultLinePath: defaultDrawPathWidth,
-                    ratio: ratio / originalRatio / toImageScale,
-                    startPoint: point
-                )
-
-                drawPaths.append(path)
-            } else if pan.state == .changed {
-                let path = drawPaths.last
-                path?.addLine(to: point)
-                drawLine()
-            } else if pan.state == .cancelled || pan.state == .ended {
-                setToolView(show: true, delay: 0.5)
-                if let path = drawPaths.last {
-                    actionManager.storeAction(.draw(path))
-                }
-            }
+            drawAction(pan)
+            
         } else if selectedTool == .mosaicDraw {
-            let point = pan.location(in: imageView)
-            if pan.state == .began {
-                setToolView(show: false)
-                
-                let ratio = getImagePresentingRatio()
-                let pathW = mosaicDrawLineWidth / mainScrollView.zoomScale
-                let hepath = HEMosaicPath(pathWidth: pathW, ratio: ratio, startPoint: point)
-                
-                mosaicDrawImageLayerMaskLayer.fillColor = nil
-                mosaicDrawImageLayerMaskLayer.strokeColor = UIColor.black.cgColor
-                mosaicDrawImageLayerMaskLayer.lineWidth = pathW
-                mosaicDrawImageLayerMaskLayer.path = hepath.path.cgPath
-                mosaicDrawPaths.append(hepath)
-            } else if pan.state == .changed {
-                let hepath = mosaicDrawPaths.last
-                hepath?.addLine(to: point)
-                mosaicDrawImageLayerMaskLayer.path = hepath?.path.cgPath
-            } else if pan.state == .cancelled || pan.state == .ended {
-                setToolView(show: true, delay: 0.5)
-                if let path = mosaicDrawPaths.last {
-                    actionManager.storeAction(.mosaic(path))
-                }
-                generateNewMosaicImage()
-            }
+            drawWithMosaicAction(pan)
         }
     }
     
-    private func eraserAction(_ pan: UIPanGestureRecognizer) {
+    private func drawWithMosaicAction(_ pan: UIPanGestureRecognizer) {
+        let point = pan.location(in: imageView)
+        switch pan.state {
+        case .began:
+            setToolView(show: false)
+            
+            let ratio = getImagePresentingRatio()
+            let pathW = mosaicDrawLineWidth / mainScrollView.zoomScale
+            let hepath = HEMosaicPath(pathWidth: pathW, ratio: ratio, startPoint: point)
+            
+            mosaicImageLayerMaskLayer.fillColor = nil
+            mosaicImageLayerMaskLayer.strokeColor = UIColor.black.cgColor
+            mosaicImageLayerMaskLayer.lineWidth = pathW
+            mosaicImageLayerMaskLayer.path = hepath.path.cgPath
+            mosaicDrawPaths.append(hepath)
+            
+            imageView.layer.addSublayer(mosaicImageLayer)
+            imageView.layer.insertSublayer(mosaicImageLayerMaskLayer, above: mosaicImageLayer)
+            mosaicImageLayer.mask = mosaicImageLayerMaskLayer
+            
+        case .changed:
+            let hepath = mosaicDrawPaths.last
+            hepath?.addLine(to: point)
+            mosaicImageLayerMaskLayer.path = hepath?.path.cgPath
+            
+        case .cancelled, .ended:
+            setToolView(show: true, delay: 0.5)
+            if let path = mosaicDrawPaths.last {
+                actionManager.storeAction(.mosaic(path))
+            }
+            generateNewMosaicImage()
+            mosaicImageLayerMaskLayer.path = nil
+        default:
+            break
+        }
+    }
+    
+    private func drawAction(_ pan: UIPanGestureRecognizer) {
+        let point = pan.location(in: drawingImageView)
+        switch pan.state {
+        case .began:
+            setToolView(show: false)
+            
+            let originalRatio = min(mainScrollView.frame.width / originalImage.size.width, mainScrollView.frame.height / originalImage.size.height)
+            let ratio = min(
+                mainScrollView.frame.width / currentClipStatus.editRect.width,
+                mainScrollView.frame.height / currentClipStatus.editRect.height
+            )
+            let scale = ratio / originalRatio
+            // Zoom to original size
+            var size = drawingImageView.frame.size
+            size.width /= scale
+            size.height /= scale
+            if shouldSwapSize {
+                swap(&size.width, &size.height)
+            }
+            
+            var toImageScale = HEEditImageViewController.maxDrawLineImageWidth / size.width
+            if editImage.size.width / editImage.size.height > 1 {
+                toImageScale = HEEditImageViewController.maxDrawLineImageWidth / size.height
+            }
+            
+            let path = HEDrawPath(
+                pathColor: currentDrawColor,
+                pathWidth: drawLineWidth / mainScrollView.zoomScale,
+                defaultLinePath: defaultDrawPathWidth,
+                ratio: ratio / originalRatio / toImageScale,
+                startPoint: point
+            )
+
+            drawPaths.append(path)
+            
+        case .changed:
+            let path = drawPaths.last
+            path?.addLine(to: point)
+            drawLine()
+            
+        case .ended, .cancelled:
+            setToolView(show: true, delay: 0.5)
+            if let path = drawPaths.last {
+                actionManager.storeAction(.draw(path))
+            }
+            
+        default:
+            break
+        }
+    }
+    
+    private func eraserGestureAction(_ pan: UIPanGestureRecognizer) {
         // DrawingImageView를 기준으로 한 점
         let point = pan.location(in: drawingImageView)
         let originalRatio = min(mainScrollView.frame.width / originalImage.size.width, mainScrollView.frame.height / originalImage.size.height)
@@ -1463,10 +1486,10 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                                               originScale: 1 / scale,
                                               originAngle: -currentClipStatus.angle,
                                               originFrame: originFrame)
+        attachSticker(imageSticker)
         if sticker.kind == .mosaic {
             applyMosaicImageToStickerView(imageSticker)
         }
-        attachSticker(imageSticker)
         view.layoutIfNeeded()
         
         actionManager.storeAction(.sticker(oldState: nil, newState: imageSticker.state))
@@ -1566,10 +1589,10 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         stickerView.setImage(UIImage().he.solid(.clear, width: startSide, height: startSide).he.circle())
     }
     
-    private func applyMosaicImageToStickerView(_ stickerView: HEImageStickerView) {
-        let ratio = getImagePresentingRatio()
+    private func applyMosaicImageToStickerView(_ stickerView: HEImageStickerView, withRatio ratio: CGFloat? = nil) {
+        let presentingRatio = ratio ?? getImagePresentingRatio()
         var frame = stickerView.frame.insetBy(dx: HEImageStickerView.edgeInset, dy: HEImageStickerView.edgeInset)
-        frame = CGRect(x: frame.minX / ratio, y: frame.minY / ratio, width: frame.width / ratio, height: frame.height / ratio)
+        frame = CGRect(x: frame.minX / presentingRatio, y: frame.minY / presentingRatio, width: frame.width / presentingRatio, height: frame.height / presentingRatio)
         if let image = mosaicImage?.he.clipImage(angle: 0, editRect: frame, isCircle: true) {
             stickerView.setImage(image)
         }
@@ -1616,9 +1639,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         sticker.frame = sticker.originFrame
         configSticker(sticker)
         
-        if sticker.kind == .mosaic {
-            generateNewMosaicImage()
-        } else {
+        if sticker.kind != .mosaic {
             let transform = sticker.originTransform.scaledBy(x: 1.4, y: 1.4)
             sticker.transform = transform
             sticker.alpha = 0
@@ -1649,7 +1670,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         drawPanGes.require(toFail: sticker.panGes)
     }
     
-    func recalculateStickersFrame(_ oldSize: CGSize, _ oldAngle: CGFloat, _ newAngle: CGFloat) {
+    private func recalculateStickersFrame(_ oldSize: CGSize, _ oldAngle: CGFloat, _ newAngle: CGFloat) {
         let currSize = stickersContainer.frame.size
         let scale: CGFloat
         if Int(newAngle - oldAngle) % 180 == 0 {
@@ -1663,7 +1684,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         }
     }
     
-    func drawLine() {
+    private func drawLine() {
         let originalRatio = min(mainScrollView.frame.width / originalImage.size.width, mainScrollView.frame.height / originalImage.size.height)
         let ratio = min(
             mainScrollView.frame.width / currentClipStatus.editRect.width,
@@ -1733,14 +1754,14 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     /// editImage 의 모자이크 버전을 다시 생성
     func generateNewMosaicImageLayer() {
         mosaicImage = editImage.he.mosaicImage()
-        mosaicImageLayer?.removeFromSuperlayer()
+        mosaicImageLayer.removeFromSuperlayer()
         
         let mosaicImageLayer = CALayer()
         mosaicImageLayer.frame = imageView.bounds
         mosaicImageLayer.contents = mosaicImage?.cgImage
-        imageView.layer.insertSublayer(mosaicImageLayer, below: mosaicDrawImageLayerMaskLayer)
+        imageView.layer.insertSublayer(mosaicImageLayer, below: mosaicImageLayerMaskLayer)
         
-        mosaicImageLayer.mask = mosaicDrawImageLayerMaskLayer
+        mosaicImageLayer.mask = mosaicImageLayerMaskLayer
         
         self.mosaicImageLayer = mosaicImageLayer
     }
@@ -1841,7 +1862,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         
         editImage = image
         imageView.image = image
-        mosaicDrawImageLayerMaskLayer.path = nil
+        mosaicImageLayerMaskLayer.path = nil
         
         return image
     }
@@ -2055,9 +2076,10 @@ extension HEEditImageViewController: UICollectionViewDataSource, UICollectionVie
 }
 
 
-// MARK: HEStickerViewDelegate --
+// MARK: 스티커 조작: HEStickerViewDelegate --
 
 extension HEEditImageViewController: HEStickerViewDelegate {
+    
     func stickerBeginOperation(_ sticker: HEBaseStickerView) {
         stickersContainer.bringSubviewToFront(sticker)
         preStickerState = sticker.state
@@ -2090,21 +2112,17 @@ extension HEEditImageViewController: HEStickerViewDelegate {
         }
         
         if sticker.kind == .mosaic {
-//            generateNewMosaicImage()
-            
-//            var actualSize = currentClipStatus.editRect.size
-//            if shouldSwapSize {
-//                swap(&actualSize.width, &actualSize.height)
-//            }
-//            let ratio = min(
-//                mainScrollView.frame.width / currentClipStatus.editRect.width,
-//                mainScrollView.frame.height / currentClipStatus.editRect.height
-//            )
             if let stickerView = sticker as? HEImageStickerView {
                 clearMosaicImageFromStickerView(stickerView)
-                mosaicDrawImageLayerMaskLayer.fillColor = UIColor.black.cgColor
-                mosaicDrawImageLayerMaskLayer.strokeColor = nil
-                mosaicDrawImageLayerMaskLayer.lineWidth = 0
+                mosaicImageLayerMaskLayer.fillColor = UIColor.black.cgColor
+                mosaicImageLayerMaskLayer.strokeColor = nil
+                mosaicImageLayerMaskLayer.lineWidth = 0
+                mosaicImageLayerMaskLayer.path = CGPath(ellipseIn: sticker.frame.insetBy(dx: HEImageStickerView.edgeInset, dy: HEImageStickerView.edgeInset), transform: nil)
+                
+                mosaicStickerActiveContainer.isHidden = false
+                mosaicStickerActiveContainer.layer.addSublayer(mosaicImageLayer)
+                mosaicStickerActiveContainer.layer.addSublayer(mosaicImageLayerMaskLayer)
+                mosaicImageLayer.mask = mosaicImageLayerMaskLayer
             }
         }
     }
@@ -2132,7 +2150,8 @@ extension HEEditImageViewController: HEStickerViewDelegate {
         }
         
         if sticker.kind == .mosaic { // 모자이크 영역 이동
-            mosaicDrawImageLayerMaskLayer.path = CGPath(ellipseIn: sticker.frame.insetBy(dx: HEImageStickerView.edgeInset, dy: HEImageStickerView.edgeInset), transform: nil)
+            let inset = HEImageStickerView.edgeInset
+            mosaicImageLayerMaskLayer.path = CGPath(ellipseIn: sticker.frame.insetBy(dx: inset, dy: inset), transform: nil)
         }
     }
     
@@ -2160,22 +2179,11 @@ extension HEEditImageViewController: HEStickerViewDelegate {
             (view as? HEStickerViewAdditional)?.gesIsEnabled = true
         }
         
+        mosaicStickerActiveContainer.isHidden = true
         if sticker.kind == .mosaic {
-//            var actualSize = currentClipStatus.editRect.size
-//            if shouldSwapSize {
-//                swap(&actualSize.width, &actualSize.height)
-//            }
-//            let ratio = min(
-//                mainScrollView.frame.width / currentClipStatus.editRect.width,
-//                mainScrollView.frame.height / currentClipStatus.editRect.height
-//            )
-//            let frame = sticker.frame.insetBy(dx: HEImageStickerView.edgeInset, dy: HEImageStickerView.edgeInset)
-//            if let image = mosaicImage?.he.clipImage(angle: 0, editRect: frame, isCircle: true) {
-//                (sticker as? HEImageStickerView)?.image = image
-//            }
             if let stickerView = sticker as? HEImageStickerView {
                 applyMosaicImageToStickerView(stickerView)
-                mosaicDrawImageLayerMaskLayer.path = nil
+                mosaicImageLayerMaskLayer.path = nil
             }
         }
     }
