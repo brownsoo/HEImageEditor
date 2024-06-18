@@ -8,7 +8,8 @@ import UIKit
 class HEImageStickerView: HEBaseStickerView {
     
     static let edgeInset: CGFloat = 5
-    private let image: UIImage
+    
+    private var image: UIImage
     
     private lazy var imageView: UIImageView = {
         let view = UIImageView(image: image)
@@ -90,6 +91,11 @@ class HEImageStickerView: HEBaseStickerView {
     
     override func setupUIFrameWhenFirstLayout() {
         imageView.frame = bounds.insetBy(dx: Self.edgeInset, dy: Self.edgeInset)
+    }
+    
+    func setImage(_ image: UIImage) {
+        self.image = image
+        self.imageView.image = image
     }
     
     // TODO: containerWidth 처리

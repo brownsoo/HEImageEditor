@@ -13,15 +13,6 @@ ZLImageEditor is a powerful image editor framework. Supports graffiti, cropping,
 
 ZLImageEditor is extracted from [ZLPhotoBrowser](https://github.com/longitachi/ZLPhotoBrowser).
 
-### Directory
-* [Features](#Features)
-* [Requirements](#Requirements)
-* [Usage](#Usage)
-* [Change Log](#ChangeLog)
-* [Languages](#Languages)
-* [Installation(Support Cocoapods/Carthage/SPM)](#Installation)
-* [Support](#Support)
-* [Demo Effect](#DemoEffect)
 
 ### <a id="Features"></a>Features
 - [x] Draw (Support custom line color).

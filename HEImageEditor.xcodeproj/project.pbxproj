@@ -105,6 +105,8 @@
 		17D691DF2C1AE51D007443EC /* HETopConfirmBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HETopConfirmBarView.swift; sourceTree = "<group>"; };
 		17D691E72C1BD35E007443EC /* HEMainTopBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEMainTopBarView.swift; sourceTree = "<group>"; };
 		17D691E92C1BDF41007443EC /* HEPassThroughView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEPassThroughView.swift; sourceTree = "<group>"; };
+		17D691F52C212D1D007443EC /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
+		17D691F62C212D4D007443EC /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		E40208D7256B9BA60077F5DC /* HEImageEditor.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = HEImageEditor.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E40208DA256B9BA60077F5DC /* HEImageEditor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HEImageEditor.h; sourceTree = "<group>"; };
 		E40208DB256B9BA60077F5DC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -214,6 +216,7 @@
 		17189EAD2C1041EB00270F4D /* Doc */ = {
 			isa = PBXGroup;
 			children = (
+				17D691F52C212D1D007443EC /* README.md */,
 				17189EAE2C1041EB00270F4D /* out */,
 				17189EB52C1041EB00270F4D /* view.puml */,
 				17189EB62C1041EB00270F4D /* interaction.puml */,
@@ -367,6 +370,7 @@
 		E40208CD256B9BA60077F5DC = {
 			isa = PBXGroup;
 			children = (
+				17D691F62C212D4D007443EC /* Package.swift */,
 				17189EAD2C1041EB00270F4D /* Doc */,
 				E40208D9256B9BA60077F5DC /* Sources */,
 				E40208D8256B9BA60077F5DC /* Products */,
