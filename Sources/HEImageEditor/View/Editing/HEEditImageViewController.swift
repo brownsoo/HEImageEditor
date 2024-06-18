@@ -104,7 +104,9 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     /// 하단 툴바 영역
     private lazy var bottomToolViewContainer: HEPassThroughView = {
         let shadowView = HEPassThroughView()
-        shadowView.findResponderSticker = findResponderSticker(_:)
+        shadowView.findResponderSticker = { [weak self] point in
+            return self?.findResponderSticker(point)
+        }
         return shadowView
     }()
     
@@ -115,7 +117,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         return layer
     }()
     
-    private var bottomToolView: HEEditImageBottomView!
+    private weak var bottomToolView: HEEditImageBottomView!
     private var bottomToolViewHeight: CGFloat!
     
     private var imageStickerTray: (UIView & HEImageStickerTray)? {
@@ -302,7 +304,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     /// 자르기 화면의 하단에 무언가 놓을 수 있다.. (없애버릴까..)
     public var clipImageBottomViewBuilder: HEClipImageBottomViewBuilder?
     /// 하단 툴뷰 구성자
-    public var bottomToolViewBuilder: HEEditImageBottomToolViewBuilder
+    private var bottomToolViewBuilder: HEEditImageBottomToolViewBuilder!
     
     override open var prefersStatusBarHidden: Bool { true }
     
@@ -374,11 +376,19 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         selectedAdjustTool = adjustTools.first
         actionManager = HEEditorActionManager(actions: editModel?.actions ?? [])
         
-        self.bottomToolViewBuilder = bottomToolViewBuilder ?? { editView in
+        
+        
+        initialStickers = editModel?.stickers.compactMap {
+            HEBaseStickerView.initWithState($0)
+        } ?? []
+        
+        super.init(nibName: nil, bundle: nil)
+        
+        self.bottomToolViewBuilder = bottomToolViewBuilder ?? { [weak self] editView in
             // 기본 툴바
             let toolbar = HEEditImageBottomView(tools: ts)
             toolbar.toolSelectListener = { [weak editView] type in
-                guard let editView else { return }
+                guard let self, let editView else { return }
                 if editView.isImageEditing {
                     editView.stopCurrentEditing()
                     return
@@ -402,13 +412,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             }
             return (toolbar, 76)
         }
-        
-        
-        initialStickers = editModel?.stickers.compactMap {
-            HEBaseStickerView.initWithState($0)
-        } ?? []
-        
-        super.init(nibName: nil, bundle: nil)
         
         if let builder = topToolViewBuilder?(self) {
             self.topBarView = builder.toolView
