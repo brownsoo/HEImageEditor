@@ -45,12 +45,11 @@ public class HEImageStickerTrayView: UIView, HEImageStickerTray {
     
     func setupUI() {
         self.clipsToBounds = true
-        self.backgroundColor = .yellow.withAlphaComponent(0.2)
         
         self.baseView = UIView()
         self.addSubview(self.baseView)
         let baseView = self.baseView!
-        baseView.backgroundColor = .red.withAlphaComponent(0.2)
+        baseView.backgroundColor = .black.withAlphaComponent(05)
         baseView.also { it in
             it.translatesAutoresizingMaskIntoConstraints = false
             trayBottomConstraint = it.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: Self.baseViewH)
@@ -110,7 +109,7 @@ public class HEImageStickerTrayView: UIView, HEImageStickerTray {
         }
         
         self.isHidden = false
-        UIView.animate(withDuration: 0.25) {
+        UIView.animate(withDuration: 0.24) {
             self.trayBottomConstraint.constant = 0
             parent.layoutIfNeeded()
         }
@@ -119,7 +118,7 @@ public class HEImageStickerTrayView: UIView, HEImageStickerTray {
     public func hide() {
         self.hideBlock?()
         
-        UIView.animate(withDuration: 0.25) {
+        UIView.animate(withDuration: 0.24) {
             self.trayBottomConstraint.constant = Self.baseViewH
             self.superview?.layoutIfNeeded()
         } completion: { (_) in

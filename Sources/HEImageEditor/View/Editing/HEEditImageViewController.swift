@@ -227,6 +227,21 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         })
     }
     
+    private lazy var aiStickerToastView: UIView = {
+        let bt = UIButton()
+        bt.backgroundColor = UIColor.black.withAlphaComponent(0.72)
+        bt.layer.cornerRadius = 16
+        let icon = UIImage.he.getImage("editStickerFaceAi24") ?? UIImage(systemName: "faceid", withConfiguration: UIImage.SymbolConfiguration(pointSize: 24, weight: .regular, scale: .small))
+        bt.setImage(icon, for: .normal)
+        bt.setTitle("버튼을 누를 때마다 스티커가 바뀝니다.", for: .normal)
+        bt.setTitleColor(.white, for: .normal)
+        bt.titleLabel?.font = .systemFont(ofSize: 14)
+        bt.titleEdgeInsets = UIEdgeInsets(top: 0, left: 2, bottom: 0, right: -2)
+        bt.contentEdgeInsets = UIEdgeInsets(top: 20, left: 40, bottom: 20, right: 40 + 2)
+        bt.adjustsImageWhenHighlighted = false
+        return bt
+    }()
+    
     private var selectedTool: HEImageEditorConfiguration.EditTool? {
         didSet {
             if selectedTool == nil {
@@ -384,11 +399,11 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         
         super.init(nibName: nil, bundle: nil)
         
-        self.bottomToolViewBuilder = bottomToolViewBuilder ?? { [weak self] editView in
+        self.bottomToolViewBuilder = bottomToolViewBuilder ?? { editView in
             // 기본 툴바
             let toolbar = HEEditImageBottomView(tools: ts)
             toolbar.toolSelectListener = { [weak editView] type in
-                guard let self, let editView else { return }
+                guard let editView else { return }
                 if editView.isImageEditing {
                     editView.stopCurrentEditing()
                     return
@@ -775,6 +790,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         mainScrollView.panGestureRecognizer.require(toFail: drawPanGes)
         
         initialStickers.forEach { self.attachSticker($0) }
+        (aiStickerToastView as? UIButton)?.addTarget(self, action: #selector(hideAiStickerToast), for: .touchUpInside)
     }
     
     /// point로 스티커 찾기
@@ -961,6 +977,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     public func startImageSticker() {
         guard let imageStickerTray else { return }
         imageStickerTray.hideBlock = { [weak self] in
+            self?.hideAiStickerToast()
             self?.setToolView(show: true)
             self?.subEditingTopView.hide()
             self?.imageStickerContainerIsHidden = true
@@ -970,7 +987,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             self?.addImageStickerView(image)
         }
         
-        imageStickerTray.show(in: view, frame: calculateImageStickerTrayFrame())
+        let trayFrame = getImageStickerTrayFrame()
+        imageStickerTray.show(in: view, frame: trayFrame)
         imageStickerContainerIsHidden = false
         selectedTool = .imageSticker
         subEditingTopView.show()
@@ -979,14 +997,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         setDrawViews(hidden: true)
         setFilterViews(hidden: true)
         setAdjustViews(hidden: true)
-        
-    }
-    
-    private func calculateImageStickerTrayFrame() -> CGRect {
-        let trayFrame = CGRect(x: 0, y: bottomToolViewContainer.frame.minY - HEImageEditorLayout.imageStickerTrayHeight,
-                               width: view.bounds.width,
-                               height: HEImageEditorLayout.imageStickerTrayHeight)
-        return trayFrame
     }
     
     // MARK: -- startTextSticker
@@ -1464,22 +1474,59 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     
     // TODO: 스티커 갯수 제한, 제스쳐 100도 문제
-    // MARK: 스티커를 뷰로 추가
+    
+    // MARK: 스티커를 뷰로 추가 --
+    
+    private func getImageStickerTrayFrame() -> CGRect {
+        let trayFrame = CGRect(x: 0, y: bottomToolViewContainer.frame.minY - HEImageEditorLayout.imageStickerTrayHeight,
+                               width: view.bounds.width,
+                               height: HEImageEditorLayout.imageStickerTrayHeight)
+        return trayFrame
+    }
+    
+    private func showAiStickerToastIfNeed(stickerTrayFrame: CGRect) {
+        guard aiStickerToastView.superview == nil else { return }
+        view.addSubview(aiStickerToastView)
+        aiStickerToastView.also { it in
+            it.alpha = 0
+            it.sizeToFit()
+            it.frame = CGRect(x: (view.bounds.width - it.bounds.width) / 2,
+                              y: stickerTrayFrame.minY - it.bounds.height,
+                              width: it.bounds.width,
+                              height: it.bounds.height)
+            let tp = CGPoint(x: (view.bounds.width - it.bounds.width) / 2, y: stickerTrayFrame.minY - it.bounds.height - 16)
+            UIView.animate(withDuration: 0.24, delay: 0.2, options: [.curveEaseOut], animations: {
+                it.alpha = 1
+                it.frame.origin = tp
+            }, completion: { _ in
+                self.perform(#selector(self.hideAiStickerToast), with: nil, afterDelay: 3)
+            })
+        }
+    }
+    
+    @objc private func hideAiStickerToast() {
+        NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(hideAiStickerToast), object: nil)
+        guard aiStickerToastView.superview != nil else {
+            return
+        }
+        UIView.animate(withDuration: 0.24, delay: 0, animations: {
+            self.aiStickerToastView.alpha = 0
+        }, completion: { _ in
+            self.aiStickerToastView.removeFromSuperview()
+        })
+    }
     
     /// 스티커를 뷰로 추가
     private func addImageStickerView(_ sticker: HEImageSticker) {
         if sticker.id == HEImageSticker.faceAiIcon.id {
+            if loadingView.isShowing {
+                return
+            }
             addImageStickersOnFaces()
+            showAiStickerToastIfNeed(stickerTrayFrame: getImageStickerTrayFrame())
             return
         }
         let image: UIImage = sticker.image
-//        if sticker.kind == .mosaic {
-//            let scale = (view.window?.windowScene?.screen.scale ?? 1.0)
-//            let startSide: CGFloat = 150 / scale // 150 pixel
-//            image = UIImage().he.solid(.clear, width: startSide, height: startSide).he.circle()
-//        } else {
-//            image = sticker.image
-//        }
         let scale = mainScrollView.zoomScale
         let size = HEImageStickerView.constraintSize(image: image, container: view)
         let originFrame = getStickerOriginFrame(size)
@@ -2162,7 +2209,7 @@ extension HEEditImageViewController: HEStickerViewDelegate {
         if selectedTool == nil {
             setToolView(show: true)
         } else if selectedTool == .imageSticker {
-            imageStickerTray?.show(in: view, frame: calculateImageStickerTrayFrame())
+            imageStickerTray?.show(in: view, frame: getImageStickerTrayFrame())
         }
         
         trashbinView.layer.removeAllAnimations()

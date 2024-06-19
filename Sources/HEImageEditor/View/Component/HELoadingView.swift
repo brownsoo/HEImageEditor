@@ -15,6 +15,10 @@ class LoadingView: UIView {
     private var requiredLayout = true
     private var arcShapeLayer: CAShapeLayer?
     
+    var isShowing: Bool {
+        superview != nil
+    }
+    
     override func willMove(toSuperview newSuperview: UIView?) {
         super.willMove(toSuperview: newSuperview)
         
