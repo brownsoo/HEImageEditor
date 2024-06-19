@@ -34,8 +34,8 @@ public class HEImageEditorConfiguration: NSObject {
         .he.rgba(190, 0, 255)
     ]
     
-    @objc public var textStickerDefaultBackgroundColor = UIColor.clear
-    private static let defaultTextBackgroundColors: [UIColor] = [
+    @objc public var textStickerDefaultFillColor = UIColor.clear
+    private static let defaultTextFillColors: [UIColor] = [
         .clear,
         .he.rgba(104, 204, 254),
         .he.rgba(254, 124, 62),
@@ -118,12 +118,12 @@ public class HEImageEditorConfiguration: NSObject {
         }
     }
     
-    private var _textStickerBackgroundColors = HEImageEditorConfiguration.defaultTextBackgroundColors
+    private var _textStickerBackgroundColors = HEImageEditorConfiguration.defaultTextFillColors
     /// Text sticker background colors for image editor.
     @objc public var textStickerBackgroundColors: [UIColor] {
         get {
             if _textStickerBackgroundColors.isEmpty {
-                return HEImageEditorConfiguration.defaultTextBackgroundColors
+                return HEImageEditorConfiguration.defaultTextFillColors
             } else {
                 return _textStickerBackgroundColors
             }

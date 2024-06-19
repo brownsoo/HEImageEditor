@@ -40,7 +40,7 @@ class HETextColorCell: UICollectionViewCell {
 }
 
 
-class HETextBackgroundColorCell: UICollectionViewCell {
+class HETextFillColorCell: UICollectionViewCell {
     lazy var colorView: UIImageView = {
         let view = UIImageView()
         view.layer.masksToBounds = true

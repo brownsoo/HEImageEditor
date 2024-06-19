@@ -1435,9 +1435,10 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         toolViewStateTimer = nil
     }
     
-    private func showInputTextVC(_ text: String? = nil,
+    private func showInputTextVC(stickerId: String? = nil,
+                                 text: String? = nil,
                                  textColor: UIColor? = nil,
-                                 backgroundTextColor: UIColor? = nil,
+                                 fillColor: UIColor? = nil,
                                  font: UIFont? = nil) {
         var bgImage: UIImage?
         autoreleasepool {
@@ -1457,7 +1458,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 .he.clipImage(angle: 0, editRect: r, isCircle: isCircle)
         }
         
-        let vc = HEInputTextViewController(image: bgImage, text: text, font: font, textColor: textColor, backgroundTextColor: backgroundTextColor)
+        let vc = HEInputTextViewController(stickerId: stickerId, image: bgImage, text: text, font: font, textColor: textColor, fillColor: fillColor)
         vc.delegate = self
         
         vc.modalPresentationStyle = .fullScreen
@@ -1663,7 +1664,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         let textSticker = HETextStickerView(
             text: text,
             textColor: textColor,
-            textBackgroundColor: backgroundTextColor,
+            fillColor: backgroundTextColor,
             font: font,
             image: image,
             originScale: 1 / scale,
@@ -2118,9 +2119,31 @@ extension HEEditImageViewController: UICollectionViewDataSource, UICollectionVie
 }
 
 extension HEEditImageViewController: HEInputTextViewControllerDelegate {
-    func inputTextViewController(_ controller: HEInputTextViewController, didInput text: String, textColor: UIColor, backgroundColor: UIColor, font: UIFont, image: UIImage?) {
+    func inputTextViewController(_ controller: HEInputTextViewController, stickerId: String?, didInput text: String, textColor: UIColor, fillColor: UIColor, font: UIFont, image: UIImage?) {
+        if stickerId == nil { // new sticker
+            self.addTextStickersView(text, textColor: textColor, backgroundTextColor: fillColor, font: font, image: image)
+            return
+        }
+        // exist
+        guard let textSticker = stickersContainer.subviews.compactMap({ $0 as? HETextStickerView}).first(where: { $0.id == stickerId }) else {
+            return
+        }
+        guard let image = image, !text.isEmpty else {
+            textSticker.moveToTrashbin()
+            return
+        }
         
-        self.addTextStickersView(text, textColor: textColor, backgroundTextColor: backgroundColor, font: font, image: image)
+        textSticker.startTimer()
+        guard textSticker.text != text || textSticker.textColor != textColor || textSticker.fillColor != fillColor || textSticker.font != font else {
+            return
+        }
+        textSticker.text = text
+        textSticker.textColor = textColor
+        textSticker.fillColor = fillColor
+        textSticker.image = image
+        textSticker.font = font
+        let newSize = HETextStickerView.calculateSize(image: image)
+        textSticker.changeSize(to: newSize)
     }
     
     func inputTextViewControllerDidCancel() {
@@ -2252,24 +2275,7 @@ extension HEEditImageViewController: HEStickerViewDelegate {
     }
     
     func sticker(_ textSticker: HETextStickerView, editText text: String) {
-        showInputTextVC(text, textColor: textSticker.textColor, backgroundTextColor: textSticker.textBackgroundColor, font: textSticker.font) { text, textColor, font, image, style in
-            guard let image = image, !text.isEmpty else {
-                textSticker.moveToTrashbin()
-                return
-            }
-            
-            textSticker.startTimer()
-            guard textSticker.text != text || textSticker.textColor != textColor || textSticker.style != style || textSticker.font != font else {
-                return
-            }
-            textSticker.text = text
-            textSticker.textColor = textColor
-            textSticker.style = style
-            textSticker.image = image
-            textSticker.font = font
-            let newSize = HETextStickerView.calculateSize(image: image)
-            textSticker.changeSize(to: newSize)
-        }
+        showInputTextVC(stickerId: textSticker.id, text: text, textColor: textSticker.textColor, fillColor: textSticker.fillColor, font: textSticker.font)
     }
 }
 

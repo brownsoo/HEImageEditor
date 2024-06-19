@@ -5,7 +5,7 @@
 import UIKit
 
 protocol HEInputTextViewControllerDelegate: AnyObject {
-    func inputTextViewController(_ controller: HEInputTextViewController, didInput text: String, textColor: UIColor, backgroundColor: UIColor, font: UIFont, image: UIImage?)
+    func inputTextViewController(_ controller: HEInputTextViewController, stickerId: String?, didInput text: String, textColor: UIColor, fillColor: UIColor, font: UIFont, image: UIImage?)
     
     func inputTextViewControllerDidCancel()
 }
@@ -38,7 +38,7 @@ class HEInputTextViewController: UIViewController {
         }
     }
     
-    private var currentBackgroundColor: UIColor = .clear{
+    private var currentFillColor: UIColor = .clear{
         didSet {
             refreshTextViewUI()
         }
@@ -138,8 +138,15 @@ class HEInputTextViewController: UIViewController {
     }
     
     private var fillStyle: HEImageEditorConfiguration.TextStickerFillStyle
+    private let stickerId: String?
     
-    init(image: UIImage?, text: String? = nil, font: UIFont? = nil, textColor: UIColor? = nil, backgroundTextColor: UIColor? = nil) {
+    init(stickerId: String? = nil,
+         image: UIImage?, 
+         text: String? = nil,
+         font: UIFont? = nil, 
+         textColor: UIColor? = nil,
+         fillColor: UIColor? = nil) {
+        self.stickerId = stickerId
         self.image = image
         self.text = text ?? ""
         if let font = font {
@@ -156,7 +163,7 @@ class HEInputTextViewController: UIViewController {
             }
         }
         
-        self.currentBackgroundColor = backgroundTextColor ?? HEImageEditorConfiguration.default().textStickerDefaultBackgroundColor
+        self.currentFillColor = fillColor ?? HEImageEditorConfiguration.default().textStickerDefaultFillColor
         self.fillStyle = HEImageEditorConfiguration.default().textStickerFillStyle
         super.init(nibName: nil, bundle: nil)
     }
@@ -302,7 +309,7 @@ class HEInputTextViewController: UIViewController {
         if selectedTool == .textColor {
             index = getColorSource().firstIndex(where: { $0 == currentTextColor })
         } else if selectedTool == .textBackground {
-            index = getColorSource().firstIndex(where: { $0 == currentBackgroundColor })
+            index = getColorSource().firstIndex(where: { $0 == currentFillColor })
         }
         if let index {
             DispatchQueue.main.async { [weak self] in
@@ -329,7 +336,7 @@ class HEInputTextViewController: UIViewController {
                 if NSStringFromClass(subview.classForCoder) == "_UITextContainerView" {
                     let size = textView.sizeThatFits(subview.frame.size)
                     image = UIGraphicsImageRenderer.he.renderImage(size: size) { context in
-                        if currentBackgroundColor != .clear {
+                        if currentFillColor != .clear {
                             textLayer.render(in: context)
                         }
                         
@@ -339,7 +346,7 @@ class HEInputTextViewController: UIViewController {
             }
         }
         
-        delegate?.inputTextViewController(self, didInput: textView.text, textColor: currentTextColor, backgroundColor: currentBackgroundColor, font: currentFont, image: image)
+        delegate?.inputTextViewController(self, stickerId: stickerId, didInput: textView.text, textColor: currentTextColor, fillColor: currentFillColor, font: currentFont, image: image)
         
         dismiss(animated: true, completion: nil)
     }
@@ -398,7 +405,7 @@ extension HEInputTextViewController: UICollectionViewDelegate, UICollectionViewD
             cell.color = c
             return cell
         } else if selectedTool == .textBackground {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HETextBackgroundColorCell.he.identifier, for: indexPath) as! HETextBackgroundColorCell
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HETextFillColorCell.he.identifier, for: indexPath) as! HETextFillColorCell
             
             let c = getColorSource()[indexPath.row]
             cell.color = c
@@ -413,7 +420,7 @@ extension HEInputTextViewController: UICollectionViewDelegate, UICollectionViewD
         if selectedTool == .textColor {
             currentTextColor = color
         } else if selectedTool == .textBackground {
-            currentBackgroundColor = color
+            currentFillColor = color
         } else {
             return
         }
@@ -474,7 +481,7 @@ extension HEInputTextViewController {
         }
         
         textLayer.path = path.cgPath
-        textLayer.fillColor = currentBackgroundColor.cgColor
+        textLayer.fillColor = currentFillColor.cgColor
         if textLayer.superlayer == nil {
             textView.layer.insertSublayer(textLayer, at: 0)
         }

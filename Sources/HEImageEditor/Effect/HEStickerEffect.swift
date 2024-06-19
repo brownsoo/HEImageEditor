@@ -46,14 +46,14 @@ public class HEImageStickerEffect: HEStickerEffect {
 public class HETextStickerEffect: HEStickerEffect {
     let text: String
     let textColor: UIColor
-    let textBackgroundColor: UIColor
+    let fillColor: UIColor
     let font: UIFont?
     
     public init(
         id: String,
         text: String,
         textColor: UIColor,
-        textBackgroundColor: UIColor,
+        fillColor: UIColor,
         font: UIFont?,
         image: UIImage,
         originScale: CGFloat,
@@ -65,7 +65,7 @@ public class HETextStickerEffect: HEStickerEffect {
     ) {
         self.text = text
         self.textColor = textColor
-        self.textBackgroundColor = textBackgroundColor
+        self.fillColor = fillColor
         self.font = font
         super.init(
             id: id,

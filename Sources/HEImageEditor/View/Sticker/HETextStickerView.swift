@@ -19,7 +19,7 @@ class HETextStickerView: HEBaseStickerView {
     
     var text: String
     var textColor: UIColor
-    var textBackgroundColor: UIColor
+    var fillColor: UIColor
     var font: UIFont?
     
     var image: UIImage {
@@ -34,7 +34,7 @@ class HETextStickerView: HEBaseStickerView {
             id: id,
             text: text,
             textColor: textColor,
-            textBackgroundColor: textBackgroundColor,
+            fillColor: fillColor,
             font: font,
             image: image,
             originScale: originScale,
@@ -55,7 +55,7 @@ class HETextStickerView: HEBaseStickerView {
             id: state.id,
             text: state.text,
             textColor: state.textColor,
-            textBackgroundColor: state.textBackgroundColor,
+            fillColor: state.fillColor,
             font: state.font,
             image: state.image,
             originScale: state.originScale,
@@ -72,7 +72,7 @@ class HETextStickerView: HEBaseStickerView {
         id: String = UUID().uuidString,
         text: String,
         textColor: UIColor,
-        textBackgroundColor: UIColor,
+        fillColor: UIColor,
         font: UIFont? = nil,
         image: UIImage,
         originScale: CGFloat,
@@ -85,7 +85,7 @@ class HETextStickerView: HEBaseStickerView {
     ) {
         self.text = text
         self.textColor = textColor
-        self.textBackgroundColor = textBackgroundColor
+        self.fillColor = fillColor
         self.font = font
         self.image = image
         super.init(
