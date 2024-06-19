@@ -1653,7 +1653,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     }
     
     /// Add text sticker
-    private func addTextStickersView(_ text: String, textColor: UIColor, font: UIFont, image: UIImage?, style: HEInputTextStyle) {
+    private func addTextStickersView(_ text: String, textColor: UIColor, backgroundTextColor: UIColor, font: UIFont, image: UIImage?) {
         guard !text.isEmpty, let image = image else { return }
         
         let scale = mainScrollView.zoomScale
@@ -1663,8 +1663,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         let textSticker = HETextStickerView(
             text: text,
             textColor: textColor,
+            textBackgroundColor: backgroundTextColor,
             font: font,
-            style: style,
             image: image,
             originScale: 1 / scale,
             originAngle: -currentClipStatus.angle,
@@ -2056,9 +2056,9 @@ extension HEEditImageViewController: UICollectionViewDataSource, UICollectionVie
             let c = drawColors[indexPath.row]
             cell.color = c
             if c == currentDrawColor, !eraserBtn.isSelected {
-                cell.bgWhiteView.layer.transform = CATransform3DMakeScale(1.2, 1.2, 1)
+                cell.colorView.layer.transform = CATransform3DMakeScale(1.2, 1.2, 1)
             } else {
-                cell.bgWhiteView.layer.transform = CATransform3DIdentity
+                cell.colorView.layer.transform = CATransform3DIdentity
             }
             
             return cell
@@ -2120,7 +2120,7 @@ extension HEEditImageViewController: UICollectionViewDataSource, UICollectionVie
 extension HEEditImageViewController: HEInputTextViewControllerDelegate {
     func inputTextViewController(_ controller: HEInputTextViewController, didInput text: String, textColor: UIColor, backgroundColor: UIColor, font: UIFont, image: UIImage?) {
         
-        self.addTextStickersView(text, textColor: textColor, font: font, image: image, style: style)
+        self.addTextStickersView(text, textColor: textColor, backgroundTextColor: backgroundColor, font: font, image: image)
     }
     
     func inputTextViewControllerDidCancel() {
@@ -2252,7 +2252,7 @@ extension HEEditImageViewController: HEStickerViewDelegate {
     }
     
     func sticker(_ textSticker: HETextStickerView, editText text: String) {
-        showInputTextVC(text, textColor: textSticker.textColor, font: textSticker.font, style: textSticker.style) { text, textColor, font, image, style in
+        showInputTextVC(text, textColor: textSticker.textColor, backgroundTextColor: textSticker.textBackgroundColor, font: textSticker.font) { text, textColor, font, image, style in
             guard let image = image, !text.isEmpty else {
                 textSticker.moveToTrashbin()
                 return
