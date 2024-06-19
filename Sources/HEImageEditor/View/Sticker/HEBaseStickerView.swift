@@ -350,6 +350,8 @@ extension HEBaseStickerView: HEStickerViewAdditional {
     func moveToTrashbin() {
         cleanTimer()
         removeFromSuperview()
+        
+        UINotificationFeedbackGenerator().notificationOccurred(.warning)
     }
     
     func addScale(_ scale: CGFloat) {
