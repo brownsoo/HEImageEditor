@@ -10,16 +10,6 @@ import UIKit
 class HEDrawColorCell: UICollectionViewCell {
     lazy var colorView: UIView = {
         let view = UIView()
-        view.layer.cornerRadius = 10
-        view.layer.masksToBounds = true
-        view.frame = CGRect(x: 0, y: 0, width: 20, height: 20)
-        return view
-    }()
-    
-    lazy var bgWhiteView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .white
-        view.layer.cornerRadius = 12
         view.layer.masksToBounds = true
         view.frame = CGRect(x: 0, y: 0, width: 24, height: 24)
         return view
@@ -33,8 +23,6 @@ class HEDrawColorCell: UICollectionViewCell {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        
-        contentView.addSubview(bgWhiteView)
         contentView.addSubview(colorView)
     }
     
@@ -45,11 +33,11 @@ class HEDrawColorCell: UICollectionViewCell {
     
     override func layoutSubviews() {
         super.layoutSubviews()
-        
         colorView.center = contentView.center
-        bgWhiteView.center = contentView.center
+        colorView.layer.cornerRadius = bounds.width / 2
     }
 }
+
 
 // MARK: filter cell
 

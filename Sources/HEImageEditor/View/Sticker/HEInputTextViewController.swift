@@ -4,22 +4,45 @@
 
 import UIKit
 
-class HEInputTextViewController: UIViewController {
-    private static let toolViewHeight: CGFloat = 70
+protocol HEInputTextViewControllerDelegate: AnyObject {
+    func inputTextViewController(_ controller: HEInputTextViewController, didInput text: String, textColor: UIColor, backgroundColor: UIColor, font: UIFont, image: UIImage?)
     
-    private let image: UIImage?
-    
-    private var text: String
+    func inputTextViewControllerDidCancel()
+}
 
-    private var font: UIFont = .boldSystemFont(ofSize: HETextStickerView.fontSize)
+class HEInputTextViewController: UIViewController {
     
-    private var currentColor: UIColor {
+    weak var delegate: HEInputTextViewControllerDelegate?
+    
+    static let toolViewHeight: CGFloat = 44
+    static let toolCellSize = CGSize(width: 40, height: 44)
+    
+    enum Tool {
+        case textColor
+        case textBackground
+    }
+    private var selectedTool: Tool? = nil {
+        willSet {
+            guard isViewLoaded else { return }
+            textColorBtn.isSelected = newValue == .textColor
+            textBackgroundBtn.isSelected = newValue == .textBackground
+        }
+    }
+    private let image: UIImage?
+    private var text: String
+    private var currentFont: UIFont = .boldSystemFont(ofSize: HETextStickerView.fontSize)
+    
+    private var currentTextColor: UIColor {
         didSet {
             refreshTextViewUI()
         }
     }
     
-    private var textStyle: HEInputTextStyle
+    private var currentBackgroundColor: UIColor = .clear{
+        didSet {
+            refreshTextViewUI()
+        }
+    }
     
     private lazy var bgImageView: UIImageView = {
         let view = UIImageView(image: image?.he.blurImage(level: 4))
@@ -34,23 +57,27 @@ class HEInputTextViewController: UIViewController {
         return view
     }()
     
-    private lazy var cancelBtn: UIButton = {
-        let btn = UIButton(type: .custom)
-        btn.setTitle(localLanguageTextValue(.cancel), for: .normal)
-        btn.addTarget(self, action: #selector(cancelBtnClick), for: .touchUpInside)
-        return btn
+    private lazy var textColorBtn: UIButton = {
+        let icon = UIImage.he.getImage("ic_edit_color_text") ?? UIImage(systemName: "character")
+        let bt = UIButton(type: .custom)
+        bt.setImage(icon?.withTintColor(.white).withRenderingMode(.alwaysOriginal), for: .normal)
+        bt.setImage(icon?.withTintColor(UIColor.he.rgba(71, 120, 222)), for: .highlighted)
+        bt.setImage(icon?.withTintColor(UIColor.he.rgba(71, 120, 222)), for: .selected)
+        bt.contentEdgeInsets = UIEdgeInsets(top: 12, left: 14, bottom: 12, right: 14)
+        return bt
     }()
     
-    private lazy var doneBtn: UIButton = {
-        let btn = UIButton(type: .custom)
-        btn.setTitle(localLanguageTextValue(.done), for: .normal)
-        btn.setTitleColor(.he.editDoneBtnTitleColor, for: .normal)
-        btn.backgroundColor = .he.editDoneBtnBgColor
-        btn.addTarget(self, action: #selector(doneBtnClick), for: .touchUpInside)
-        btn.layer.masksToBounds = true
-        btn.layer.cornerRadius = 5
-        return btn
+    private lazy var textBackgroundBtn: UIButton = {
+        let icon = UIImage.he.getImage("ic_edit_background") ?? UIImage(systemName: "rectangle.fill")
+        let bt = UIButton(type: .custom)
+        bt.setImage(icon?.withTintColor(.white).withRenderingMode(.alwaysOriginal), for: .normal)
+        bt.setImage(icon?.withTintColor(UIColor.he.rgba(71, 120, 222)), for: .highlighted)
+        bt.setImage(icon?.withTintColor(UIColor.he.rgba(71, 120, 222)), for: .selected)
+        bt.contentEdgeInsets = UIEdgeInsets(top: 12, left: 14, bottom: 12, right: 14)
+        return bt
     }()
+    
+    private lazy var topToolBar = HETopConfirmBarView()
     
     private lazy var textView: UITextView = {
         let textView = UITextView()
@@ -58,10 +85,10 @@ class HEInputTextViewController: UIViewController {
         textView.returnKeyType = .done
         textView.delegate = self
         textView.backgroundColor = .clear
-        textView.tintColor = .he.editDoneBtnBgColor
-        textView.textColor = currentColor
+        textView.textAlignment = .center
+        textView.textColor = currentTextColor
         textView.text = text
-        textView.font = font
+        textView.font = currentFont
         textView.textContainerInset = UIEdgeInsets(top: 8, left: 10, bottom: 8, right: 10)
         textView.textContainer.lineFragmentPadding = 0
         textView.layoutManager.delegate = self
@@ -75,26 +102,18 @@ class HEInputTextViewController: UIViewController {
         height: Self.toolViewHeight
     ))
     
-    private lazy var textStyleBtn: UIButton = {
-        let btn = UIButton(type: .custom)
-        btn.addTarget(self, action: #selector(textStyleBtnClick), for: .touchUpInside)
-        return btn
-    }()
-    
-    private lazy var collectionView: UICollectionView = {
+    private lazy var toolCollView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
-        layout.itemSize = CGSize(width: 36, height: 36)
+        layout.estimatedItemSize = Self.toolCellSize
         layout.minimumLineSpacing = 0
         layout.minimumInteritemSpacing = 0
         layout.scrollDirection = .horizontal
-        let inset = (Self.toolViewHeight - layout.itemSize.height) / 2
-        layout.sectionInset = UIEdgeInsets(top: inset, left: 0, bottom: inset, right: 0)
-        
+        layout.sectionInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
         let collectionView = UICollectionView(
             frame: .zero,
             collectionViewLayout: layout
         )
-        collectionView.backgroundColor = .clear
+        collectionView.backgroundColor = .black.withAlphaComponent(0.62)
         collectionView.delegate = self
         collectionView.dataSource = self
         HEDrawColorCell.he.register(collectionView)
@@ -108,10 +127,7 @@ class HEInputTextViewController: UIViewController {
     
     private let textLayerRadius: CGFloat = 10
     
-    private let maxTextCount = 100
-    
-    /// text, textColor, font, image, style
-    var endInput: ((String, UIColor, UIFont, UIImage?, HEInputTextStyle) -> Void)?
+    private let maxTextCount = 50
     
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
         deviceIsiPhone() ? .portrait : .all
@@ -121,22 +137,27 @@ class HEInputTextViewController: UIViewController {
         return true
     }
     
-    init(image: UIImage?, text: String? = nil, font: UIFont? = nil, textColor: UIColor? = nil, style: HEInputTextStyle = .normal) {
+    private var fillStyle: HEImageEditorConfiguration.TextStickerFillStyle
+    
+    init(image: UIImage?, text: String? = nil, font: UIFont? = nil, textColor: UIColor? = nil, backgroundTextColor: UIColor? = nil) {
         self.image = image
         self.text = text ?? ""
         if let font = font {
-            self.font = font.withSize(HETextStickerView.fontSize)
+            self.currentFont = font.withSize(HETextStickerView.fontSize)
         }
         if let textColor = textColor {
-            currentColor = textColor
+            currentTextColor = textColor
         } else {
-            if !HEImageEditorConfiguration.default().textStickerTextColors.contains(HEImageEditorConfiguration.default().textStickerDefaultTextColor) {
-                currentColor = HEImageEditorConfiguration.default().textStickerTextColors.first!
+            let defColor = HEImageEditorConfiguration.default().textStickerDefaultTextColor
+            if HEImageEditorConfiguration.default().textStickerTextColors.contains(defColor) {
+                currentTextColor = defColor
             } else {
-                currentColor = HEImageEditorConfiguration.default().textStickerDefaultTextColor
+                currentTextColor = HEImageEditorConfiguration.default().textStickerTextColors.first ?? .white
             }
         }
-        self.textStyle = style
+        
+        self.currentBackgroundColor = backgroundTextColor ?? HEImageEditorConfiguration.default().textStickerDefaultBackgroundColor
+        self.fillStyle = HEImageEditorConfiguration.default().textStickerFillStyle
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -177,31 +198,23 @@ class HEInputTextViewController: UIViewController {
         
         coverView.frame = bgImageView.bounds
         
-        let btnY = max(deviceSafeAreaInsets().top, 20) + 20
-        let cancelBtnW = localLanguageTextValue(.cancel).he.boundingRect(font: .systemFont(ofSize: 17), limitSize: CGSize(width: .greatestFiniteMagnitude, height: HEImageEditorLayout.bottomToolBtnHeight)).width + 20
-        cancelBtn.frame = CGRect(x: 15, y: btnY, width: cancelBtnW, height: HEImageEditorLayout.bottomToolBtnHeight)
+        let insets = view.safeAreaInsets
+        topToolBar.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: 48 + insets.top)
         
-        let doneBtnW = localLanguageTextValue(.done).he.boundingRect(font: .systemFont(ofSize: 17), limitSize: CGSize(width: .greatestFiniteMagnitude, height: HEImageEditorLayout.bottomToolBtnHeight)).width + 20
-        doneBtn.frame = CGRect(x: view.he.width - 20 - doneBtnW, y: btnY, width: doneBtnW, height: HEImageEditorLayout.bottomToolBtnHeight)
         
-        textView.frame = CGRect(x: 10, y: doneBtn.he.bottom + 30, width: view.he.width - 20, height: 200)
+        textView.frame = CGRect(x: 10,
+                                y: topToolBar.frame.maxY + 30,
+                                width: view.frame.width - 20,
+                                height: 200)
+        textView.drawDebugOutline()
         
-        textStyleBtn.frame = CGRect(
-            x: 12,
+        toolCollView.frame = CGRect(
+            x: 0,
             y: 0,
-            width: 50,
-            height: Self.toolViewHeight
-        )
-        collectionView.frame = CGRect(
-            x: textStyleBtn.he.right + 5,
-            y: 0,
-            width: view.he.width - textStyleBtn.he.right - 5 - 24,
+            width: view.he.width,
             height: Self.toolViewHeight
         )
         
-        if let index = HEImageEditorConfiguration.default().textStickerTextColors.firstIndex(where: { $0 == self.currentColor }) {
-            collectionView.scrollToItem(at: IndexPath(row: index, section: 0), at: .centeredHorizontally, animated: false)
-        }
     }
     
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
@@ -209,56 +222,100 @@ class HEInputTextViewController: UIViewController {
         shouldLayout = true
     }
     
-    func setupUI() {
+    private func setupUI() {
         view.backgroundColor = .black
         
         view.addSubview(bgImageView)
         bgImageView.addSubview(coverView)
         
-        view.addSubview(cancelBtn)
-        view.addSubview(doneBtn)
+        view.addSubview(topToolBar)
+        topToolBar.addCenterView(textColorBtn)
+        topToolBar.addCenterView(textBackgroundBtn)
+        topToolBar.cancelClickCallback = { [weak self] in self?.cancelBtnClick() }
+        topToolBar.confirmClickCallback = { [weak self] in self?.doneBtnClick() }
+        textColorBtn.addTarget(self, action: #selector(textColorBtnClick), for: .touchUpInside)
+        textBackgroundBtn.addTarget(self, action: #selector(textBackgroundBtnClick), for: .touchUpInside)
+        
         view.addSubview(textView)
         view.addSubview(toolView)
-        toolView.addSubview(textStyleBtn)
-        toolView.addSubview(collectionView)
-        
-        textView.textAlignment = .left
+        toolView.addSubview(toolCollView)
         
         refreshTextViewUI()
     }
     
     private func refreshTextViewUI() {
-        textStyleBtn.setImage(textStyle.btnImage, for: .normal)
-        textStyleBtn.setImage(textStyle.btnImage, for: .highlighted)
-        
+        guard isViewLoaded else { return }
         drawTextBackground()
-        
-        guard textStyle == .bg else {
-            textView.textColor = currentColor
+        textView.textColor = currentTextColor
+    }
+    
+   
+    @objc private func textColorBtnClick() {
+        if self.selectedTool == .textColor {
+            self.selectedTool = nil
+            self.hideToolsView()
             return
         }
+        self.selectedTool = .textColor
         
-        if currentColor == .white {
-            textView.textColor = .black
-        } else if currentColor == .black {
-            textView.textColor = .white
-        } else {
-            textView.textColor = .white
+    }
+    
+    @objc private func textBackgroundBtnClick() {
+        if self.selectedTool == .textBackground {
+            self.selectedTool = nil
+            self.hideToolsView()
+            return
+        }
+        self.selectedTool = .textBackground
+    }
+    
+    
+    private func getColorSource() -> [UIColor] {
+        if selectedTool == .textColor {
+            return HEImageEditorConfiguration.default().textStickerTextColors
+        }
+        return HEImageEditorConfiguration.default().textStickerBackgroundColors
+    }
+    
+    private func updateCollContentInset() {
+        let toolsCount = CGFloat(getColorSource().count)
+        let minimumWidth = toolsCount * Self.toolCellSize.width
+        let fullSpace = self.view.frame.width
+        var inset: CGFloat = 0
+        if minimumWidth < fullSpace {
+            let remain = fullSpace - minimumWidth
+            inset = remain / 2
+        }
+        self.toolCollView.contentInset = UIEdgeInsets(top: 0, left: inset, bottom: 0, right: inset)
+    }
+    
+    private func hideToolsView() {
+        toolCollView.isHidden = true
+    }
+    
+    private func showToolsView() {
+        updateCollContentInset()
+        toolCollView.reloadData()
+        toolCollView.isHidden = false
+        
+        var index: Int?
+        if selectedTool == .textColor {
+            index = getColorSource().firstIndex(where: { $0 == currentTextColor })
+        } else if selectedTool == .textBackground {
+            index = getColorSource().firstIndex(where: { $0 == currentBackgroundColor })
+        }
+        if let index {
+            DispatchQueue.main.async { [weak self] in
+                self?.toolCollView.scrollToItem(at: IndexPath(row: index, section: 0), at: .centeredHorizontally, animated: true)
+            }
         }
     }
     
-    @objc private func textStyleBtnClick() {
-        if textStyle == .normal {
-            textStyle = .bg
-        } else {
-            textStyle = .normal
-        }
-        
-        refreshTextViewUI()
-    }
     
     @objc func cancelBtnClick() {
-        dismiss(animated: true, completion: nil)
+        dismiss(animated: true, completion: { [weak self] in
+            self?.delegate?.inputTextViewControllerDidCancel()
+        })
     }
     
     @objc func doneBtnClick() {
@@ -272,7 +329,7 @@ class HEInputTextViewController: UIViewController {
                 if NSStringFromClass(subview.classForCoder) == "_UITextContainerView" {
                     let size = textView.sizeThatFits(subview.frame.size)
                     image = UIGraphicsImageRenderer.he.renderImage(size: size) { context in
-                        if textStyle == .bg {
+                        if currentBackgroundColor != .clear {
                             textLayer.render(in: context)
                         }
                         
@@ -282,7 +339,8 @@ class HEInputTextViewController: UIViewController {
             }
         }
         
-        endInput?(textView.text, currentColor, font, image, textStyle)
+        delegate?.inputTextViewController(self, didInput: textView.text, textColor: currentTextColor, backgroundColor: currentBackgroundColor, font: currentFont, image: image)
+        
         dismiss(animated: true, completion: nil)
     }
     
@@ -312,7 +370,7 @@ class HEInputTextViewController: UIViewController {
         
         let toolViewFrame = CGRect(
             x: 0,
-            y: view.he.height - deviceSafeAreaInsets().bottom - Self.toolViewHeight,
+            y: view.he.height - view.safeAreaInsets.bottom - Self.toolViewHeight,
             width: view.he.width,
             height: Self.toolViewHeight
         )
@@ -329,27 +387,36 @@ class HEInputTextViewController: UIViewController {
 
 extension HEInputTextViewController: UICollectionViewDelegate, UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return HEImageEditorConfiguration.default().textStickerTextColors.count
+        return getColorSource().count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HEDrawColorCell.he.identifier, for: indexPath) as! HEDrawColorCell
-        
-        let c = HEImageEditorConfiguration.default().textStickerTextColors[indexPath.row]
-        cell.color = c
-        if c == currentColor {
-            cell.bgWhiteView.layer.transform = CATransform3DMakeScale(1.33, 1.33, 1)
-            cell.colorView.layer.transform = CATransform3DMakeScale(1.2, 1.2, 1)
+        if selectedTool == .textColor {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HETextColorCell.he.identifier, for: indexPath) as! HETextColorCell
+            
+            let c = getColorSource()[indexPath.row]
+            cell.color = c
+            return cell
+        } else if selectedTool == .textBackground {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HETextBackgroundColorCell.he.identifier, for: indexPath) as! HETextBackgroundColorCell
+            
+            let c = getColorSource()[indexPath.row]
+            cell.color = c
+            return cell
         } else {
-            cell.bgWhiteView.layer.transform = CATransform3DIdentity
-            cell.colorView.layer.transform = CATransform3DIdentity
+            return UICollectionViewCell()
         }
-        
-        return cell
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        currentColor = HEImageEditorConfiguration.default().textStickerTextColors[indexPath.row]
+        let color = getColorSource()[indexPath.row]
+        if selectedTool == .textColor {
+            currentTextColor = color
+        } else if selectedTool == .textBackground {
+            currentBackgroundColor = color
+        } else {
+            return
+        }
         collectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
         collectionView.reloadData()
     }
@@ -359,57 +426,61 @@ extension HEInputTextViewController: UICollectionViewDelegate, UICollectionViewD
 
 extension HEInputTextViewController {
     private func drawTextBackground() {
-        guard textStyle == .bg, !textView.text.isEmpty else {
+        guard !textView.text.isEmpty else {
             textLayer.removeFromSuperlayer()
             return
         }
         
-        let rects = calculateTextRects()
-        
         let path = UIBezierPath()
-        for (index, rect) in rects.enumerated() {
-            if index == 0 {
-                path.move(to: CGPoint(x: rect.minX, y: rect.minY + textLayerRadius))
-                path.addArc(withCenter: CGPoint(x: rect.minX + textLayerRadius, y: rect.minY + textLayerRadius), radius: textLayerRadius, startAngle: .pi, endAngle: .pi * 1.5, clockwise: true)
-                path.addLine(to: CGPoint(x: rect.maxX - textLayerRadius, y: rect.minY))
-                path.addArc(withCenter: CGPoint(x: rect.maxX - textLayerRadius, y: rect.minY + textLayerRadius), radius: textLayerRadius, startAngle: .pi * 1.5, endAngle: .pi * 2, clockwise: true)
-            } else {
-                let preRect = rects[index - 1]
-                if rect.maxX > preRect.maxX {
-                    path.addLine(to: CGPoint(x: preRect.maxX, y: rect.minY - textLayerRadius))
-                    path.addArc(withCenter: CGPoint(x: preRect.maxX + textLayerRadius, y: rect.minY - textLayerRadius), radius: textLayerRadius, startAngle: -.pi, endAngle: -.pi * 1.5, clockwise: false)
+        if fillStyle == .area {
+            
+        } else {
+            // 텍스트 글자에 맞춰 배경 생성
+            let rects = calculateTextRectsByChar()
+            for (index, rect) in rects.enumerated() {
+                if index == 0 {
+                    path.move(to: CGPoint(x: rect.minX, y: rect.minY + textLayerRadius))
+                    path.addArc(withCenter: CGPoint(x: rect.minX + textLayerRadius, y: rect.minY + textLayerRadius), radius: textLayerRadius, startAngle: .pi, endAngle: .pi * 1.5, clockwise: true)
                     path.addLine(to: CGPoint(x: rect.maxX - textLayerRadius, y: rect.minY))
                     path.addArc(withCenter: CGPoint(x: rect.maxX - textLayerRadius, y: rect.minY + textLayerRadius), radius: textLayerRadius, startAngle: .pi * 1.5, endAngle: .pi * 2, clockwise: true)
-                } else if rect.maxX < preRect.maxX {
-                    path.addLine(to: CGPoint(x: preRect.maxX, y: preRect.maxY - textLayerRadius))
-                    path.addArc(withCenter: CGPoint(x: preRect.maxX - textLayerRadius, y: preRect.maxY - textLayerRadius), radius: textLayerRadius, startAngle: 0, endAngle: .pi / 2, clockwise: true)
-                    path.addLine(to: CGPoint(x: rect.maxX + textLayerRadius, y: preRect.maxY))
-                    path.addArc(withCenter: CGPoint(x: rect.maxX + textLayerRadius, y: preRect.maxY + textLayerRadius), radius: textLayerRadius, startAngle: -.pi / 2, endAngle: -.pi, clockwise: false)
                 } else {
-                    path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY + textLayerRadius))
+                    let preRect = rects[index - 1]
+                    if rect.maxX > preRect.maxX {
+                        path.addLine(to: CGPoint(x: preRect.maxX, y: rect.minY - textLayerRadius))
+                        path.addArc(withCenter: CGPoint(x: preRect.maxX + textLayerRadius, y: rect.minY - textLayerRadius), radius: textLayerRadius, startAngle: -.pi, endAngle: -.pi * 1.5, clockwise: false)
+                        path.addLine(to: CGPoint(x: rect.maxX - textLayerRadius, y: rect.minY))
+                        path.addArc(withCenter: CGPoint(x: rect.maxX - textLayerRadius, y: rect.minY + textLayerRadius), radius: textLayerRadius, startAngle: .pi * 1.5, endAngle: .pi * 2, clockwise: true)
+                    } else if rect.maxX < preRect.maxX {
+                        path.addLine(to: CGPoint(x: preRect.maxX, y: preRect.maxY - textLayerRadius))
+                        path.addArc(withCenter: CGPoint(x: preRect.maxX - textLayerRadius, y: preRect.maxY - textLayerRadius), radius: textLayerRadius, startAngle: 0, endAngle: .pi / 2, clockwise: true)
+                        path.addLine(to: CGPoint(x: rect.maxX + textLayerRadius, y: preRect.maxY))
+                        path.addArc(withCenter: CGPoint(x: rect.maxX + textLayerRadius, y: preRect.maxY + textLayerRadius), radius: textLayerRadius, startAngle: -.pi / 2, endAngle: -.pi, clockwise: false)
+                    } else {
+                        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY + textLayerRadius))
+                    }
                 }
-            }
-            
-            if index == rects.count - 1 {
-                path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - textLayerRadius))
-                path.addArc(withCenter: CGPoint(x: rect.maxX - textLayerRadius, y: rect.maxY - textLayerRadius), radius: textLayerRadius, startAngle: 0, endAngle: .pi / 2, clockwise: true)
-                path.addLine(to: CGPoint(x: rect.minX + textLayerRadius, y: rect.maxY))
-                path.addArc(withCenter: CGPoint(x: rect.minX + textLayerRadius, y: rect.maxY - textLayerRadius), radius: textLayerRadius, startAngle: .pi / 2, endAngle: .pi, clockwise: true)
                 
-                let firstRect = rects[0]
-                path.addLine(to: CGPoint(x: firstRect.minX, y: firstRect.minY + textLayerRadius))
-                path.close()
+                if index == rects.count - 1 {
+                    path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - textLayerRadius))
+                    path.addArc(withCenter: CGPoint(x: rect.maxX - textLayerRadius, y: rect.maxY - textLayerRadius), radius: textLayerRadius, startAngle: 0, endAngle: .pi / 2, clockwise: true)
+                    path.addLine(to: CGPoint(x: rect.minX + textLayerRadius, y: rect.maxY))
+                    path.addArc(withCenter: CGPoint(x: rect.minX + textLayerRadius, y: rect.maxY - textLayerRadius), radius: textLayerRadius, startAngle: .pi / 2, endAngle: .pi, clockwise: true)
+                    
+                    let firstRect = rects[0]
+                    path.addLine(to: CGPoint(x: firstRect.minX, y: firstRect.minY + textLayerRadius))
+                    path.close()
+                }
             }
         }
         
         textLayer.path = path.cgPath
-        textLayer.fillColor = currentColor.cgColor
+        textLayer.fillColor = currentBackgroundColor.cgColor
         if textLayer.superlayer == nil {
             textView.layer.insertSublayer(textLayer, at: 0)
         }
     }
     
-    private func calculateTextRects() -> [CGRect] {
+    private func calculateTextRectsByChar() -> [CGRect] {
         let layoutManager = textView.layoutManager
         
         let range = layoutManager.glyphRange(forCharacterRange: NSMakeRange(0, textView.text.utf16.count), actualCharacterRange: nil)
@@ -445,7 +516,7 @@ extension HEInputTextViewController {
         var preChanged = false
         var currChanged = false
         
-        // 当前rect宽度大于上方的rect，但差值小于2倍圆角
+        // 현재 직사각형 너비는 위의 직사각형 너비보다 크지만 차이는 preRect의 2배 미만입니다.
         if currRect.width > preRect.width, currRect.width - preRect.width < 2 * textLayerRadius {
             var size = preRect.size
             size.width = currRect.width
@@ -502,20 +573,6 @@ extension HEInputTextViewController: NSLayoutManagerDelegate {
         }
         
         drawTextBackground()
-    }
-}
-
-public enum HEInputTextStyle {
-    case normal
-    case bg
-    
-    fileprivate var btnImage: UIImage? {
-        switch self {
-        case .normal:
-            return .he.getImage("zl_input_font")
-        case .bg:
-            return .he.getImage("zl_input_font_bg")
-        }
     }
 }
 

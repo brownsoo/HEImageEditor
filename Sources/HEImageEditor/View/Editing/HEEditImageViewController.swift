@@ -45,7 +45,7 @@ public struct HEAdjustStatus {
 
 public typealias HEEditImageBottomToolViewBuilder = (HEEditImageView) -> (toolView: HEEditImageBottomView, height: CGFloat)
 
-public typealias HEEditImageTopToolViewBuilder = (HEEditImageView) -> (toolView: HEMainTopBarView, height: CGFloat)
+public typealias HEEditImageTopToolViewBuilder = (HEEditImageView) -> (toolView: HETopBarView, height: CGFloat)
 
 open class HEEditImageViewController: UIViewController, HEEditImageView {
     static let maxDrawLineImageWidth: CGFloat = 600
@@ -91,7 +91,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         return view
     }()
     
-    private var topBarView: HEMainTopBarView?
+    private var topBarView: HETopBarView?
     private var topBarViewHeight: CGFloat = 0
     
     private lazy var topShadowLayer: CAGradientLayer = {
@@ -250,27 +250,19 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         }
     }
     
-    var selectedAdjustTool: HEImageEditorConfiguration.AdjustTool?
-    
-    let drawColors: [UIColor]
-    
-    var currentDrawColor = HEImageEditorConfiguration.default().defaultDrawColor
-    
-    var drawPaths: [HEDrawPath]
-    
-    var drawLineWidth: CGFloat = 6
-    
-    
-    
-    var thumbnailFilterImages: [UIImage] = []
+    private var selectedAdjustTool: HEImageEditorConfiguration.AdjustTool?
+    private let drawColors: [UIColor]
+    private var currentDrawColor = HEImageEditorConfiguration.default().defaultDrawColor
+    private var drawPaths: [HEDrawPath]
+    private var drawLineWidth: CGFloat = 6
+    private var thumbnailFilterImages: [UIImage] = []
     
     // Cache the filter image of original image
-    var filterImages: [String: UIImage] = [:]
+    private var filterImages: [String: UIImage] = [:]
     
-    var currentFilter: HEFilter
+    private var currentFilter: HEFilter
     
-    
-    
+    private var currentEditController: UIViewController?
     private var isScrolling = false
     private var shouldLayout = true
     private var imageStickerContainerIsHidden = true
@@ -410,7 +402,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 }
                 switch type {
                 case .draw:
-                    editView.drawBtnClick()
+                    editView.startDrawing()
                 case .clip:
                     editView.startClipping()
                 case .imageSticker:
@@ -418,11 +410,11 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 case .textSticker:
                     editView.startTextSticker()
                 case .mosaicDraw:
-                    editView.mosaicBtnClick()
+                    editView.startMosaicDrawing()
                 case .filter:
-                    editView.filterBtnClick()
+                    editView.startFiltering()
                 case .adjust:
-                    editView.adjustBtnClick()
+                    editView.startAdjusting()
                 }
             }
             return (toolbar, 76)
@@ -796,7 +788,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     /// point로 스티커 찾기
     ///
     /// - point 는 컨트롤러의 view 좌표계
-    func findResponderSticker(_ point: CGPoint) -> UIView? {
+    private func findResponderSticker(_ point: CGPoint) -> UIView? {
         for sticker in stickersContainer.subviews.reversed() {
             let rect = stickersContainer.convert(sticker.frame, to: view)
             if rect.contains(point) {
@@ -827,19 +819,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     private var isInSubEditController: Bool {
         self.currentEditController != nil
-    }
-    
-    public func drawBtnClick() {
-        let isSelected = selectedTool != .draw
-        if isSelected {
-            selectedTool = .draw
-        } else {
-            selectedTool = nil
-        }
-        
-        setDrawViews(hidden: !isSelected)
-        setFilterViews(hidden: true)
-        setAdjustViews(hidden: true)
     }
     
     @objc private func eraserBtnClick() {
@@ -934,44 +913,19 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         setAdjustViews(hidden: true)
     }
     
-    private var currentEditController: UIViewController?
-    
-    private func addToEditController(_ target: UIViewController) {
-        if let exist = self.currentEditController {
-            exist.willMove(toParent: nil)
-            exist.view.removeFromSuperview()
-            exist.removeFromParent()
-        }
-        self.addChild(target)
-        subEditingContainer.addSubview(target.view)
-        target.view.frame = subEditingContainer.bounds
-        target.didMove(toParent: self)
-        self.currentEditController = target
-    }
-    
-    private func removeEditController() {
-        if let exist = self.currentEditController {
-            exist.willMove(toParent: nil)
-            exist.view.removeFromSuperview()
-            exist.removeFromParent()
-        }
-        self.currentEditController = nil
-    }
-    
-    
-    private func clipImage(status: HEClipStatus) {
-        let oldAngle = currentClipStatus.angle
-        let oldContainerSize = stickersContainer.frame.size
-        if oldAngle != status.angle {
-            currentClipStatus.angle = status.angle
-            rotationImageView()
+    public func startDrawing() {
+        let isSelected = selectedTool != .draw
+        if isSelected {
+            selectedTool = .draw
+        } else {
+            selectedTool = nil
         }
         
-        currentClipStatus.editRect = status.editRect
-        currentClipStatus.ratio = status.ratio
-        resetContainerViewFrame()
-        recalculateStickersFrame(oldContainerSize, oldAngle, status.angle)
+        setDrawViews(hidden: !isSelected)
+        setFilterViews(hidden: true)
+        setAdjustViews(hidden: true)
     }
+    
     
     // MARK: -- 이미지 스티커 시작
     public func startImageSticker() {
@@ -1001,9 +955,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     // MARK: -- startTextSticker
     public func startTextSticker() {
-        showInputTextVC(font: HEImageEditorConfiguration.default().textStickerDefaultFont) { [weak self] text, textColor, font, image, style in
-            self?.addTextStickersView(text, textColor: textColor, font: font, image: image, style: style)
-        }
+        showInputTextVC(font: HEImageEditorConfiguration.default().textStickerDefaultFont)
         
         selectedTool = nil
         setDrawViews(hidden: true)
@@ -1011,7 +963,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         setAdjustViews(hidden: true)
     }
     
-    public func mosaicBtnClick() {
+    public func startMosaicDrawing() {
         let isSelected = selectedTool != .mosaicDraw
         if isSelected {
             selectedTool = .mosaicDraw
@@ -1025,7 +977,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         setAdjustViews(hidden: true)
     }
     
-    public func filterBtnClick() {
+    public func startFiltering() {
         let isSelected = selectedTool != .filter
         if isSelected {
             selectedTool = .filter
@@ -1038,7 +990,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         setAdjustViews(hidden: true)
     }
     
-    public func adjustBtnClick() {
+    public func startAdjusting() {
         let isSelected = selectedTool != .adjust
         if isSelected {
             selectedTool = .adjust
@@ -1068,7 +1020,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         adjustSlider?.isHidden = hidden
     }
     
-    func changeAdjustTool(_ tool: HEImageEditorConfiguration.AdjustTool) {
+    private func changeAdjustTool(_ tool: HEImageEditorConfiguration.AdjustTool) {
         selectedAdjustTool = tool
         
         switch tool {
@@ -1154,8 +1106,48 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         actionManager.redoAction()
     }
     
+    // MARK: 여기 아래는 대부분 내부 함수들 --
+    
+    private func addToEditController(_ target: UIViewController) {
+        if let exist = self.currentEditController {
+            exist.willMove(toParent: nil)
+            exist.view.removeFromSuperview()
+            exist.removeFromParent()
+        }
+        self.addChild(target)
+        subEditingContainer.addSubview(target.view)
+        target.view.frame = subEditingContainer.bounds
+        target.didMove(toParent: self)
+        self.currentEditController = target
+    }
+    
+    private func removeEditController() {
+        if let exist = self.currentEditController {
+            exist.willMove(toParent: nil)
+            exist.view.removeFromSuperview()
+            exist.removeFromParent()
+        }
+        self.currentEditController = nil
+    }
+    
+    
+    private func clipImage(status: HEClipStatus) {
+        let oldAngle = currentClipStatus.angle
+        let oldContainerSize = stickersContainer.frame.size
+        if oldAngle != status.angle {
+            currentClipStatus.angle = status.angle
+            rotationImageView()
+        }
+        
+        currentClipStatus.editRect = status.editRect
+        currentClipStatus.ratio = status.ratio
+        resetContainerViewFrame()
+        recalculateStickersFrame(oldContainerSize, oldAngle, status.angle)
+    }
+    
+    
     // TODO: 제외
-    @objc func tapAction(_ tap: UITapGestureRecognizer) {
+    @objc private func tapAction(_ tap: UITapGestureRecognizer) {
         if bottomToolViewContainer.alpha == 1 {
             setToolView(show: false)
         } else {
@@ -1443,7 +1435,10 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         toolViewStateTimer = nil
     }
     
-    private func showInputTextVC(_ text: String? = nil, textColor: UIColor? = nil, font: UIFont? = nil, style: HEInputTextStyle = .normal, completion: @escaping (String, UIColor, UIFont, UIImage?, HEInputTextStyle) -> Void) {
+    private func showInputTextVC(_ text: String? = nil,
+                                 textColor: UIColor? = nil,
+                                 backgroundTextColor: UIColor? = nil,
+                                 font: UIFont? = nil) {
         var bgImage: UIImage?
         autoreleasepool {
             // Calculate image displayed frame on the screen.
@@ -1462,18 +1457,15 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 .he.clipImage(angle: 0, editRect: r, isCircle: isCircle)
         }
         
-        let vc = HEInputTextViewController(image: bgImage, text: text, font: font, textColor: textColor, style: style)
-        
-        vc.endInput = { text, textColor, font, image, style in
-            completion(text, textColor, font, image, style)
-        }
+        let vc = HEInputTextViewController(image: bgImage, text: text, font: font, textColor: textColor, backgroundTextColor: backgroundTextColor)
+        vc.delegate = self
         
         vc.modalPresentationStyle = .fullScreen
         showDetailViewController(vc, sender: nil)
     }
     
     
-    // TODO: 스티커 갯수 제한, 제스쳐 100도 문제
+    // TODO: 스티커 갯수 제한, 제스쳐 100 개 문제
     
     // MARK: 스티커를 뷰로 추가 --
     
@@ -2123,6 +2115,18 @@ extension HEEditImageViewController: UICollectionViewDataSource, UICollectionVie
         collectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
         collectionView.reloadData()
     }
+}
+
+extension HEEditImageViewController: HEInputTextViewControllerDelegate {
+    func inputTextViewController(_ controller: HEInputTextViewController, didInput text: String, textColor: UIColor, backgroundColor: UIColor, font: UIFont, image: UIImage?) {
+        
+        self.addTextStickersView(text, textColor: textColor, font: font, image: image, style: style)
+    }
+    
+    func inputTextViewControllerDidCancel() {
+    }
+    
+    
 }
 
 

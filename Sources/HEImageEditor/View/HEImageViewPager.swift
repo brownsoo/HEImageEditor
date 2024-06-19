@@ -44,7 +44,7 @@ public class HEImageViewPagerController: UIViewController {
     }
     
     func makeTopBarView() -> (HEPassThroughView, CGFloat) {
-        let topbar = HEMainTopBarView()
+        let topbar = HETopBarView()
         let cancelButton = UIButton()
         cancelButton.also { it in
             let icon = UIImage.he.getImage("ic_arrow_right") ?? UIImage(systemName: "chevron.left")

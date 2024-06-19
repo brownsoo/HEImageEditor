@@ -62,7 +62,7 @@ class HEClipActionToolView: UIView {
         clipActionColView.backgroundColor = .clear
         clipActionColView.isHidden = actionItems.count < 1
         clipActionColView.showsHorizontalScrollIndicator = false
-        clipActionColView.backgroundColor = .yellow.withAlphaComponent(0.1)
+        clipActionColView.backgroundColor = .black.withAlphaComponent(0.7)
         self.addSubview(clipActionColView)
         clipActionColView.register(ClipActionCell.self, forCellWithReuseIdentifier: ClipActionCell.he.identifier)
         clipActionColView.register(ClipActionSeparatorCell.self,  forCellWithReuseIdentifier: ClipActionSeparatorCell.he.identifier)

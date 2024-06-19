@@ -209,7 +209,7 @@ extension ViewController {
     // ex
     private func makeTopToolBuilder() -> HEEditImageTopToolViewBuilder {
         return { [weak self] editView in
-            let toolView = HEMainTopBarView()
+            let toolView = HETopBarView()
             if let self {
                 toolView.addLeadingView(editCancelBtn)
                 toolView.addTrailingView(editUndoBtn)
@@ -362,7 +362,7 @@ extension ViewController {
             make.centerY.equalTo(textStickerToolLabel)
         }
         
-        let mosaicToolLabel = createLabel("Mosaic")
+        let mosaicToolLabel = createLabel("Mosaic Draw")
         editImageToolView.addSubview(mosaicToolLabel)
         mosaicToolLabel.snp.makeConstraints { make in
             make.top.equalTo(imageStickerToolLabel.snp.bottom).offset(spacing)
@@ -427,6 +427,7 @@ extension ViewController {
         resultImageView = UIImageView()
         resultImageView.contentMode = .scaleAspectFit
         resultImageView.clipsToBounds = true
+        resultImageView.backgroundColor = .systemGray
         view.addSubview(resultImageView)
         resultImageView.snp.makeConstraints { make in
             make.top.equalTo(self.pickImageBtn.snp.bottom).offset(spacing)

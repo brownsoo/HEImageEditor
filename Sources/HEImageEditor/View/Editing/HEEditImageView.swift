@@ -28,34 +28,15 @@ public protocol HEEditImageView: AnyObject {
     func startClipping()
     func startImageSticker()
     func startTextSticker()
-    func mosaicBtnClick()
-    func filterBtnClick()
-    func adjustBtnClick()
-    func drawBtnClick()
+    func startMosaicDrawing()
+    func startDrawing()
+    func startFiltering()
+    func startAdjusting()
     
     func stopCurrentEditing()
     
     func addActionChangedListener<T: HEEditorActionListener>(_ listener: T)
     func removeActionChangedListener<T: HEEditorActionListener>(_ listener: T)
     func clearAllActionChangedListeners()
-//    var image: HEImage { get }
-//    var effects: [HEEffect] { get }
-//    var selectedEffect: HEEffect? { get }
-//    
-//    func setImage(_ image: HEImage)
-//    func setImage(_ image: UIImage)
-//    func setImage(asset: PHAsset)
-//    
-//    func addEffect(effect: HEEffect)
-//    func removeEffect(effect: HEEffect)
-//    func applyEffects(effects: [HEEffect])
-//    func resetEffects()
-//    func bringEffectToFront(effect: HEEffect)
-//    func selectEffectAt(x: CGFloat, y: CGFloat) -> HEEffect?
     
-//    func rotate(radian: CGFloat)
-//    func crop(rect: CGRect)
-    
-    ///이미지 추출
-    //func export(destination: URL) async throws -> URL
 }

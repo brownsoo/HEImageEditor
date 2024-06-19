@@ -76,7 +76,7 @@ open class HEEditImageBottomView: UIView {
         self.drawDebugOutline()
     }
     
-    private func calculateCellWidth() {
+    private func updateCollContentInset() {
         let toolsCount = CGFloat(tools.count)
         if toolsCount < 1 {
             return
@@ -96,7 +96,6 @@ open class HEEditImageBottomView: UIView {
         }
         let toolsWidth = (Self.itemSize.width + interitemSpacing) * toolsCount - interitemSpacing
         let inset = (fullSpace - toolsWidth) / 2
-        trace("interitemSpacing \(interitemSpacing)")
         self.toolCollectionView.contentInset = UIEdgeInsets(top: 0,
                                                             left: max(inset, Self.padding.left),
                                                             bottom: 0,
@@ -105,7 +104,7 @@ open class HEEditImageBottomView: UIView {
     
     open override func layoutSubviews() {
         super.layoutSubviews()
-        self.calculateCellWidth()
+        self.updateCollContentInset()
     }
 }
 
@@ -233,8 +232,6 @@ class HEEditToolCell: UICollectionViewCell {
             titleLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -4),
             titleLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
         ])
-        
-        contentView.backgroundColor = .yellow.withAlphaComponent(0.3)
     }
     
     required init?(coder: NSCoder) {

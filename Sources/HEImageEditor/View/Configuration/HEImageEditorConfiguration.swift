@@ -22,6 +22,29 @@ public class HEImageEditorConfiguration: NSObject {
         .he.rgba(127, 127, 127)
     ]
     
+    @objc public var textStickerDefaultTextColor = UIColor.white
+    private static let defaultTextColors: [UIColor] = [
+        .white,
+        .black,
+        .he.rgba(255, 0, 0),
+        .he.rgba(254, 107, 2),
+        .he.rgba(254, 184, 0),
+        .he.rgba(16, 198, 35),
+        .he.rgba(6, 106, 254),
+        .he.rgba(190, 0, 255)
+    ]
+    
+    @objc public var textStickerDefaultBackgroundColor = UIColor.clear
+    private static let defaultTextBackgroundColors: [UIColor] = [
+        .clear,
+        .he.rgba(104, 204, 254),
+        .he.rgba(254, 124, 62),
+        .he.rgba(524, 184, 0),
+        .he.rgba(119, 224, 80),
+        .he.rgba(255, 109, 130),
+        .he.rgba(141, 141, 141)
+    ]
+    
     @objc public class func `default`() -> HEImageEditorConfiguration {
         return HEImageEditorConfiguration.single
     }
@@ -80,12 +103,12 @@ public class HEImageEditorConfiguration: NSObject {
         }
     }
     
-    private var _textStickerTextColors = HEImageEditorConfiguration.defaultColors
+    private var _textStickerTextColors = HEImageEditorConfiguration.defaultTextColors
     /// Text sticker colors for image editor.
     @objc public var textStickerTextColors: [UIColor] {
         get {
             if _textStickerTextColors.isEmpty {
-                return HEImageEditorConfiguration.defaultColors
+                return HEImageEditorConfiguration.defaultTextColors
             } else {
                 return _textStickerTextColors
             }
@@ -95,14 +118,27 @@ public class HEImageEditorConfiguration: NSObject {
         }
     }
     
-    /// The default text sticker color. If this color not in textStickerTextColors, will pick the first color in textStickerTextColors as the default.
-    @objc public var textStickerDefaultTextColor = UIColor.white
+    private var _textStickerBackgroundColors = HEImageEditorConfiguration.defaultTextBackgroundColors
+    /// Text sticker background colors for image editor.
+    @objc public var textStickerBackgroundColors: [UIColor] {
+        get {
+            if _textStickerBackgroundColors.isEmpty {
+                return HEImageEditorConfiguration.defaultTextBackgroundColors
+            } else {
+                return _textStickerBackgroundColors
+            }
+        }
+        set {
+            _textStickerBackgroundColors = newValue
+        }
+    }
     
-    /// The default font of text sticker.
+    
     @objc public var textStickerDefaultFont: UIFont?
-    
-    /// Whether text sticker allows line break.
+    /// 텍스트 스티커에서 글줄 내리기 허용 여부
     @objc public var textStickerCanLineBreak = false
+    /// 텍스트 스티커 배경 넣기 스타일
+    @objc public var textStickerFillStyle: TextStickerFillStyle = TextStickerFillStyle.area
     
     private var _filters: [HEFilter] = HEFilter.all
     /// Filters for image editor.
@@ -164,7 +200,13 @@ public class HEImageEditorConfiguration: NSObject {
 }
 
 public extension HEImageEditorConfiguration {
-    enum EditTool: String {
+    
+    @objc enum TextStickerFillStyle: Int {
+        case area
+        case character
+    }
+    
+    @objc enum EditTool: Int {
         case draw
         case clip
         case imageSticker
@@ -174,7 +216,19 @@ public extension HEImageEditorConfiguration {
         case adjust
         
         var label: String {
-            return localLanguageTextValue("effect-" + self.rawValue)
+            return localLanguageTextValue("effect-" + self.name)
+        }
+        
+        var name: String {
+            switch self {
+            case .draw: return "draw"
+            case .clip: return "clip"
+            case .imageSticker: return "imageSticker"
+            case .textSticker: return "textSticker"
+            case .mosaicDraw: return "mosaicDraw"
+            case .filter: return "filter"
+            case .adjust: return "adjust"
+            }
         }
     }
     

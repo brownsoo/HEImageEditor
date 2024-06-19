@@ -1,5 +1,5 @@
 //
-//  HEMainTopBarView.swift
+//  HETopBarView.swift
 //  HEImageEditor
 //
 //  Created by 브라운수 on 6/14/24.
@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 
-open class HEMainTopBarView: HEPassThroughView {
+open class HETopBarView: HEPassThroughView {
     
     private lazy var centerContainer = UIStackView()
     private lazy var trailingContainer = UIStackView()
@@ -21,6 +21,12 @@ open class HEMainTopBarView: HEPassThroughView {
     
     required public init?(coder: NSCoder) {
         super.init(coder: coder)
+    }
+    
+    open override func layoutSubviews() {
+        super.layoutSubviews()
+        
+        self.drawDebugOutline()
     }
     
     public func show(animate: Bool = true) {
@@ -66,7 +72,7 @@ open class HEMainTopBarView: HEPassThroughView {
         centerContainer.addArrangedSubview(v)
     }
     
-    private func setupUI() {
+    public func setupUI() {
         self.backgroundColor = .blue.withAlphaComponent(0.2)
         self.addSubview(leadingContainer)
         self.addSubview(trailingContainer)
@@ -98,7 +104,7 @@ open class HEMainTopBarView: HEPassThroughView {
         leadingContainer.also { it in
             it.axis = .horizontal
             it.alignment = .bottom
-            it.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+            it.setContentHuggingPriority(.defaultLow, for: .horizontal)
             it.setContentCompressionResistancePriority(.required, for: .horizontal)
             it.translatesAutoresizingMaskIntoConstraints = false
             NSLayoutConstraint.activate([
@@ -110,7 +116,7 @@ open class HEMainTopBarView: HEPassThroughView {
         trailingContainer.also { it in
             it.axis = .horizontal
             it.alignment = .bottom
-            it.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+            it.setContentHuggingPriority(.defaultLow, for: .horizontal)
             it.setContentCompressionResistancePriority(.required, for: .horizontal)
             it.translatesAutoresizingMaskIntoConstraints = false
             NSLayoutConstraint.activate([

@@ -1,33 +1,12 @@
 //
-//  ZLTextStickerView.swift
+//  HETextStickerView.swift
 //  HEImageEditor
 //
-//  Created by long on 2020/10/30.
-//
-//  Copyright (c) 2020 Long Zhang <495181165@qq.com>
-//
-//  Permission is hereby granted, free of charge, to any person obtaining a copy
-//  of this software and associated documentation files (the "Software"), to deal
-//  in the Software without restriction, including without limitation the rights
-//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//  copies of the Software, and to permit persons to whom the Software is
-//  furnished to do so, subject to the following conditions:
-//
-//  The above copyright notice and this permission notice shall be included in
-//  all copies or substantial portions of the Software.
-//
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-//  THE SOFTWARE.
 
 import UIKit
 
 class HETextStickerView: HEBaseStickerView {
-    static let fontSize: CGFloat = 32
+    static let fontSize: CGFloat = 23
     
     private static let edgeInset: CGFloat = 10
     
@@ -39,12 +18,9 @@ class HETextStickerView: HEBaseStickerView {
     }()
     
     var text: String
-    
     var textColor: UIColor
-
+    var textBackgroundColor: UIColor
     var font: UIFont?
-    
-    var style: HEInputTextStyle
     
     var image: UIImage {
         didSet {
@@ -58,8 +34,8 @@ class HETextStickerView: HEBaseStickerView {
             id: id,
             text: text,
             textColor: textColor,
+            textBackgroundColor: textBackgroundColor,
             font: font,
-            style: style,
             image: image,
             originScale: originScale,
             originAngle: originAngle,
@@ -71,7 +47,7 @@ class HETextStickerView: HEBaseStickerView {
     }
     
     deinit {
-        trace("ZLTextStickerView deinit")
+        trace()
     }
     
     convenience init(state: HETextStickerEffect) {
@@ -79,8 +55,8 @@ class HETextStickerView: HEBaseStickerView {
             id: state.id,
             text: state.text,
             textColor: state.textColor,
+            textBackgroundColor: state.textBackgroundColor,
             font: state.font,
-            style: state.style,
             image: state.image,
             originScale: state.originScale,
             originAngle: state.originAngle,
@@ -96,8 +72,8 @@ class HETextStickerView: HEBaseStickerView {
         id: String = UUID().uuidString,
         text: String,
         textColor: UIColor,
+        textBackgroundColor: UIColor,
         font: UIFont? = nil,
-        style: HEInputTextStyle,
         image: UIImage,
         originScale: CGFloat,
         originAngle: CGFloat,
@@ -109,8 +85,8 @@ class HETextStickerView: HEBaseStickerView {
     ) {
         self.text = text
         self.textColor = textColor
+        self.textBackgroundColor = textBackgroundColor
         self.font = font
-        self.style = style
         self.image = image
         super.init(
             id: id,

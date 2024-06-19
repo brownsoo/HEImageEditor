@@ -52,32 +52,6 @@ public class HEImageEditorUIConfiguration: NSObject {
         }
     }
     
-    /// Developers can customize images, but the name of the custom image resource must be consistent with the image name in the replaced bundle.
-    /// - example: Developers need to replace the selected and unselected image resources, and the array that needs to be passed in is
-    /// ["zl_btn_selected", "zl_btn_unselected"].
-    @objc public var customImageNames: [String] = [] {
-        didSet {
-            HECustomImageDeploy.imageNames = customImageNames
-        }
-    }
-    
-    /// Developers can customize images, but the name of the custom image resource must be consistent with the image name in the replaced bundle.
-    /// - example: Developers need to replace the selected and unselected image resources, and the array that needs to be passed in is
-    /// ["zl_btn_selected": selectedImage, "zl_btn_unselected": unselectedImage].
-    public var customImageForKey: [String: UIImage?] = [:] {
-        didSet {
-            customImageForKey.forEach { HECustomImageDeploy.imageForKey[$0.key] = $0.value }
-        }
-    }
-    
-    /// Developers can customize images, but the name of the custom image resource must be consistent with the image name in the replaced bundle.
-    /// - example: Developers need to replace the selected and unselected image resources, and the array that needs to be passed in is
-    /// ["zl_btn_selected": selectedImage, "zl_btn_unselected": unselectedImage].
-    @objc public var customImageForKey_objc: [String: UIImage] = [:] {
-        didSet {
-            HECustomImageDeploy.imageForKey = customImageForKey_objc
-        }
-    }
     
     // MARK: Color properties
     
@@ -107,14 +81,6 @@ public class HEImageEditorUIConfiguration: NSObject {
 
     /// The highlighted color of the tool icon.
     @objc public var toolIconHighlightedColor: UIColor? = .he.rgba(71, 120, 222)
-}
-
-// MARK: Image source deploy
-
-enum HECustomImageDeploy {
-    static var imageNames: [String] = []
-    
-    static var imageForKey: [String: UIImage] = [:]
 }
 
 @objc public enum HEAdjustSliderType: Int {

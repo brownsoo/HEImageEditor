@@ -13,6 +13,6 @@
 "effect-clip"="자르기,회전";
 "effect-imageSticker"="스티커";
 "effect-textSticker"="텍스트";
-"effect-mosaic"="모자이크";
+"effect-mosaicDraw"="모자이크";
 "effect-filter"="필터";
 "effect-adjust"="색감조정";

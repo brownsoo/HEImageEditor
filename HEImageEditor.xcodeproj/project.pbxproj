@@ -32,8 +32,9 @@
 		17D691DC2C198C68007443EC /* HEFaceDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D691DB2C198C68007443EC /* HEFaceDetection.swift */; };
 		17D691DE2C1AA941007443EC /* HELoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D691DD2C1AA941007443EC /* HELoadingView.swift */; };
 		17D691E02C1AE51D007443EC /* HETopConfirmBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D691DF2C1AE51D007443EC /* HETopConfirmBarView.swift */; };
-		17D691E82C1BD35E007443EC /* HEMainTopBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D691E72C1BD35E007443EC /* HEMainTopBarView.swift */; };
+		17D691E82C1BD35E007443EC /* HETopBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D691E72C1BD35E007443EC /* HETopBarView.swift */; };
 		17D691EA2C1BDF41007443EC /* HEPassThroughView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D691E92C1BDF41007443EC /* HEPassThroughView.swift */; };
+		17D6920D2C22B587007443EC /* HETextStickerColorCells.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D6920C2C22B587007443EC /* HETextStickerColorCells.swift */; };
 		E40208DC256B9BA60077F5DC /* HEImageEditor.h in Headers */ = {isa = PBXBuildFile; fileRef = E40208DA256B9BA60077F5DC /* HEImageEditor.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E40208EB256B9F9C0077F5DC /* HEEditImageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E40208E4256B9F9C0077F5DC /* HEEditImageViewController.swift */; };
 		E40208EC256B9F9C0077F5DC /* HEImageStickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E40208E5256B9F9C0077F5DC /* HEImageStickerView.swift */; };
@@ -103,10 +104,11 @@
 		17D691DB2C198C68007443EC /* HEFaceDetection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEFaceDetection.swift; sourceTree = "<group>"; };
 		17D691DD2C1AA941007443EC /* HELoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HELoadingView.swift; sourceTree = "<group>"; };
 		17D691DF2C1AE51D007443EC /* HETopConfirmBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HETopConfirmBarView.swift; sourceTree = "<group>"; };
-		17D691E72C1BD35E007443EC /* HEMainTopBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEMainTopBarView.swift; sourceTree = "<group>"; };
+		17D691E72C1BD35E007443EC /* HETopBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HETopBarView.swift; sourceTree = "<group>"; };
 		17D691E92C1BDF41007443EC /* HEPassThroughView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEPassThroughView.swift; sourceTree = "<group>"; };
 		17D691F52C212D1D007443EC /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
 		17D691F62C212D4D007443EC /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
+		17D6920C2C22B587007443EC /* HETextStickerColorCells.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HETextStickerColorCells.swift; sourceTree = "<group>"; };
 		E40208D7256B9BA60077F5DC /* HEImageEditor.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = HEImageEditor.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E40208DA256B9BA60077F5DC /* HEImageEditor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HEImageEditor.h; sourceTree = "<group>"; };
 		E40208DB256B9BA60077F5DC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -321,7 +323,7 @@
 				17D691972C12EC32007443EC /* HEClipBottomView.swift */,
 				17D691DD2C1AA941007443EC /* HELoadingView.swift */,
 				17D691DF2C1AE51D007443EC /* HETopConfirmBarView.swift */,
-				17D691E72C1BD35E007443EC /* HEMainTopBarView.swift */,
+				17D691E72C1BD35E007443EC /* HETopBarView.swift */,
 			);
 			path = Component;
 			sourceTree = "<group>";
@@ -358,6 +360,7 @@
 		17D691D52C18301E007443EC /* Sticker */ = {
 			isa = PBXGroup;
 			children = (
+				17D6920C2C22B587007443EC /* HETextStickerColorCells.swift */,
 				FDC9B2432990D66300963047 /* HEBaseStickerView.swift */,
 				E40208E5256B9F9C0077F5DC /* HEImageStickerView.swift */,
 				E40208E6256B9F9C0077F5DC /* HETextStickerView.swift */,
@@ -494,12 +497,13 @@
 				17189EA82C1041DB00270F4D /* TransformEffect.swift in Sources */,
 				17D691982C12EC32007443EC /* HEClipBottomView.swift in Sources */,
 				FD8EFA54277206D30067ADF1 /* HEEditToolCells.swift in Sources */,
-				17D691E82C1BD35E007443EC /* HEMainTopBarView.swift in Sources */,
+				17D691E82C1BD35E007443EC /* HETopBarView.swift in Sources */,
 				FD1551CA28BE2C720043D844 /* UIView+.swift in Sources */,
 				17D691DE2C1AA941007443EC /* HELoadingView.swift in Sources */,
 				E40208FF256BA0080077F5DC /* Bundle.swift in Sources */,
 				E40208F0256B9F9C0077F5DC /* HEClipImageViewController.swift in Sources */,
 				FDE1A559282E580900178B0F /* HEImageEditorUIConfiguration.swift in Sources */,
+				17D6920D2C22B587007443EC /* HETextStickerColorCells.swift in Sources */,
 				17D691DA2C184616007443EC /* Also.swift in Sources */,
 				FDE1A561282E61B500178B0F /* HEEnlargeButton.swift in Sources */,
 				174095612C19FC1C00A4B18D /* Foundation+.swift in Sources */,
