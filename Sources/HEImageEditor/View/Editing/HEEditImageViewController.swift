@@ -43,7 +43,7 @@ public struct HEAdjustStatus {
     }
 }
 
-public typealias HEEditImageBottomToolViewBuilder = (HEEditImageView) -> (toolView: HEEditImageBottomView, height: CGFloat)
+public typealias HEEditImageBottomToolViewBuilder = (HEEditImageView) -> (toolView: HEEditImageBottomToolView, height: CGFloat)
 
 public typealias HEEditImageTopToolViewBuilder = (HEEditImageView) -> (toolView: HETopBarView, height: CGFloat)
 
@@ -117,7 +117,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         return layer
     }()
     
-    private weak var bottomToolView: HEEditImageBottomView!
+    private weak var bottomToolView: HEEditImageBottomToolView!
     private var bottomToolViewHeight: CGFloat!
     
     private var imageStickerTray: (UIView & HEImageStickerTray)? {
@@ -393,7 +393,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         
         self.bottomToolViewBuilder = bottomToolViewBuilder ?? { editView in
             // 기본 툴바
-            let toolbar = HEEditImageBottomView(tools: ts)
+            let toolbar = HEEditImageBottomToolView(tools: ts)
             toolbar.toolSelectListener = { [weak editView] type in
                 guard let editView else { return }
                 if editView.isImageEditing {
@@ -1654,7 +1654,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     }
     
     /// Add text sticker
-    private func addTextStickersView(_ text: String, textColor: UIColor, backgroundTextColor: UIColor, font: UIFont, image: UIImage?) {
+    private func addTextStickersView(_ text: String, textColor: UIColor, fillColor: UIColor, font: UIFont, image: UIImage?) {
         guard !text.isEmpty, let image = image else { return }
         
         let scale = mainScrollView.zoomScale
@@ -1664,7 +1664,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         let textSticker = HETextStickerView(
             text: text,
             textColor: textColor,
-            fillColor: backgroundTextColor,
+            fillColor: fillColor,
             font: font,
             image: image,
             originScale: 1 / scale,
@@ -2121,7 +2121,7 @@ extension HEEditImageViewController: UICollectionViewDataSource, UICollectionVie
 extension HEEditImageViewController: HEInputTextViewControllerDelegate {
     func inputTextViewController(_ controller: HEInputTextViewController, stickerId: String?, didInput text: String, textColor: UIColor, fillColor: UIColor, font: UIFont, image: UIImage?) {
         if stickerId == nil { // new sticker
-            self.addTextStickersView(text, textColor: textColor, backgroundTextColor: fillColor, font: font, image: image)
+            self.addTextStickersView(text, textColor: textColor, fillColor: fillColor, font: font, image: image)
             return
         }
         // exist

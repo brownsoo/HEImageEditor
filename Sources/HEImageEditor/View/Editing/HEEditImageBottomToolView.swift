@@ -1,5 +1,5 @@
 //
-//  HEEditImageBottomView.swift
+//  HEEditImageBottomToolView.swift
 //  HEImageEditor
 //
 //  Created by 브라운수 on 6/10/24.
@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 
-open class HEEditImageBottomView: UIView {
+open class HEEditImageBottomToolView: UIView {
     
     public static let height: CGFloat = 72
     public static let itemSize = CGSize(width: 54, height: 56)
@@ -40,12 +40,21 @@ open class HEEditImageBottomView: UIView {
     
     open func selectTool(_ tool: HEImageEditorConfiguration.EditTool) {
         selectedTool = tool
-        toolCollectionView.reloadData()
+        if let row = tools.firstIndex(where: { $0 == tool }) {
+            toolCollectionView.selectItem(at: IndexPath(row: row, section: 0), animated: true, scrollPosition: .centeredHorizontally)
+        } else {
+            toolCollectionView.reloadData()
+        }
     }
     
     open func unselectTool() {
+        let tool = selectedTool
         selectedTool = nil
-        toolCollectionView.reloadData()
+        if let tool, let row = tools.firstIndex(where: { $0 == tool }) {
+            toolCollectionView.deselectItem(at: IndexPath(row: row, section: 0), animated: true)
+        } else {
+            toolCollectionView.reloadData()
+        }
     }
     
     private var toolCollectionView: UICollectionView = {
@@ -108,7 +117,7 @@ open class HEEditImageBottomView: UIView {
     }
 }
 
-extension HEEditImageBottomView: UICollectionViewDelegate, UICollectionViewDataSource {
+extension HEEditImageBottomToolView: UICollectionViewDelegate, UICollectionViewDataSource {
     public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         tools.count
     }
@@ -123,13 +132,21 @@ extension HEEditImageBottomView: UICollectionViewDelegate, UICollectionViewDataS
         return cell
     }
     
+    public func collectionView(_ collectionView: UICollectionView, didHighlightItemAt indexPath: IndexPath) {
+        collectionView.cellForItem(at: indexPath)?.contentView.backgroundColor = UIColor.darkGray.withAlphaComponent(0.3)
+    }
+    
+    public func collectionView(_ collectionView: UICollectionView, didUnhighlightItemAt indexPath: IndexPath) {
+        collectionView.cellForItem(at: indexPath)?.contentView.backgroundColor = nil
+    }
+    
     public func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let toolType = tools[indexPath.row]
         self.toolSelectListener?(toolType)
     }
 }
 
-extension HEEditImageBottomView: UICollectionViewDelegateFlowLayout {
+extension HEEditImageBottomToolView: UICollectionViewDelegateFlowLayout {
     
     public func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         return Self.itemSize

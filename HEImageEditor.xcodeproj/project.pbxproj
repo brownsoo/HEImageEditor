@@ -26,7 +26,7 @@
 		17D6919B2C167D18007443EC /* HEColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D6919A2C167D18007443EC /* HEColor.swift */; };
 		17D6919D2C168A9C007443EC /* HEEditImageModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D6919C2C168A9C007443EC /* HEEditImageModel.swift */; };
 		17D691A02C16976B007443EC /* DebugLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D6919F2C16976B007443EC /* DebugLine.swift */; };
-		17D691A22C169A07007443EC /* HEEditImageBottomView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D691A12C169A07007443EC /* HEEditImageBottomView.swift */; };
+		17D691A22C169A07007443EC /* HEEditImageBottomToolView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D691A12C169A07007443EC /* HEEditImageBottomToolView.swift */; };
 		17D691D72C183A80007443EC /* HEImageStickerTrayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D691D62C183A80007443EC /* HEImageStickerTrayView.swift */; };
 		17D691DA2C184616007443EC /* Also.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D691D92C184616007443EC /* Also.swift */; };
 		17D691DC2C198C68007443EC /* HEFaceDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D691DB2C198C68007443EC /* HEFaceDetection.swift */; };
@@ -98,7 +98,7 @@
 		17D6919A2C167D18007443EC /* HEColor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HEColor.swift; sourceTree = "<group>"; };
 		17D6919C2C168A9C007443EC /* HEEditImageModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEEditImageModel.swift; sourceTree = "<group>"; };
 		17D6919F2C16976B007443EC /* DebugLine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugLine.swift; sourceTree = "<group>"; };
-		17D691A12C169A07007443EC /* HEEditImageBottomView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEEditImageBottomView.swift; sourceTree = "<group>"; };
+		17D691A12C169A07007443EC /* HEEditImageBottomToolView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEEditImageBottomToolView.swift; sourceTree = "<group>"; };
 		17D691D62C183A80007443EC /* HEImageStickerTrayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEImageStickerTrayView.swift; sourceTree = "<group>"; };
 		17D691D92C184616007443EC /* Also.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Also.swift; sourceTree = "<group>"; };
 		17D691DB2C198C68007443EC /* HEFaceDetection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEFaceDetection.swift; sourceTree = "<group>"; };
@@ -351,7 +351,7 @@
 			children = (
 				17189E9C2C1041DB00270F4D /* HEEditImageView.swift */,
 				E40208E4256B9F9C0077F5DC /* HEEditImageViewController.swift */,
-				17D691A12C169A07007443EC /* HEEditImageBottomView.swift */,
+				17D691A12C169A07007443EC /* HEEditImageBottomToolView.swift */,
 				FD8EFA53277206D30067ADF1 /* HEEditToolCells.swift */,
 			);
 			path = Editing;
@@ -521,7 +521,7 @@
 				E40208EC256B9F9C0077F5DC /* HEImageStickerView.swift in Sources */,
 				E40208F7256B9FCB0077F5DC /* CGFloat+.swift in Sources */,
 				FDE1A55D282E595C00178B0F /* UIColor+.swift in Sources */,
-				17D691A22C169A07007443EC /* HEEditImageBottomView.swift in Sources */,
+				17D691A22C169A07007443EC /* HEEditImageBottomToolView.swift in Sources */,
 				FD8EFA562772CF3B0067ADF1 /* HEImageEditorConfiguration+Chaining.swift in Sources */,
 				17D691EA2C1BDF41007443EC /* HEPassThroughView.swift in Sources */,
 				17189EA12C1041DB00270F4D /* HEEffect.swift in Sources */,

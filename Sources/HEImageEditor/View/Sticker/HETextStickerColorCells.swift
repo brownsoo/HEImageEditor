@@ -8,6 +8,9 @@
 import UIKit
 
 class HETextColorCell: UICollectionViewCell {
+    
+    static let reuseIdentifier = "HEImageEditor.HETextColorCell"
+    
     lazy var colorView: UIImageView = {
         let view = UIImageView()
         view.layer.masksToBounds = true
@@ -19,7 +22,8 @@ class HETextColorCell: UICollectionViewCell {
     
     var color: UIColor = .white {
         willSet {
-            colorView.tintColor = newValue
+            colorView.image = colorView.image?.withTintColor(newValue)
+            colorView.highlightedImage = colorView.highlightedImage?.withTintColor(newValue)
         }
     }
     
@@ -41,6 +45,9 @@ class HETextColorCell: UICollectionViewCell {
 
 
 class HETextFillColorCell: UICollectionViewCell {
+    
+    static let reuseIdentifier = "HEImageEditor.HETextFillColorCell"
+    
     lazy var colorView: UIImageView = {
         let view = UIImageView()
         view.layer.masksToBounds = true
@@ -57,10 +64,9 @@ class HETextFillColorCell: UICollectionViewCell {
             if newValue == UIColor.clear {
                 colorView.image = noneImage
             } else {
-                colorView.image = UIImage.he.getImage("edit_color_white") ?? UIImage(systemName: "circle.fill")
-                colorView.highlightedImage = UIImage.he.getImage("edit_color_select_white") ?? UIImage(systemName: "record.circle")
+                colorView.image = (UIImage.he.getImage("edit_color_white") ?? UIImage(systemName: "circle.fill"))?.withTintColor(newValue)
+                colorView.highlightedImage = (UIImage.he.getImage("edit_color_select_white") ?? UIImage(systemName: "record.circle"))?.withTintColor(newValue)
             }
-            colorView.tintColor = newValue
         }
     }
     

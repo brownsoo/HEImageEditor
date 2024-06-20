@@ -31,7 +31,7 @@ class HEInputTextViewController: UIViewController {
     private let image: UIImage?
     private var text: String
     private var currentFont: UIFont = .boldSystemFont(ofSize: HETextStickerView.fontSize)
-    
+    private var keyboardHeight: CGFloat = 0
     private var currentTextColor: UIColor {
         didSet {
             refreshTextViewUI()
@@ -102,7 +102,7 @@ class HEInputTextViewController: UIViewController {
         height: Self.toolViewHeight
     ))
     
-    private lazy var toolCollView: UICollectionView = {
+    private lazy var colorCollView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.estimatedItemSize = Self.toolCellSize
         layout.minimumLineSpacing = 0
@@ -114,10 +114,8 @@ class HEInputTextViewController: UIViewController {
             collectionViewLayout: layout
         )
         collectionView.backgroundColor = .black.withAlphaComponent(0.62)
-        collectionView.delegate = self
-        collectionView.dataSource = self
-        HEDrawColorCell.he.register(collectionView)
-        
+        collectionView.register(HETextColorCell.self, forCellWithReuseIdentifier: HETextColorCell.reuseIdentifier)
+        collectionView.register(HETextFillColorCell.self, forCellWithReuseIdentifier: HETextFillColorCell.reuseIdentifier)
         return collectionView
     }()
     
@@ -215,12 +213,13 @@ class HEInputTextViewController: UIViewController {
                                 height: 200)
         textView.drawDebugOutline()
         
-        toolCollView.frame = CGRect(
+        toolView.frame = CGRect(
             x: 0,
             y: 0,
             width: view.he.width,
             height: Self.toolViewHeight
         )
+        colorCollView.frame = toolView.bounds
         
     }
     
@@ -245,9 +244,14 @@ class HEInputTextViewController: UIViewController {
         
         view.addSubview(textView)
         view.addSubview(toolView)
-        toolView.addSubview(toolCollView)
+        toolView.addSubview(colorCollView)
+        toolView.isHidden = true
+        
+        colorCollView.delegate = self
+        colorCollView.dataSource = self
         
         refreshTextViewUI()
+        
     }
     
     private func refreshTextViewUI() {
@@ -258,22 +262,23 @@ class HEInputTextViewController: UIViewController {
     
    
     @objc private func textColorBtnClick() {
-        if self.selectedTool == .textColor {
-            self.selectedTool = nil
-            self.hideToolsView()
+        if selectedTool == .textColor {
+            selectedTool = nil
+            hideToolsView()
             return
         }
-        self.selectedTool = .textColor
-        
+        selectedTool = .textColor
+        showToolsView()
     }
     
     @objc private func textBackgroundBtnClick() {
-        if self.selectedTool == .textBackground {
-            self.selectedTool = nil
-            self.hideToolsView()
+        if selectedTool == .textBackground {
+            selectedTool = nil
+            hideToolsView()
             return
         }
-        self.selectedTool = .textBackground
+        selectedTool = .textBackground
+        showToolsView()
     }
     
     
@@ -293,17 +298,18 @@ class HEInputTextViewController: UIViewController {
             let remain = fullSpace - minimumWidth
             inset = remain / 2
         }
-        self.toolCollView.contentInset = UIEdgeInsets(top: 0, left: inset, bottom: 0, right: inset)
+        self.colorCollView.contentInset = UIEdgeInsets(top: 0, left: inset, bottom: 0, right: inset)
     }
     
     private func hideToolsView() {
-        toolCollView.isHidden = true
+        toolView.isHidden = true
     }
     
     private func showToolsView() {
         updateCollContentInset()
-        toolCollView.reloadData()
-        toolCollView.isHidden = false
+        colorCollView.reloadData()
+        toolView.frame = getToolViewFrame()
+        toolView.isHidden = false
         
         var index: Int?
         if selectedTool == .textColor {
@@ -313,7 +319,7 @@ class HEInputTextViewController: UIViewController {
         }
         if let index {
             DispatchQueue.main.async { [weak self] in
-                self?.toolCollView.scrollToItem(at: IndexPath(row: index, section: 0), at: .centeredHorizontally, animated: true)
+                self?.colorCollView.scrollToItem(at: IndexPath(row: index, section: 0), at: .centeredHorizontally, animated: true)
             }
         }
     }
@@ -332,16 +338,31 @@ class HEInputTextViewController: UIViewController {
         var image: UIImage?
         
         if !textView.text.isEmpty {
+            let rects = calculateTextRectsByChar()
+            let initial = CGRect(x: 10000, y: 10000, width: 0, height: 0)
+            let textRect = rects.reduce(initial) { prev, rect in
+                let x = min(prev.minX, rect.minX)
+                let y = min(prev.minY, rect.minY)
+                return CGRect(x: x,
+                              y: y,
+                              width: max(prev.width, rect.width),
+                              height: prev.height +  rect.height)
+            }
             for subview in textView.subviews {
                 if NSStringFromClass(subview.classForCoder) == "_UITextContainerView" {
-                    let size = textView.sizeThatFits(subview.frame.size)
-                    image = UIGraphicsImageRenderer.he.renderImage(size: size) { context in
+                    
+                    var frame = subview.frame
+//                    frame.origin = textView.contentOffset
+                    let size = textView.sizeThatFits(frame.size)
+                    
+                    image = UIGraphicsImageRenderer.he.renderImage(size: textView.bounds.size) { context in
                         if currentFillColor != .clear {
                             textLayer.render(in: context)
                         }
-                        
                         subview.layer.render(in: context)
                     }
+                    // FIXME: 위 렌더러에서 한번에 처리하기..
+                    image = image?.he.clipImage(angle: 0, editRect: textRect, isCircle: false)
                 }
             }
         }
@@ -353,15 +374,11 @@ class HEInputTextViewController: UIViewController {
     
     @objc private func keyboardWillShow(_ notify: Notification) {
         let rect = notify.userInfo?[UIApplication.keyboardFrameEndUserInfoKey] as? CGRect
-        let keyboardH = rect?.height ?? 366
+        let keyboardH = (rect?.height ?? 366)
+        self.keyboardHeight = keyboardH
         let duration: TimeInterval = notify.userInfo?[UIApplication.keyboardAnimationDurationUserInfoKey] as? TimeInterval ?? 0.25
         
-        let toolViewFrame = CGRect(
-            x: 0,
-            y: view.he.height - keyboardH - Self.toolViewHeight,
-            width: view.he.width,
-            height: Self.toolViewHeight
-        )
+        let toolViewFrame = getToolViewFrame()
         
         var textViewFrame = textView.frame
         textViewFrame.size.height = toolViewFrame.minY - textViewFrame.minY - 20
@@ -374,14 +391,8 @@ class HEInputTextViewController: UIViewController {
     
     @objc private func keyboardWillHide(_ notify: Notification) {
         let duration: TimeInterval = notify.userInfo?[UIApplication.keyboardAnimationDurationUserInfoKey] as? TimeInterval ?? 0.25
-        
-        let toolViewFrame = CGRect(
-            x: 0,
-            y: view.he.height - view.safeAreaInsets.bottom - Self.toolViewHeight,
-            width: view.he.width,
-            height: Self.toolViewHeight
-        )
-        
+        self.keyboardHeight = 0
+        let toolViewFrame = getToolViewFrame()
         var textViewFrame = textView.frame
         textViewFrame.size.height = toolViewFrame.minY - textViewFrame.minY - 20
         
@@ -390,28 +401,38 @@ class HEInputTextViewController: UIViewController {
             self.textView.frame = textViewFrame
         }
     }
+    
+    private func getToolViewFrame() -> CGRect {
+        return CGRect(
+            x: 0,
+            y: view.he.height - keyboardHeight - Self.toolViewHeight,
+            width: view.he.width,
+            height: Self.toolViewHeight
+        )
+    }
 }
 
 extension HEInputTextViewController: UICollectionViewDelegate, UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        if toolView.isHidden {
+            return 0
+        }
         return getColorSource().count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        if selectedTool == .textColor {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HETextColorCell.he.identifier, for: indexPath) as! HETextColorCell
-            
-            let c = getColorSource()[indexPath.row]
-            cell.color = c
-            return cell
-        } else if selectedTool == .textBackground {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HETextFillColorCell.he.identifier, for: indexPath) as! HETextFillColorCell
+        if selectedTool == .textBackground {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HETextFillColorCell.reuseIdentifier, for: indexPath) as! HETextFillColorCell
             
             let c = getColorSource()[indexPath.row]
             cell.color = c
             return cell
         } else {
-            return UICollectionViewCell()
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HETextColorCell.reuseIdentifier, for: indexPath) as! HETextColorCell
+            
+            let c = getColorSource()[indexPath.row]
+            cell.color = c
+            return cell
         }
     }
     
@@ -424,8 +445,6 @@ extension HEInputTextViewController: UICollectionViewDelegate, UICollectionViewD
         } else {
             return
         }
-        collectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
-        collectionView.reloadData()
     }
 }
 
@@ -433,17 +452,38 @@ extension HEInputTextViewController: UICollectionViewDelegate, UICollectionViewD
 
 extension HEInputTextViewController {
     private func drawTextBackground() {
-        guard !textView.text.isEmpty else {
+        guard !textView.text.isEmpty, currentFillColor != .clear else {
             textLayer.removeFromSuperlayer()
             return
         }
         
         let path = UIBezierPath()
+        let rects = calculateTextRectsByChar()
+        
         if fillStyle == .area {
+            let initial = CGRect(x: 10000, y: 10000, width: 0, height: 0)
+            let rect = rects.reduce(initial) { prev, rect in
+                let x = min(prev.minX, rect.minX)
+                let y = min(prev.minY, rect.minY)
+                return CGRect(x: x,
+                              y: y,
+                              width: max(prev.width, rect.width),
+                              height: prev.height +  rect.height)
+            }
+            path.move(to: CGPoint(x: rect.minX, y: rect.minY + textLayerRadius))
+            path.addArc(withCenter: CGPoint(x: rect.minX + textLayerRadius, y: rect.minY + textLayerRadius), radius: textLayerRadius, startAngle: .pi, endAngle: .pi * 1.5, clockwise: true)
+            path.addLine(to: CGPoint(x: rect.maxX - textLayerRadius, y: rect.minY))
+            path.addArc(withCenter: CGPoint(x: rect.maxX - textLayerRadius, y: rect.minY + textLayerRadius), radius: textLayerRadius, startAngle: .pi * 1.5, endAngle: .pi * 2, clockwise: true)
+            
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - textLayerRadius))
+            path.addArc(withCenter: CGPoint(x: rect.maxX - textLayerRadius, y: rect.maxY - textLayerRadius), radius: textLayerRadius, startAngle: 0, endAngle: .pi / 2, clockwise: true)
+            path.addLine(to: CGPoint(x: rect.minX + textLayerRadius, y: rect.maxY))
+            path.addArc(withCenter: CGPoint(x: rect.minX + textLayerRadius, y: rect.maxY - textLayerRadius), radius: textLayerRadius, startAngle: .pi / 2, endAngle: .pi, clockwise: true)
+            path.addLine(to: CGPoint(x: rect.minX, y: rect.minY + textLayerRadius))
+            path.close()
             
         } else {
             // 텍스트 글자에 맞춰 배경 생성
-            let rects = calculateTextRectsByChar()
             for (index, rect) in rects.enumerated() {
                 if index == 0 {
                     path.move(to: CGPoint(x: rect.minX, y: rect.minY + textLayerRadius))
@@ -498,7 +538,10 @@ extension HEInputTextViewController {
         let insetLeft = textView.textContainerInset.left
         let insetTop = textView.textContainerInset.top
         layoutManager.enumerateLineFragments(forGlyphRange: glyphRange) { _, usedRect, _, range, _ in
-            rects.append(CGRect(x: usedRect.minX - 10 + insetLeft, y: usedRect.minY - 8 + insetTop, width: usedRect.width + 20, height: usedRect.height + 16))
+            rects.append(CGRect(x: usedRect.minX - 10 + insetLeft,
+                                y: usedRect.minY - 8 + insetTop,
+                                width: usedRect.width + 20,
+                                height: usedRect.height + 16))
         }
         
         guard rects.count > 1 else {
