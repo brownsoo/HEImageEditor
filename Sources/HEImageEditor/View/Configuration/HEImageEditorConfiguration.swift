@@ -136,7 +136,7 @@ public class HEImageEditorConfiguration: NSObject {
     
     @objc public var textStickerDefaultFont: UIFont?
     /// 텍스트 스티커에서 글줄 내리기 허용 여부
-    @objc public var textStickerCanLineBreak = false
+    @objc public var textStickerCanLineBreak = true
     /// 텍스트 스티커 배경 넣기 스타일
     @objc public var textStickerFillStyle: TextStickerFillStyle = TextStickerFillStyle.area
     

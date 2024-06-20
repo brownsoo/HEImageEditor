@@ -123,7 +123,7 @@ class HEInputTextViewController: UIViewController {
     
     private lazy var textLayer = CAShapeLayer()
     
-    private let textLayerRadius: CGFloat = 10
+    private let textLayerRadius: CGFloat = 1
     
     private let maxTextCount = 50
     
@@ -211,7 +211,6 @@ class HEInputTextViewController: UIViewController {
                                 y: topToolBar.frame.maxY + 30,
                                 width: view.frame.width - 20,
                                 height: 200)
-        textView.drawDebugOutline()
         
         toolView.frame = CGRect(
             x: 0,
@@ -252,12 +251,14 @@ class HEInputTextViewController: UIViewController {
         
         refreshTextViewUI()
         
+        
+        textView.drawDebugOutline()
     }
     
     private func refreshTextViewUI() {
         guard isViewLoaded else { return }
-        drawTextBackground()
         textView.textColor = currentTextColor
+        drawTextBackground()
     }
     
    
@@ -308,7 +309,7 @@ class HEInputTextViewController: UIViewController {
     private func showToolsView() {
         updateCollContentInset()
         colorCollView.reloadData()
-        toolView.frame = getToolViewFrame()
+        toolView.frame = getToolViewFrame(keyboardHeight: self.keyboardHeight)
         toolView.isHidden = false
         
         var index: Int?
@@ -350,11 +351,8 @@ class HEInputTextViewController: UIViewController {
             }
             for subview in textView.subviews {
                 if NSStringFromClass(subview.classForCoder) == "_UITextContainerView" {
-                    
-                    var frame = subview.frame
-//                    frame.origin = textView.contentOffset
-                    let size = textView.sizeThatFits(frame.size)
-                    
+//                    var frame = subview.frame
+//                    let size = textView.sizeThatFits(frame.size)
                     image = UIGraphicsImageRenderer.he.renderImage(size: textView.bounds.size) { context in
                         if currentFillColor != .clear {
                             textLayer.render(in: context)
@@ -376,33 +374,40 @@ class HEInputTextViewController: UIViewController {
         let rect = notify.userInfo?[UIApplication.keyboardFrameEndUserInfoKey] as? CGRect
         let keyboardH = (rect?.height ?? 366)
         self.keyboardHeight = keyboardH
+        
         let duration: TimeInterval = notify.userInfo?[UIApplication.keyboardAnimationDurationUserInfoKey] as? TimeInterval ?? 0.25
-        
-        let toolViewFrame = getToolViewFrame()
-        
-        var textViewFrame = textView.frame
-        textViewFrame.size.height = toolViewFrame.minY - textViewFrame.minY - 20
-        
-        UIView.animate(withDuration: max(duration, 0.25)) {
-            self.toolView.frame = toolViewFrame
-            self.textView.frame = textViewFrame
-        }
+        adjustTextViewFrame(duration: max(duration, 0.25))
     }
     
     @objc private func keyboardWillHide(_ notify: Notification) {
         let duration: TimeInterval = notify.userInfo?[UIApplication.keyboardAnimationDurationUserInfoKey] as? TimeInterval ?? 0.25
         self.keyboardHeight = 0
-        let toolViewFrame = getToolViewFrame()
-        var textViewFrame = textView.frame
-        textViewFrame.size.height = toolViewFrame.minY - textViewFrame.minY - 20
-        
-        UIView.animate(withDuration: max(duration, 0.25)) {
-            self.toolView.frame = toolViewFrame
+        adjustTextViewFrame(duration: max(duration, 0.25))
+    }
+    
+    private func adjustTextViewFrame(duration: TimeInterval) {
+        let toolFrame = getToolViewFrame(keyboardHeight: self.keyboardHeight)
+        let topFrame = topToolBar.frame
+        let availableAea = CGSize(width: view.bounds.width, height: toolFrame.minY - topFrame.maxY)
+        let size = textView.sizeThatFits(availableAea)
+        let textViewFrame = CGRect(origin: CGPoint(x: max(0, (availableAea.width - size.width) / 2),
+                                                   y: max(0, topFrame.maxY + (availableAea.height - size.height) / 2)),
+                                   size: CGSize(width: size.width, height: size.height))
+        if textView.frame == textViewFrame {
+            return
+        }
+        if duration == 0 || abs(textView.frame.minY - textViewFrame.minY) < 5 {
+            self.toolView.frame = toolFrame
             self.textView.frame = textViewFrame
+        } else {
+            UIView.animate(withDuration: max(duration, 0.25)) {
+                self.toolView.frame = toolFrame
+                self.textView.frame = textViewFrame
+            }
         }
     }
     
-    private func getToolViewFrame() -> CGRect {
+    private func getToolViewFrame(keyboardHeight: CGFloat) -> CGRect {
         return CGRect(
             x: 0,
             y: view.he.height - keyboardHeight - Self.toolViewHeight,
@@ -452,38 +457,32 @@ extension HEInputTextViewController: UICollectionViewDelegate, UICollectionViewD
 
 extension HEInputTextViewController {
     private func drawTextBackground() {
+        adjustTextViewFrame(duration: 0)
         guard !textView.text.isEmpty, currentFillColor != .clear else {
             textLayer.removeFromSuperlayer()
             return
         }
         
         let path = UIBezierPath()
-        let rects = calculateTextRectsByChar()
         
         if fillStyle == .area {
-            let initial = CGRect(x: 10000, y: 10000, width: 0, height: 0)
-            let rect = rects.reduce(initial) { prev, rect in
-                let x = min(prev.minX, rect.minX)
-                let y = min(prev.minY, rect.minY)
-                return CGRect(x: x,
-                              y: y,
-                              width: max(prev.width, rect.width),
-                              height: prev.height +  rect.height)
-            }
-            path.move(to: CGPoint(x: rect.minX, y: rect.minY + textLayerRadius))
-            path.addArc(withCenter: CGPoint(x: rect.minX + textLayerRadius, y: rect.minY + textLayerRadius), radius: textLayerRadius, startAngle: .pi, endAngle: .pi * 1.5, clockwise: true)
-            path.addLine(to: CGPoint(x: rect.maxX - textLayerRadius, y: rect.minY))
-            path.addArc(withCenter: CGPoint(x: rect.maxX - textLayerRadius, y: rect.minY + textLayerRadius), radius: textLayerRadius, startAngle: .pi * 1.5, endAngle: .pi * 2, clockwise: true)
+            let textArea = textView.bounds
             
-            path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - textLayerRadius))
-            path.addArc(withCenter: CGPoint(x: rect.maxX - textLayerRadius, y: rect.maxY - textLayerRadius), radius: textLayerRadius, startAngle: 0, endAngle: .pi / 2, clockwise: true)
-            path.addLine(to: CGPoint(x: rect.minX + textLayerRadius, y: rect.maxY))
-            path.addArc(withCenter: CGPoint(x: rect.minX + textLayerRadius, y: rect.maxY - textLayerRadius), radius: textLayerRadius, startAngle: .pi / 2, endAngle: .pi, clockwise: true)
-            path.addLine(to: CGPoint(x: rect.minX, y: rect.minY + textLayerRadius))
+            path.move(to: CGPoint(x: textArea.minX, y: textArea.minY + textLayerRadius))
+            path.addArc(withCenter: CGPoint(x: textArea.minX + textLayerRadius, y: textArea.minY + textLayerRadius), radius: textLayerRadius, startAngle: .pi, endAngle: .pi * 1.5, clockwise: true)
+            path.addLine(to: CGPoint(x: textArea.maxX - textLayerRadius, y: textArea.minY))
+            path.addArc(withCenter: CGPoint(x: textArea.maxX - textLayerRadius, y: textArea.minY + textLayerRadius), radius: textLayerRadius, startAngle: .pi * 1.5, endAngle: .pi * 2, clockwise: true)
+            
+            path.addLine(to: CGPoint(x: textArea.maxX, y: textArea.maxY - textLayerRadius))
+            path.addArc(withCenter: CGPoint(x: textArea.maxX - textLayerRadius, y: textArea.maxY - textLayerRadius), radius: textLayerRadius, startAngle: 0, endAngle: .pi / 2, clockwise: true)
+            path.addLine(to: CGPoint(x: textArea.minX + textLayerRadius, y: textArea.maxY))
+            path.addArc(withCenter: CGPoint(x: textArea.minX + textLayerRadius, y: textArea.maxY - textLayerRadius), radius: textLayerRadius, startAngle: .pi / 2, endAngle: .pi, clockwise: true)
+            path.addLine(to: CGPoint(x: textArea.minX, y: textArea.minY + textLayerRadius))
             path.close()
             
         } else {
             // 텍스트 글자에 맞춰 배경 생성
+            let rects = calculateTextRectsByChar()
             for (index, rect) in rects.enumerated() {
                 if index == 0 {
                     path.move(to: CGPoint(x: rect.minX, y: rect.minY + textLayerRadius))
@@ -595,6 +594,7 @@ extension HEInputTextViewController {
 
 extension HEInputTextViewController: UITextViewDelegate {
     func textViewDidChange(_ textView: UITextView) {
+        drawTextBackground()
         let markedTextRange = textView.markedTextRange
         guard markedTextRange == nil || (markedTextRange?.isEmpty ?? true) else {
             return
@@ -622,7 +622,7 @@ extension HEInputTextViewController: NSLayoutManagerDelegate {
             return
         }
         
-        drawTextBackground()
+        //drawTextBackground()
     }
 }
 
