@@ -5,44 +5,6 @@
 
 import UIKit
 
-public struct HEClipStatus {
-    /// 이미지 내 영역
-    var editRect: CGRect
-    var angle: CGFloat = 0
-    var ratio: HEImageClipRatio?
-    
-    public init(
-        editRect: CGRect,
-        angle: CGFloat = 0,
-        ratio: HEImageClipRatio? = nil
-    ) {
-        self.editRect = editRect
-        self.angle = angle
-        self.ratio = ratio
-    }
-}
-
-/// 명도, 대비, 채도 변형 상태
-public struct HEAdjustStatus {
-    var brightness: Float = 0
-    var contrast: Float = 0
-    var saturation: Float = 0
-
-    var allValueIsZero: Bool {
-        brightness == 0 && contrast == 0 && saturation == 0
-    }
-    
-    public init(
-        brightness: Float = 0,
-        contrast: Float = 0,
-        saturation: Float = 0
-    ) {
-        self.brightness = brightness
-        self.contrast = contrast
-        self.saturation = saturation
-    }
-}
-
 public typealias HEEditImageBottomToolViewBuilder = (HEEditImageView) -> (toolView: HEEditImageBottomToolView, height: CGFloat)
 
 public typealias HEEditImageTopToolViewBuilder = (HEEditImageView) -> (toolView: HETopBarView, height: CGFloat)
@@ -648,7 +610,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         // 편집용 상단 툴바
         view.addSubview(subEditingTopView)
         subEditingTopView.hide(animate: false)
-        
+            
         // 상단 툴바
         if let topBarView {
             view.addSubview(topBarView)
