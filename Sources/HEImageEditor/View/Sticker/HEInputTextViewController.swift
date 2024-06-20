@@ -79,19 +79,27 @@ class HEInputTextViewController: UIViewController {
     
     private lazy var topToolBar = HETopConfirmBarView()
     
+    private lazy var textStickerMaximumLines = HEImageEditorConfiguration.default().textStickerMaximumLines
+    private lazy var textStickerMaximumCharactersPerLine = HEImageEditorConfiguration.default().textStickerMaximumCharactersPerLine
+    private lazy var textStickerCanLineBreak = HEImageEditorConfiguration.default().textStickerCanLineBreak
+    
     private lazy var textView: UITextView = {
         let textView = UITextView()
         textView.keyboardAppearance = .dark
-        textView.returnKeyType = .done
+        textView.returnKeyType = textStickerCanLineBreak ? .default : .done
         textView.delegate = self
         textView.backgroundColor = .clear
+        textView.textContainer.maximumNumberOfLines = textStickerMaximumLines
         textView.textAlignment = .center
         textView.textColor = currentTextColor
         textView.text = text
         textView.font = currentFont
+        textView.autocorrectionType = .no
+        textView.autocapitalizationType = .none
         textView.textContainerInset = UIEdgeInsets(top: 8, left: 10, bottom: 8, right: 10)
         textView.textContainer.lineFragmentPadding = 0
         textView.layoutManager.delegate = self
+        ///textView.attributedText = [NSAttributedString.Key.underlineStyle: NSUnderlineStyle.single]
         return textView
     }()
     
@@ -252,7 +260,7 @@ class HEInputTextViewController: UIViewController {
         refreshTextViewUI()
         
         
-        textView.drawDebugOutline()
+        // textView.drawDebugOutline()
     }
     
     private func refreshTextViewUI() {
@@ -324,7 +332,6 @@ class HEInputTextViewController: UIViewController {
             }
         }
     }
-    
     
     @objc func cancelBtnClick() {
         dismiss(animated: true, completion: { [weak self] in
@@ -457,7 +464,9 @@ extension HEInputTextViewController: UICollectionViewDelegate, UICollectionViewD
 
 extension HEInputTextViewController {
     private func drawTextBackground() {
+        
         adjustTextViewFrame(duration: 0)
+        
         guard !textView.text.isEmpty, currentFillColor != .clear else {
             textLayer.removeFromSuperlayer()
             return
@@ -592,6 +601,7 @@ extension HEInputTextViewController {
     }
 }
 
+
 extension HEInputTextViewController: UITextViewDelegate {
     func textViewDidChange(_ textView: UITextView) {
         drawTextBackground()
@@ -612,6 +622,20 @@ extension HEInputTextViewController: UITextViewDelegate {
             doneBtnClick()
             return false
         }
+        
+        let lines = (textView.text as NSString).replacingCharacters(in: range, with: text).components(separatedBy: .newlines)
+        if let lastLine = lines.last {
+            if lastLine.count > textStickerMaximumCharactersPerLine {
+                if lines.count + 1 > textStickerMaximumLines {
+                    return false
+                }
+                textView.text = textView.text + "\n" + text
+                DispatchQueue.main.async {
+                    self.drawTextBackground()
+                }
+                return false
+            }
+        }
         return true
     }
 }
@@ -621,7 +645,6 @@ extension HEInputTextViewController: NSLayoutManagerDelegate {
         guard layoutFinishedFlag else {
             return
         }
-        
         //drawTextBackground()
     }
 }

@@ -165,7 +165,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
 
     open lazy var trashbinView: UIView = {
         let view = UIView()
-        view.backgroundColor = .he.ashbinNormalBgColor
+        view.backgroundColor = .he.trashbinNormalBgColor
         view.layer.cornerRadius = 15
         view.layer.masksToBounds = true
         view.isHidden = true
@@ -931,10 +931,13 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     public func startImageSticker() {
         guard let imageStickerTray else { return }
         imageStickerTray.hideBlock = { [weak self] in
-            self?.hideAiStickerToast()
-            self?.setToolView(show: true)
-            self?.subEditingTopView.hide()
-            self?.imageStickerContainerIsHidden = true
+            guard let self else { return }
+            if self.selectedTool == nil {
+                self.setToolView(show: true)
+            }
+            self.hideAiStickerToast()
+            self.subEditingTopView.hide()
+            self.imageStickerContainerIsHidden = true
         }
         
         imageStickerTray.selectImageStickerBlock = { [weak self] image in
@@ -2118,6 +2121,8 @@ extension HEEditImageViewController: UICollectionViewDataSource, UICollectionVie
     }
 }
 
+// MARK: HEInputTextViewControllerDelegate
+
 extension HEEditImageViewController: HEInputTextViewControllerDelegate {
     func inputTextViewController(_ controller: HEInputTextViewController, stickerId: String?, didInput text: String, textColor: UIColor, fillColor: UIColor, font: UIFont, image: UIImage?) {
         if stickerId == nil { // new sticker
@@ -2161,7 +2166,6 @@ extension HEEditImageViewController: HEStickerViewDelegate {
         stickersContainer.bringSubviewToFront(sticker)
         preStickerState = sticker.state
         // 쓰레기통 표시
-        setToolView(show: false)
         trashbinView.layer.removeAllAnimations()
         trashbinView.isHidden = false
         trashbinView.alpha = 0
@@ -2172,7 +2176,7 @@ extension HEEditImageViewController: HEStickerViewDelegate {
         )
         frame.origin.y = visibleMaxY - trashbinSize.height + 18
         let target = frame
-        frame.origin.y = frame.origin.y + 15
+        frame.origin.y = target.origin.y + 15
         trashbinView.frame = frame
         UIView.animate(withDuration: 0.25, delay: 0.2) {
             self.trashbinView.frame = target
@@ -2180,6 +2184,8 @@ extension HEEditImageViewController: HEStickerViewDelegate {
         }
         // 스티커 트레이 숨김
         imageStickerTray?.hide()
+        // 숨김
+        setToolView(show: false)
         
         stickersContainer.subviews.forEach { view in
             if view !== sticker {
@@ -2207,7 +2213,7 @@ extension HEEditImageViewController: HEStickerViewDelegate {
     func stickerOnOperation(_ sticker: HEBaseStickerView, panGes: UIPanGestureRecognizer) {
         let point = panGes.location(in: view)
         if trashbinView.frame.contains(point) {
-            trashbinView.backgroundColor = .he.ashbinTintBgColor
+            trashbinView.backgroundColor = .he.trashbinTintBgColor
             trashbinImgView.isHighlighted = true
             if sticker.alpha == 1 {
                 sticker.layer.removeAllAnimations()
@@ -2216,7 +2222,7 @@ extension HEEditImageViewController: HEStickerViewDelegate {
                 }
             }
         } else {
-            trashbinView.backgroundColor = .he.ashbinNormalBgColor
+            trashbinView.backgroundColor = .he.trashbinNormalBgColor
             trashbinImgView.isHighlighted = false
             if sticker.alpha != 1 {
                 sticker.layer.removeAllAnimations()
@@ -2235,8 +2241,13 @@ extension HEEditImageViewController: HEStickerViewDelegate {
     func stickerEndOperation(_ sticker: HEBaseStickerView, panGes: UIPanGestureRecognizer) {
         if selectedTool == nil {
             setToolView(show: true)
-        } else if selectedTool == .imageSticker {
-            imageStickerTray?.show(in: view, frame: getImageStickerTrayFrame())
+        } else {
+            if selectedTool == .imageSticker {
+                imageStickerTray?.show(in: view, frame: getImageStickerTrayFrame())
+            }
+            if !isInSubEditController {
+                subEditingTopView.show()
+            }
         }
         
         trashbinView.layer.removeAllAnimations()

@@ -22,11 +22,11 @@ extension HEImageEditorWrapper where Base: UIColor {
         HEImageEditorUIConfiguration.default().editDoneBtnTitleColor
     }
     
-    static var ashbinNormalBgColor: UIColor {
+    static var trashbinNormalBgColor: UIColor {
         HEImageEditorUIConfiguration.default().ashbinNormalBgColor
     }
     
-    static var ashbinTintBgColor: UIColor {
+    static var trashbinTintBgColor: UIColor {
         HEImageEditorUIConfiguration.default().ashbinTintBgColor
     }
     
