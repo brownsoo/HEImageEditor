@@ -7,6 +7,21 @@
 
 import UIKit
 
+func deviceIsiPhone() -> Bool {
+    return UIDevice.current.userInterfaceIdiom == .phone
+}
+
+func deviceIsiPad() -> Bool {
+    return UIDevice.current.userInterfaceIdiom == .pad
+}
+
+func deviceSafeAreaInsets() -> UIEdgeInsets {
+    var insets: UIEdgeInsets = .zero
+    insets = UIApplication.shared.findKeyWindow()?.safeAreaInsets ?? .zero
+    return insets
+}
+
+
 extension UIViewController {
     @discardableResult
     func showAlert(_ text: String, confirmAction: ((UIAlertAction) -> Void)? = nil) -> UIAlertController {

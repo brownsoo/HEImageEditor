@@ -392,9 +392,9 @@ public extension HEImageEditorWrapper where Base: UIImage {
         
         let filter = CIFilter(name: "CIColorControls")
         filter?.setValue(ciImage, forKey: kCIInputImageKey)
-        filter?.setValue(HEImageEditorConfiguration.AdjustTool.brightness.filterValue(brightness), forKey: HEImageEditorConfiguration.AdjustTool.brightness.key)
-        filter?.setValue(HEImageEditorConfiguration.AdjustTool.contrast.filterValue(contrast), forKey: HEImageEditorConfiguration.AdjustTool.contrast.key)
-        filter?.setValue(HEImageEditorConfiguration.AdjustTool.saturation.filterValue(saturation), forKey: HEImageEditorConfiguration.AdjustTool.saturation.key)
+        filter?.setValue(HEConfiguration.AdjustTool.brightness.filterValue(brightness), forKey: HEConfiguration.AdjustTool.brightness.key)
+        filter?.setValue(HEConfiguration.AdjustTool.contrast.filterValue(contrast), forKey: HEConfiguration.AdjustTool.contrast.key)
+        filter?.setValue(HEConfiguration.AdjustTool.saturation.filterValue(saturation), forKey: HEConfiguration.AdjustTool.saturation.key)
         let outputCIImage = filter?.outputImage
         return outputCIImage?.he.toUIImage()
     }

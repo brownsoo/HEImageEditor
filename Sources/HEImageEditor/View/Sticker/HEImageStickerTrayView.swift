@@ -18,7 +18,7 @@ public protocol HEImageStickerTrayViewDataSource {
 
 public class HEImageStickerTrayView: UIView, HEImageStickerTray {
     
-    static let baseViewH: CGFloat = HEImageEditorLayout.imageStickerTrayHeight
+    static let baseViewH: CGFloat = HEConfiguration.imageStickerTrayHeight
     
     public var selectImageStickerBlock: ((HEImageSticker) -> Void)?
     public var hideBlock: (() -> Void)?

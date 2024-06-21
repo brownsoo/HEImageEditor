@@ -19,7 +19,7 @@ class HEAdjustSlider: UIView {
         label.layer.shadowOffset = .zero
         label.layer.shadowOpacity = 1
         label.textColor = .white
-        label.textAlignment = HEImageEditorUIConfiguration.default().adjustSliderType == .vertical ? .right : .center
+        label.textAlignment = HEUIConfiguration.default().adjustSliderType == .vertical ? .right : .center
         label.adjustsFontSizeToFitWidth = true
         label.minimumScaleFactor = 0.6
         return label
@@ -67,7 +67,7 @@ class HEAdjustSlider: UIView {
     
     private var valueForPanBegan: Float = 0
     
-    private var isVertical = HEImageEditorUIConfiguration.default().adjustSliderType == .vertical
+    private var isVertical = HEUIConfiguration.default().adjustSliderType == .vertical
     
     var beginAdjust: (() -> Void)?
     
@@ -162,8 +162,8 @@ class HEAdjustSlider: UIView {
             
             guard #available(iOS 10.0, *) else { return }
             if value == 0,
-               HEImageEditorConfiguration.default().impactFeedbackWhenAdjustSliderValueIsZero {
-                let style = HEImageEditorConfiguration.default().impactFeedbackStyle.uiFeedback
+               HEConfiguration.default().impactFeedbackWhenAdjustSliderValueIsZero {
+                let style = HEConfiguration.default().impactFeedbackStyle.uiFeedback
                 UIImpactFeedbackGenerator(style: style).impactOccurred()
             }
         } else {

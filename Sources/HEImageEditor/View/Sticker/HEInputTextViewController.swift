@@ -79,9 +79,9 @@ class HEInputTextViewController: UIViewController {
     
     private lazy var topToolBar = HETopConfirmBarView()
     
-    private lazy var textStickerMaximumLines = HEImageEditorConfiguration.default().textStickerMaximumLines
-    private lazy var textStickerMaximumCharactersPerLine = HEImageEditorConfiguration.default().textStickerMaximumCharactersPerLine
-    private lazy var textStickerCanLineBreak = HEImageEditorConfiguration.default().textStickerCanLineBreak
+    private lazy var textStickerMaximumLines = HEConfiguration.default().textStickerMaximumLines
+    private lazy var textStickerMaximumCharactersPerLine = HEConfiguration.default().textStickerMaximumCharactersPerLine
+    private lazy var textStickerCanLineBreak = HEConfiguration.default().textStickerCanLineBreak
     
     private lazy var textView: UITextView = {
         let textView = UITextView()
@@ -143,7 +143,7 @@ class HEInputTextViewController: UIViewController {
         return true
     }
     
-    private var fillStyle: HEImageEditorConfiguration.TextStickerFillStyle
+    private var fillStyle: HEConfiguration.TextStickerFillStyle
     private let stickerId: String?
     
     init(stickerId: String? = nil,
@@ -161,16 +161,16 @@ class HEInputTextViewController: UIViewController {
         if let textColor = textColor {
             currentTextColor = textColor
         } else {
-            let defColor = HEImageEditorConfiguration.default().textStickerDefaultTextColor
-            if HEImageEditorConfiguration.default().textStickerTextColors.contains(defColor) {
+            let defColor = HEConfiguration.default().textStickerDefaultTextColor
+            if HEConfiguration.default().textStickerTextColors.contains(defColor) {
                 currentTextColor = defColor
             } else {
-                currentTextColor = HEImageEditorConfiguration.default().textStickerTextColors.first ?? .white
+                currentTextColor = HEConfiguration.default().textStickerTextColors.first ?? .white
             }
         }
         
-        self.currentFillColor = fillColor ?? HEImageEditorConfiguration.default().textStickerDefaultFillColor
-        self.fillStyle = HEImageEditorConfiguration.default().textStickerFillStyle
+        self.currentFillColor = fillColor ?? HEConfiguration.default().textStickerDefaultFillColor
+        self.fillStyle = HEConfiguration.default().textStickerFillStyle
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -293,9 +293,9 @@ class HEInputTextViewController: UIViewController {
     
     private func getColorSource() -> [UIColor] {
         if selectedTool == .textColor {
-            return HEImageEditorConfiguration.default().textStickerTextColors
+            return HEConfiguration.default().textStickerTextColors
         }
-        return HEImageEditorConfiguration.default().textStickerBackgroundColors
+        return HEConfiguration.default().textStickerBackgroundColors
     }
     
     private func updateCollContentInset() {
@@ -618,7 +618,7 @@ extension HEInputTextViewController: UITextViewDelegate {
     }
     
     func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
-        if !HEImageEditorConfiguration.default().textStickerCanLineBreak && text == "\n" {
+        if !HEConfiguration.default().textStickerCanLineBreak && text == "\n" {
             doneBtnClick()
             return false
         }

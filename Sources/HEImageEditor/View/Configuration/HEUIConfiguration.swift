@@ -4,15 +4,15 @@
 //
 import UIKit
 
-public class HEImageEditorUIConfiguration: NSObject {
-    private static var single = HEImageEditorUIConfiguration()
+public class HEUIConfiguration: NSObject {
+    private static var single = HEUIConfiguration()
     
-    @objc public class func `default`() -> HEImageEditorUIConfiguration {
-        return HEImageEditorUIConfiguration.single
+    @objc public class func `default`() -> HEUIConfiguration {
+        return HEUIConfiguration.single
     }
     
     @objc public class func resetConfiguration() {
-        HEImageEditorUIConfiguration.single = HEImageEditorUIConfiguration()
+        HEUIConfiguration.single = HEUIConfiguration()
     }
         
     /// Adjust Slider Type
@@ -21,7 +21,7 @@ public class HEImageEditorUIConfiguration: NSObject {
     // MARK: Language properties
     
     /// Language for framework.
-    @objc public var languageType: HEImageEditorLanguageType = .system {
+    @objc public var languageType: HELanguageType = .system {
         didSet {
             Bundle.resetLanguage()
         }

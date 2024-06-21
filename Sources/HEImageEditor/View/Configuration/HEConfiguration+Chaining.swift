@@ -1,87 +1,87 @@
 //
-//  HEImageEditorConfiguration+Chaining.swift
+//  HEConfiguration+Chaining.swift
 //  HEImageEditor
 //
 
 import UIKit
 
-public extension HEImageEditorConfiguration {
+public extension HEConfiguration {
     @discardableResult
-    func editImageTools(_ tools: [HEImageEditorConfiguration.EditTool]) -> HEImageEditorConfiguration {
+    func editImageTools(_ tools: [HEConfiguration.EditTool]) -> HEConfiguration {
         self.tools = tools
         return self
     }
     
     @discardableResult
-    func drawColors(_ colors: [UIColor]) -> HEImageEditorConfiguration {
+    func drawColors(_ colors: [UIColor]) -> HEConfiguration {
         drawColors = colors
         return self
     }
     
     @discardableResult
-    func defaultDrawColor(_ color: UIColor) -> HEImageEditorConfiguration {
+    func defaultDrawColor(_ color: UIColor) -> HEConfiguration {
         defaultDrawColor = color
         return self
     }
     
     @discardableResult
-    func clipRatios(_ ratios: [HEImageClipRatio]) -> HEImageEditorConfiguration {
+    func clipRatios(_ ratios: [HEImageClipRatio]) -> HEConfiguration {
         clipRatios = ratios
         return self
     }
     
     @discardableResult
-    func textStickerTextColors(_ colors: [UIColor]) -> HEImageEditorConfiguration {
+    func textStickerTextColors(_ colors: [UIColor]) -> HEConfiguration {
         textStickerTextColors = colors
         return self
     }
     
     @discardableResult
-    func textStickerDefaultTextColor(_ color: UIColor) -> HEImageEditorConfiguration {
+    func textStickerDefaultTextColor(_ color: UIColor) -> HEConfiguration {
         textStickerDefaultTextColor = color
         return self
     }
     
     @discardableResult
-    func textStickerDefaultFont(_ font: UIFont?) -> HEImageEditorConfiguration {
+    func textStickerDefaultFont(_ font: UIFont?) -> HEConfiguration {
         textStickerDefaultFont = font
         return self
     }
     
     @discardableResult
-    func textStickerCanLineBreak(_ enable: Bool) -> HEImageEditorConfiguration {
+    func textStickerCanLineBreak(_ enable: Bool) -> HEConfiguration {
         textStickerCanLineBreak = enable
         return self
     }
     
     @discardableResult
-    func filters(_ filters: [HEFilter]) -> HEImageEditorConfiguration {
+    func filters(_ filters: [HEFilter]) -> HEConfiguration {
         self.filters = filters
         return self
     }
     
     @discardableResult
-    func imageStickerTray(_ view: (UIView & HEImageStickerTray)?) -> HEImageEditorConfiguration {
+    func imageStickerTray(_ view: (UIView & HEImageStickerTray)?) -> HEConfiguration {
         self.imageStickerTray = view
         return self
     }
     
     @discardableResult
-    func adjustTools(_ tools: [HEImageEditorConfiguration.AdjustTool]) -> HEImageEditorConfiguration {
+    func adjustTools(_ tools: [HEConfiguration.AdjustTool]) -> HEConfiguration {
         adjustTools = tools
         return self
     }
     
     @available(iOS 10.0, *)
     @discardableResult
-    func impactFeedbackWhenAdjustSliderValueIsZero(_ value: Bool) -> HEImageEditorConfiguration {
+    func impactFeedbackWhenAdjustSliderValueIsZero(_ value: Bool) -> HEConfiguration {
         impactFeedbackWhenAdjustSliderValueIsZero = value
         return self
     }
     
     @available(iOS 10.0, *)
     @discardableResult
-    func impactFeedbackStyle(_ style: HEImageEditorConfiguration.FeedbackStyle) -> HEImageEditorConfiguration {
+    func impactFeedbackStyle(_ style: HEConfiguration.FeedbackStyle) -> HEConfiguration {
         impactFeedbackStyle = style
         return self
     }

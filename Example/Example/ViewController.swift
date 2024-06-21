@@ -34,7 +34,7 @@ class ViewController: UIViewController {
     
     var resultImageEditModel: HEEditImageModel?
     
-    let config = HEImageEditorConfiguration.default()
+    let config = HEConfiguration.default()
     
     
     private var editCancelBtn: UIButton = {
@@ -93,7 +93,7 @@ class ViewController: UIViewController {
             HEImageSticker(id: $0, image: UIImage(named: $0) ?? UIImage())
         })
         
-        HEImageEditorConfiguration.default()
+        HEConfiguration.default()
             .clipRatios([.origin, .custom, .wh1x1])
             .imageStickerTray(stickerTray)
     }

@@ -8,27 +8,32 @@
 import Foundation
 import UIKit
 
-open class HEEditImageBottomToolView: UIView {
+public protocol HEEditToolView: UIView {
+    func unselectTool()
+    func selectTool(_ tool: HEConfiguration.EditTool)
+}
+
+open class HEEditImageBottomToolView: UIView, HEEditToolView {
     
     public static let height: CGFloat = 72
     public static let itemSize = CGSize(width: 54, height: 56)
     public static let padding = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
     public static let minimumInterspacing: CGFloat = 20
     
-    public let tools: [HEImageEditorConfiguration.EditTool]
-    public var toolSelectListener: ((HEImageEditorConfiguration.EditTool) -> Void)?
-    public private(set) var selectedTool: HEImageEditorConfiguration.EditTool?
+    public let tools: [HEConfiguration.EditTool]
+    public var toolSelectListener: ((HEConfiguration.EditTool) -> Void)?
+    public private(set) var selectedTool: HEConfiguration.EditTool?
     
     var interitemSpacing: CGFloat = 20
     
-    public init(tools: [HEImageEditorConfiguration.EditTool]) {
+    public init(tools: [HEConfiguration.EditTool]) {
         self.tools = tools
         super.init(frame: .zero)
         setupUI()
     }
     
     public required init?(coder: NSCoder) { // TODO: check coder
-        let tools = coder.decodeObject(forKey: "tools") as? [HEImageEditorConfiguration.EditTool]
+        let tools = coder.decodeObject(forKey: "tools") as? [HEConfiguration.EditTool]
         self.tools = tools ?? []
         super.init(coder: coder)
     }
@@ -38,12 +43,12 @@ open class HEEditImageBottomToolView: UIView {
         super.encode(with: coder)
     }
     
-    open func selectTool(_ tool: HEImageEditorConfiguration.EditTool) {
+    open func selectTool(_ tool: HEConfiguration.EditTool) {
         selectedTool = tool
         if let row = tools.firstIndex(where: { $0 == tool }) {
-            toolCollectionView.selectItem(at: IndexPath(row: row, section: 0), animated: true, scrollPosition: .centeredHorizontally)
+            collView.selectItem(at: IndexPath(row: row, section: 0), animated: true, scrollPosition: .centeredHorizontally)
         } else {
-            toolCollectionView.reloadData()
+            collView.reloadData()
         }
     }
     
@@ -51,13 +56,13 @@ open class HEEditImageBottomToolView: UIView {
         let tool = selectedTool
         selectedTool = nil
         if let tool, let row = tools.firstIndex(where: { $0 == tool }) {
-            toolCollectionView.deselectItem(at: IndexPath(row: row, section: 0), animated: true)
+            collView.deselectItem(at: IndexPath(row: row, section: 0), animated: true)
         } else {
-            toolCollectionView.reloadData()
+            collView.reloadData()
         }
     }
     
-    private var toolCollectionView: UICollectionView = {
+    private var collView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
         
@@ -70,17 +75,17 @@ open class HEEditImageBottomToolView: UIView {
     
     
     func setupUI() {
-        toolCollectionView.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(toolCollectionView)
+        collView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(collView)
         NSLayoutConstraint.activate([
-            toolCollectionView.leadingAnchor.constraint(equalTo: self.leadingAnchor),
-            toolCollectionView.trailingAnchor.constraint(equalTo: self.trailingAnchor),
-            toolCollectionView.topAnchor.constraint(equalTo: self.topAnchor),
-            toolCollectionView.bottomAnchor.constraint(equalTo: self.safeAreaLayoutGuide.bottomAnchor),
+            collView.leadingAnchor.constraint(equalTo: self.leadingAnchor),
+            collView.trailingAnchor.constraint(equalTo: self.trailingAnchor),
+            collView.topAnchor.constraint(equalTo: self.topAnchor),
+            collView.bottomAnchor.constraint(equalTo: self.safeAreaLayoutGuide.bottomAnchor),
         ])
-        toolCollectionView.contentInsetAdjustmentBehavior = .never
-        toolCollectionView.delegate = self
-        toolCollectionView.dataSource = self
+        collView.contentInsetAdjustmentBehavior = .never
+        collView.delegate = self
+        collView.dataSource = self
     }
     
     private func updateCollContentInset() {
@@ -103,7 +108,7 @@ open class HEEditImageBottomToolView: UIView {
         }
         let toolsWidth = (Self.itemSize.width + interitemSpacing) * toolsCount - interitemSpacing
         let inset = (fullSpace - toolsWidth) / 2
-        self.toolCollectionView.contentInset = UIEdgeInsets(top: 0,
+        self.collView.contentInset = UIEdgeInsets(top: 0,
                                                             left: max(inset, Self.padding.left),
                                                             bottom: 0,
                                                             right: max(inset, Self.padding.right))
@@ -161,7 +166,7 @@ extension HEEditImageBottomToolView: UICollectionViewDelegateFlowLayout {
 
 class HEEditToolCell: UICollectionViewCell {
     
-    var toolType: HEImageEditorConfiguration.EditTool = .draw {
+    var toolType: HEConfiguration.EditTool = .draw {
         didSet {
             badgeView.isHidden = true
             var icon: UIImage?

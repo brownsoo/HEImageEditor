@@ -7,39 +7,39 @@ import UIKit
 
 extension HEImageEditorWrapper where Base: UIColor {
     static var adjustSliderNormalColor: UIColor {
-        HEImageEditorUIConfiguration.default().adjustSliderNormalColor
+        HEUIConfiguration.default().adjustSliderNormalColor
     }
     
     static var adjustSliderTintColor: UIColor {
-        HEImageEditorUIConfiguration.default().adjustSliderTintColor
+        HEUIConfiguration.default().adjustSliderTintColor
     }
     
     static var editDoneBtnBgColor: UIColor {
-        HEImageEditorUIConfiguration.default().editDoneBtnBgColor
+        HEUIConfiguration.default().editDoneBtnBgColor
     }
     
     static var editDoneBtnTitleColor: UIColor {
-        HEImageEditorUIConfiguration.default().editDoneBtnTitleColor
+        HEUIConfiguration.default().editDoneBtnTitleColor
     }
     
     static var trashbinNormalBgColor: UIColor {
-        HEImageEditorUIConfiguration.default().ashbinNormalBgColor
+        HEUIConfiguration.default().ashbinNormalBgColor
     }
     
     static var trashbinTintBgColor: UIColor {
-        HEImageEditorUIConfiguration.default().ashbinTintBgColor
+        HEUIConfiguration.default().ashbinTintBgColor
     }
     
     static var toolTitleNormalColor: UIColor {
-        HEImageEditorUIConfiguration.default().toolTitleNormalColor
+        HEUIConfiguration.default().toolTitleNormalColor
     }
     
     static var toolTitleTintColor: UIColor {
-        HEImageEditorUIConfiguration.default().toolTitleTintColor
+        HEUIConfiguration.default().toolTitleTintColor
     }
 
     static var toolIconHighlightedColor: UIColor? {
-        HEImageEditorUIConfiguration.default().toolIconHighlightedColor
+        HEUIConfiguration.default().toolIconHighlightedColor
     }
 }
 

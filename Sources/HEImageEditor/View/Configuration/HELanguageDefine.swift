@@ -4,7 +4,7 @@
 //
 import Foundation
 
-@objc public enum HEImageEditorLanguageType: Int {
+@objc public enum HELanguageType: Int {
     case system
     case english
     case korean
@@ -12,7 +12,7 @@ import Foundation
     var key: String {
         var key = "en"
         
-        switch HEImageEditorUIConfiguration.default().languageType {
+        switch HEUIConfiguration.default().languageType {
         case .system:
             key = Locale.preferredLanguages.first ?? "en"
             
@@ -68,7 +68,7 @@ public struct HELocalLanguageKey: Hashable {
 }
 
 func localLanguageTextValue(_ key: HELocalLanguageKey) -> String {
-    if let value = HEImageEditorUIConfiguration.default().customLanguageConfig[key] {
+    if let value = HEUIConfiguration.default().customLanguageConfig[key] {
         return value
     }
     

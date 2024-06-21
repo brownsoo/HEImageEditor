@@ -73,7 +73,7 @@ extension Bundle {
     
     class func heLocalizedString(_ key: String) -> String {
         if bundle == nil {
-            guard let path = Bundle.HEImageEditorBundle?.path(forResource: HEImageEditorUIConfiguration.default().languageType.key, ofType: "lproj") else {
+            guard let path = Bundle.HEImageEditorBundle?.path(forResource: HEUIConfiguration.default().languageType.key, ofType: "lproj") else {
                 return ""
             }
             bundle = Bundle(path: path)

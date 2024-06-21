@@ -5,8 +5,8 @@
 
 import UIKit
 
-public class HEImageEditorConfiguration: NSObject {
-    private static var single = HEImageEditorConfiguration()
+public class HEConfiguration: NSObject {
+    private static var single = HEConfiguration()
     
     private static let defaultColors: [UIColor] = [
         .white,
@@ -45,19 +45,21 @@ public class HEImageEditorConfiguration: NSObject {
         .he.rgba(141, 141, 141)
     ]
     
-    @objc public class func `default`() -> HEImageEditorConfiguration {
-        return HEImageEditorConfiguration.single
+    @objc public class func `default`() -> HEConfiguration {
+        return HEConfiguration.single
     }
     
     @objc public class func resetConfiguration() {
-        HEImageEditorConfiguration.single = HEImageEditorConfiguration()
+        HEConfiguration.single = HEConfiguration()
     }
     
-    private var _tools: [HEImageEditorConfiguration.EditTool] = [.textSticker,  .imageSticker, .clip]
+    public static let imageStickerTrayHeight: CGFloat = 156
+    
+    private var _tools: [HEConfiguration.EditTool] = [.textSticker,  .imageSticker, .clip]
     
     /// Edit image tools.
     /// - warning: 이미지스티커를 포함할 경우, imageStickerTray: HEImageStickerTray를 꼭 설정해야 함.
-    public var tools: [HEImageEditorConfiguration.EditTool] {
+    public var tools: [HEConfiguration.EditTool] {
         get {
             if _tools.isEmpty {
                 return [.textSticker,  .imageSticker, .clip]
@@ -70,12 +72,12 @@ public class HEImageEditorConfiguration: NSObject {
         }
     }
     
-    private var _drawColors = HEImageEditorConfiguration.defaultColors
+    private var _drawColors = HEConfiguration.defaultColors
     /// Draw colors for image editor.
     @objc public var drawColors: [UIColor] {
         get {
             if _drawColors.isEmpty {
-                return HEImageEditorConfiguration.defaultColors
+                return HEConfiguration.defaultColors
             } else {
                 return _drawColors
             }
@@ -103,12 +105,12 @@ public class HEImageEditorConfiguration: NSObject {
         }
     }
     
-    private var _textStickerTextColors = HEImageEditorConfiguration.defaultTextColors
+    private var _textStickerTextColors = HEConfiguration.defaultTextColors
     /// Text sticker colors for image editor.
     @objc public var textStickerTextColors: [UIColor] {
         get {
             if _textStickerTextColors.isEmpty {
-                return HEImageEditorConfiguration.defaultTextColors
+                return HEConfiguration.defaultTextColors
             } else {
                 return _textStickerTextColors
             }
@@ -118,12 +120,12 @@ public class HEImageEditorConfiguration: NSObject {
         }
     }
     
-    private var _textStickerBackgroundColors = HEImageEditorConfiguration.defaultTextFillColors
+    private var _textStickerBackgroundColors = HEConfiguration.defaultTextFillColors
     /// Text sticker background colors for image editor.
     @objc public var textStickerBackgroundColors: [UIColor] {
         get {
             if _textStickerBackgroundColors.isEmpty {
-                return HEImageEditorConfiguration.defaultTextFillColors
+                return HEConfiguration.defaultTextFillColors
             } else {
                 return _textStickerBackgroundColors
             }
@@ -159,11 +161,11 @@ public class HEImageEditorConfiguration: NSObject {
     
     @objc public var imageStickerTray: (UIView & HEImageStickerTray)?
 
-    private var _adjustTools: [HEImageEditorConfiguration.AdjustTool] = [.brightness, .contrast, .saturation]
+    private var _adjustTools: [HEConfiguration.AdjustTool] = [.brightness, .contrast, .saturation]
     /// Adjust image tools. (Default order is brightness, contrast, saturation)
     /// Valid when the tools contain EditTool.adjust
     /// Because Objective-C Array can't contain Enum styles, so this property is invalid in Objective-C.
-    public var adjustTools: [HEImageEditorConfiguration.AdjustTool] {
+    public var adjustTools: [HEConfiguration.AdjustTool] {
         get {
             if _adjustTools.isEmpty {
                 return [.brightness, .contrast, .saturation]
@@ -188,10 +190,10 @@ public class HEImageEditorConfiguration: NSObject {
         }
     }
     
-    private var _impactFeedbackStyle: HEImageEditorConfiguration.FeedbackStyle = .medium
+    private var _impactFeedbackStyle: HEConfiguration.FeedbackStyle = .medium
     /// Impact feedback style. Defaults to .medium
     @available(iOS 10.0, *)
-    @objc public var impactFeedbackStyle: HEImageEditorConfiguration.FeedbackStyle {
+    @objc public var impactFeedbackStyle: HEConfiguration.FeedbackStyle {
         get {
             return _impactFeedbackStyle
         }
@@ -201,7 +203,7 @@ public class HEImageEditorConfiguration: NSObject {
     }
 }
 
-public extension HEImageEditorConfiguration {
+public extension HEConfiguration {
     
     @objc enum TextStickerFillStyle: Int {
         case area
