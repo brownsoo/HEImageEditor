@@ -16,9 +16,6 @@ public struct HEImageEditorWrapper<Base> {
 
 /// HE 변환 모델 
 public protocol HEImageEditorCompatible: AnyObject { }
-
-public protocol HEImageEditorCompatibleValue { }
-
 extension HEImageEditorCompatible {
     public var he: HEImageEditorWrapper<Self> {
         get { HEImageEditorWrapper(self) }
@@ -31,18 +28,21 @@ extension HEImageEditorCompatible {
     }
 }
 
+extension UIImage: HEImageEditorCompatible { }
+extension CIImage: HEImageEditorCompatible { }
+extension UIColor: HEImageEditorCompatible { }
+extension UIView: HEImageEditorCompatible { }
+extension UIGraphicsImageRenderer: HEImageEditorCompatible { }
+
+
+
+public protocol HEImageEditorCompatibleValue { }
 extension HEImageEditorCompatibleValue {
     public var he: HEImageEditorWrapper<Self> {
         get { HEImageEditorWrapper(self) }
         set { }
     }
 }
-
-extension UIImage: HEImageEditorCompatible { }
-extension CIImage: HEImageEditorCompatible { }
-extension UIColor: HEImageEditorCompatible { }
-extension UIView: HEImageEditorCompatible { }
-extension UIGraphicsImageRenderer: HEImageEditorCompatible { }
 
 extension String: HEImageEditorCompatibleValue { }
 extension CGFloat: HEImageEditorCompatibleValue { }

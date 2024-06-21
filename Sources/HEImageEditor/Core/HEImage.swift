@@ -6,79 +6,77 @@
 //
 
 import Foundation
+import Combine
 import UIKit
 
-//public protocol HEImage: Codable {
-//    /// 원본 이미지, 효과 정보를 가진 데이터
-//    
-//    var id: String { get }
-//    var origin: URL { get }
-//    /// 중간 정리된 파일
-//    var fatten: URL? { get }
-//    var thumbnailFile: URL? { get }
-//    
-//    var effects: [HEEffect] { get set }
-//    
-//    func makeUIImage() -> UIImage
-//    func applyEffect(_ effect: HEEffect)
-//}
-
-public struct HEImage: Codable {
-    
-    enum CodingKeys: String, CodingKey {
-        case origin
-        case effects
-        case frame
-    }
+@MainActor
+public class HEImage {
     
     public private(set) var id: String
-    public private(set) var origin: URL
-    public var frame: CGRect
+    private(set) var origin: URL?
+    private(set) var originImage: UIImage?
+    public private(set) var thumbnailURL: URL?
+    public private(set) var editImageURL: URL?
+    public var editModel: HEEditImageModel?
+    private var cancellables = Set<AnyCancellable>()
     
-    public var fatten: String? {
-        nil
-    }
-    
-    public var thumbnailFile: String? {
-        nil
-    }
-    
-    public var effects: [HEEffect]
-    
-    public init(origin: URL, effects: [HEEffect]) {
-        self.id = origin.absoluteString
+    public init(origin: URL, editModel: HEEditImageModel?) {
+        self.id = UUID().uuidString
         self.origin = origin
-        self.effects = effects
-        self.frame = .zero
+        self.editModel = editModel
     }
     
-    public init(from decoder: Decoder) throws {
-//        let container = try decoder.container(keyedBy: CodingKeys.self)
-//        self.origin = try container.decode(URL.self, forKey: .origin)
-//        var array = NSMutableArray()
-//        for effect in effects {
-//            array.add(effect)
-//        }
-        fatalError("init(coder:) has not been implemented")
+    public init(image: UIImage, editModel: HEEditImageModel?) {
+        self.id = UUID().uuidString
+        self.originImage = image
+        self.editModel = editModel
     }
-    
-    public func encode(to encoder: Encoder) throws {
-//        var container = encoder.container(keyedBy: CodingKeys.self)
-//        try container.encode(self.origin, forKey: .origin)
-//        var array = NSMutableArray()
-//        for effect in effects {
-//            array.add(effect)
-//        }
-//        try container.encode(array, forKey: .effects)
-        fatalError("init(coder:) has not been implemented")
-    }
+}
 
-    public func makeUIImage() -> UIImage {
-        fatalError("init(coder:) has not been implemented")
+extension HEImage {
+    
+    func originImage() async throws -> UIImage {
+        if let originImage {
+            return originImage
+        } else if let origin {
+            let image = try await Task.detached {
+                let data = try Data(contentsOf: origin)
+                return UIImage(data: data)!
+            }.value
+            return image
+        }
+        throw HEError.imageNotFound
     }
     
-    public func applyEffect(_ effect: HEEffect) {
-        fatalError("init(coder:) has not been implemented")
+    func directoryURL() -> URL {
+        if #available(iOS 16.0, *) {
+            return FileManager.default.temporaryDirectory.appending(path: "he", directoryHint: .isDirectory)
+        } else {
+            return FileManager.default.temporaryDirectory.appendingPathComponent("he", isDirectory: true)
+        }
     }
+    
+    func storeEditImage(uiImage: UIImage) async throws -> URL? {
+        let dir = directoryURL()
+        let fileName = self.id + ".png"
+        return try await Task.detached {
+            guard let data = uiImage.pngData() else {
+                throw HEError.generateFileData
+            }
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            
+            let fileURL: URL
+            if #available(iOS 16.0, *) {
+                fileURL = dir.appending(path: fileName, directoryHint: .notDirectory)
+            } else {
+                fileURL = dir.appendingPathComponent(fileName, isDirectory: false)
+            }
+            
+            FileManager.default.createFile(atPath: fileURL.path, contents: data)
+            return fileURL
+        }.value
+    }
+    
+    
 }
 

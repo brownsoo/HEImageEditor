@@ -7,7 +7,7 @@
 
 import Foundation
 
-/// 편집 대상 모델
+/// 편집 정보
 public class HEEditImageModel: NSObject {
     /// 드로잉스
     public let drawPaths: [HEDrawPath]

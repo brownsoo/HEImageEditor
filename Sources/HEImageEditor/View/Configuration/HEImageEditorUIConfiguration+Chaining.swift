@@ -6,12 +6,7 @@
 import UIKit
 
 public extension HEImageEditorUIConfiguration {
-    @discardableResult
-    func hudStyle(_ style: HEProgressHUD.HUDStyle) -> HEImageEditorUIConfiguration {
-        hudStyle = style
-        return self
-    }
-    
+        
     @discardableResult
     func adjustSliderType(_ type: HEAdjustSliderType) -> HEImageEditorUIConfiguration {
         adjustSliderType = type

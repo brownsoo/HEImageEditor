@@ -38,6 +38,7 @@
 		17D692212C2437EC007443EC /* HEClipStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D692202C2437EC007443EC /* HEClipStatus.swift */; };
 		17D692232C24380A007443EC /* HEAdjustStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D692222C24380A007443EC /* HEAdjustStatus.swift */; };
 		17D692252C24382F007443EC /* HEImageClipRatio.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D692242C24382F007443EC /* HEImageClipRatio.swift */; };
+		17D692272C253644007443EC /* HEError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D692262C253644007443EC /* HEError.swift */; };
 		E40208DC256B9BA60077F5DC /* HEImageEditor.h in Headers */ = {isa = PBXBuildFile; fileRef = E40208DA256B9BA60077F5DC /* HEImageEditor.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E40208EB256B9F9C0077F5DC /* HEEditImageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E40208E4256B9F9C0077F5DC /* HEEditImageViewController.swift */; };
 		E40208EC256B9F9C0077F5DC /* HEImageStickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E40208E5256B9F9C0077F5DC /* HEImageStickerView.swift */; };
@@ -59,7 +60,6 @@
 		FD3073352AD80B7700CFB618 /* HEStickerEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD3073342AD80B7700CFB618 /* HEStickerEffect.swift */; };
 		FD3073372AD80D0000CFB618 /* HEEditorActionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD3073362AD80D0000CFB618 /* HEEditorActionManager.swift */; };
 		FD3073392AD80D4000CFB618 /* HEPaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD3073382AD80D4000CFB618 /* HEPaths.swift */; };
-		FD7E7508284E134600EF34DD /* HEProgressHUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD7E7507284E134600EF34DD /* HEProgressHUD.swift */; };
 		FD8EFA522772026D0067ADF1 /* HEAdjustSlider.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD8EFA512772026D0067ADF1 /* HEAdjustSlider.swift */; };
 		FD8EFA54277206D30067ADF1 /* HEEditToolCells.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD8EFA53277206D30067ADF1 /* HEEditToolCells.swift */; };
 		FD8EFA562772CF3B0067ADF1 /* HEImageEditorConfiguration+Chaining.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD8EFA552772CF3B0067ADF1 /* HEImageEditorConfiguration+Chaining.swift */; };
@@ -115,6 +115,7 @@
 		17D692202C2437EC007443EC /* HEClipStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEClipStatus.swift; sourceTree = "<group>"; };
 		17D692222C24380A007443EC /* HEAdjustStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEAdjustStatus.swift; sourceTree = "<group>"; };
 		17D692242C24382F007443EC /* HEImageClipRatio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEImageClipRatio.swift; sourceTree = "<group>"; };
+		17D692262C253644007443EC /* HEError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEError.swift; sourceTree = "<group>"; };
 		E40208D7256B9BA60077F5DC /* HEImageEditor.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = HEImageEditor.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E40208DA256B9BA60077F5DC /* HEImageEditor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HEImageEditor.h; sourceTree = "<group>"; };
 		E40208DB256B9BA60077F5DC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -138,7 +139,6 @@
 		FD3073342AD80B7700CFB618 /* HEStickerEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEStickerEffect.swift; sourceTree = "<group>"; };
 		FD3073362AD80D0000CFB618 /* HEEditorActionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEEditorActionManager.swift; sourceTree = "<group>"; };
 		FD3073382AD80D4000CFB618 /* HEPaths.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEPaths.swift; sourceTree = "<group>"; };
-		FD7E7507284E134600EF34DD /* HEProgressHUD.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HEProgressHUD.swift; sourceTree = "<group>"; };
 		FD8EFA512772026D0067ADF1 /* HEAdjustSlider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HEAdjustSlider.swift; sourceTree = "<group>"; };
 		FD8EFA53277206D30067ADF1 /* HEEditToolCells.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEEditToolCells.swift; sourceTree = "<group>"; };
 		FD8EFA552772CF3B0067ADF1 /* HEImageEditorConfiguration+Chaining.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HEImageEditorConfiguration+Chaining.swift"; sourceTree = "<group>"; };
@@ -190,6 +190,7 @@
 				17D692202C2437EC007443EC /* HEClipStatus.swift */,
 				17D692222C24380A007443EC /* HEAdjustStatus.swift */,
 				17D692242C24382F007443EC /* HEImageClipRatio.swift */,
+				17D692262C253644007443EC /* HEError.swift */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -328,7 +329,6 @@
 				FD8EFA512772026D0067ADF1 /* HEAdjustSlider.swift */,
 				17D691E92C1BDF41007443EC /* HEPassThroughView.swift */,
 				FDE1A560282E61B500178B0F /* HEEnlargeButton.swift */,
-				FD7E7507284E134600EF34DD /* HEProgressHUD.swift */,
 				17D691972C12EC32007443EC /* HEClipBottomView.swift */,
 				17D691DD2C1AA941007443EC /* HELoadingView.swift */,
 				17D691DF2C1AE51D007443EC /* HETopConfirmBarView.swift */,
@@ -519,7 +519,6 @@
 				174095612C19FC1C00A4B18D /* Foundation+.swift in Sources */,
 				FDE1A55B282E58E700178B0F /* HEImageEditorUIConfiguration+Chaining.swift in Sources */,
 				FDBD955E2B148C74005EE2F8 /* UIGraphicsImageRenderer+.swift in Sources */,
-				FD7E7508284E134600EF34DD /* HEProgressHUD.swift in Sources */,
 				17D692232C24380A007443EC /* HEAdjustStatus.swift in Sources */,
 				17D6919D2C168A9C007443EC /* HEEditImageModel.swift in Sources */,
 				17D692212C2437EC007443EC /* HEClipStatus.swift in Sources */,
@@ -553,6 +552,7 @@
 				17D691992C167D0B007443EC /* TextStickerEffect.swift in Sources */,
 				17189EAA2C1041DB00270F4D /* HEImageViewPager.swift in Sources */,
 				17D691D72C183A80007443EC /* HEImageStickerTrayView.swift in Sources */,
+				17D692272C253644007443EC /* HEError.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

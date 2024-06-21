@@ -73,12 +73,11 @@ class LoadingView: UIView {
     }
     
     private let rotationAnimation: CAAnimation = {
-        let animation = CABasicAnimation(keyPath: "transform.rotation")
-        animation.fromValue = 0
-        animation.toValue = Double.pi * 2
-        animation.duration = 0.7
-        animation.repeatCount = MAXFLOAT
-
-        return animation
+        let ani = CABasicAnimation(keyPath: "transform.rotation")
+        ani.fromValue = 0
+        ani.toValue = Double.pi * 2
+        ani.duration = 0.4
+        ani.repeatCount = MAXFLOAT
+        return ani
     }()
 }

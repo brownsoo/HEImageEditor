@@ -9,12 +9,18 @@ public typealias HEEditImageBottomToolViewBuilder = (HEEditImageView) -> (toolVi
 
 public typealias HEEditImageTopToolViewBuilder = (HEEditImageView) -> (toolView: HETopBarView, height: CGFloat)
 
+public protocol HEEditImageViewControllerDelegate: AnyObject {
+    func didFinishEditImage(resultImage: UIImage, editId: String?, editModel: HEEditImageModel?) -> Void
+}
+
 open class HEEditImageViewController: UIViewController, HEEditImageView {
     static let maxDrawLineImageWidth: CGFloat = 600
-    
     static let shadowColorFrom = UIColor.black.withAlphaComponent(0.35).cgColor
-    
     static let shadowColorTo = UIColor.clear.cgColor
+    
+    public weak var delegate: HEEditImageViewControllerDelegate?
+    
+    public var editId: String?
     
     public var drawColViewH: CGFloat = 50
     /// 필터 컬렉션 트레이 높이
@@ -23,6 +29,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     public var adjustColViewH: CGFloat = 60
     
     public var trashbinSize = CGSize(width: 56, height: 56)
+    
     
     /// 메인 컨테이터 뷰
     open lazy var mainScrollView: UIScrollView = {
@@ -262,8 +269,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     private var toolViewStateTimer: Timer?
     
     private var hasAdjustedImage = false
-    // 편집 종료 TODO: Change to delegate
-    @objc public var editFinishBlock: ((UIImage, HEEditImageModel?) -> Void)?
     
     /// 뷰 컨트롤러를 담는 뷰
     private lazy var childVCContainer = UIView()
@@ -293,20 +298,20 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     ///
     public class func showImageEditor(
         parent: UIViewController,
-        animate: Bool = true,
         image: UIImage,
+        editId: String? = nil,
         editModel: HEEditImageModel? = nil,
+        animate: Bool = true,
+        delegate: HEEditImageViewControllerDelegate? = nil,
         topToolViewBuilder: HEEditImageTopToolViewBuilder? = nil,
         bottomToolViewBuilder: HEEditImageBottomToolViewBuilder? = nil,
-        clipImageBottomViewBuilder: HEClipImageBottomViewBuilder? = nil,
-        completion: ((UIImage, HEEditImageModel?) -> Void)?
+        clipImageBottomViewBuilder: HEClipImageBottomViewBuilder? = nil
     ) {
         let vc = HEEditImageViewController(image: image, editModel: editModel, topToolViewBuilder: topToolViewBuilder, bottomToolViewBuilder: bottomToolViewBuilder)
         vc.clipImageBottomViewBuilder = clipImageBottomViewBuilder
-        vc.editFinishBlock = { ei, editImageModel in
-            completion?(ei, editImageModel)
-        }
         vc.animateDismiss = animate
+        vc.editId = editId
+        vc.delegate = delegate
         vc.modalPresentationStyle = .overFullScreen
         parent.present(vc, animated: animate, completion: nil)
     }
@@ -345,8 +350,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         adjustTools = HEImageEditorConfiguration.default().adjustTools
         selectedAdjustTool = adjustTools.first
         actionManager = HEEditorActionManager(actions: editModel?.actions ?? [])
-        
-        
         
         initialStickers = editModel?.stickers.compactMap {
             HEBaseStickerView.initWithState($0)
@@ -1027,12 +1030,13 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             hasEdit = false
         }
         
+        let editId = self.editId
         var resImage = originalImage
         var editModel: HEEditImageModel?
         
         func callback() {
             dismiss(animated: animateDismiss) {
-                self.editFinishBlock?(resImage, editModel)
+                self.delegate?.didFinishEditImage(resultImage: resImage, editId: editId, editModel: editModel)
             }
         }
         
@@ -1042,8 +1046,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         }
         
         autoreleasepool {
-            let hud = HEProgressHUD(style: HEImageEditorUIConfiguration.default().hudStyle)
-            hud.show(in: view)
+            let loadingView = LoadingView()
+            loadingView.show(inCenterOf: view)
             
             DispatchQueue.main.async { [self] in
                 resImage = buildImage()
@@ -1067,7 +1071,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                     actions: actionManager.actions
                 )
                 
-                hud.hide()
+                loadingView.hide()
                 callback()
             }
         }

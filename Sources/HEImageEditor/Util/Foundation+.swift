@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Combine
 
 
 extension Int {
@@ -19,3 +20,6 @@ extension TimeInterval {
         return UInt64(self * 1_000_000_000)
     }
 }
+
+// Combine Cancellable
+extension Task : Cancellable {}

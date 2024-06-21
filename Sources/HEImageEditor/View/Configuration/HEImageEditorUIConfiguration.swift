@@ -14,10 +14,7 @@ public class HEImageEditorUIConfiguration: NSObject {
     @objc public class func resetConfiguration() {
         HEImageEditorUIConfiguration.single = HEImageEditorUIConfiguration()
     }
-    
-    /// HUD style. Defaults to dark.
-    @objc public var hudStyle: HEProgressHUD.HUDStyle = .dark
-    
+        
     /// Adjust Slider Type
     @objc public var adjustSliderType: HEAdjustSliderType = .vertical
     

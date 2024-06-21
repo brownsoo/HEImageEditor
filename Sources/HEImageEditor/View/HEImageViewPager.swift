@@ -9,21 +9,26 @@ import Foundation
 import UIKit
 
 public protocol HEImageViewPager {
-    var effectImageViews: [HEEditImageView] { get }
-    var selectedEffectImageView: HEEditImageView? { get }
+//    var imageViews: [HEEditImageView] { get }
+    var selectedImageView: HEEditImageView? { get }
     var currentPage: Int { get set }
     var pageCount: Int { get }
     
-    func addEffectImageView(imageView: HEEditImageView)
-    func removeEffectImageView(imageView: HEEditImageView)
-    func selectEffectImageView(imageView: HEEditImageView)
+    func addImageView(imageView: HEEditImageView)
+    func removeImageView(imageView: HEEditImageView)
+    func selectImageView(imageView: HEEditImageView)
     func nextPage()
     func prevPage()
 }
 
+public protocol HEImageViewPagerDataSource: AnyObject {
+    func numberOfImageViews(in pager: HEImageViewPager) -> Int
+    func imageViewPager(_ pager: HEImageViewPager, imageAt Index: Int) -> HEImage
+}
 
-public class HEImageViewPagerController: UIViewController {
+public class HEImageViewPagerController: UIPageViewController {
     
+    weak var imageDataSource: HEImageViewPagerDataSource?
     
     private lazy var indexLabel: UILabel = {
        let lb = UILabel()
@@ -32,6 +37,18 @@ public class HEImageViewPagerController: UIViewController {
         lb.textColor = .he.rgba(246, 246, 246)
         return lb
     }()
+    
+    
+    
+    public override func viewDidLoad() {
+        super.viewDidLoad()
+        setupUI()
+    }
+    
+    private func setupUI() {
+        self.dataSource = self
+        self.delegate = self
+    }
     
     @objc
     private func didClickCancel() {
@@ -71,4 +88,21 @@ public class HEImageViewPagerController: UIViewController {
         
         return (topbar, 44)
     }
+}
+
+
+extension HEImageViewPagerController: UIPageViewControllerDataSource {
+    public func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
+        <#code#>
+    }
+    
+    public func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
+        <#code#>
+    }
+    
+    
+}
+
+extension HEImageViewPagerController: UIPageViewControllerDelegate {
+    
 }

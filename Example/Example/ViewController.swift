@@ -199,11 +199,9 @@ extension ViewController {
             parent: self,
             image: image,
             editModel: editModel,
+            delegate: self,
             topToolViewBuilder: makeTopToolBuilder()
-        ) { [weak self] resImage, editModel in
-            self?.resultImageView.image = resImage
-            self?.resultImageEditModel = editModel
-        }
+        )
     }
    
     // ex
@@ -247,6 +245,13 @@ extension ViewController {
             toolView.revertClickListener = { clipView.revertEdit() }
             return (toolView, HEClipBottomView.estimateHeight)
         }
+    }
+}
+
+extension ViewController: HEEditImageViewControllerDelegate {
+    func didFinishEditImage(resultImage: UIImage, editId: String?, editModel: HEImageEditor.HEEditImageModel?) {
+        self.resultImageView.image = resultImage
+        self.resultImageEditModel = editModel
     }
 }
 

@@ -9,12 +9,10 @@ import Foundation
 import Photos
 import UIKit
 
-
-
-
 public protocol HEEditorActionListener: Equatable {
     func didUpdatedActions(_ actions: [HEEditorAction], redoActions: [HEEditorAction])
 }
+
 
 public protocol HEEditImageView: AnyObject {
     
