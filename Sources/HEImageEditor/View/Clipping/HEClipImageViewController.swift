@@ -76,7 +76,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
     var bottomShadowLayer: CAGradientLayer!
     private lazy var topView = HETopConfirmBarView()
     /// 회전, 크롭 툴 아이템 뷰
-    private var clipActionToolView: HEClipActionToolView!
+    private var toolView: HEClipActionToolView!
     
     private var shouldLayout = true
     
@@ -150,17 +150,17 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
             selectedRatio = ratio
         } else {
             firstEnter = true
-            selectedRatio = HEImageEditorConfiguration.default().clipRatios.first!
+            selectedRatio = .custom
         }
         
-        self.clipActionToolView = HEClipActionToolView(clipRatios: HEImageEditorConfiguration.default().clipRatios,
+        self.toolView = HEClipActionToolView(clipRatios: HEImageEditorConfiguration.default().clipRatios,
                                                        originImageSize: image.size,
                                                        selectedRatio: self.selectedRatio)
         self.bottomViewBuilder = bottomViewBuilder
         
         super.init(nibName: nil, bundle: nil)
         
-        self.clipActionToolView.delegate = self
+        self.toolView.delegate = self
         if firstEnter {
             calculateEditRect()
         }
@@ -211,12 +211,14 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
                     animateImageView.removeFromSuperview()
                 }
                 self.topView.show()
+                self.toolView.show()
             }
         } else {
             bottomView?.alpha = 1
             scrollView.alpha = 1
             gridView.alpha = 1
             topView.show(animate: false)
+            toolView.show(animate: false)
         }
     }
     
@@ -238,8 +240,8 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         topView.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: 48 + view.safeAreaInsets.top)
         topView.hide(animate: false)
         
-        clipActionToolView.frame = CGRect(x: 0, y: toolViewTop, width: view.bounds.width, height: HEClipActionToolView.viewHeight)
-        clipActionToolView.selectRatio(self.selectedRatio, animated: false)
+        toolView.frame = CGRect(x: 0, y: toolViewTop, width: view.bounds.width, height: HEClipActionToolView.viewHeight)
+        toolView.selectRatio(self.selectedRatio, animated: false)
         
         scrollView.frame = view.bounds
         dimView.frame = view.bounds
@@ -293,9 +295,10 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         view.addSubview(topView)
         topView.cancelClickCallback = self.cancelEdit
         topView.confirmClickCallback = self.doneEdit
+        topView.hide(animate: false)
         
         // 툴바
-        view.addSubview(clipActionToolView)
+        view.addSubview(toolView)
         
         gridPanGes = UIPanGestureRecognizer(target: self, action: #selector(gridGesPanAction(_:)))
         gridPanGes.delegate = self
@@ -771,31 +774,26 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         cleanTimer()
         dimView.alpha = 0
         gridView.isEditing = true
-        if clipActionToolView.alpha != 0 {
-            clipActionToolView.layer.removeAllAnimations()
-            UIView.animate(withDuration: 0.2) {
-                self.clipActionToolView.alpha = 0
-            }
-        }
     }
     
-    @objc func endEditing() {
+    @objc private func endEditing() {
         gridView.isEditing = false
         moveClipContentToCenter()
     }
     
-    func startTimer() {
+    private func startTimer() {
         cleanTimer()
-        resetTimer = Timer.scheduledTimer(timeInterval: 0.8, target: HEWeakProxy(target: self), selector: #selector(endEditing), userInfo: nil, repeats: false)
+        resetTimer = Timer.scheduledTimer(timeInterval: 0.5, target: HEWeakProxy(target: self), selector: #selector(endEditing), userInfo: nil, repeats: false)
         RunLoop.current.add(resetTimer!, forMode: .common)
     }
     
-    func cleanTimer() {
+    private func cleanTimer() {
         resetTimer?.invalidate()
         resetTimer = nil
     }
     
-    func moveClipContentToCenter() {
+    private func moveClipContentToCenter() {
+        
         let maxClipRect = maxClipFrame
         var clipRect = clipBoxFrame
         
@@ -825,13 +823,12 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
                 self.scrollView.zoomScale *= scale
                 self.scrollView.zoomScale = min(self.scrollView.maximumZoomScale, self.scrollView.zoomScale)
             }
-
+            
             if self.scrollView.zoomScale < self.scrollView.maximumZoomScale - CGFloat.ulpOfOne {
                 offset.x = min(self.scrollView.contentSize.width - clipRect.maxX, offset.x)
                 offset.y = min(self.scrollView.contentSize.height - clipRect.maxY, offset.y)
                 self.scrollView.contentOffset = offset
             }
-            self.clipActionToolView.alpha = 1
             self.dimView.alpha = 1
             self.changeClipBoxFrame(newFrame: clipRect)
         }

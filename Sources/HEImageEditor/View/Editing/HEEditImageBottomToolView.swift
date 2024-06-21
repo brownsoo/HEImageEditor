@@ -81,8 +81,6 @@ open class HEEditImageBottomToolView: UIView {
         toolCollectionView.contentInsetAdjustmentBehavior = .never
         toolCollectionView.delegate = self
         toolCollectionView.dataSource = self
-        
-        self.drawDebugOutline()
     }
     
     private func updateCollContentInset() {

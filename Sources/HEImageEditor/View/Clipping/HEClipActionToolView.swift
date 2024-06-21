@@ -42,7 +42,7 @@ class HEClipActionToolView: UIView {
         let totalWidth = (ClipActionCell.itemSize.width * (numberOfClipItems + 1)) + ClipActionSeparatorCell.itemSize.width // 1 => rotate
         let totalSpacingWidth = spaceBetweenCell * (numberOfClipItems - 1)
         clipActionColContentViewWidth = totalWidth + totalSpacingWidth
-        self.selectedRatio = selectedRatio ?? clipRatios.first ?? .custom
+        self.selectedRatio = selectedRatio ?? .custom
         
         super.init(frame: .zero)
         
@@ -82,6 +82,37 @@ class HEClipActionToolView: UIView {
         }
         self.selectedRatio = ratio
     }
+    
+    func show(animate: Bool = true) {
+        if animate {
+            self.isHidden = false
+            UIView.animate(withDuration: 0.2, delay: 0.1, options: [.curveEaseOut], animations: {
+                self.alpha = 1
+            })
+            UIView.animate(withDuration: 0.2, delay: 0.2, options: [.curveEaseOut], animations: {
+                self.transform = .identity
+            })
+        } else {
+            self.isHidden = false
+            self.transform = .identity
+            self.alpha = 1
+        }
+    }
+    
+    func hide(animate: Bool = true) {
+        if animate {
+            UIView.animate(withDuration: 0.2, delay: 0, options: [.curveLinear], animations: {
+                self.transform = CGAffineTransform(translationX: 0, y: 12)
+                self.alpha = 0
+            }) { _ in
+                self.isHidden = true
+            }
+        } else {
+            self.alpha = 0
+            self.isHidden = true
+            self.transform = CGAffineTransform(translationX: 0, y: 12)
+        }
+    }
 }
 
 
@@ -112,6 +143,7 @@ extension HEClipActionToolView: UICollectionViewDataSource, UICollectionViewDele
                 cell.configureCell(title: localLanguageTextValue(.rotate),
                                    image: UIImage.he.getImage("icEditRotate"),
                                    ratio: .origin)
+                cell.imageView.highlightedImage = UIImage.he.getImage("icEditRotate")?.withTintColor(.he.rgba(71, 120, 222))
             } else {
                 let ratio = ratios[indexPath.row]
                 cell.configureCell(title: localLanguageTextValue(HELocalLanguageKey(rawValue: ratio.title)),
@@ -136,8 +168,10 @@ extension HEClipActionToolView: UICollectionViewDataSource, UICollectionViewDele
         if section == .separator {
             return
         }
+        let cell = collectionView.cellForItem(at: indexPath) as? ClipActionCell
         if section == .rotate {
             self.delegate?.clipRotateSelected(sender: self)
+            cell?.imageView.isHighlighted = true
             return
         }
         let ratios = actionItems[section] ?? []
@@ -146,9 +180,16 @@ extension HEClipActionToolView: UICollectionViewDataSource, UICollectionViewDele
             return
         }
         selectedRatio = ratio
-        clipActionColView.reloadData()
         clipActionColView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
         self.delegate?.clipRatioSelected(sender: self, ratio: ratio)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
+        guard let section = ClipActionSection(rawValue: indexPath.section) else { return }
+        let cell = collectionView.cellForItem(at: indexPath) as? ClipActionCell
+        if section == .rotate {
+            cell?.imageView.isHighlighted = false
+        }
     }
     
     func collectionView(_ collectionView: UICollectionView, didHighlightItemAt indexPath: IndexPath) {

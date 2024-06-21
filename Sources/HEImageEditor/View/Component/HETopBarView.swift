@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 
-open class HETopBarView: HEPassThroughView {
+open class HETopBarView: UIView {
     
     private lazy var centerContainer = UIStackView()
     private lazy var trailingContainer = UIStackView()
@@ -21,12 +21,6 @@ open class HETopBarView: HEPassThroughView {
     
     required public init?(coder: NSCoder) {
         super.init(coder: coder)
-    }
-    
-    open override func layoutSubviews() {
-        super.layoutSubviews()
-        
-        self.drawDebugOutline()
     }
     
     public func show(animate: Bool = true) {
@@ -73,7 +67,7 @@ open class HETopBarView: HEPassThroughView {
     }
     
     public func setupUI() {
-        self.backgroundColor = .blue.withAlphaComponent(0.2)
+        self.backgroundColor = .black.withAlphaComponent(0.5)
         self.addSubview(leadingContainer)
         self.addSubview(trailingContainer)
         self.addSubview(centerContainer)
@@ -97,7 +91,8 @@ open class HETopBarView: HEPassThroughView {
                 it.centerYAnchor.constraint(equalTo: guide.centerYAnchor),
                 it.centerXAnchor.constraint(equalTo: guide.centerXAnchor),
                 it.leadingAnchor.constraint(greaterThanOrEqualTo: leadingContainer.trailingAnchor),
-                it.trailingAnchor.constraint(lessThanOrEqualTo: trailingContainer.leadingAnchor)
+                it.trailingAnchor.constraint(lessThanOrEqualTo: trailingContainer.leadingAnchor),
+                it.widthAnchor.constraint(equalToConstant: 0).withPriority(.fittingSizeLevel),
             ])
         }
         
@@ -110,6 +105,7 @@ open class HETopBarView: HEPassThroughView {
             NSLayoutConstraint.activate([
                 it.centerYAnchor.constraint(equalTo: guide.centerYAnchor),
                 it.leadingAnchor.constraint(equalTo: guide.leadingAnchor),
+                it.widthAnchor.constraint(equalToConstant: 0).withPriority(.defaultLow),
             ])
         }
         
@@ -122,6 +118,7 @@ open class HETopBarView: HEPassThroughView {
             NSLayoutConstraint.activate([
                 it.centerYAnchor.constraint(equalTo: guide.centerYAnchor),
                 it.trailingAnchor.constraint(equalTo: guide.trailingAnchor),
+                it.widthAnchor.constraint(equalToConstant: 0).withPriority(.defaultLow),
             ])
         }
     }

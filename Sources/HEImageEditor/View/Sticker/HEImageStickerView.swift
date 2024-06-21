@@ -98,11 +98,12 @@ class HEImageStickerView: HEBaseStickerView {
         self.imageView.image = image
     }
     
-    // TODO: containerWidth 처리
-    class func constraintSize(image: UIImage, container: UIView) -> CGSize {
-        let scale = (container.window?.windowScene?.screen.scale ?? image.scale)
-        let startSide: CGFloat = 150 / scale // 150 pixel
-        let minSide: CGFloat = 50 / scale // 50 pixel
+    class func constraintViewSize(image: UIImage, container: UIView) -> CGSize {
+//        let scale = (container.window?.windowScene?.screen.scale ?? image.scale)
+//        let startSide: CGFloat = 150 / scale // 150 pixel
+//        let minSide: CGFloat = 50 / scale // 50 pixel
+        let startSide: CGFloat = 150 
+        let minSide: CGFloat = 50
         let whRatio = image.size.width / image.size.height
         var size: CGSize = .zero
         if whRatio >= 1 {

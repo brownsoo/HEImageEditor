@@ -43,7 +43,7 @@ public class HEImageViewPagerController: UIViewController {
         
     }
     
-    func makeTopBarView() -> (HEPassThroughView, CGFloat) {
+    func makeTopBarView() -> (HETopBarView, CGFloat) {
         let topbar = HETopBarView()
         let cancelButton = UIButton()
         cancelButton.also { it in

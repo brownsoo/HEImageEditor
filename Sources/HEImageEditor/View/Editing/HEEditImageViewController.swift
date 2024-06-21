@@ -266,9 +266,10 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     @objc public var editFinishBlock: ((UIImage, HEEditImageModel?) -> Void)?
     
     /// 뷰 컨트롤러를 담는 뷰
-    private lazy var subEditingContainer = UIView()
-    /// 편집 상태에서 사용하는 탑뷰
-    private lazy var subEditingTopView = HETopConfirmBarView()
+    private lazy var childVCContainer = UIView()
+    
+    /// 선택된 편집 상태에서 사용하는 탑뷰
+    private lazy var editingTopView = HETopConfirmBarView()
     
     /// 자르기 화면의 하단에 무언가 놓을 수 있다.. (없애버릴까..)
     public var clipImageBottomViewBuilder: HEClipImageBottomViewBuilder?
@@ -484,8 +485,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         trashbinImgView.frame = CGRect(x: (trashbinSize.width - 24) / 2, y: (trashbinSize.height - 24) / 2, width: 24, height: 24)
         
         bottomToolView.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: bottomToolViewHeight)
-        subEditingContainer.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: bottomToolViewContainer.frame.minY)
-        subEditingTopView.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: 48 + insets.top)
+        childVCContainer.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: bottomToolViewContainer.frame.minY)
+        editingTopView.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: 48 + insets.top)
         
         if !drawPaths.isEmpty {
             drawLine()
@@ -596,7 +597,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     private func setupUI() {
         view.backgroundColor = .black
         
-        view.addSubview(subEditingContainer)
+        view.addSubview(childVCContainer)
         
         // 메인 컨텐츠
         view.addSubview(mainScrollView)
@@ -607,15 +608,15 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         containerView.addSubview(mosaicStickerActiveContainer)
         mosaicStickerActiveContainer.isHidden = true
         
-        // 편집용 상단 툴바
-        view.addSubview(subEditingTopView)
-        subEditingTopView.hide(animate: false)
-            
         // 상단 툴바
         if let topBarView {
             view.addSubview(topBarView)
             topBarView.layer.addSublayer(topShadowLayer)
         }
+        
+        // 편집용 상단 툴바
+        view.addSubview(editingTopView)
+        editingTopView.hide(animate: false)
         
         // 하단 툴바
         view.addSubview(bottomToolViewContainer)
@@ -898,7 +899,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 self.setToolView(show: true)
             }
             self.hideAiStickerToast()
-            self.subEditingTopView.hide()
+            self.editingTopView.hide()
             self.imageStickerContainerIsHidden = true
         }
         
@@ -910,7 +911,16 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         imageStickerTray.show(in: view, frame: trayFrame)
         imageStickerContainerIsHidden = false
         selectedTool = .imageSticker
-        subEditingTopView.show()
+        editingTopView.show()
+        editingTopView.confirmClickCallback = { [weak self] in
+            self?.selectedTool = nil
+            self?.imageStickerTray?.hide()
+        }
+        editingTopView.cancelClickCallback = {[weak self] in
+            self?.selectedTool = nil
+            self?.imageStickerTray?.hide()
+        }
+        
         
         setToolView(show: false)
         setDrawViews(hidden: true)
@@ -1080,8 +1090,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             exist.removeFromParent()
         }
         self.addChild(target)
-        subEditingContainer.addSubview(target.view)
-        target.view.frame = subEditingContainer.bounds
+        childVCContainer.addSubview(target.view)
+        target.view.frame = childVCContainer.bounds
         target.didMove(toParent: self)
         self.currentEditController = target
     }
@@ -1486,8 +1496,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         }
         let image: UIImage = sticker.image
         let scale = mainScrollView.zoomScale
-        let size = HEImageStickerView.constraintSize(image: image, container: view)
-        let originFrame = getStickerOriginFrame(size)
+        let stickerViewSize = HEImageStickerView.constraintViewSize(image: image, container: view)
+        let originFrame = getStickerOriginFrame(stickerViewSize)
         
         let imageSticker = HEImageStickerView(kind: sticker.kind,
                                               image: image,
@@ -2208,7 +2218,7 @@ extension HEEditImageViewController: HEStickerViewDelegate {
                 imageStickerTray?.show(in: view, frame: getImageStickerTrayFrame())
             }
             if !isInSubEditController {
-                subEditingTopView.show()
+                editingTopView.show()
             }
         }
         
