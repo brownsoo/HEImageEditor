@@ -6,7 +6,7 @@
 import Foundation
 import UIKit
 
-extension HEImageEditorWrapper where Base == String {
+extension HEWrapper where Base == String {
     func boundingRect(font: UIFont, limitSize: CGSize) -> CGSize {
         let style = NSMutableParagraphStyle()
         style.lineBreakMode = .byCharWrapping

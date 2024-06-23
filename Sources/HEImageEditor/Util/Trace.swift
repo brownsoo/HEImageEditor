@@ -42,9 +42,27 @@ func trace<T>(_ object: T?, filename: String = #file, line: Int = #line, funcNam
         logger.log("\(leading, privacy: .public)  nil")
     }
 }
+
+func woops<T>(_ object: T?, filename: String = #file, line: Int = #line, funcName: String = #function) {
+    let th = Thread.current.isMainThread ? "[main]": "[\(Thread.current.name ?? "-")]"
+    let time = timeFormatter.string(from: Date())
+    let file = filename.components(separatedBy: "/").last?.split(separator: ".").first ?? ""
+    let leading = "*HiHE* 💥 \(time) \(th) \(file) (L\(line))::\(funcName)"
+    if let obj = object {
+       // print("\(leading) \(obj)")
+        logger.log("\(leading, privacy: .public) \(String(describing: obj), privacy: .public)")
+    } else {
+        //print("\(leading) nil")
+        logger.log("\(leading, privacy: .public)  nil")
+    }
+}
+
 #else
 func trace() {}
 func trace<T>(_ object: T?) {
+    // 제외
+}
+func woops<T>(_ object: T?) {
     // 제외
 }
 #endif

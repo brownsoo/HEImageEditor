@@ -5,7 +5,7 @@
 
 import UIKit
 
-public extension HEImageEditorWrapper where Base: UIGraphicsImageRenderer {
+public extension HEWrapper where Base: UIGraphicsImageRenderer {
     static func renderImage(
         size: CGSize,
         formatConfig: ((UIGraphicsImageRendererFormat) -> Void)? = nil,

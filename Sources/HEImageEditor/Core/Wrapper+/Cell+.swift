@@ -6,7 +6,7 @@
 
 import UIKit
 
-extension HEImageEditorWrapper where Base: UICollectionViewCell {
+extension HEWrapper where Base: UICollectionViewCell {
     static var identifier: String {
         NSStringFromClass(Base.self)
     }

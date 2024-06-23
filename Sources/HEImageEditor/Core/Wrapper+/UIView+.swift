@@ -5,7 +5,7 @@
 
 import UIKit
 
-extension HEImageEditorWrapper where Base: UIView {
+extension HEWrapper where Base: UIView {
     var top: CGFloat {
         base.frame.minY
     }

@@ -5,7 +5,7 @@
 
 import UIKit
 
-extension HEImageEditorWrapper where Base: UIColor {
+extension HEWrapper where Base: UIColor {
     static var adjustSliderNormalColor: UIColor {
         HEUIConfiguration.default().adjustSliderNormalColor
     }
@@ -43,7 +43,7 @@ extension HEImageEditorWrapper where Base: UIColor {
     }
 }
 
-extension HEImageEditorWrapper where Base: UIColor {
+extension HEWrapper where Base: UIColor {
     /// - Parameters:
     ///   - r: 0~255
     ///   - g: 0~255

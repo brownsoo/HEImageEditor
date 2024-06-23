@@ -6,7 +6,7 @@
 import UIKit
 import Accelerate
 
-public extension HEImageEditorWrapper where Base: UIImage {
+public extension HEWrapper where Base: UIImage {
     // 회전 정정
     func fixOrientation() -> UIImage {
         if base.imageOrientation == .up {
@@ -369,7 +369,7 @@ public extension HEImageEditorWrapper where Base: UIImage {
     }
 }
 
-public extension HEImageEditorWrapper where Base: UIImage {
+public extension HEWrapper where Base: UIImage {
     var width: CGFloat {
         base.size.width
     }
@@ -379,7 +379,7 @@ public extension HEImageEditorWrapper where Base: UIImage {
     }
 }
 
-public extension HEImageEditorWrapper where Base: UIImage {
+public extension HEWrapper where Base: UIImage {
     /// 사진 밝기, 대비, 채도 조정
     /// - Parameters:
     ///   - brightness: value in [-1, 1]
@@ -400,13 +400,13 @@ public extension HEImageEditorWrapper where Base: UIImage {
     }
 }
 
-extension HEImageEditorWrapper where Base: UIImage {
+extension HEWrapper where Base: UIImage {
     static func getImage(_ named: String) -> UIImage? {
         return UIImage(named: named, in: Bundle.HEImageEditorBundle, compatibleWith: nil)
     }
 }
 
-public extension HEImageEditorWrapper where Base: CIImage {
+public extension HEWrapper where Base: CIImage {
     func toUIImage() -> UIImage? {
         let context = CIContext()
         guard let cgImage = context.createCGImage(base, from: base.extent) else {

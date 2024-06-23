@@ -7,12 +7,13 @@
 
 import Foundation
 import UIKit
+import Combine
 
 public protocol HEImageViewPager {
 //    var imageViews: [HEEditImageView] { get }
-    var selectedImage: HEImage? { get }
-    var currentPage: Int { get set }
-    var pageCount: Int { get }
+//    var selectedImage: HEImage? { get }
+//    var currentPage: Int { get set }
+//    var pageCount: Int { get }
     
 //    func addImageView(imageView: HEEditImageView)
 //    func removeImageView(imageView: HEEditImageView)
@@ -21,27 +22,16 @@ public protocol HEImageViewPager {
 //    func prevPage()
 }
 
-public protocol HEImageViewPagerDataSource: AnyObject {
-    func numberOfImageViews(in pager: HEImageViewPager) -> Int
-    func imageViewPager(_ pager: HEImageViewPager, imageAt Index: Int) -> HEImage
-    func imageViewPager(_ pager: HEImageViewPager, imageForId id: String) -> HEImage
+public protocol HEImageViewPagerDelegate: AnyObject {
+    
 }
 
 public class HEImageViewPagerController: UIViewController, HEImageViewPager {
     
-    public weak var imageDataSource: HEImageViewPagerDataSource?
+    public weak var delegate: HEImageViewPagerDelegate?
     
-    public var selectedImage: HEImage?
-    
-    public var currentPage: Int = 0 {
-        didSet {
-            
-        }
-    }
-    
-    public var pageCount: Int {
-        imageDataSource?.numberOfImageViews(in: self) ?? 0
-    }
+    public var imageSource: HEImageDataSource
+    public var imageCache: HEImageCache
     
     private lazy var indexLabel: UILabel = {
        let lb = UILabel()
@@ -58,6 +48,17 @@ public class HEImageViewPagerController: UIViewController, HEImageViewPager {
     private var topBarView: HETopBarView!
     private var topBarViewHeight: CGFloat = 0
     private var shouldLayout = true
+    private var cancellables = Set<AnyCancellable>()
+    
+    public init(imageSource: HEImageDataSource, imageCache: HEImageCache) {
+        self.imageSource = imageSource
+        self.imageCache = imageCache
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     public override func viewDidLoad() {
         super.viewDidLoad()
@@ -92,28 +93,26 @@ public class HEImageViewPagerController: UIViewController, HEImageViewPager {
         topBarView.show()
     }
     
-    private func showAiStickerToastIfNeed(stickerTrayFrame: CGRect) {
+    private func showResetToastIfNeed() {
         guard resetToastView.superview == nil else { return }
         view.addSubview(resetToastView)
         resetToastView.also { it in
             it.alpha = 0
             it.sizeToFit()
             it.frame = CGRect(x: (view.bounds.width - it.bounds.width) / 2,
-                              y: stickerTrayFrame.minY - it.bounds.height,
+                              y: bottomToolView.frame.minY - it.bounds.height - 14,
                               width: it.bounds.width,
                               height: it.bounds.height)
-            let tp = CGPoint(x: (view.bounds.width - it.bounds.width) / 2, y: stickerTrayFrame.minY - it.bounds.height - 16)
+            let tp = CGPoint(x: (view.bounds.width - it.bounds.width) / 2, y: bottomToolView.frame.minY - it.bounds.height - 24)
             UIView.animate(withDuration: 0.24, delay: 0.2, options: [.curveEaseOut], animations: {
                 it.alpha = 1
                 it.frame.origin = tp
-            }, completion: { _ in
-                self.perform(#selector(self.hideAiStickerToast), with: nil, afterDelay: 3)
             })
         }
     }
     
-    @objc private func hideAiStickerToast() {
-        NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(hideAiStickerToast), object: nil)
+    @objc private func hideResetToast() {
+        NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(hideResetToast), object: nil)
         guard resetToastView.superview != nil else {
             return
         }
@@ -126,12 +125,18 @@ public class HEImageViewPagerController: UIViewController, HEImageViewPager {
     
     @objc
     private func didClickCancel() {
-        
+        // TODO: - 
     }
     
     @objc
     private func didConfirmClick() {
-        
+        // TODO: -
+    }
+    
+    @objc
+    private func clickOnResetToast() {
+        self.perform(#selector(self.hideResetToast), with: nil, afterDelay: 0.2)
+        // TODO: -
     }
     
     func makeTopBarView() -> (HETopBarView, CGFloat) {
@@ -171,29 +176,13 @@ public class HEImageViewPagerController: UIViewController, HEImageViewPager {
         }
         let toolbar = HEEditImageBottomToolView(tools: ts)
         toolbar.toolSelectListener = { [weak self] type in
-//            guard let editView else { return }
-//            if editView.isImageEditing {
-//                editView.stopCurrentEditing()
-//                return
-//            }
-//            switch type {
-//            case .draw:
-//                editView.startDrawing()
-//            case .clip:
-//                editView.startClipping()
-//            case .imageSticker:
-//                editView.startImageSticker()
-//            case .textSticker:
-//                editView.startTextSticker()
-//            case .mosaicDraw:
-//                editView.startMosaicDrawing()
-//            case .filter:
-//                editView.startFiltering()
-//            case .adjust:
-//                editView.startAdjusting()
-//            }
+            self?.startEditImage(tool: type)
         }
         return (toolbar, 76)
+    }
+    
+    private func startEditImage(tool: HEConfiguration.EditTool) {
+        
     }
 }
 
@@ -208,6 +197,7 @@ extension HEImageViewPagerController {
         coll.backgroundColor = .clear
         coll.showsHorizontalScrollIndicator = false
         HEImageViewPageCell.he.register(coll)
+        coll.allowsSelection = false
         coll.dataSource = self
         coll.delegate = self
         view.addSubview(coll)
@@ -235,24 +225,35 @@ extension HEImageViewPagerController {
         bt.titleEdgeInsets = UIEdgeInsets(top: 0, left: 2, bottom: 0, right: -2)
         bt.contentEdgeInsets = UIEdgeInsets(top: 14, left: 16, bottom: 14, right: 16 + 2)
         bt.adjustsImageWhenHighlighted = false
+        bt.addTarget(self, action: #selector(clickOnResetToast), for: .touchUpInside)
         resetToastView = bt
     }
     
 }
 
 extension HEImageViewPagerController: UICollectionViewDelegate {
+    public func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+        let ord = (indexPath.row + 1)
+        let total = imageSource.numberOfImages()
+        indexLabel.text = "\(ord) / \(total)"
+    }
     
 }
 
 extension HEImageViewPagerController: UICollectionViewDataSource {
     public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return pageCount
+        return imageSource.numberOfImages()
     }
     
     public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HEImageViewPageCell.he.identifier, for: indexPath)
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HEImageViewPageCell.he.identifier, for: indexPath) as! HEImageViewPageCell
+        
+        if let hei = imageSource.imageStore(at: indexPath.row) {
+            cell.loadImage(task: imageCache.editImage(forHei: hei))
+        }
         return cell
     }
+    
     
     
 }
@@ -260,6 +261,7 @@ extension HEImageViewPagerController: UICollectionViewDataSource {
 class HEImageViewPageCell: UICollectionViewCell {
     
     private var imageView: UIImageView!
+    private var imageLoadTask: Cancellable?
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -280,5 +282,19 @@ class HEImageViewPageCell: UICollectionViewCell {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    func loadImage(task: Task<UIImage, Error>) {
+        imageView.image = nil
+        imageLoadTask?.cancel()
+        imageLoadTask = Task { [weak self] in
+            do {
+                let image = try await task.value
+                if Task.isCancelled { return }
+                self?.imageView.image = image
+            } catch {
+                woops(error)
+            }
+        }
     }
 }
