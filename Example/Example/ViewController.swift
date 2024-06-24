@@ -80,6 +80,9 @@ class ViewController: UIViewController {
     
     var imageStickers: [HEImageSticker] = []
     
+    lazy var imageStore = HESimpleImageStore()
+    
+    
     func configImageEditor() {
         
         let stickerTray = HEImageStickerTrayView()
@@ -89,8 +92,10 @@ class ViewController: UIViewController {
         imageStickers.append(HEImageSticker.mosaicIcon)
         imageStickers.append(contentsOf: (1...18).map { (v) -> String in
             "imageSticker" + String(v)
-        }.compactMap {
-            HEImageSticker(id: $0, image: UIImage(named: $0) ?? UIImage())
+        }.compactMap { name in
+            HEImageSticker(id: name) {
+                UIImage(named: name) ?? UIImage()
+            }
         })
         
         HEConfiguration.default()
@@ -99,6 +104,27 @@ class ViewController: UIViewController {
     }
     
     
+    func startEditSingleImage(_ image: UIImage, editModel: HEEditImageModel?) {
+        HEEditImageViewController.showImageEditor(
+            parent: self,
+            image: image,
+            editModel: editModel,
+            delegate: self,
+            topToolViewBuilder: makeTopToolBuilder()
+        )
+    }
+   
+    
+    func startEditMultipleImages(_ images: [HEImage]) {
+        imageStore.clearAll()
+        imageStore.addHEImages(images)
+        let vc = HEImageViewPagerController(imageStore: imageStore,
+                                            imageCache: imageStore,
+                                            stickerDataSource: self)
+        
+        vc.modalPresentationStyle = .fullScreen
+        present(vc, animated: true)
+    }
 }
 
 extension ViewController: HEImageStickerTrayViewDataSource {
@@ -194,16 +220,6 @@ extension ViewController {
         startEditSingleImage(oi, editModel: resultImageEditModel)
     }
     
-    func startEditSingleImage(_ image: UIImage, editModel: HEEditImageModel?) {
-        HEEditImageViewController.showImageEditor(
-            parent: self,
-            image: image,
-            editModel: editModel,
-            delegate: self,
-            topToolViewBuilder: makeTopToolBuilder()
-        )
-    }
-   
     // ex
     private func makeTopToolBuilder() -> HEEditImageTopToolViewBuilder {
         return { [weak self] editView in

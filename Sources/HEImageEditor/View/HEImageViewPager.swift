@@ -11,8 +11,8 @@ import Combine
 
 public protocol HEImageViewPager {
 //    var imageViews: [HEEditImageView] { get }
-//    var selectedImage: HEImage? { get }
-//    var currentPage: Int { get set }
+    var currentImage: HEImage? { get }
+    var currentIndex: Int? { get }
 //    var pageCount: Int { get }
     
 //    func addImageView(imageView: HEEditImageView)
@@ -29,9 +29,13 @@ public protocol HEImageViewPagerDelegate: AnyObject {
 public class HEImageViewPagerController: UIViewController, HEImageViewPager {
     
     public weak var delegate: HEImageViewPagerDelegate?
+    public weak var stickerDataSource: HEImageStickerTrayViewDataSource?
     
-    public var imageSource: HEImageDataSource
-    public var imageCache: HEImageCache
+    public weak var imageStore: HEImageDataStore!
+    public weak var imageCache: HEImageCache!
+    
+    public private(set) var currentImage: HEImage?
+    public private(set) var currentIndex: Int?
     
     private lazy var indexLabel: UILabel = {
        let lb = UILabel()
@@ -50,9 +54,12 @@ public class HEImageViewPagerController: UIViewController, HEImageViewPager {
     private var shouldLayout = true
     private var cancellables = Set<AnyCancellable>()
     
-    public init(imageSource: HEImageDataSource, imageCache: HEImageCache) {
-        self.imageSource = imageSource
+    public init(imageStore: HEImageDataStore,
+                imageCache: HEImageCache,
+                stickerDataSource: HEImageStickerTrayViewDataSource?) {
+        self.imageStore = imageStore
         self.imageCache = imageCache
+        self.stickerDataSource = stickerDataSource
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -137,6 +144,13 @@ public class HEImageViewPagerController: UIViewController, HEImageViewPager {
     private func clickOnResetToast() {
         self.perform(#selector(self.hideResetToast), with: nil, afterDelay: 0.2)
         // TODO: -
+        if let currentIndex, let hei = imageStore.getHEImage(at: currentIndex) {
+            Task {
+                hei.setEditModel(nil)
+                await imageCache.clearCached(forHei: hei)
+                collView.reloadItems(at: [IndexPath(row: currentIndex, section: 0)])
+            }
+        }
     }
     
     func makeTopBarView() -> (HETopBarView, CGFloat) {
@@ -176,15 +190,73 @@ public class HEImageViewPagerController: UIViewController, HEImageViewPager {
         }
         let toolbar = HEEditImageBottomToolView(tools: ts)
         toolbar.toolSelectListener = { [weak self] type in
-            self?.startEditImage(tool: type)
+            if let self, let currentImage {
+                self.startEditImage(hei: currentImage, tool: type)
+            }
         }
         return (toolbar, 76)
     }
     
-    private func startEditImage(tool: HEConfiguration.EditTool) {
-        
+    private func setupHEConfiguration() {
+        let stickerTray = HEImageStickerTrayView()
+        stickerTray.dataSource = self.stickerDataSource
+        HEConfiguration.default()
+            .clipRatios([.origin, .custom, .wh1x1])
+            .imageStickerTray(stickerTray)
+    }
+    
+    private func startEditImage(hei: HEImage, tool: HEConfiguration.EditTool?) {
+        let topBuilder: HEEditImageTopToolViewBuilder = { [weak self] _ in
+            return self?.makeTopBarView()
+        }
+        let bottomBuilder: HEEditImageBottomToolViewBuilder = { [weak self] _ in
+            return self?.makeBottomToolView()
+        }
+        Task { @MainActor in
+            do {
+                let image = try await self.imageCache.editImage(forHei: hei).value
+                let editModel = hei.editModel
+                setupHEConfiguration()
+                
+                let vc = HEEditImageViewController(image: image, editModel: editModel, topToolViewBuilder: topBuilder, bottomToolViewBuilder: bottomBuilder)
+                vc.delegate = self
+                vc.editId = hei.id
+                vc.modalPresentationStyle = .overFullScreen
+                self.present(vc, animated: false)
+            } catch {
+                woops(error)
+            }
+        }
+        .store(in: &cancellables)
     }
 }
+
+extension HEImageViewPagerController: HEEditImageViewControllerDelegate {
+    public func didFinishEditImage(resultImage: UIImage, editId: String?, editModel: HEEditImageModel?) {
+        // TODO: 편집 데이터 교체
+        guard let editId, let hei = imageStore.getHEImage(forId: editId) else {
+            return
+        }
+        Task {
+            hei.setEditModel(editModel)
+            do {
+                let fileUrl = try await imageCache.cacheEditImage(uiImage: resultImage, forHei: hei).value
+                trace(fileUrl)
+                let thumbUrl = try await imageCache.cacheThumbnailImage(uiImage: resultImage, forHei: hei).value
+                trace(thumbUrl)
+            } catch {
+                woops(error)
+            }
+            
+            if let currentIndex, currentIndex < imageStore.numberOfImages() {
+                collView.reloadItems(at: [IndexPath(row: currentIndex, section: 0)])
+            }
+        }
+    }
+    
+    
+}
+
 
 extension HEImageViewPagerController {
     
@@ -231,32 +303,57 @@ extension HEImageViewPagerController {
     
 }
 
-extension HEImageViewPagerController: UICollectionViewDelegate {
-    public func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-        let ord = (indexPath.row + 1)
-        let total = imageSource.numberOfImages()
-        indexLabel.text = "\(ord) / \(total)"
+
+
+extension HEImageViewPagerController: UICollectionViewDelegateFlowLayout {
+    public func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        return view.bounds.size
     }
-    
 }
 
-extension HEImageViewPagerController: UICollectionViewDataSource {
+extension HEImageViewPagerController: UICollectionViewDataSource, UICollectionViewDelegate {
+    
+    public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        trace()
+    }
+    
+    public func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
+        trace()
+    }
+    
+    public func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+        let ord = (indexPath.row + 1)
+        let total = imageStore.numberOfImages()
+        indexLabel.text = "\(ord) / \(total)"
+        
+        trace()
+        
+        if let cell = cell as? HEImageViewPageCell, let hei = imageStore.getHEImage(at: indexPath.row) {
+            cell.loadImage(task: imageCache.editImage(forHei: hei))
+        }
+    }
+    
+    public func collectionView(_ collectionView: UICollectionView, didEndDisplaying cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+        let ord = (indexPath.row + 1)
+        let total = imageStore.numberOfImages()
+        indexLabel.text = "\(ord) / \(total)"
+        currentImage = imageStore.getHEImage(at: indexPath.row)
+        currentIndex = indexPath.row
+        trace()
+    }
+    
     public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return imageSource.numberOfImages()
+        return imageStore.numberOfImages()
     }
     
     public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HEImageViewPageCell.he.identifier, for: indexPath) as! HEImageViewPageCell
-        
-        if let hei = imageSource.imageStore(at: indexPath.row) {
-            cell.loadImage(task: imageCache.editImage(forHei: hei))
-        }
         return cell
     }
     
-    
-    
 }
+
+
 
 class HEImageViewPageCell: UICollectionViewCell {
     
@@ -285,6 +382,8 @@ class HEImageViewPageCell: UICollectionViewCell {
     }
     
     func loadImage(task: Task<UIImage, Error>) {
+        
+        trace()
         imageView.image = nil
         imageLoadTask?.cancel()
         imageLoadTask = Task { [weak self] in

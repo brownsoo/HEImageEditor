@@ -28,7 +28,6 @@ public class HEImageStickerTrayView: UIView, HEImageStickerTray {
     
     public weak var dataSource: HEImageStickerTrayViewDataSource?
     
-    
     private var baseView: UIView!
     private var collectionView: UICollectionView!
     private var trayBottomConstraint: NSLayoutConstraint!
@@ -172,7 +171,9 @@ extension HEImageStickerTrayView: UICollectionViewDataSource, UICollectionViewDe
     public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ImageStickerCell.reuseIdentifier, for: indexPath) as! ImageStickerCell
         let sticker = self.dataSource?.imageStickerTrayView(self, stickerForItemAt: indexPath)
-        cell.imageView.image = sticker?.image
+        Task {
+            cell.imageView.image = await sticker?.imageLoader()            
+        }
         
         return cell
     }

@@ -16,3 +16,13 @@
 "effect-mosaicDraw"="모자이크";
 "effect-filter"="필터";
 "effect-adjust"="색감조정";
+
+"camera"="카메라";
+"album"="앨범";
+"close"= "닫기";
+"cancel"="취소";
+"go_to_setting"="설정으로 이동";
+"perms_accessing_album"="사진 등록을 위해 앨범 접근을 허용해주세요.";
+"perms_limited_album"="사진 앨범에 접근 권한이 없습니다.";
+"perms_accessing_camera"="사진 등록을 위해 카메라 접근을 허용해주세요.";
+"perms_limited_camera"="카메라 접근 권한이 없습니다.";

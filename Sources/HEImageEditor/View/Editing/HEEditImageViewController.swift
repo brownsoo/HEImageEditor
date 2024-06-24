@@ -5,9 +5,9 @@
 
 import UIKit
 
-public typealias HEEditImageBottomToolViewBuilder = (HEEditImageView) -> (toolView: HEEditToolView, height: CGFloat)
+public typealias HEEditImageTopToolViewBuilder = (HEEditImageView) -> (toolView: HETopBarView, height: CGFloat)?
+public typealias HEEditImageBottomToolViewBuilder = (HEEditImageView) -> (toolView: HEEditToolView, height: CGFloat)?
 
-public typealias HEEditImageTopToolViewBuilder = (HEEditImageView) -> (toolView: HETopBarView, height: CGFloat)
 
 public protocol HEEditImageViewControllerDelegate: AnyObject {
     func didFinishEditImage(resultImage: UIImage, editId: String?, editModel: HEEditImageModel?) -> Void
@@ -79,7 +79,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         return layer
     }()
     
-    private weak var bottomToolView: HEEditToolView!
+    private weak var bottomToolView: HEEditToolView?
     private var bottomToolViewHeight: CGFloat!
     
     private var imageStickerTray: (UIView & HEImageStickerTray)? {
@@ -207,7 +207,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     private var selectedTool: HEConfiguration.EditTool? {
         didSet {
             if selectedTool == nil {
-                bottomToolView.unselectTool()
+                bottomToolView?.unselectTool()
             }
         }
     }
@@ -479,7 +479,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         )
         trashbinImgView.frame = CGRect(x: (trashbinSize.width - 24) / 2, y: (trashbinSize.height - 24) / 2, width: 24, height: 24)
         
-        bottomToolView.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: bottomToolViewHeight)
+        bottomToolView?.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: bottomToolViewHeight)
         childVCContainer.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: bottomToolViewContainer.frame.minY)
         editingTopView.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: 48 + insets.top)
         
@@ -499,6 +499,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         super.viewWillTransition(to: size, with: coordinator)
         shouldLayout = true
     }
+
     
     // MARK: --- lifecycle --
     
@@ -615,10 +616,12 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         // 하단 툴바
         view.addSubview(bottomToolViewContainer)
         let builder = self.bottomToolViewBuilder(self)
-        bottomToolView = builder.toolView
-        bottomToolViewHeight = builder.height
+        bottomToolView = builder?.toolView
+        bottomToolViewHeight = builder?.height ?? 0
         bottomToolViewContainer.layer.addSublayer(bottomShadowLayer)
-        bottomToolViewContainer.addSubview(bottomToolView)
+        if let bottomToolView {
+            bottomToolViewContainer.addSubview(bottomToolView)
+        }
         
         if tools.contains(.draw) {
             bottomToolViewContainer.addSubview(eraserBtnBgBlurView)
@@ -1482,31 +1485,33 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     /// 스티커를 뷰로 추가
     private func addImageStickerView(_ sticker: HEImageSticker) {
-        if sticker.id == HEImageSticker.faceAiIcon.id {
-            if loadingView.isShowing {
+        Task {
+            if sticker.id == HEImageSticker.faceAiIcon.id {
+                if loadingView.isShowing {
+                    return
+                }
+                addImageStickersOnFaces()
+                showAiStickerToastIfNeed(stickerTrayFrame: getImageStickerTrayFrame())
                 return
             }
-            addImageStickersOnFaces()
-            showAiStickerToastIfNeed(stickerTrayFrame: getImageStickerTrayFrame())
-            return
+            let image: UIImage = await sticker.imageLoader()
+            let scale = mainScrollView.zoomScale
+            let stickerViewSize = HEImageStickerView.constraintViewSize(image: image, container: view)
+            let originFrame = getStickerOriginFrame(stickerViewSize)
+            
+            let imageSticker = HEImageStickerView(kind: sticker.kind,
+                                                  image: image,
+                                                  originScale: 1 / scale,
+                                                  originAngle: -currentClipStatus.angle,
+                                                  originFrame: originFrame)
+            attachSticker(imageSticker)
+            if sticker.kind == .mosaic {
+                applyMosaicImageToStickerView(imageSticker)
+            }
+            view.layoutIfNeeded()
+            
+            actionManager.storeAction(.sticker(oldState: nil, newState: imageSticker.state))
         }
-        let image: UIImage = sticker.image
-        let scale = mainScrollView.zoomScale
-        let stickerViewSize = HEImageStickerView.constraintViewSize(image: image, container: view)
-        let originFrame = getStickerOriginFrame(stickerViewSize)
-        
-        let imageSticker = HEImageStickerView(kind: sticker.kind,
-                                              image: image,
-                                              originScale: 1 / scale,
-                                              originAngle: -currentClipStatus.angle,
-                                              originFrame: originFrame)
-        attachSticker(imageSticker)
-        if sticker.kind == .mosaic {
-            applyMosaicImageToStickerView(imageSticker)
-        }
-        view.layoutIfNeeded()
-        
-        actionManager.storeAction(.sticker(oldState: nil, newState: imageSticker.state))
     }
     
     private func addImageStickersOnFaces() {
@@ -1533,7 +1538,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 for result in results {
                     trace(result)
                     if let sticker = imageStickerTray.randomSticker(inSection: 0) {
-                        let image = sticker.image
+                        let image = await sticker.imageLoader()
                         let scale = mainScrollView.zoomScale
                         // let size = HEImageStickerView.calculateSize(image: image, container: view)
                         let originFrame = getStickerOriginFrame(stickerFrame: result.frame)

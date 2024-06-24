@@ -14,7 +14,7 @@
 		17189EBA2C10461E00270F4D /* UIKit+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17189EB92C10461E00270F4D /* UIKit+.swift */; };
 		17189EBC2C105BE500270F4D /* Trace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17189EBB2C105BE500270F4D /* Trace.swift */; };
 		174095612C19FC1C00A4B18D /* Foundation+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 174095602C19FC1C00A4B18D /* Foundation+.swift */; };
-		17A4FA752C280983002140BA /* HEImageDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17A4FA742C280983002140BA /* HEImageDataSource.swift */; };
+		17A4FA752C280983002140BA /* HEImageDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17A4FA742C280983002140BA /* HEImageDataStore.swift */; };
 		17C8ED8A2C148390006F390A /* HEClipActionToolView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17C8ED892C148390006F390A /* HEClipActionToolView.swift */; };
 		17D691982C12EC32007443EC /* HEClipBottomView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D691972C12EC32007443EC /* HEClipBottomView.swift */; };
 		17D6919B2C167D18007443EC /* HEColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D6919A2C167D18007443EC /* HEColor.swift */; };
@@ -33,6 +33,9 @@
 		17D692232C24380A007443EC /* HEAdjustStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D692222C24380A007443EC /* HEAdjustStatus.swift */; };
 		17D692252C24382F007443EC /* HEImageClipRatio.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D692242C24382F007443EC /* HEImageClipRatio.swift */; };
 		17D692272C253644007443EC /* HEError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D692262C253644007443EC /* HEError.swift */; };
+		17E2D87B2C290272005F5E0B /* HEImageSticker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E2D87A2C290272005F5E0B /* HEImageSticker.swift */; };
+		17E2D87D2C290986005F5E0B /* HEImageUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E2D87C2C290986005F5E0B /* HEImageUtil.swift */; };
+		17E2D87F2C290B02005F5E0B /* TakePhoto.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E2D87E2C290B02005F5E0B /* TakePhoto.swift */; };
 		E40208DC256B9BA60077F5DC /* HEImageEditor.h in Headers */ = {isa = PBXBuildFile; fileRef = E40208DA256B9BA60077F5DC /* HEImageEditor.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E40208EB256B9F9C0077F5DC /* HEEditImageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E40208E4256B9F9C0077F5DC /* HEEditImageViewController.swift */; };
 		E40208EC256B9F9C0077F5DC /* HEImageStickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E40208E5256B9F9C0077F5DC /* HEImageStickerView.swift */; };
@@ -82,7 +85,7 @@
 		17189EB92C10461E00270F4D /* UIKit+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIKit+.swift"; sourceTree = "<group>"; };
 		17189EBB2C105BE500270F4D /* Trace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Trace.swift; sourceTree = "<group>"; };
 		174095602C19FC1C00A4B18D /* Foundation+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Foundation+.swift"; sourceTree = "<group>"; };
-		17A4FA742C280983002140BA /* HEImageDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEImageDataSource.swift; sourceTree = "<group>"; };
+		17A4FA742C280983002140BA /* HEImageDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEImageDataStore.swift; sourceTree = "<group>"; };
 		17C8ED892C148390006F390A /* HEClipActionToolView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEClipActionToolView.swift; sourceTree = "<group>"; };
 		17D691972C12EC32007443EC /* HEClipBottomView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEClipBottomView.swift; sourceTree = "<group>"; };
 		17D6919A2C167D18007443EC /* HEColor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HEColor.swift; sourceTree = "<group>"; };
@@ -103,6 +106,9 @@
 		17D692222C24380A007443EC /* HEAdjustStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEAdjustStatus.swift; sourceTree = "<group>"; };
 		17D692242C24382F007443EC /* HEImageClipRatio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEImageClipRatio.swift; sourceTree = "<group>"; };
 		17D692262C253644007443EC /* HEError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEError.swift; sourceTree = "<group>"; };
+		17E2D87A2C290272005F5E0B /* HEImageSticker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEImageSticker.swift; sourceTree = "<group>"; };
+		17E2D87C2C290986005F5E0B /* HEImageUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEImageUtil.swift; sourceTree = "<group>"; };
+		17E2D87E2C290B02005F5E0B /* TakePhoto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TakePhoto.swift; sourceTree = "<group>"; };
 		E40208D7256B9BA60077F5DC /* HEImageEditor.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = HEImageEditor.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E40208DA256B9BA60077F5DC /* HEImageEditor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HEImageEditor.h; sourceTree = "<group>"; };
 		E40208DB256B9BA60077F5DC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -175,7 +181,8 @@
 				17D692222C24380A007443EC /* HEAdjustStatus.swift */,
 				17D692242C24382F007443EC /* HEImageClipRatio.swift */,
 				17D692262C253644007443EC /* HEError.swift */,
-				17A4FA742C280983002140BA /* HEImageDataSource.swift */,
+				17A4FA742C280983002140BA /* HEImageDataStore.swift */,
+				17E2D87A2C290272005F5E0B /* HEImageSticker.swift */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -263,6 +270,8 @@
 				17D6919F2C16976B007443EC /* DebugLine.swift */,
 				17D691D92C184616007443EC /* Also.swift */,
 				174095602C19FC1C00A4B18D /* Foundation+.swift */,
+				17E2D87C2C290986005F5E0B /* HEImageUtil.swift */,
+				17E2D87E2C290B02005F5E0B /* TakePhoto.swift */,
 			);
 			path = Util;
 			sourceTree = "<group>";
@@ -470,7 +479,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E4020912256BA27D0077F5DC /* HEConfiguration.swift in Sources */,
-				17A4FA752C280983002140BA /* HEImageDataSource.swift in Sources */,
+				17A4FA752C280983002140BA /* HEImageDataStore.swift in Sources */,
 				17C8ED8A2C148390006F390A /* HEClipActionToolView.swift in Sources */,
 				E40208F4256B9FA70077F5DC /* HEClipImageDismissAnimatedTransition.swift in Sources */,
 				E40208FE256BA0080077F5DC /* String+.swift in Sources */,
@@ -514,8 +523,11 @@
 				FD8EFA522772026D0067ADF1 /* HEAdjustSlider.swift in Sources */,
 				E40208EB256B9F9C0077F5DC /* HEEditImageViewController.swift in Sources */,
 				E402090E256BA1F40077F5DC /* HELanguageDefine.swift in Sources */,
+				17E2D87F2C290B02005F5E0B /* TakePhoto.swift in Sources */,
+				17E2D87D2C290986005F5E0B /* HEImageUtil.swift in Sources */,
 				FDC144962BABE0B4004C2BCD /* HEWeakProxy.m in Sources */,
 				FDC9B2442990D66300963047 /* HEBaseStickerView.swift in Sources */,
+				17E2D87B2C290272005F5E0B /* HEImageSticker.swift in Sources */,
 				17189EAB2C1041DB00270F4D /* HEEditImageView.swift in Sources */,
 				FD3073392AD80D4000CFB618 /* HEPaths.swift in Sources */,
 				E40208EF256B9F9C0077F5DC /* HEInputTextViewController.swift in Sources */,

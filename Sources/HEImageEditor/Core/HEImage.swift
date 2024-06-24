@@ -8,13 +8,14 @@
 import Foundation
 import UIKit
 
-public actor HEImage {
+@MainActor
+public class HEImage {
     
     public let id: String
     public let originURL: URL?
     public let originImage: UIImage?
     
-    public var editModel: HEEditImageModel?
+    public internal(set) var editModel: HEEditImageModel?
     public internal(set) var editImageURL: URL?
     public internal(set) var thumbnailURL: URL?
     
@@ -32,11 +33,15 @@ public actor HEImage {
         self.editModel = editModel
     }
     
-    func setEditImageURL(_ url: URL) async {
+    public func setEditModel(_ model: HEEditImageModel?) {
+        self.editModel = model
+    }
+    
+    public func setEditImageURL(_ url: URL?) {
         self.editImageURL = url
     }
     
-    func setThumbnailURL(_ url: URL) async {
+    public func setThumbnailURL(_ url: URL?) {
         self.thumbnailURL = url
     }
 }

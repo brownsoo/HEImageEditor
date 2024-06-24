@@ -83,3 +83,9 @@ extension Bundle {
         return Bundle.main.localizedString(forKey: key, value: value, table: nil)
     }
 }
+
+extension String {
+    func localized() -> String {
+        return Bundle.heLocalizedString(self)
+    }
+}

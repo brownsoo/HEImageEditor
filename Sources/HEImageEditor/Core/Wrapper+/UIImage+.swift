@@ -190,6 +190,30 @@ public extension HEWrapper where Base: UIImage {
         }
     }
     
+    func resize(newWidth: CGFloat) -> UIImage {
+        let scale = newWidth / base.size.width
+        let newHeight = base.size.height * scale
+        let newSize = CGSize(width: newWidth, height: newHeight)
+        let newRect = CGRect(origin: CGPoint(), size: newSize)
+        let renderer = UIGraphicsImageRenderer(size: newSize)
+        let result = renderer.image { c in
+            base.draw(in: newRect)
+        }
+        return result
+    }
+
+    func resize(newHeight: CGFloat) -> UIImage {
+        let scale = newHeight / base.size.height
+        let newWidth = base.size.width * scale
+        let newSize = CGSize(width: newWidth, height: newHeight)
+        let newRect = CGRect(origin: CGPoint(), size: newSize)
+        let renderer = UIGraphicsImageRenderer(size: newSize)
+        let result = renderer.image { c in
+            base.draw(in: newRect)
+        }
+        return result
+    }
+    
     /// Resize image. Processing speed is better than resize(:) method
     /// - Parameters:
     ///   - size: Dest size of the image.
