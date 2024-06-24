@@ -267,14 +267,19 @@ extension HEImageViewPagerController {
     
     private func setupUI() {
         
+        view.backgroundColor = .blue
+        
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
-        
+        layout.minimumLineSpacing = 0
+        layout.minimumInteritemSpacing = 0
+        layout.sectionInset = UIEdgeInsets.zero
         let coll = UICollectionView(frame: .zero, collectionViewLayout: layout)
         coll.backgroundColor = .clear
         coll.showsHorizontalScrollIndicator = false
         HEImageViewPageCell.he.register(coll)
         coll.allowsSelection = false
+        coll.isPagingEnabled = true
         coll.dataSource = self
         coll.delegate = self
         view.addSubview(coll)
@@ -339,7 +344,10 @@ extension HEImageViewPagerController: UICollectionViewDataSource, UICollectionVi
     }
     
     public func collectionView(_ collectionView: UICollectionView, didEndDisplaying cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-        let ord = (indexPath.row + 1)
+        guard let visible = collectionView.visibleCells.first else { return }
+        guard let index = collectionView.indexPath(for: visible)?.row else { return }
+        
+        let ord = (index + 1)
         let total = imageStore.numberOfImages()
         indexLabel.text = "\(ord) / \(total)"
         currentImage = imageStore.getHEImage(at: indexPath.row)

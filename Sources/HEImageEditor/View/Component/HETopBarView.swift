@@ -10,6 +10,7 @@ import UIKit
 
 open class HETopBarView: UIView {
     
+    private var guideBottom: NSLayoutConstraint!
     private lazy var centerContainer = UIStackView()
     private lazy var trailingContainer = UIStackView()
     private lazy var leadingContainer = UIStackView()
@@ -37,7 +38,7 @@ open class HETopBarView: UIView {
                 self.alpha = 1
             })
             UIView.animate(withDuration: 0.2, delay: 0.2, options: [.curveEaseOut], animations: {
-                self.transform = .identity
+                self.guideBottom?.constant = 0
             })
         } else {
             self.isHidden = false
@@ -49,7 +50,7 @@ open class HETopBarView: UIView {
     public func hide(animate: Bool = true) {
         if animate {
             UIView.animate(withDuration: 0.2, delay: 0, options: [.curveLinear], animations: {
-                self.transform = CGAffineTransform(translationX: 0, y: -12)
+                self.guideBottom?.constant = -12
                 self.alpha = 0
             }) { _ in
                 self.isHidden = true
@@ -57,7 +58,8 @@ open class HETopBarView: UIView {
         } else {
             self.alpha = 0
             self.isHidden = true
-            self.transform = CGAffineTransform(translationX: 0, y: -12)
+            self.guideBottom?.constant = -12
+            self.layoutIfNeeded()
         }
     }
     
@@ -88,11 +90,12 @@ open class HETopBarView: UIView {
         
         let guide = UILayoutGuide()
         self.addLayoutGuide(guide)
+        guideBottom = guide.bottomAnchor.constraint(equalTo: self.bottomAnchor)
         NSLayoutConstraint.activate([
             guide.leftAnchor.constraint(equalTo: self.leftAnchor),
             guide.rightAnchor.constraint(equalTo: self.rightAnchor),
             guide.heightAnchor.constraint(equalToConstant: 44),
-            guide.bottomAnchor.constraint(equalTo: self.bottomAnchor),
+            guideBottom
         ])
         
         centerContainer.also { it in
