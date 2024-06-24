@@ -133,6 +133,11 @@ public class HEImageViewPagerController: UIViewController, HEImageViewPager {
     @objc
     private func didClickCancel() {
         // TODO: - 
+        if let nc = self.navigationController, nc.viewControllers.count > 1 {
+            nc.popViewController(animated: true)
+        } else {
+            self.dismiss(animated: true)
+        }
     }
     
     @objc
@@ -147,7 +152,7 @@ public class HEImageViewPagerController: UIViewController, HEImageViewPager {
         if let currentIndex, let hei = imageStore.getHEImage(at: currentIndex) {
             Task {
                 hei.setEditModel(nil)
-                await imageCache.clearCached(forHei: hei)
+                await imageCache.clearCached(forHei: hei, includeOrigin: false)
                 collView.reloadItems(at: [IndexPath(row: currentIndex, section: 0)])
             }
         }
@@ -314,11 +319,11 @@ extension HEImageViewPagerController: UICollectionViewDelegateFlowLayout {
 extension HEImageViewPagerController: UICollectionViewDataSource, UICollectionViewDelegate {
     
     public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-        trace()
+        trace(currentIndex)
     }
     
     public func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
-        trace()
+        trace(currentIndex)
     }
     
     public func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
@@ -369,10 +374,10 @@ class HEImageViewPageCell: UICollectionViewCell {
         self.imageView.also { it in
             it.translatesAutoresizingMaskIntoConstraints = false
             NSLayoutConstraint.activate([
-                it.widthAnchor.constraint(equalToConstant: 40),
-                it.heightAnchor.constraint(equalToConstant: 40),
-                it.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-                it.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+                it.leftAnchor.constraint(equalTo: contentView.leftAnchor),
+                it.rightAnchor.constraint(equalTo: contentView.rightAnchor),
+                it.topAnchor.constraint(equalTo: contentView.topAnchor),
+                it.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
             ])
         }
     }

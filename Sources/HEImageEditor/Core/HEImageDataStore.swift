@@ -9,17 +9,15 @@ import Foundation
 import UIKit
 
 public protocol HEImageCache: AnyObject {
-//    func cacheImage(_ image: UIImage, forId id: String) -> Void
-//    func getCachedImage(forId id: String) -> UIImage?
-    
-    func originImage(hei: HEImage) -> Task<UIImage, Error>
+    func originImage(forHei hei: HEImage) -> Task<UIImage, Error>
     func editImage(forHei hei: HEImage) -> Task<UIImage, Error>
-//    func thumbnailImage(forHei hei: HEImage) -> Task<UIImage, Error>
+    func thumbnailImage(forHei hei: HEImage) -> Task<UIImage, Error>
     
+    func cacheOriginImage(uiImage: UIImage, forId id: String) -> Task<URL?, Error>
     func cacheEditImage(uiImage: UIImage, forHei hei: HEImage) -> Task<URL?, Error>
     func cacheThumbnailImage(uiImage: UIImage, forHei hei: HEImage) -> Task<URL?, Error>
     
-    func clearCached(forHei hei: HEImage) async
+    func clearCached(forHei hei: HEImage, includeOrigin: Bool) async
 }
 
 @MainActor
@@ -76,7 +74,7 @@ public class HESimpleImageStore: HEImageDataStore {
     
     public func addHEImages(_ heis: [HEImage], excepting: ((HEImage) -> Bool)?) {
         if let excepting {
-            var exists = images
+            let exists = images
             heis.forEach { hei in
                 if exists.first(where: excepting) == nil {
                     images.append(hei)
@@ -116,15 +114,15 @@ public class HESimpleImageStore: HEImageDataStore {
 }
 
 extension HESimpleImageStore: HEImageCache {
-    private func cacheImage(_ image: UIImage, forId id: String) {
-        memCache.setObject(image, forKey: id as AnyObject)
+    private func memCacheImage(_ image: UIImage, forUrl url: String) {
+        memCache.setObject(image, forKey: url as AnyObject)
     }
     
-    private func getCachedImage(forId id: String) -> UIImage? {
-        memCache.object(forKey: id as AnyObject) as? UIImage
+    private func getMemCachedImage(forUrl url: String) -> UIImage? {
+        memCache.object(forKey: url as AnyObject) as? UIImage
     }
     
-    public func originImage(hei: HEImage) -> Task<UIImage, Error> {
+    public func originImage(forHei hei: HEImage) -> Task<UIImage, Error> {
         Task {
             if let originImage = hei.originImage {
                 return originImage
@@ -132,23 +130,33 @@ extension HESimpleImageStore: HEImageCache {
             guard let originURL = hei.originURL else {
                 throw HEError.imageNotFound
             }
-            return try await getImage(forURL: originURL, heiId: hei.id).value
+            return try await getImage(forURL: originURL).value
         }
     }
     
     
     public func editImage(forHei hei: HEImage) -> Task<UIImage, Error> {
         Task {
-            if let editImageURL = await hei.editImageURL {
-                return try await getImage(forURL: editImageURL, heiId: hei.id).value
+            if let editImageURL = hei.editImageURL {
+                return try await getImage(forURL: editImageURL).value
             } else {
-                return try await originImage(hei: hei).value
+                return try await originImage(forHei: hei).value
             }
         }
     }
     
-    public func cacheEditImage(uiImage: UIImage, forHei hei: HEImage) -> Task<URL?, Error> {
-        let fileName = hei.id + ".png"
+    public func thumbnailImage(forHei hei: HEImage) -> Task<UIImage, Error> {
+        Task {
+            if let thumbnailURL = hei.thumbnailURL {
+                return try await getImage(forURL: thumbnailURL).value
+            } else {
+                throw HEError.imageNotFound
+            }
+        }
+    }
+    
+    public func cacheOriginImage(uiImage: UIImage, forId id: String) -> Task<URL?, Error> {
+        let fileName = id + ".png"
         return Task {
             guard let data = uiImage.pngData() else {
                 throw HEError.generateFileData
@@ -156,9 +164,23 @@ extension HESimpleImageStore: HEImageCache {
             let fileURL: URL = try fileURL(fileName: fileName)
             FileManager.default.createFile(atPath: fileURL.path, contents: data)
             
-            cacheImage(uiImage, forId: hei.id)
+            memCacheImage(uiImage, forUrl: fileName)
+            trace(fileURL)
+            return fileURL
+        }
+    }
+    
+    public func cacheEditImage(uiImage: UIImage, forHei hei: HEImage) -> Task<URL?, Error> {
+        let fileName = hei.id + ".edit.png"
+        return Task {
+            guard let data = uiImage.pngData() else {
+                throw HEError.generateFileData
+            }
+            let fileURL: URL = try fileURL(fileName: fileName)
+            FileManager.default.createFile(atPath: fileURL.path, contents: data)
             
-            await hei.setEditImageURL(fileURL)
+            memCacheImage(uiImage, forUrl: fileName)
+            hei.setEditImageURL(fileURL)
             
             return fileURL
         }
@@ -173,17 +195,33 @@ extension HESimpleImageStore: HEImageCache {
             let fileURL: URL = try fileURL(fileName: fileName)
             FileManager.default.createFile(atPath: fileURL.path, contents: data)
             
-            await hei.setThumbnailURL(fileURL)
+            memCacheImage(uiImage, forUrl: fileName)
+            hei.setThumbnailURL(fileURL)
             
             return fileURL
         }
     }
     
-    public func clearCached(forHei hei: HEImage) async {
-        await hei.setEditImageURL(nil)
-        await hei.setThumbnailURL(nil)
+    public func clearCached(forHei hei: HEImage, includeOrigin: Bool) async {
+        if includeOrigin {
+            if let originURL = hei.originURL {
+                memCache.removeObject(forKey: originURL.absoluteString as AnyObject)
+            }
+        }
+        
+        if let editImageURL = hei.editImageURL {
+            memCache.removeObject(forKey: editImageURL.absoluteString as AnyObject)
+        }
+        if let thumbnailURL = hei.thumbnailURL {
+            memCache.removeObject(forKey: thumbnailURL.absoluteString as AnyObject)
+        }
+        
+        
+        hei.setEditImageURL(nil)
+        hei.setThumbnailURL(nil)
+        
         do {
-            let fileURL = try fileURL(fileName: hei.id + ".png")
+            let fileURL = try fileURL(fileName: hei.id + ".edit.png")
             try FileManager.default.removeItem(at: fileURL)
         } catch {
             woops(error)
@@ -217,9 +255,9 @@ extension HESimpleImageStore {
         }
     }
     
-    func getImage(forURL url: URL , heiId id: String) -> Task<UIImage, Error> {
+    func getImage(forURL url: URL) -> Task<UIImage, Error> {
         Task {
-            if let cached = getCachedImage(forId: id) {
+            if let cached = getMemCachedImage(forUrl: url.absoluteString) {
                 return cached
             }
             
@@ -234,7 +272,7 @@ extension HESimpleImageStore {
             let (data, response) = try await URLSession.shared.data(from: url)
             trace(response)
             if let image = UIImage(data: data) {
-                cacheImage(image, forId: id)
+                memCacheImage(image, forUrl: url.absoluteString)
                 return image
             }
             

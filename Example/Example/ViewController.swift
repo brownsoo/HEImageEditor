@@ -8,6 +8,8 @@
 import UIKit
 import SnapKit
 import HEImageEditor
+import PhotosUI
+import OrderedCollections
 
 class ViewController: UIViewController {
     var editImageToolView: UIView!
@@ -25,8 +27,6 @@ class ViewController: UIViewController {
     var editImageFilterToolSwitch: UISwitch!
     
     var editImageAdjustToolSwitch: UISwitch!
-    
-    var pickImageBtn: UIButton!
     
     var resultImageView: UIImageView!
     
@@ -75,6 +75,21 @@ class ViewController: UIViewController {
         
         setupUI()
         configImageEditor()
+        
+        PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
+            switch status {
+                
+            case .limited:
+                print("limited authorization granted")
+                
+            case .authorized:
+                print("authorization granted")
+                
+            default:
+                print("Unimplemented")
+                
+            }
+        }
     }
     
     
@@ -146,6 +161,65 @@ extension ViewController: HEImageStickerTrayViewDataSource {
     }
 }
 
+extension ViewController: PHPickerViewControllerDelegate {
+    func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+        print(results)
+        
+        picker.dismiss(animated: true)
+        
+        
+        Task {
+            let existing: OrderedDictionary<String, HEImage> =  imageStore.all().reduce(into: OrderedDictionary<String, HEImage>()) {
+                $0[$1.id] = $1
+            }
+            var newSelection = OrderedDictionary<String, HEImage>()
+            for result in results {
+                if let identifier = result.assetIdentifier?.replacingOccurrences(of: "/", with: "~") {
+                    if let exist = existing[identifier] {
+                        newSelection[identifier] = exist
+                    } else {
+                        if let image = await loadImageObject(result: result) {
+                            print("image= \(image.size.width) x \(image.size.height)")
+                            if let fileUrl = try? await imageStore.cacheOriginImage(uiImage: image, forId: identifier).value {
+                                newSelection[identifier] = HEImage(
+                                    id: identifier,
+                                    origin: fileUrl,
+                                    editModel: nil
+                                )
+                            } else {
+                                newSelection[identifier] = HEImage(
+                                    id: identifier,
+                                    image: image,
+                                    editModel: nil
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            
+            
+            let images = newSelection.values.map({ $0 })
+            startEditMultipleImages(images)
+        }
+        
+    }
+    
+    private func loadImageObject(result: PHPickerResult) async -> UIImage? {
+        let itemProvider = result.itemProvider
+        return await withCheckedContinuation { continuation in
+            if itemProvider.canLoadObject(ofClass: UIImage.self) {
+                itemProvider.loadObject(ofClass: UIImage.self) { image, error in
+                    continuation.resume(with: .success(image as? UIImage))
+                }
+            } else {
+                continuation.resume(with: .success(nil))
+            }
+        }
+    }
+    
+}
+
 extension ViewController {
     
     @objc func pickImage() {
@@ -153,6 +227,24 @@ extension ViewController {
         picker.delegate = self
         picker.sourceType = .photoLibrary
         picker.mediaTypes = ["public.image"]
+        showDetailViewController(picker, sender: nil)
+    }
+    
+    @objc func pickMutipleImages() {
+        var configuration = PHPickerConfiguration(photoLibrary: .shared())
+        configuration.filter = PHPickerFilter.any(of: [.images, .livePhotos])
+        configuration.selectionLimit = 100
+        configuration.preferredAssetRepresentationMode = .current
+        if #available(iOS 17.0, *) {
+            configuration.mode = .default
+        }
+        if #available(iOS 15.0, *) {
+            configuration.selection = .ordered
+            // TODO: configuration.preselectedAssetIdentifiers
+        }
+        let picker = PHPickerViewController(configuration: configuration)
+        picker.delegate = self
+        
         showDetailViewController(picker, sender: nil)
     }
     
@@ -432,7 +524,7 @@ extension ViewController {
             make.bottom.equalTo(self.editImageToolView)
         }
         
-        pickImageBtn = UIButton(type: .custom)
+        let pickImageBtn = UIButton(type: .custom)
         pickImageBtn.backgroundColor = .black
         pickImageBtn.layer.cornerRadius = 5
         pickImageBtn.layer.masksToBounds = true
@@ -445,13 +537,23 @@ extension ViewController {
             make.left.equalTo(self.editImageToolView)
         }
         
+        let pickMultipleBt = UIButton()
+        pickMultipleBt.backgroundColor = .black
+        pickMultipleBt.setTitle("Pick images", for: .normal)
+        pickMultipleBt.addTarget(self, action: #selector(pickMutipleImages), for: .touchUpInside)
+        view.addSubview(pickMultipleBt)
+        pickMultipleBt.snp.makeConstraints { make in
+            make.top.equalTo(pickImageBtn)
+            make.left.equalTo(pickImageBtn.snp.right).offset(20)
+        }
+        
         resultImageView = UIImageView()
         resultImageView.contentMode = .scaleAspectFit
         resultImageView.clipsToBounds = true
         resultImageView.backgroundColor = .systemGray
         view.addSubview(resultImageView)
         resultImageView.snp.makeConstraints { make in
-            make.top.equalTo(self.pickImageBtn.snp.bottom).offset(spacing)
+            make.top.equalTo(pickImageBtn.snp.bottom).offset(spacing)
             make.left.right.equalTo(self.view)
             make.bottom.equalTo(self.view.snp.bottomMargin)
         }

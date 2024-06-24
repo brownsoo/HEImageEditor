@@ -7,6 +7,7 @@
 
 import Foundation
 import UIKit
+import PhotosUI
 
 @MainActor
 public class HEImage {
@@ -19,19 +20,24 @@ public class HEImage {
     public internal(set) var editImageURL: URL?
     public internal(set) var thumbnailURL: URL?
     
-    public init(origin: URL, editModel: HEEditImageModel?) {
-        self.id = origin.absoluteString
+    public init(id: String = UUID().uuidString, origin: URL, editModel: HEEditImageModel?) {
+        self.id = id
         self.originURL = origin
         self.originImage = nil
         self.editModel = editModel
     }
     
-    public init(image: UIImage, editModel: HEEditImageModel?) {
-        self.id = UUID().uuidString
+    public init(id: String = UUID().uuidString, image: UIImage, editModel: HEEditImageModel?) {
+        self.id = id
         self.originURL = nil
         self.originImage = image
         self.editModel = editModel
     }
+    
+//    public init(phpickResult: PHPickerResult) {
+//        self.id = phpickResult.assetIdentifier!
+//        self.originURL = phpickResult.itemProvider.
+//    }
     
     public func setEditModel(_ model: HEEditImageModel?) {
         self.editModel = model

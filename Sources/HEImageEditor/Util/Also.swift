@@ -7,9 +7,9 @@
 
 import Foundation
 
-public protocol Also {}
+protocol Also {}
 
-public extension Also {
+extension Also {
     @discardableResult
     func also(perform thisFn: (Self)->Void) -> Self {
         thisFn(self)

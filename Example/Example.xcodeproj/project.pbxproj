@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		170DCE242C1291A100CF8477 /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 170DCE232C1291A100CF8477 /* SnapKit */; };
+		17E2D8822C295FDC005F5E0B /* OrderedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = 17E2D8812C295FDC005F5E0B /* OrderedCollections */; };
 		17F242592C0F429700F6A93E /* HEImageEditor.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 17F242582C0F429700F6A93E /* HEImageEditor.framework */; };
 		17F2425A2C0F429700F6A93E /* HEImageEditor.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 17F242582C0F429700F6A93E /* HEImageEditor.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		985A2D6A282A85B5007AE0C6 /* cubano-regular-webfont.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 985A2D57282A85B4007AE0C6 /* cubano-regular-webfont.ttf */; };
@@ -124,6 +125,7 @@
 			files = (
 				17F242592C0F429700F6A93E /* HEImageEditor.framework in Frameworks */,
 				170DCE242C1291A100CF8477 /* SnapKit in Frameworks */,
+				17E2D8822C295FDC005F5E0B /* OrderedCollections in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -216,6 +218,7 @@
 			name = Example;
 			packageProductDependencies = (
 				170DCE232C1291A100CF8477 /* SnapKit */,
+				17E2D8812C295FDC005F5E0B /* OrderedCollections */,
 			);
 			productName = Example;
 			productReference = E4020924256BA9D70077F5DC /* Example.app */;
@@ -263,6 +266,7 @@
 			mainGroup = E402091B256BA9D70077F5DC;
 			packageReferences = (
 				170DCE222C1291A100CF8477 /* XCRemoteSwiftPackageReference "SnapKit" */,
+				17E2D8802C295FDC005F5E0B /* XCRemoteSwiftPackageReference "swift-collections" */,
 			);
 			productRefGroup = E4020925256BA9D70077F5DC /* Products */;
 			projectDirPath = "";
@@ -564,6 +568,14 @@
 				minimumVersion = 5.7.1;
 			};
 		};
+		17E2D8802C295FDC005F5E0B /* XCRemoteSwiftPackageReference "swift-collections" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-collections.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -571,6 +583,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 170DCE222C1291A100CF8477 /* XCRemoteSwiftPackageReference "SnapKit" */;
 			productName = SnapKit;
+		};
+		17E2D8812C295FDC005F5E0B /* OrderedCollections */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 17E2D8802C295FDC005F5E0B /* XCRemoteSwiftPackageReference "swift-collections" */;
+			productName = OrderedCollections;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
