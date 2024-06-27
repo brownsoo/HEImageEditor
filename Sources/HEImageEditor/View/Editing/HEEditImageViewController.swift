@@ -10,8 +10,16 @@ public typealias HEEditImageBottomToolViewBuilder = (HEEditImageView) -> (toolVi
 
 
 public protocol HEEditImageViewControllerDelegate: AnyObject {
-    func didFinishEditImage(resultImage: UIImage, editId: String?, editModel: HEEditImageModel?) -> Void
+    func didFinishEditImage(_ editView: HEEditImageView, resultImage: UIImage, editId: String?, editModel: HEEditImageModel?) -> Void
+    func cancelledEditImage(_ editView: HEEditImageView)
 }
+
+
+public extension HEEditImageViewControllerDelegate {
+    func cancelledEditImage(_ editView: HEEditImageView) {}
+}
+
+
 
 open class HEEditImageViewController: UIViewController, HEEditImageView {
     static let maxDrawLineImageWidth: CGFloat = 600
@@ -769,10 +777,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         stickersContainer.transform = transform
     }
     
-    public func cancel() {
-        dismiss(animated: animateDismiss, completion: nil)
-    }
-    
     public var isImageEditing: Bool {
         return self.currentEditController != nil || self.selectedTool != nil
     }
@@ -820,8 +824,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         self.selectedTool = nil
         
         guard let current = self.currentEditController else { return }
-        // TODO: 브레이크
         if let vc = current as? HEClipImageViewController {
+            // TODO: 브레이크
             vc.doneEdit()
         }
     }
@@ -1005,7 +1009,14 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         }
     }
     
-    @objc 
+    @objc
+    public func cancel() {
+        dismiss(animated: animateDismiss) {
+            self.delegate?.cancelledEditImage(self)
+        }
+    }
+    
+    @objc
     public func done() {
         var stickerStates: [HEStickerEffect] = []
         for view in stickersContainer.subviews {
@@ -1030,7 +1041,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         
         func callback() {
             dismiss(animated: animateDismiss) {
-                self.delegate?.didFinishEditImage(resultImage: resImage, editId: editId, editModel: editModel)
+                self.delegate?.didFinishEditImage(self, resultImage: resImage, editId: editId, editModel: editModel)
             }
         }
         
@@ -1378,7 +1389,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         }
     }
     
-    @objc private func setToolViewShowInTimer(show: Bool) {
+    @objc
+    private func setToolViewShowInTimer(show: Bool) {
         var flag = show
         if let toolViewStateTimer = toolViewStateTimer {
             let userInfo = toolViewStateTimer.userInfo as? [String: Any]
@@ -1554,7 +1566,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                         
                         let delay = sin(halfPi * i / count) * animeDuration
                         attachSticker(imageSticker, delay: delay)
-                        // view.layoutIfNeeded()
                         
                         // 액션 저장
                         actionManager.storeAction(.sticker(oldState: nil, newState: imageSticker.state))
@@ -1616,6 +1627,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             stickerView.setImage(image)
         }
     }
+    
     /// ratio = 보여지는 영역 / 편집 이미지 영역
     private func getImagePresentingRatio() -> CGFloat {
         var actualSize = currentClipStatus.editRect.size

@@ -137,7 +137,7 @@ class ViewController: UIViewController {
                                             imageCache: imageStore,
                                             stickerDataSource: self)
         
-        vc.modalPresentationStyle = .fullScreen
+        vc.modalPresentationStyle = .overFullScreen
         present(vc, animated: true)
     }
 }
@@ -356,8 +356,8 @@ extension ViewController {
     }
 }
 
-extension ViewController: HEEditImageViewControllerDelegate {
-    func didFinishEditImage(resultImage: UIImage, editId: String?, editModel: HEImageEditor.HEEditImageModel?) {
+extension ViewController: HEEditImageViewControllerDelegate {  
+    func didFinishEditImage(_ editView: HEEditImageView, resultImage: UIImage, editId: String?, editModel: HEEditImageModel?) {
         self.resultImageView.image = resultImage
         self.resultImageEditModel = editModel
     }

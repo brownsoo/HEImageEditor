@@ -11,7 +11,7 @@ import Combine
 
 public protocol HEImageViewPager {
 //    var imageViews: [HEEditImageView] { get }
-    var currentImage: HEImage? { get }
+    var editingImage: HEImage? { get }
     var currentIndex: Int? { get }
 //    var pageCount: Int { get }
     
@@ -34,7 +34,7 @@ public class HEImageViewPagerController: UIViewController, HEImageViewPager {
     public weak var imageStore: HEImageDataStore!
     public weak var imageCache: HEImageCache!
     
-    public private(set) var currentImage: HEImage?
+    public private(set) var editingImage: HEImage?
     public private(set) var currentIndex: Int?
     
     private lazy var indexLabel: UILabel = {
@@ -158,7 +158,7 @@ public class HEImageViewPagerController: UIViewController, HEImageViewPager {
         }
     }
     
-    func makeTopBarView() -> (HETopBarView, CGFloat) {
+    private func makeTopBarView() -> (HETopBarView, CGFloat) {
         let topbar = HETopBarView()
         let cancelButton = UIButton()
         cancelButton.also { it in
@@ -187,7 +187,7 @@ public class HEImageViewPagerController: UIViewController, HEImageViewPager {
         return (topbar, 44)
     }
     
-    func makeBottomToolView() -> (HEEditToolView, CGFloat) {
+    private func makeBottomToolView() -> (HEEditToolView, CGFloat) {
         // 기본 툴바
         var ts = HEConfiguration.default().tools
         if ts.contains(.imageSticker), HEConfiguration.default().imageStickerTray == nil {
@@ -195,9 +195,7 @@ public class HEImageViewPagerController: UIViewController, HEImageViewPager {
         }
         let toolbar = HEEditImageBottomToolView(tools: ts)
         toolbar.toolSelectListener = { [weak self] type in
-            if let self, let currentImage {
-                self.startEditImage(hei: currentImage, tool: type)
-            }
+            self?.onBottomToolSelected(type: type)
         }
         return (toolbar, 76)
     }
@@ -210,34 +208,69 @@ public class HEImageViewPagerController: UIViewController, HEImageViewPager {
             .imageStickerTray(stickerTray)
     }
     
-    private func startEditImage(hei: HEImage, tool: HEConfiguration.EditTool?) {
-        let topBuilder: HEEditImageTopToolViewBuilder = { [weak self] _ in
-            return self?.makeTopBarView()
+    private func onBottomToolSelected(type: HEConfiguration.EditTool) {
+        guard let currentIndex, let currentImage = imageStore.getHEImage(at: currentIndex) else {
+            return
         }
-        let bottomBuilder: HEEditImageBottomToolViewBuilder = { [weak self] _ in
-            return self?.makeBottomToolView()
-        }
+        self.editingImage = currentImage
         Task { @MainActor in
-            do {
-                let image = try await self.imageCache.editImage(forHei: hei).value
-                let editModel = hei.editModel
-                setupHEConfiguration()
-                
-                let vc = HEEditImageViewController(image: image, editModel: editModel, topToolViewBuilder: topBuilder, bottomToolViewBuilder: bottomBuilder)
-                vc.delegate = self
-                vc.editId = hei.id
-                vc.modalPresentationStyle = .overFullScreen
-                self.present(vc, animated: false)
-            } catch {
-                woops(error)
-            }
+           await self.startEditImage(hei: currentImage, tool: type)
         }
         .store(in: &cancellables)
+        
+    }
+    
+    // 편집 모드의 상단바 구성
+    private func makeEditTopBarView() -> HEEditImageTopToolViewBuilder {
+        return { editView in
+            let topbar = HETopBarView()
+            let cancelButton = UIButton()
+            cancelButton.also { it in
+                let icon = UIImage.he.getImage("ic_arrow_right") ?? UIImage(systemName: "chevron.left")
+                it.setImage(icon, for: .normal)
+                it.frame = CGRect(origin: .zero, size: .init(width: 48, height: 48))
+            }
+            topbar.addLeadingView(cancelButton)
+            
+            let confirmButton = UIButton()
+            confirmButton.also { it in
+                let icon = UIImage.he.getImage("icCheck") ?? UIImage(systemName: "checkmark")
+                it.setImage(icon, for: .normal)
+                it.frame = CGRect(origin: .zero, size: .init(width: 48, height: 48))
+            }
+            topbar.addTrailingView(confirmButton)
+            
+            cancelButton.addAction(.init(handler: { [weak editView] _ in editView?.cancel() }), for: .touchUpInside)
+            confirmButton.addAction(.init(handler: { [weak editView] _ in editView?.done() }), for: .touchUpInside)
+            
+            return (topbar, 44)
+        }
+    }
+    
+    private func startEditImage(hei: HEImage, tool: HEConfiguration.EditTool?) async {
+        let topBuilder = self.makeEditTopBarView()
+        do {
+            let image = try await self.imageCache.editImage(forHei: hei).value
+            let editModel = hei.editModel
+            setupHEConfiguration()
+            
+            let vc = HEEditImageViewController(image: image, editModel: editModel, topToolViewBuilder: topBuilder)
+            vc.delegate = self
+            vc.editId = hei.id
+            vc.modalPresentationStyle = .overFullScreen
+            self.present(vc, animated: false)
+        } catch {
+            woops(error)
+        }
     }
 }
 
 extension HEImageViewPagerController: HEEditImageViewControllerDelegate {
-    public func didFinishEditImage(resultImage: UIImage, editId: String?, editModel: HEEditImageModel?) {
+    
+    public func didFinishEditImage(_ editView: HEEditImageView, resultImage: UIImage, editId: String?, editModel: HEEditImageModel?) {
+        
+        bottomToolView?.unselectTool()
+        editingImage = nil
         // TODO: 편집 데이터 교체
         guard let editId, let hei = imageStore.getHEImage(forId: editId) else {
             return
@@ -259,7 +292,10 @@ extension HEImageViewPagerController: HEEditImageViewControllerDelegate {
         }
     }
     
-    
+    public func cancelledEditImage(_ editView: HEEditImageView) {
+        bottomToolView?.unselectTool()
+        editingImage = nil
+    }
 }
 
 
@@ -335,7 +371,7 @@ extension HEImageViewPagerController: UICollectionViewDataSource, UICollectionVi
         let ord = (indexPath.row + 1)
         let total = imageStore.numberOfImages()
         indexLabel.text = "\(ord) / \(total)"
-        
+        currentIndex = indexPath.row
         trace()
         
         if let cell = cell as? HEImageViewPageCell, let hei = imageStore.getHEImage(at: indexPath.row) {
@@ -350,8 +386,7 @@ extension HEImageViewPagerController: UICollectionViewDataSource, UICollectionVi
         let ord = (index + 1)
         let total = imageStore.numberOfImages()
         indexLabel.text = "\(ord) / \(total)"
-        currentImage = imageStore.getHEImage(at: indexPath.row)
-        currentIndex = indexPath.row
+        currentIndex = index
         trace()
     }
     
