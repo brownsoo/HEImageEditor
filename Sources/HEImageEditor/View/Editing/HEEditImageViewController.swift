@@ -6,20 +6,8 @@
 import UIKit
 
 public typealias HEEditImageTopToolViewBuilder = (HEEditImageView) -> (toolView: HETopBarView, height: CGFloat)?
+
 public typealias HEEditImageBottomToolViewBuilder = (HEEditImageView) -> (toolView: HEEditToolView, height: CGFloat)?
-
-
-public protocol HEEditImageViewControllerDelegate: AnyObject {
-    func didFinishEditImage(_ editView: HEEditImageView, resultImage: UIImage, editId: String?, editModel: HEEditImageModel?) -> Void
-    func cancelledEditImage(_ editView: HEEditImageView)
-}
-
-
-public extension HEEditImageViewControllerDelegate {
-    func cancelledEditImage(_ editView: HEEditImageView) {}
-}
-
-
 
 open class HEEditImageViewController: UIViewController, HEEditImageView {
     static let maxDrawLineImageWidth: CGFloat = 600
@@ -34,7 +22,9 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         deviceIsiPhone() ? .portrait : .all
     }
     
-    public weak var delegate: HEEditImageViewControllerDelegate?
+    public weak var delegate: HEEditImageViewDelegate?
+    
+    open var continuouslyMode: Bool = false
     
     public var editId: String?
     
@@ -306,7 +296,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         editModel: HEEditImageModel? = nil,
         initialTool: HEConfiguration.EditTool? = nil,
         animate: Bool = true,
-        delegate: HEEditImageViewControllerDelegate? = nil,
+        delegate: HEEditImageViewDelegate? = nil,
         topToolViewBuilder: HEEditImageTopToolViewBuilder? = nil,
         bottomToolViewBuilder: HEEditImageBottomToolViewBuilder? = nil,
         clipImageBottomViewBuilder: HEClipImageBottomViewBuilder? = nil
@@ -409,6 +399,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    // MARK: lifecycle --
+    
     override open func viewDidLoad() {
         super.viewDidLoad()
         
@@ -423,13 +415,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     override open func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        
-        // 초기 툴 처리 
-        if let tool = initialEditTool {
-            initialEditTool = nil
-            bottomToolView?.selectTool(tool)
-        }
-        
+        trace()
         // 드로잉 툴에 관한 처리
         guard tools.contains(.draw) else { return }
         
@@ -476,21 +462,25 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         eraserLineView.frame = CGRect(x: eraserBtn.he.right + 11, y: eraserBtn.frame.midY - 10, width: 1, height: 20)
         drawColorCollectionView?.frame = CGRect(x: eraserLineView.he.right + 11, y: 30, width: view.he.width - eraserLineView.he.right - 31, height: drawColViewH)
         
-        adjustCollectionView?.frame = CGRect(x: 20, y: 20, width: view.he.width - 40, height: adjustColViewH)
-        if HEUIConfiguration.default().adjustSliderType == .vertical {
-            adjustSlider?.frame = CGRect(x: view.he.width - 60, y: view.he.height / 2 - 100, width: 60, height: 200)
-        } else {
-            let sliderHeight: CGFloat = 60
-            let sliderWidth = UIDevice.current.userInterfaceIdiom == .phone ? view.he.width - 100 : view.he.width / 2
-            adjustSlider?.frame = CGRect(
-                x: (view.he.width - sliderWidth) / 2,
-                y: bottomToolViewContainer.he.top - sliderHeight,
-                width: sliderWidth,
-                height: sliderHeight
-            )
+        if let adjustCollectionView {
+            adjustCollectionView.frame = CGRect(x: 20, y: 20, width: view.he.width - 40, height: adjustColViewH)
+            if HEUIConfiguration.default().adjustSliderType == .vertical {
+                adjustSlider?.frame = CGRect(x: view.he.width - 60, y: view.he.height / 2 - 100, width: 60, height: 200)
+            } else {
+                let sliderHeight: CGFloat = 60
+                let sliderWidth = UIDevice.current.userInterfaceIdiom == .phone ? view.he.width - 100 : view.he.width / 2
+                adjustSlider?.frame = CGRect(
+                    x: (view.he.width - sliderWidth) / 2,
+                    y: bottomToolViewContainer.he.top - sliderHeight,
+                    width: sliderWidth,
+                    height: sliderHeight
+                )
+            }
         }
         
-        filterCollectionView?.frame = CGRect(x: 20, y: 0, width: view.he.width - 40, height: filterColViewH)
+        if let filterCollectionView {
+            filterCollectionView.frame = CGRect(x: 20, y: 0, width: view.he.width - 40, height: filterColViewH)
+        }
          
         trashbinView.frame = CGRect(
             x: (view.he.width - trashbinSize.width) / 2,
@@ -501,7 +491,9 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         trashbinImgView.frame = CGRect(x: (trashbinSize.width - 24) / 2, y: (trashbinSize.height - 24) / 2, width: 24, height: 24)
         
         bottomToolView?.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: bottomToolViewHeight)
+        
         childVCContainer.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: bottomToolViewContainer.frame.minY)
+        
         editingTopView.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: 48 + insets.top)
         
         if !drawPaths.isEmpty {
@@ -514,29 +506,23 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         if let index = drawColors.firstIndex(where: { $0 == self.currentDrawColor }) {
             drawColorCollectionView?.scrollToItem(at: IndexPath(row: index, section: 0), at: .centeredHorizontally, animated: false)
         }
+        
+        // 초기 툴 처리
+        if let tool = initialEditTool {
+            DispatchQueue.main.async {
+                self.initialEditTool = nil
+                self.bottomToolView?.selectTool(tool)
+            }
+        }
+        
     }
 
     override open func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
         shouldLayout = true
     }
-
     
-    // MARK: --- lifecycle --
-    
-    public func addActionChangedListener<T: HEEditorActionListener>(_ listener: T) {
-        actionListeners.append(listener)
-        
-    }
-    public func removeActionChangedListener<T: HEEditorActionListener>(_ listener: T) {
-        actionListeners.removeAll { ($0 as? T) == listener }
-    }
-    
-    public func clearAllActionChangedListeners() {
-        actionListeners.removeAll()
-    }
-    
-    func generateFilterImages() {
+    private func generateFilterImages() {
         let size: CGSize
         let ratio = (originalImage.size.width / originalImage.size.height)
         let fixLength: CGFloat = 200
@@ -561,7 +547,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         }
     }
     
-    func resetContainerViewFrame() {
+    private func resetContainerViewFrame() {
         mainScrollView.setZoomScale(1, animated: true)
         imageView.image = editImage
         let editRect = currentClipStatus.editRect
@@ -755,10 +741,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             mosaicImageLayer.mask = mosaicImageLayerMaskLayer
         }
         
-//        let tapGes = UITapGestureRecognizer(target: self, action: #selector(tapAction(_:)))
-//        tapGes.delegate = self
-//        view.addGestureRecognizer(tapGes)
-        
         view.addGestureRecognizer(drawPanGes)
         mainScrollView.panGestureRecognizer.require(toFail: drawPanGes)
         
@@ -781,9 +763,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     }
     
     /// 회전 -
-    ///
-    /// -- TODO: 패튼 처리
-    func rotationImageView() {
+    private func rotationImageView() {
         let transform = CGAffineTransform(rotationAngle: currentClipStatus.angle.he.toPi)
         imageView.transform = transform
         drawingImageView.transform = transform
@@ -811,6 +791,32 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         if reloadData {
             drawColorCollectionView?.reloadData()
         }
+    }
+    
+    private func completeIfNotContinuously(isDoneProcess: Bool) -> Bool {
+        if !continuouslyMode {
+            if isDoneProcess {
+                done()
+            } else {
+                cancel()
+            }
+            return true
+        }
+        return false
+    }
+    
+    // MARK: Action Listener
+    
+    public func addActionChangedListener<T: HEEditorActionListener>(_ listener: T) {
+        actionListeners.append(listener)
+        
+    }
+    public func removeActionChangedListener<T: HEEditorActionListener>(_ listener: T) {
+        actionListeners.removeAll { ($0 as? T) == listener }
+    }
+    
+    public func clearAllActionChangedListeners() {
+        actionListeners.removeAll()
     }
     
     public func stopCurrentEditing() {
@@ -870,10 +876,18 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             
             self.clipImage(status: HEClipStatus(editRect: editRect, angle: angle, ratio: selectRatio))
             self.actionManager.storeAction(.clip(oldStatus: self.preClipStatus, newStatus: self.currentClipStatus))
+            
+            if completeIfNotContinuously(isDoneProcess: true) {
+                return
+            }
         }
         
         vc.cancelClipBlock = { [weak self] in
-            self?.resetContainerViewFrame()
+            guard let self else { return }
+            if completeIfNotContinuously(isDoneProcess: false) {
+                return
+            }
+            self.resetContainerViewFrame()
         }
         vc.dismissCallback = { [weak self] in
             self?.removeEditController()
@@ -1143,17 +1157,9 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     }
     
     
-    // TODO: 제외
-    @objc private func tapAction(_ tap: UITapGestureRecognizer) {
-        if bottomToolViewContainer.alpha == 1 {
-            setToolView(show: false)
-        } else {
-            setToolView(show: true)
-        }
-    }
-    
     /// 패닝 제스쳐를 드로잉 작업으로 처리
-    @objc private func panGestureAction(_ pan: UIPanGestureRecognizer) {
+    @objc 
+    private func panGestureAction(_ pan: UIPanGestureRecognizer) {
         // 지우개
         if selectedTool == .draw, eraserBtn.isSelected {
             eraserGestureAction(pan)
@@ -2170,7 +2176,7 @@ extension HEEditImageViewController: HEStickerViewDelegate {
         var frame = trashbinView.frame
         let visibleMaxY = min(
             bottomToolViewContainer.frame.minY - 20,
-            containerView.convert(imageView.frame, to: view).maxY
+            bottomToolViewContainer.frame.minY - 86
         )
         frame.origin.y = visibleMaxY - trashbinSize.height + 18
         let target = frame

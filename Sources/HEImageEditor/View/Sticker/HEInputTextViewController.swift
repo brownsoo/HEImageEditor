@@ -45,7 +45,7 @@ class HEInputTextViewController: UIViewController {
     }
     
     private lazy var bgImageView: UIImageView = {
-        let view = UIImageView(image: image?.he.blurImage(level: 4))
+        let view = UIImageView(image: self.image)
         view.contentMode = .scaleAspectFit
         return view
     }()
@@ -53,7 +53,7 @@ class HEInputTextViewController: UIViewController {
     private lazy var coverView: UIView = {
         let view = UIView()
         view.backgroundColor = .black
-        view.alpha = 0.4
+        view.alpha = 0.5
         return view
     }()
     

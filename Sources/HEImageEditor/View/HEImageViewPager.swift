@@ -259,6 +259,7 @@ public class HEImageViewPagerController: UIViewController, HEImageViewPager {
             vc.editId = hei.id
             vc.initialEditTool = tool
             vc.animateDismiss = true
+            vc.continuouslyMode = false
             vc.modalPresentationStyle = .overFullScreen
             self.present(vc, animated: false)
         } catch {
@@ -267,7 +268,7 @@ public class HEImageViewPagerController: UIViewController, HEImageViewPager {
     }
 }
 
-extension HEImageViewPagerController: HEEditImageViewControllerDelegate {
+extension HEImageViewPagerController: HEEditImageViewDelegate {
     
     public func didFinishEditImage(_ editView: HEEditImageView, resultImage: UIImage, editId: String?, editModel: HEEditImageModel?) {
         

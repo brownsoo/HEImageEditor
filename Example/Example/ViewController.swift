@@ -356,7 +356,7 @@ extension ViewController {
     }
 }
 
-extension ViewController: HEEditImageViewControllerDelegate {  
+extension ViewController: HEEditImageViewDelegate {  
     func didFinishEditImage(_ editView: HEEditImageView, resultImage: UIImage, editId: String?, editModel: HEEditImageModel?) {
         self.resultImageView.image = resultImage
         self.resultImageEditModel = editModel
