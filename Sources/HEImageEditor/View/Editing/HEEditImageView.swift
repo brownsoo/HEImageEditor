@@ -16,6 +16,7 @@ public protocol HEEditorActionListener: Equatable {
 
 public protocol HEEditImageView: AnyObject {
     
+    var selectedTool: HEConfiguration.EditTool? { get }
     var isImageEditing: Bool { get }
     
     /// 취소하고 화면 종료

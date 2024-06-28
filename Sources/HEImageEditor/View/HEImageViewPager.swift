@@ -257,6 +257,8 @@ public class HEImageViewPagerController: UIViewController, HEImageViewPager {
             let vc = HEEditImageViewController(image: image, editModel: editModel, topToolViewBuilder: topBuilder)
             vc.delegate = self
             vc.editId = hei.id
+            vc.initialEditTool = tool
+            vc.animateDismiss = true
             vc.modalPresentationStyle = .overFullScreen
             self.present(vc, animated: false)
         } catch {

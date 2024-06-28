@@ -10,7 +10,12 @@ import UIKit
 
 public protocol HEEditToolView: UIView {
     func unselectTool()
-    func selectTool(_ tool: HEConfiguration.EditTool)
+    func selectTool(_ tool: HEConfiguration.EditTool, dispatchingEvent: Bool)
+}
+public extension HEEditToolView {
+    func selectTool(_ tool: HEConfiguration.EditTool) {
+        self.selectTool(tool, dispatchingEvent: true)
+    }
 }
 
 open class HEEditImageBottomToolView: UIView, HEEditToolView {
@@ -43,8 +48,11 @@ open class HEEditImageBottomToolView: UIView, HEEditToolView {
         super.encode(with: coder)
     }
     
-    open func selectTool(_ tool: HEConfiguration.EditTool) {
+    open func selectTool(_ tool: HEConfiguration.EditTool, dispatchingEvent: Bool) {
         selectedTool = tool
+        if dispatchingEvent {
+            toolSelectListener?(tool)
+        }
         if let row = tools.firstIndex(where: { $0 == tool }) {
             collView.selectItem(at: IndexPath(row: row, section: 0), animated: true, scrollPosition: .centeredHorizontally)
         } else {

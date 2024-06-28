@@ -26,6 +26,14 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     static let shadowColorFrom = UIColor.black.withAlphaComponent(0.35).cgColor
     static let shadowColorTo = UIColor.clear.cgColor
     
+    override open var prefersStatusBarHidden: Bool { true }
+    
+    override open var prefersHomeIndicatorAutoHidden: Bool { true }
+    
+    override open var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+        deviceIsiPhone() ? .portrait : .all
+    }
+    
     public weak var delegate: HEEditImageViewControllerDelegate?
     
     public var editId: String?
@@ -212,7 +220,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         return bt
     }()
     
-    private var selectedTool: HEConfiguration.EditTool? {
+    public var selectedTool: HEConfiguration.EditTool? {
         didSet {
             if selectedTool == nil {
                 bottomToolView?.unselectTool()
@@ -282,13 +290,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     /// 하단 툴뷰 구성자
     private var bottomToolViewBuilder: HEEditImageBottomToolViewBuilder!
     
-    override open var prefersStatusBarHidden: Bool { true }
-    
-    override open var prefersHomeIndicatorAutoHidden: Bool { true }
-    
-    override open var supportedInterfaceOrientations: UIInterfaceOrientationMask {
-        deviceIsiPhone() ? .portrait : .all
-    }
+    public var initialEditTool: HEConfiguration.EditTool?
     
     deinit {
         cleanToolViewStateTimer()
@@ -302,6 +304,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         image: UIImage,
         editId: String? = nil,
         editModel: HEEditImageModel? = nil,
+        initialTool: HEConfiguration.EditTool? = nil,
         animate: Bool = true,
         delegate: HEEditImageViewControllerDelegate? = nil,
         topToolViewBuilder: HEEditImageTopToolViewBuilder? = nil,
@@ -312,6 +315,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         vc.clipImageBottomViewBuilder = clipImageBottomViewBuilder
         vc.animateDismiss = animate
         vc.editId = editId
+        vc.initialEditTool = initialTool
         vc.delegate = delegate
         vc.modalPresentationStyle = .overFullScreen
         parent.present(vc, animated: animate, completion: nil)
@@ -358,16 +362,17 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         
         super.init(nibName: nil, bundle: nil)
         
+        // 하단 툴바 구성자
         self.bottomToolViewBuilder = bottomToolViewBuilder ?? { editView in
             // 기본 툴바
             let toolbar = HEEditImageBottomToolView(tools: ts)
-            toolbar.toolSelectListener = { [weak editView] type in
-                guard let editView else { return }
+            toolbar.toolSelectListener = { [weak editView] toolType in
+                guard let editView, editView.selectedTool != toolType else { return }
                 if editView.isImageEditing {
                     editView.stopCurrentEditing()
                     return
                 }
-                switch type {
+                switch toolType {
                 case .draw:
                     editView.startDrawing()
                 case .clip:
@@ -419,6 +424,13 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     override open func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
+        // 초기 툴 처리 
+        if let tool = initialEditTool {
+            initialEditTool = nil
+            bottomToolView?.selectTool(tool)
+        }
+        
+        // 드로잉 툴에 관한 처리
         guard tools.contains(.draw) else { return }
         
         var size = drawingImageView.frame.size
@@ -433,6 +445,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         
         let width = drawLineWidth / mainScrollView.zoomScale * toImageScale
         defaultDrawPathWidth = width
+        
     }
     
     override open func viewDidLayoutSubviews() {
@@ -442,7 +455,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         }
         
         shouldLayout = false
-        trace("edit didLayout")
+        trace("didLayout")
         let insets = self.view.safeAreaInsets
         
         mainScrollView.frame = view.bounds
