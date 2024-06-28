@@ -86,11 +86,11 @@ public class HESimpleImageStore: HEImageDataStore {
     }
     
     public func addImage(image: UIImage) {
-        images.append(HEImage(image: image, editModel: nil))
+        images.append(HEImage(image: image, editState: nil))
     }
     
     public func addImage(url: URL) {
-        images.append(HEImage(origin: url, editModel: nil))
+        images.append(HEImage(origin: url, editState: nil))
     }
     
     public func all() -> [HEImage] {

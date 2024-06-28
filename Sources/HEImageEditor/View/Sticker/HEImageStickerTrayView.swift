@@ -21,7 +21,7 @@ public class HEImageStickerTrayView: UIView, HEImageStickerTray {
     static let baseViewH: CGFloat = HEConfiguration.imageStickerTrayHeight
     
     public var selectImageStickerBlock: ((HEImageSticker) -> Void)?
-    public var hideBlock: (() -> Void)?
+    public var hideBlock: ((Bool) -> Void)?
     public var hasMosaicSticker: Bool {
         return dataSource?.hasMosaicSticker(self) ?? false
     }
@@ -114,13 +114,13 @@ public class HEImageStickerTrayView: UIView, HEImageStickerTray {
         }
     }
     
-    public func hide() {
-        self.hideBlock?()
+    public func hide(instantly: Bool) {
         
         UIView.animate(withDuration: 0.24) {
             self.trayBottomConstraint.constant = Self.baseViewH
             self.superview?.layoutIfNeeded()
         } completion: { (_) in
+            self.hideBlock?(instantly)
             self.isHidden = true
         }
 

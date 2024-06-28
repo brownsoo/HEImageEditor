@@ -31,8 +31,7 @@ extension HEClipImageViewController {
     }
 }
 
-class HEClipImageViewController: UIViewController, HEClipImageView {
-    
+public class HEClipImageViewController: UIViewController, HEClipImageView {
     
     private var animateDismiss = true
     
@@ -73,7 +72,6 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
     private var bottomView: UIView?
     private var bottomViewHeight: CGFloat = 0
     
-    var bottomShadowLayer: CAGradientLayer!
     private lazy var topView = HETopConfirmBarView()
     /// 회전, 크롭 툴 아이템 뷰
     private var toolView: HEClipActionToolView!
@@ -117,11 +115,11 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
     
     var dismissCallback: (() -> Void)?
     
-    override var prefersStatusBarHidden: Bool { true }
+    public override var prefersStatusBarHidden: Bool { true }
     
-    override var prefersHomeIndicatorAutoHidden: Bool { true}
+    public override var prefersHomeIndicatorAutoHidden: Bool { true}
     
-    override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+    public override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
         deviceIsiPhone() ? .portrait : .all
     }
     
@@ -171,7 +169,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func viewDidLoad() {
+    public override func viewDidLoad() {
         super.viewDidLoad()
         
         setupUI()
@@ -180,7 +178,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         }
     }
     
-    override func viewDidAppear(_ animated: Bool) {
+    public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
         viewDidAppearCount += 1
@@ -222,7 +220,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         }
     }
     
-    override func viewDidLayoutSubviews() {
+    public override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         
         guard shouldLayout else { return }
@@ -468,8 +466,6 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         self.imageView.isHidden = true
         self.gridView.isHidden = true
         
-        self.topView.hide()
-        
         UIView.animate(withDuration: 0.3, animations: {
             imageView.frame = presentAnimateFrame
         }) { _ in
@@ -480,10 +476,11 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         }
     }
     
-    func cancelEdit() {
+    public func cancelEdit() {
         dismissAnimateFromRect = cancelClipAnimateFrame
         dismissAnimateImage = presentAnimateImage
         cancelClipBlock?()
+        topView.hide()
         if self.presentingViewController is HEEditImageViewController {
             dismiss(animated: animateDismiss, completion: dismissCallback)
         } else {
@@ -494,11 +491,12 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
     }
     
     
-    func doneEdit() {
+    public func doneEdit() {
         let image = clipImage()
         dismissAnimateFromRect = clipBoxFrame
         dismissAnimateImage = image.clipImage
         clipDoneBlock?(angle, image.editRect, selectedRatio)
+        topView.hide()
         if self.presentingViewController is HEEditImageViewController {
             dismiss(animated: animateDismiss, completion: dismissCallback)
         } else {
@@ -509,7 +507,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
     }
     
     /// 초기화
-    func revertEdit() {
+    public func revertEdit() {
         angle = 0
         editImage = originalImage
         calculateEditRect()
@@ -520,7 +518,7 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         
     }
     
-    func rotate() {
+    public func rotate() {
         guard !isRotating else {
             return
         }
@@ -574,14 +572,15 @@ class HEClipImageViewController: UIViewController, HEClipImageView {
         generateThumbnailImage()
     }
     
-    func clip(ratio: HEImageClipRatio) {
+    public func clip(ratio: HEImageClipRatio) {
         self.selectedRatio = ratio
         self.calculateEditRect()
         self.layoutInitialImage()
     }
     
     /// 그리드 패닝
-    @objc func gridGesPanAction(_ pan: UIPanGestureRecognizer) {
+    @objc 
+    private func gridGesPanAction(_ pan: UIPanGestureRecognizer) {
         let point = pan.location(in: view)
         if pan.state == .began {
             startEditing()
@@ -876,7 +875,7 @@ extension HEClipImageViewController: HEClipToolViewDelegate {
 }
 
 extension HEClipImageViewController: UIGestureRecognizerDelegate {
-    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+    public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
         guard gestureRecognizer == gridPanGes else {
             return true
         }
@@ -896,29 +895,29 @@ extension HEClipImageViewController: UIGestureRecognizerDelegate {
 
 
 extension HEClipImageViewController: UIScrollViewDelegate {
-    func viewForZooming(in scrollView: UIScrollView) -> UIView? {
+    public func viewForZooming(in scrollView: UIScrollView) -> UIView? {
         return containerView
     }
     
-    func scrollViewWillBeginZooming(_ scrollView: UIScrollView, with view: UIView?) {
+    public func scrollViewWillBeginZooming(_ scrollView: UIScrollView, with view: UIView?) {
         startEditing()
     }
     
-    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+    public func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
         guard scrollView == self.scrollView else {
             return
         }
         startEditing()
     }
     
-    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+    public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
         guard scrollView == self.scrollView else {
             return
         }
         startTimer()
     }
     
-    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+    public func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
         guard scrollView == self.scrollView else {
             return
         }
@@ -929,7 +928,7 @@ extension HEClipImageViewController: UIScrollViewDelegate {
 }
 
 extension HEClipImageViewController: UIViewControllerTransitioningDelegate {
-    func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+    public func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
         return HEClipImageDismissAnimatedTransition()
     }
 }

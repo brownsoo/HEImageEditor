@@ -3,7 +3,7 @@
 //  Example
 //
 //  Created by long on 2020/11/23.
-//
+//  Changed by brownsoo on 2024/summer
 
 import UIKit
 import SnapKit
@@ -13,29 +13,17 @@ import OrderedCollections
 
 class ViewController: UIViewController {
     var editImageToolView: UIView!
-    
     var editImageDrawToolSwitch: UISwitch!
-    
     var editImageClipToolSwitch: UISwitch!
-    
     var editImageImageStickerToolSwitch: UISwitch!
-    
     var editImageTextStickerToolSwitch: UISwitch!
-    
     var editImageMosaicToolSwitch: UISwitch!
-    
     var editImageFilterToolSwitch: UISwitch!
-    
     var editImageAdjustToolSwitch: UISwitch!
-    
     var resultImageView: UIImageView!
-    
     var originalImage: UIImage?
-    
-    var resultImageEditModel: HEEditImageModel?
-    
+    var resultImageEditState: HEEditState?
     let config = HEConfiguration.default()
-    
     
     private var editCancelBtn: UIButton = {
         let btn = UIButton(type: .custom)
@@ -119,11 +107,11 @@ class ViewController: UIViewController {
     }
     
     
-    func startEditSingleImage(_ image: UIImage, editModel: HEEditImageModel?) {
+    func startEditSingleImage(_ image: UIImage, editState: HEEditState?) {
         HEEditImageViewController.showImageEditor(
             parent: self,
             image: image,
-            editModel: editModel,
+            editModel: editState,
             delegate: self,
             topToolViewBuilder: makeTopToolBuilder()
         )
@@ -133,7 +121,7 @@ class ViewController: UIViewController {
     func startEditMultipleImages(_ images: [HEImage]) {
         imageStore.clearAll()
         imageStore.addHEImages(images)
-        let vc = HEImageViewPagerController(imageStore: imageStore,
+        let vc = HEImageEditorViewController(imageStore: imageStore,
                                             imageCache: imageStore,
                                             stickerDataSource: self)
         
@@ -148,11 +136,11 @@ extension ViewController: HEImageStickerTrayViewDataSource {
         true
     }
     
-    func imageStickerTrayView(_ trayView: HEImageEditor.HEImageStickerTrayView, numberOfItemsInSection section: Int) -> Int {
+    func imageStickerTrayView(_ trayView: HEImageStickerTrayView, numberOfItemsInSection section: Int) -> Int {
         imageStickers.count
     }
     
-    func imageStickerTrayView(_ trayView: HEImageEditor.HEImageStickerTrayView, stickerForItemAt indexPath: IndexPath) -> HEImageSticker {
+    func imageStickerTrayView(_ trayView: HEImageStickerTrayView, stickerForItemAt indexPath: IndexPath) -> HEImageSticker {
         imageStickers[indexPath.row]
     }
     
@@ -309,7 +297,7 @@ extension ViewController {
             return
         }
         
-        startEditSingleImage(oi, editModel: resultImageEditModel)
+        startEditSingleImage(oi, editState: resultImageEditState)
     }
     
     // ex
@@ -357,14 +345,14 @@ extension ViewController {
 }
 
 extension ViewController: HEEditImageViewDelegate {  
-    func didFinishEditImage(_ editView: HEEditImageView, resultImage: UIImage, editId: String?, editModel: HEEditImageModel?) {
+    func didFinishEditImage(_ editView: HEEditImageView, resultImage: UIImage, editId: String?, editModel: HEEditState?) {
         self.resultImageView.image = resultImage
-        self.resultImageEditModel = editModel
+        self.resultImageEditState = editModel
     }
 }
 
 extension ViewController: HEEditorActionListener {
-    func didUpdatedActions(_ actions: [HEEditorAction], redoActions: [HEEditorAction]) {
+    func didUpdatedActions(_ actions: [HEEditAction], redoActions: [HEEditAction]) {
         editUndoBtn.isEnabled = !actions.isEmpty
         editRedoBtn.isEnabled = actions.count != redoActions.count
     }
@@ -382,7 +370,7 @@ extension ViewController: UIImagePickerControllerDelegate, UINavigationControlle
             let h = w * image.he.height / image.he.width
             image = image.he.resize(CGSize(width: w, height: h)) ?? image
             self.originalImage = image
-            self.startEditSingleImage(image, editModel: nil)
+            self.startEditSingleImage(image, editState: nil)
         }
     }
 }

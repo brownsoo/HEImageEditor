@@ -6,7 +6,7 @@
 import Foundation
 
 /// 
-public enum HEEditorAction {
+public enum HEEditAction {
     case draw(HEDrawPath)
     case eraser([HEDrawPath])
     case clip(oldStatus: HEClipStatus, newStatus: HEClipStatus)
@@ -16,28 +16,29 @@ public enum HEEditorAction {
     case adjust(oldStatus: HEAdjustStatus, newStatus: HEAdjustStatus)
 }
 
-protocol HEEditorManagerDelegate: AnyObject {
-    func editorManager(_ manager: HEEditorActionManager, didUpdateActions actions: [HEEditorAction], redoActions: [HEEditorAction])
+protocol HEEditActionManagerDelegate: AnyObject {
     
-    func editorManager(_ manager: HEEditorActionManager, undoAction action: HEEditorAction)
+    func editActionManager(_ manager: HEEditActionManager, didUpdateActions actions: [HEEditAction], redoActions: [HEEditAction])
     
-    func editorManager(_ manager: HEEditorActionManager, redoAction action: HEEditorAction)
+    func editActionManager(_ manager: HEEditActionManager, undoAction action: HEEditAction)
+    
+    func editActionManager(_ manager: HEEditActionManager, redoAction action: HEEditAction)
 }
 
-/// 액션 되돌리기, 다시실행 관리
-class HEEditorActionManager {
+/// 편집 동작 히스토리 관리
+class HEEditActionManager {
     
-    private(set) var actions: [HEEditorAction] = []
-    private(set) var redoActions: [HEEditorAction] = []
+    private(set) var actions: [HEEditAction] = []
+    private(set) var redoActions: [HEEditAction] = []
     
-    weak var delegate: HEEditorManagerDelegate?
+    weak var delegate: HEEditActionManagerDelegate?
     
-    init(actions: [HEEditorAction] = []) {
+    init(actions: [HEEditAction] = []) {
         self.actions = actions
         self.redoActions = actions
     }
     
-    func storeAction(_ action: HEEditorAction) {
+    func storeAction(_ action: HEEditAction) {
         actions.append(action)
         redoActions = actions
         
@@ -47,7 +48,7 @@ class HEEditorActionManager {
     func undoAction() {
         guard let preAction = actions.popLast() else { return }
         
-        delegate?.editorManager(self, undoAction: preAction)
+        delegate?.editActionManager(self, undoAction: preAction)
         deliverUpdate()
     }
     
@@ -57,11 +58,11 @@ class HEEditorActionManager {
         let action = redoActions[actions.count]
         actions.append(action)
         
-        delegate?.editorManager(self, redoAction: action)
+        delegate?.editActionManager(self, redoAction: action)
         deliverUpdate()
     }
     
     private func deliverUpdate() {
-        delegate?.editorManager(self, didUpdateActions: actions, redoActions: redoActions)
+        delegate?.editActionManager(self, didUpdateActions: actions, redoActions: redoActions)
     }
 }

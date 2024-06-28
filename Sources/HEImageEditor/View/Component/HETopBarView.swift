@@ -15,13 +15,6 @@ open class HETopBarView: UIView {
     private lazy var trailingContainer = UIStackView()
     private lazy var leadingContainer = UIStackView()
     
-    private lazy var shadowLayer: CAGradientLayer = {
-        let layer = CAGradientLayer()
-        layer.colors = [HEEditImageViewController.shadowColorFrom, HEEditImageViewController.shadowColorTo]
-        layer.locations = [0, 1]
-        return layer
-    }()
-    
     public override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
@@ -75,18 +68,12 @@ open class HETopBarView: UIView {
         centerContainer.addArrangedSubview(v)
     }
     
-    open override func layoutSubviews() {
-        super.layoutSubviews()
-        shadowLayer.frame = self.bounds
-    }
     
     public func setupUI() {
         
         self.addSubview(leadingContainer)
         self.addSubview(trailingContainer)
         self.addSubview(centerContainer)
-        
-        self.layer.addSublayer(shadowLayer)
         
         let guide = UILayoutGuide()
         self.addLayoutGuide(guide)

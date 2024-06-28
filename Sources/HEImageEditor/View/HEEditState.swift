@@ -1,5 +1,5 @@
 //
-//  HEEditImageModel.swift
+//  HEEditState.swift
 //  HEImageEditor
 //
 //  Created by 브라운수 on 6/10/24.
@@ -8,7 +8,7 @@
 import Foundation
 
 /// 편집 정보
-public class HEEditImageModel: NSObject {
+public class HEEditState: NSObject {
     /// 드로잉스
     public let drawPaths: [HEDrawPath]
     /// 모자잌스
@@ -22,7 +22,7 @@ public class HEEditImageModel: NSObject {
     
     public let stickers: [HEStickerEffect]
     
-    public let actions: [HEEditorAction]
+    public let actions: [HEEditAction]
     
     public init(
         drawPaths: [HEDrawPath] = [],
@@ -31,7 +31,7 @@ public class HEEditImageModel: NSObject {
         adjustStatus: HEAdjustStatus = HEAdjustStatus(),
         selectFilter: HEFilter? = nil,
         stickers: [HEStickerEffect] = [],
-        actions: [HEEditorAction] = []
+        actions: [HEEditAction] = []
     ) {
         self.drawPaths = drawPaths
         self.mosaicPaths = mosaicPaths

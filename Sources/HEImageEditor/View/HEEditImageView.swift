@@ -10,11 +10,11 @@ import Photos
 import UIKit
 
 public protocol HEEditorActionListener: Equatable {
-    func didUpdatedActions(_ actions: [HEEditorAction], redoActions: [HEEditorAction])
+    func didUpdatedActions(_ actions: [HEEditAction], redoActions: [HEEditAction])
 }
 
 public protocol HEEditImageViewDelegate: AnyObject {
-    func didFinishEditImage(_ editView: HEEditImageView, resultImage: UIImage, editId: String?, editModel: HEEditImageModel?) -> Void
+    func didFinishEditImage(_ editView: HEEditImageView, resultImage: UIImage, editId: String?, editModel: HEEditState?) -> Void
     func cancelledEditImage(_ editView: HEEditImageView)
 }
 
@@ -27,11 +27,6 @@ public protocol HEEditImageView: AnyObject {
     
     var selectedTool: HEConfiguration.EditTool? { get }
     var isImageEditing: Bool { get }
-    /// 연속 편집 모드 여부
-    ///
-    /// - true: 편집이 종료되면, 대기 상태가 아닌 뷰를 종료한다. 
-    /// - false: (기본값) 편집을 종료하면, 편집된 이미지를 표시하며 대기한다.
-    var continuouslyMode: Bool { get set }
     
     /// 취소하고 화면 종료
     func cancel()

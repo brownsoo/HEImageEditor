@@ -1,5 +1,5 @@
 //
-//  LoadingView.swift
+//  HELoadingView.swift
 //  HEImageEditor
 //
 //  Created by 브라운수 on 6/13/24.
@@ -7,7 +7,7 @@
 
 import UIKit
 
-class LoadingView: UIView {
+class HELoadingView: UIView {
     override var intrinsicContentSize: CGSize {
         CGSize(width: 78, height: 78)
     }

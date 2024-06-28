@@ -64,7 +64,7 @@ open class HEEditImageBottomToolView: UIView, HEEditToolView {
         let tool = selectedTool
         selectedTool = nil
         if let tool, let row = tools.firstIndex(where: { $0 == tool }) {
-            collView.deselectItem(at: IndexPath(row: row, section: 0), animated: true)
+            collView.deselectItem(at: IndexPath(row: row, section: 0), animated: false)
         } else {
             collView.reloadData()
         }

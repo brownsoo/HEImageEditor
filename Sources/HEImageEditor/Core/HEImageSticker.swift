@@ -53,10 +53,19 @@ public class HEImageSticker: NSObject {
 @objc public protocol HEImageStickerTray {
     weak var dataSource: HEImageStickerTrayViewDataSource? { get set }
     var selectImageStickerBlock: ((HEImageSticker) -> Void)? { get set }
-    var hideBlock: (() -> Void)? { get set }
+    /// 숨겨질 때 호출
+    ///
+    /// - instantly 여부 전달 
+    var hideBlock: ((Bool) -> Void)? { get set }
     var hasMosaicSticker: Bool { get }
     
     func show(in parent: UIView, frame: CGRect)
-    func hide()
+    func hide(instantly: Bool)
     func randomSticker(inSection section: Int) -> HEImageSticker?
+}
+
+public extension HEImageStickerTray {
+    func hide() {
+        hide(instantly: false)
+    }
 }

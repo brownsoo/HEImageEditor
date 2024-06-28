@@ -623,9 +623,13 @@ extension HEInputTextViewController: UITextViewDelegate {
             return false
         }
         
-        let lines = (textView.text as NSString).replacingCharacters(in: range, with: text).components(separatedBy: .newlines)
-        if let lastLine = lines.last {
-            if lastLine.count > textStickerMaximumCharactersPerLine {
+        let composed = (textView.text as NSString).replacingCharacters(in: range, with: text)
+        let lines = composed.components(separatedBy: .newlines)
+        if text == "\n" && lines.count > textStickerMaximumLines {
+            return false
+        }
+        if let lastLineString = lines.last {
+            if lastLineString.count > textStickerMaximumCharactersPerLine {
                 if lines.count + 1 > textStickerMaximumLines {
                     return false
                 }

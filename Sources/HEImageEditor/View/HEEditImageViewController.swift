@@ -10,9 +10,8 @@ public typealias HEEditImageTopToolViewBuilder = (HEEditImageView) -> (toolView:
 public typealias HEEditImageBottomToolViewBuilder = (HEEditImageView) -> (toolView: HEEditToolView, height: CGFloat)?
 
 open class HEEditImageViewController: UIViewController, HEEditImageView {
+    
     static let maxDrawLineImageWidth: CGFloat = 600
-    static let shadowColorFrom = UIColor.black.withAlphaComponent(0.35).cgColor
-    static let shadowColorTo = UIColor.clear.cgColor
     
     override open var prefersStatusBarHidden: Bool { true }
     
@@ -23,8 +22,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     }
     
     public weak var delegate: HEEditImageViewDelegate?
-    
-    open var continuouslyMode: Bool = false
     
     public var editId: String?
     
@@ -77,14 +74,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         }
         return shadowView
     }()
-    
-    private lazy var bottomShadowLayer: CAGradientLayer = {
-        let layer = CAGradientLayer()
-        layer.colors = [HEEditImageViewController.shadowColorTo, HEEditImageViewController.shadowColorFrom]
-        layer.locations = [0, 1]
-        return layer
-    }()
-    
+        
     private weak var bottomToolView: HEEditToolView?
     private var bottomToolViewHeight: CGFloat!
     
@@ -95,7 +85,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     open var drawColorCollectionView: UICollectionView?
     open var filterCollectionView: UICollectionView?
     open var adjustCollectionView: UICollectionView?
-    private lazy var loadingView = LoadingView()
+    private lazy var loadingView = HELoadingView()
     private var actionListeners: [any HEEditorActionListener] = []
     
     
@@ -240,7 +230,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     private var preStickerState: HEStickerEffect?
     private var currentAdjustStatus: HEAdjustStatus
     private var preAdjustStatus: HEAdjustStatus
-    private var actionManager: HEEditorActionManager
+    private var actionManager: HEEditActionManager
     private lazy var deleteDrawPaths: [HEDrawPath] = []
     private var defaultDrawPathWidth: CGFloat = 0
     private var impactFeedback: UIImpactFeedbackGenerator?
@@ -293,7 +283,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         parent: UIViewController,
         image: UIImage,
         editId: String? = nil,
-        editModel: HEEditImageModel? = nil,
+        editModel: HEEditState? = nil,
         initialTool: HEConfiguration.EditTool? = nil,
         animate: Bool = true,
         delegate: HEEditImageViewDelegate? = nil,
@@ -313,7 +303,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     /// 에디터 생성
     public init(image: UIImage, 
-                editModel: HEEditImageModel? = nil,
+                editModel: HEEditState? = nil,
                 topToolViewBuilder: HEEditImageTopToolViewBuilder? = nil,
                 bottomToolViewBuilder: HEEditImageBottomToolViewBuilder? = nil) {
         var image = image
@@ -344,7 +334,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         tools = ts
         adjustTools = HEConfiguration.default().adjustTools
         selectedAdjustTool = adjustTools.first
-        actionManager = HEEditorActionManager(actions: editModel?.actions ?? [])
+        actionManager = HEEditActionManager(actions: editModel?.actions ?? [])
         
         initialStickers = editModel?.stickers.compactMap {
             HEBaseStickerView.initWithState($0)
@@ -451,11 +441,11 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             topBarView.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: insets.top + topBarViewHeight)
         }
         
+        bottomToolViewContainer.backgroundColor = .black
         bottomToolViewContainer.frame = CGRect(x: 0,
                                         y: view.frame.height - bottomToolViewHeight - insets.bottom,
                                         width: view.he.width,
                                         height: bottomToolViewHeight + insets.bottom)
-        bottomShadowLayer.frame = bottomToolViewContainer.bounds
         
         eraserBtn.frame = CGRect(x: 20, y: 30 + (drawColViewH - 36) / 2, width: 36, height: 36)
         eraserBtnBgBlurView.frame = eraserBtn.frame
@@ -625,7 +615,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         let builder = self.bottomToolViewBuilder(self)
         bottomToolView = builder?.toolView
         bottomToolViewHeight = builder?.height ?? 0
-        bottomToolViewContainer.layer.addSublayer(bottomShadowLayer)
+        bottomToolViewContainer.backgroundColor = .yellow
+        
         if let bottomToolView {
             bottomToolViewContainer.addSubview(bottomToolView)
         }
@@ -793,18 +784,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         }
     }
     
-    private func completeIfNotContinuously(isDoneProcess: Bool) -> Bool {
-        if !continuouslyMode {
-            if isDoneProcess {
-                done()
-            } else {
-                cancel()
-            }
-            return true
-        }
-        return false
-    }
-    
     // MARK: Action Listener
     
     public func addActionChangedListener<T: HEEditorActionListener>(_ listener: T) {
@@ -844,7 +823,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         
         guard let current = self.currentEditController else { return }
         if let vc = current as? HEClipImageViewController {
-            // TODO: 브레이크
+            // TODO: 편집상태 제거 브레이크??
             vc.doneEdit()
         }
     }
@@ -873,21 +852,12 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             )
         vc.clipDoneBlock = { [weak self] angle, editRect, selectRatio in
             guard let self else { return }
-            
             self.clipImage(status: HEClipStatus(editRect: editRect, angle: angle, ratio: selectRatio))
             self.actionManager.storeAction(.clip(oldStatus: self.preClipStatus, newStatus: self.currentClipStatus))
-            
-            if completeIfNotContinuously(isDoneProcess: true) {
-                return
-            }
         }
         
         vc.cancelClipBlock = { [weak self] in
-            guard let self else { return }
-            if completeIfNotContinuously(isDoneProcess: false) {
-                return
-            }
-            self.resetContainerViewFrame()
+            self?.resetContainerViewFrame()
         }
         vc.dismissCallback = { [weak self] in
             self?.removeEditController()
@@ -921,7 +891,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     // MARK: -- 이미지 스티커 시작
     public func startImageSticker() {
         guard let imageStickerTray else { return }
-        imageStickerTray.hideBlock = { [weak self] in
+        imageStickerTray.hideBlock = { [weak self] instantly in
             guard let self else { return }
             if self.selectedTool == nil {
                 self.setToolView(show: true)
@@ -941,12 +911,14 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         selectedTool = .imageSticker
         editingTopView.show()
         editingTopView.confirmClickCallback = { [weak self] in
-            self?.selectedTool = nil
-            self?.imageStickerTray?.hide()
+            guard let self else { return }
+            self.selectedTool = nil
+            self.imageStickerTray?.hide()
         }
         editingTopView.cancelClickCallback = {[weak self] in
-            self?.selectedTool = nil
-            self?.imageStickerTray?.hide()
+            guard let self else { return }
+            self.selectedTool = nil
+            self.imageStickerTray?.hide()
         }
         
         
@@ -1064,7 +1036,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         
         let editId = self.editId
         var resImage = originalImage
-        var editModel: HEEditImageModel?
+        var editModel: HEEditState?
         
         func callback() {
             dismiss(animated: animateDismiss) {
@@ -1078,7 +1050,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         }
         
         autoreleasepool {
-            let loadingView = LoadingView()
+            let loadingView = HELoadingView()
             loadingView.show(inCenterOf: view)
             
             DispatchQueue.main.async { [self] in
@@ -1093,7 +1065,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                     resImage = resImage.he.compress(to: oriDataSize)
                 }
                 
-                editModel = HEEditImageModel(
+                editModel = HEEditState(
                     drawPaths: drawPaths,
                     mosaicPaths: mosaicDrawPaths,
                     clipStatus: currentClipStatus,
@@ -2129,6 +2101,7 @@ extension HEEditImageViewController: UICollectionViewDataSource, UICollectionVie
 
 extension HEEditImageViewController: HEInputTextViewControllerDelegate {
     func inputTextViewController(_ controller: HEInputTextViewController, stickerId: String?, didInput text: String, textColor: UIColor, fillColor: UIColor, font: UIFont, image: UIImage?) {
+        bottomToolView?.unselectTool()
         if stickerId == nil { // new sticker
             self.addTextStickersView(text, textColor: textColor, fillColor: fillColor, font: font, image: image)
             return
@@ -2156,8 +2129,8 @@ extension HEEditImageViewController: HEInputTextViewControllerDelegate {
     }
     
     func inputTextViewControllerDidCancel() {
+        bottomToolView?.unselectTool()
     }
-    
     
 }
 
@@ -2296,12 +2269,12 @@ extension HEEditImageViewController: HEStickerViewDelegate {
 
 // MARK: unod & redo
 
-extension HEEditImageViewController: HEEditorManagerDelegate {
-    func editorManager(_ manager: HEEditorActionManager, didUpdateActions actions: [HEEditorAction], redoActions: [HEEditorAction]) {
+extension HEEditImageViewController: HEEditActionManagerDelegate {
+    func editActionManager(_ manager: HEEditActionManager, didUpdateActions actions: [HEEditAction], redoActions: [HEEditAction]) {
         self.actionListeners.forEach({ $0.didUpdatedActions(actions, redoActions: redoActions) })
     }
     
-    func editorManager(_ manager: HEEditorActionManager, undoAction action: HEEditorAction) {
+    func editActionManager(_ manager: HEEditActionManager, undoAction action: HEEditAction) {
         switch action {
         case let .draw(path):
             undoDraw(path)
@@ -2320,7 +2293,7 @@ extension HEEditImageViewController: HEEditorManagerDelegate {
         }
     }
     
-    func editorManager(_ manager: HEEditorActionManager, redoAction action: HEEditorAction) {
+    func editActionManager(_ manager: HEEditActionManager, redoAction action: HEEditAction) {
         switch action {
         case let .draw(path):
             redoDraw(path)
