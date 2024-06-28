@@ -32,15 +32,8 @@ public class HEImageSticker: NSObject {
     public var isSpecialSticker: Bool { self.kind == .faceAI || self.kind == .mosaic }
     
     public let id: String
-    // public private(set) var image: UIImage?
     public let kind: Kind
     public var imageLoader: (() async -> UIImage)
-    
-//    public init(id: String, kind: Kind = .default, image: UIImage) {
-//        self.id = id
-//        self.image = image // TODO: lazy loading
-//        self.kind = kind
-//    }
     
     public init(id: String, kind: Kind = .default, imageLoader: @escaping () async -> UIImage) {
         self.id = id

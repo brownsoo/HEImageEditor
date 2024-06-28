@@ -111,9 +111,16 @@ class ViewController: UIViewController {
         HEEditImageViewController.showImageEditor(
             parent: self,
             image: image,
-            editModel: editState,
+            editState: editState,
             delegate: self,
-            topToolViewBuilder: makeTopToolBuilder()
+            topToolViewBuilder: makeTopToolBuilder(),
+            clipImageBottomViewBuilder: { clipView in
+                let bottom = HEClipBottomView()
+                bottom.cancelClickListener = { [weak clipView] in clipView?.cancelEdit() }
+                bottom.doneClickListener = { [weak clipView] in clipView?.doneEdit() }
+                bottom.revertClickListener = { [weak clipView] in clipView?.revertEdit() }
+                return (bottom, HEClipBottomView.estimateHeight)
+            }
         )
     }
    
@@ -172,13 +179,13 @@ extension ViewController: PHPickerViewControllerDelegate {
                                 newSelection[identifier] = HEImage(
                                     id: identifier,
                                     origin: fileUrl,
-                                    editModel: nil
+                                    editState: nil
                                 )
                             } else {
                                 newSelection[identifier] = HEImage(
                                     id: identifier,
                                     image: image,
-                                    editModel: nil
+                                    editState: nil
                                 )
                             }
                         }

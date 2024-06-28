@@ -15,7 +15,7 @@ public class HEEditState: NSObject {
     public let mosaicPaths: [HEMosaicPath]
     
     public let clipStatus: HEClipStatus?
-    /// 색조 적용 상태
+    /// 색조 상태
     public let adjustStatus: HEAdjustStatus
     
     public let selectFilter: HEFilter?

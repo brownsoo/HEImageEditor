@@ -1,119 +1,85 @@
-[![Version](https://img.shields.io/github/v/tag/longitachi/ZLImageEditor.svg?color=blue&include_prereleases=&sort=semver)](https://cocoapods.org/pods/ZLImageEditor)
-[![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-brightgreen.svg?style=flat)](https://github.com/Carthage/Carthage)
-[![SwiftPM compatible](https://img.shields.io/badge/SwiftPM-supported-E57141.svg)](https://swift.org/package-manager/)
-[![License](https://img.shields.io/badge/license-MIT-black)](https://raw.githubusercontent.com/longitachi/ZLImageEditor/master/LICENSE)
-[![Platform](https://img.shields.io/badge/Platforms-iOS-blue?style=flat)](https://img.shields.io/badge/Platforms-iOS-blue?style=flat)
-![Language](https://img.shields.io/badge/Language-%20Swift%20-E57141.svg)
 
-<img src="https://github.com/longitachi/ImageFolder/blob/master/ZLImageEditor/ZLImageEditor.png" width = "277" height = "600" div align=center/>
-
----------------
-
-ZLImageEditor is a powerful image editor framework. Supports graffiti, cropping, mosaic, text stickers, picture stickers, filters, adjust(brightness, contrast, saturation).
-
-ZLImageEditor is extracted from [ZLPhotoBrowser](https://github.com/longitachi/ZLPhotoBrowser).
-
+HEImageEditor 는 [ZLImageEditor](https://github.com/longitachi/ZLImageEditor) 를 수정하여 만들었습니다.  
 
 ### <a id="Features"></a>Features
 - [x] Draw (Support custom line color).
 - [x] Crop (Support custom crop ratios).
 - [x] Image sticker (Support custom image sticker container view).
 - [x] Text sticker  (Support custom text color).
-- [x] Mosaic.
+- [x] Mosaic sticker.
+- [x] Mosaic drawing.
 - [x] Filter (Support custom filters).
 - [x] Adjust (Brightness, Contrast, Saturation).
 
 ### <a id="Requirements"></a>Requirements
- | v >= 2.0.0 | iOS 10.0+ |
- | --- | --- |
- | v \< 2.0.0 | iOS 9.0+ |
  * Swift 5.x
  * Xcode 12.x
 
 ### <a id="Usage"></a>Usage
 ```swift
-ZLImageEditorConfiguration.default()
-    .editImageTools([.draw, .clip, .imageSticker, .textSticker, .mosaic, .filter, .adjust])
-    .adjustTools([.brightness, .contrast, .saturation])
-
-ZLEditImageViewController.showEditImageVC(parentVC: self, image: image, editModel: editModel) { [weak self] (resImage, editModel) in
-    // your code
+// 이미지 스티커 제공자 
+var imageStickers: [HEImageSticker] = []
+// 에디터 세팅 
+func configImageEditor() {
+    
+    let stickerTray = HEImageStickerTrayView()
+    stickerTray.dataSource = self
+    
+    imageStickers.append(HEImageSticker.faceAiIcon)
+    imageStickers.append(HEImageSticker.mosaicIcon)
+    imageStickers.append(contentsOf: (1...18).map { (v) -> String in
+        "imageSticker" + String(v)
+    }.compactMap { name in
+        HEImageSticker(id: name) {
+            UIImage(named: name) ?? UIImage()
+        }
+    })
+    
+    HEConfiguration.default()
+        .clipRatios([.origin, .custom, .wh1x1])
+        .imageStickerTray(stickerTray)
 }
 ```
 
-### <a id="ChangeLog"></a>Change Log
-> [More logs](https://github.com/longitachi/ZLImageEditor/blob/master/CHANGELOG.md)
-```
-● 2.0.2
-  Add:
-    Adapt the text sticker input interface for iPad landscape mode.
-  Fix:
-    Fix the bug where cropping square images to circular shape fails.
-● 2.0.1
-  Add: 
-    Adapt to iOS 17, replace UIGraphicsBeginImageContextWithOptions with UIGraphicsImageRenderer.
-● 2.0.0
-  Add:
-    Enhancing the drawing tool with an eraser function.
-    The minimum supported system has been upgraded from iOS 9 to iOS 10.
-...
+```swift
+// 단일 이미지를 편집 
+func startEditSingleImage(_ image: UIImage, editState: HEEditState?) {
+    HEEditImageViewController.showImageEditor(
+        parent: self,
+        image: image,
+        editState: editState,
+        delegate: self,
+        topToolViewBuilder: makeTopToolBuilder(),
+        clipImageBottomViewBuilder: { clipView in
+            let bottom = HEClipBottomView()
+            bottom.cancelClickListener = { [weak clipView] in clipView?.cancelEdit() }
+            bottom.doneClickListener = { [weak clipView] in clipView?.doneEdit() }
+            bottom.revertClickListener = { [weak clipView] in clipView?.revertEdit() }
+            return (bottom, HEClipBottomView.estimateHeight)
+        }
+    )
+}
+
+
+// 다수  이미지를 편집하고 싶다면, 이미지 스토어 생성 
+lazy var imageStore = HESimpleImageStore()
+
+func startEditMultipleImages(_ images: [HEImage]) {
+    imageStore.clearAll()
+    imageStore.addHEImages(images)
+    let vc = HEImageEditorViewController(imageStore: imageStore,
+                                        imageCache: imageStore,
+                                        stickerDataSource: self)
+    
+    vc.modalPresentationStyle = .overFullScreen
+    present(vc, animated: true)
+}
 ```
 
 ### <a id="Languages"></a>Languages
-🇨🇳 Chinese (Simplified/Traditional), 🇺🇸 English, 🇯🇵 Japanese, 🇫🇷 French, 🇩🇪 German, 🇺🇦 Ukranian, 🇷🇺 Russian, 🇻🇳 Vietnamese, 🇰🇷 Korean, 🇲🇾 Malay, 🇮🇹 Italian, 🇮🇩 Indonesian, 🇪🇸 Spanish, 🇵🇹 Portuguese, 🇹🇷 Turkey, 🇸🇦 Arabic, 🇳🇱 Dutch.
+🇺🇸 English, 🇰🇷 Korean
 
-### <a id="Installation"></a>Installation
-There are four ways to use ZLImageEditor in your project:
 
-  - using CocoaPods
-  - using Carthage
-  - using Swift Package Manager
-  - manual install (build frameworks or embed Xcode Project)
-
-#### CocoaPods
-To integrate ZLImageEditor into your Xcode project using CocoaPods, specify it to a target in your Podfile:
-
-```
-source 'https://github.com/CocoaPods/Specs.git'
-platform :ios, '10.0'
-use_frameworks!
-
-target 'MyApp' do
-  # your other pod
-  # ...
-  pod 'ZLImageEditor'
-end
-```
-
-Then, run the following command:
-
-```
-$ pod install
-```
-
-> If you cannot find the latest version, you can execute `pod repo update` first
-
-#### Carthage
-To integrate ZLImageEditor into your Xcode project using Carthage, specify it in your Cartfile:
-
-```
-github "longitachi/ZLImageEditor"
-```
-
-Then, run the following command to build the ZLImageEditor framework:
-
-```
-$ carthage update ZLImageEditor
-```
-
-#### Swift Package Manager
-1. Select File > Swift Packages > Add Package Dependency. Enter https://github.com/longitachi/ZLImageEditor.git in the "Choose Package Repository" dialog.
-2. In the next page, specify the version resolving rule as "Up to Next Major" with "2.0.2" as its earliest version.
-3. After Xcode checking out the source and resolving the version, you can choose the "ZLImageEditor" library and add it to your app target.
-
-### <a id="Support"></a> Support
-* [**★ Star**](#) this repo.
-* Support with <img src="https://github.com/longitachi/ImageFolder/blob/master/ZLPhotoBrowser/ap.png" width = "100" height = "125" /> or <img src="https://github.com/longitachi/ImageFolder/blob/master/ZLPhotoBrowser/wp.png" width = "100" height = "125" /> or <img src="https://github.com/longitachi/ImageFolder/blob/master/ZLPhotoBrowser/pp.png" width = "150" height = "125" />
-
-### <a id="DemoEffect"></a> Demo Effect
-![image](https://github.com/longitachi/ImageFolder/blob/master/ZLImageEditor/editImage.gif)
+### Swift Package Manager
+1. Select File > Swift Packages > Add Package Dependency. Enter https://github.com/brownsoo/HEImageEditor.git in the "Choose Package Repository" dialog.
+2. After Xcode checking out the source and resolving the version, you can choose the "HEImageEditor" library and add it to your app target.

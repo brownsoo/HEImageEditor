@@ -1,5 +1,5 @@
 //
-//  ZLEditImageViewController.swift
+//  HEEditImageViewController.swift
 //  HEImageEditor
 //
 
@@ -283,7 +283,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         parent: UIViewController,
         image: UIImage,
         editId: String? = nil,
-        editModel: HEEditState? = nil,
+        editState: HEEditState? = nil,
         initialTool: HEConfiguration.EditTool? = nil,
         animate: Bool = true,
         delegate: HEEditImageViewDelegate? = nil,
@@ -291,7 +291,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         bottomToolViewBuilder: HEEditImageBottomToolViewBuilder? = nil,
         clipImageBottomViewBuilder: HEClipImageBottomViewBuilder? = nil
     ) {
-        let vc = HEEditImageViewController(image: image, editModel: editModel, topToolViewBuilder: topToolViewBuilder, bottomToolViewBuilder: bottomToolViewBuilder)
+        let vc = HEEditImageViewController(image: image, editState: editState, topToolViewBuilder: topToolViewBuilder, bottomToolViewBuilder: bottomToolViewBuilder)
         vc.clipImageBottomViewBuilder = clipImageBottomViewBuilder
         vc.animateDismiss = animate
         vc.editId = editId
@@ -303,7 +303,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     /// 에디터 생성
     public init(image: UIImage, 
-                editModel: HEEditState? = nil,
+                editState: HEEditState? = nil,
                 topToolViewBuilder: HEEditImageTopToolViewBuilder? = nil,
                 bottomToolViewBuilder: HEEditImageBottomToolViewBuilder? = nil) {
         var image = image
@@ -318,13 +318,13 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         originalImage = image.he.fixOrientation()
         editImage = originalImage
         editImageWithoutAdjust = originalImage
-        currentClipStatus = editModel?.clipStatus ?? HEClipStatus(editRect: CGRect(origin: .zero, size: image.size))
+        currentClipStatus = editState?.clipStatus ?? HEClipStatus(editRect: CGRect(origin: .zero, size: image.size))
         preClipStatus = currentClipStatus
         drawColors = HEConfiguration.default().drawColors
-        currentFilter = editModel?.selectFilter ?? .normal
-        drawPaths = editModel?.drawPaths ?? []
-        mosaicDrawPaths = editModel?.mosaicPaths ?? []
-        currentAdjustStatus = editModel?.adjustStatus ?? HEAdjustStatus()
+        currentFilter = editState?.selectFilter ?? .normal
+        drawPaths = editState?.drawPaths ?? []
+        mosaicDrawPaths = editState?.mosaicPaths ?? []
+        currentAdjustStatus = editState?.adjustStatus ?? HEAdjustStatus()
         preAdjustStatus = currentAdjustStatus
         
         var ts = HEConfiguration.default().tools
@@ -334,9 +334,9 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         tools = ts
         adjustTools = HEConfiguration.default().adjustTools
         selectedAdjustTool = adjustTools.first
-        actionManager = HEEditActionManager(actions: editModel?.actions ?? [])
+        actionManager = HEEditActionManager(actions: editState?.actions ?? [])
         
-        initialStickers = editModel?.stickers.compactMap {
+        initialStickers = editState?.stickers.compactMap {
             HEBaseStickerView.initWithState($0)
         } ?? []
         
@@ -1800,15 +1800,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                                 inputMosaicImage: UIImage? = nil,
                                 skipEditImage: Bool = false) -> UIImage? {
         
-//        var actualSize = currentClipStatus.editRect.size
-//        if shouldSwapSize {
-//            swap(&actualSize.width, &actualSize.height)
-//        }
-//        let ratio = min(
-//            mainScrollView.frame.width / currentClipStatus.editRect.width,
-//            mainScrollView.frame.height / currentClipStatus.editRect.height
-//        )
-
         let renderRect = CGRect(origin: .zero, size: originalImage.size)
         var midImage = UIGraphicsImageRenderer.he.renderImage(size: originalImage.size) { format in
             format.scale = self.originalImage.scale
@@ -1848,19 +1839,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 context.setBlendMode(.clear)
                 context.strokePath()
             }
-            // 모자잌 스티커로 지움
-//            let stickers = self.mosaicStickers.filter({ !$0.onOperation })
-//            stickers.forEach { v in
-//                let frame = v.frame.insetBy(dx: HEImageStickerView.edgeInset, dy: HEImageStickerView.edgeInset)
-//                context.addEllipse(in: CGRect(x: frame.minX / ratio,
-//                                              y: frame.minY / ratio,
-//                                              width: frame.width / ratio,
-//                                              height: frame.height / ratio))
-//                context.setLineWidth(0)
-//                context.setBlendMode(.clear)
-//                context.setFillColor(UIColor.blue.cgColor)
-//                context.fillPath()
-//            }
         }
         
         guard let midCgImage = midImage.cgImage else { return nil }

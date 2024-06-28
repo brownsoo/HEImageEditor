@@ -1,5 +1,5 @@
 //
-//  ZLBaseStickerView.swift
+//  HEBaseStickerView.swift
 //  HEImageEditor
 //
 

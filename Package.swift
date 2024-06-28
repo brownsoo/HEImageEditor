@@ -4,7 +4,8 @@ import PackageDescription
 
 let package = Package(
     name: "HEImageEditor",
-    platforms: [.iOS(.v10)],
+    defaultLocalization: "ko",
+    platforms: [.iOS(.v14)],
     products: [
         // Products define the executables and libraries a package produces, and make them visible to other packages.
         .library(
@@ -16,14 +17,14 @@ let package = Package(
     targets: [
         .target(
             name: "HEImageEditor",
-            path: "Sources",
+            //path: "Sources",
             exclude: [
-                "Info.plist",
-                "General/HEWeakProxy.h",
-                "General/HEWeakProxy.m"
+                "../Info.plist",
+                "Util/HEWeakProxy.h",
+                "Util/HEWeakProxy.m"
             ],
             resources: [
-                .process("HEImageEditor.bundle")
+                .process("Resources/HEImageEditor.bundle")
             ]),
     ]
 )

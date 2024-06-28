@@ -24,6 +24,9 @@ public protocol HEImageEditorDelegate: AnyObject {
     func didFinishEditImages(_ editor: HEImageEditor)
 }
 
+/// 다수 이미지 편집기
+///
+/// - 내부적으로 HEEditImageView 를 편집모드로 사용한다.
 open class HEImageEditorViewController: UIViewController, HEImageEditor {
     
     public weak var delegate: HEImageEditorDelegate?
@@ -256,17 +259,25 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
         let topBuilder = self.makeEditTopBarView()
         do {
             let image: UIImage
-            let editModel: HEEditState?
+            var editState: HEEditState? = hei.editState
             if continuouslyMode {
                 image = try await self.imageCache.originImage(forHei: hei).value
-                editModel = hei.editState
             } else {
                 image = try await self.imageCache.editImage(forHei: hei).value
-                editModel = nil
+                editState = HEEditState(
+                    drawPaths: editState?.drawPaths ?? [],
+                    mosaicPaths: editState?.mosaicPaths ?? [],
+                    clipStatus: nil,
+                    adjustStatus: editState?.adjustStatus ?? HEAdjustStatus(),
+                    selectFilter: editState?.selectFilter,
+                    stickers: editState?.stickers ?? [],
+                    actions: []
+                )
             }
+            
             setupHEConfiguration()
             
-            let vc = HEEditImageViewController(image: image, editModel: editModel, topToolViewBuilder: topBuilder)
+            let vc = HEEditImageViewController(image: image, editState: editState, topToolViewBuilder: topBuilder)
             vc.delegate = self
             vc.editId = hei.id
             vc.initialEditTool = tool

@@ -26,6 +26,9 @@ public extension HEEditImageViewDelegate {
 public protocol HEEditImageView: AnyObject {
     
     var selectedTool: HEConfiguration.EditTool? { get }
+    /// 편집 중
+    ///
+    /// - selectedTool 이 있음.
     var isImageEditing: Bool { get }
     
     /// 취소하고 화면 종료
@@ -38,11 +41,17 @@ public protocol HEEditImageView: AnyObject {
     
     /// 자르기, 회전 시작
     func startClipping()
+    /// 이미지 스티커 시작
     func startImageSticker()
+    /// 텍스트 스티커 시작
     func startTextSticker()
+    /// 모자이크로 그리기 시작
     func startMosaicDrawing()
+    /// 그리기 시작
     func startDrawing()
+    /// 필터 시작
     func startFiltering()
+    /// 색조 조정 시작 
     func startAdjusting()
     
     /// 편집 상황을 종료
