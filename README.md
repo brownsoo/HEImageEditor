@@ -1,32 +1,37 @@
 
-HEImageEditor 는 [ZLImageEditor](https://github.com/longitachi/ZLImageEditor) 를 수정하여 만들었습니다.  
+HEImageEditor was created based on [ZLImageEditor](https://github.com/longitachi/ZLImageEditor), improved functionality and added several features✨.
 
 ### <a id="Features"></a>Features
-- [x] Draw (Support custom line color).
-- [x] Crop (Support custom crop ratios).
-- [x] Image sticker (Support custom image sticker container view).
-- [x] Text sticker  (Support custom text color).
-- [x] Mosaic sticker.
-- [x] Mosaic drawing.
-- [x] Filter (Support custom filters).
-- [x] Adjust (Brightness, Contrast, Saturation).
+- Free draw line.
+- Free draw mosaic line.
+- Crop & Rotate.
+- Image sticker
+  - Automatically attach stickers to your face through facial recognition.✨
+- Text sticker
+  - Custom text color & Background color✨
+- Mosaic sticker ✨ 
+  - You can attach the mosaic effect like a sticker and change its size and position.
+- Filter (Support custom filters).
+- Adjust (Brightness, Contrast, Saturation).
+- Multiple Images supports.✨
 
 ### <a id="Requirements"></a>Requirements
  * Swift 5.x
  * Xcode 12.x
+ * Target iOS 14.0
 
 ### <a id="Usage"></a>Usage
 ```swift
-// 이미지 스티커 제공자 
 var imageStickers: [HEImageSticker] = []
 // 에디터 세팅 
 func configImageEditor() {
-    
+    // 이미지 스티커를 사용하려면, HEImageStickerTray 를 구현해줘야 한다.
     let stickerTray = HEImageStickerTrayView()
+    // 이미지 스티커용 이미지 데이터 소스 제공 
     stickerTray.dataSource = self
     
-    imageStickers.append(HEImageSticker.faceAiIcon)
-    imageStickers.append(HEImageSticker.mosaicIcon)
+    imageStickers.append(HEImageSticker.faceAiIcon) // 얼굴인식 스티커 추가
+    imageStickers.append(HEImageSticker.mosaicIcon) // 모자이크 스티커 추가 
     imageStickers.append(contentsOf: (1...18).map { (v) -> String in
         "imageSticker" + String(v)
     }.compactMap { name in
@@ -35,6 +40,7 @@ func configImageEditor() {
         }
     })
     
+    // 편집기 구성 
     HEConfiguration.default()
         .clipRatios([.origin, .custom, .wh1x1])
         .imageStickerTray(stickerTray)
@@ -50,7 +56,7 @@ func startEditSingleImage(_ image: UIImage, editState: HEEditState?) {
         editState: editState,
         delegate: self,
         topToolViewBuilder: makeTopToolBuilder(),
-        clipImageBottomViewBuilder: { clipView in
+        clipImageBottomViewBuilder: { clipView in // 자르기&회전 이외의 뷰를 추가할 수 있음.
             let bottom = HEClipBottomView()
             bottom.cancelClickListener = { [weak clipView] in clipView?.cancelEdit() }
             bottom.doneClickListener = { [weak clipView] in clipView?.doneEdit() }
@@ -59,9 +65,9 @@ func startEditSingleImage(_ image: UIImage, editState: HEEditState?) {
         }
     )
 }
-
-
-// 다수  이미지를 편집하고 싶다면, 이미지 스토어 생성 
+```
+```swift
+// 다수 이미지를 편집하고 싶다면, 이미지 스토어 생성 
 lazy var imageStore = HESimpleImageStore()
 
 func startEditMultipleImages(_ images: [HEImage]) {
