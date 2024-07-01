@@ -9,7 +9,7 @@ import Foundation
 import UIKit
 import Combine
 
-public protocol HEImageEditor: AnyObject {
+public protocol HEImageEditor: AnyObject & UIViewController {
     /// 연속 편집 모드 여부
     ///
     /// - true: 편집을 종료해도 이전 편집 상태를 유지한다.
@@ -22,6 +22,13 @@ public protocol HEImageEditor: AnyObject {
 
 public protocol HEImageEditorDelegate: AnyObject {
     func didFinishEditImages(_ editor: HEImageEditor)
+    func confirmingResetEditImage(_ editor: HEImageEditor, hei: HEImage, completion: @escaping (Bool) -> Void)
+}
+
+public extension HEImageEditorDelegate {
+    func confirmingResetEditImage(_ editor: HEImageEditor, hei: HEImage, completion: @escaping (Bool) -> Void) {
+        completion(true)
+    }
 }
 
 /// 다수 이미지 편집기
@@ -154,14 +161,22 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
     
     @objc
     private func clickOnResetToast() {
-        self.perform(#selector(self.hideResetToast), with: nil, afterDelay: 0.2)
-        // TODO: -
-        if let currentIndex, let hei = imageStore.getHEImage(at: currentIndex) {
-            Task {
-                hei.setEditState(nil)
-                await imageCache.clearCached(forHei: hei, includeOrigin: false)
-                collView.reloadItems(at: [IndexPath(row: currentIndex, section: 0)])
+        guard let currentIndex, let hei = imageStore.getHEImage(at: currentIndex) else { return }
+        if let delegate = delegate {
+            delegate.confirmingResetEditImage(self, hei: hei) { [weak self] confirmed in
+                if confirmed {
+                    self?.executeReset(hei, index: currentIndex)
+                }
             }
+        }
+    }
+    
+    private func executeReset(_ hei: HEImage, index: Int) {
+        self.perform(#selector(self.hideResetToast), with: nil, afterDelay: 0.0)
+        Task {
+            hei.setEditState(nil)
+            await imageCache.clearCached(forHei: hei, includeOrigin: false)
+            collView.reloadItems(at: [IndexPath(row: index, section: 0)])
         }
     }
     

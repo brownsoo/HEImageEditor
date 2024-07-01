@@ -889,6 +889,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     
     // MARK: -- 이미지 스티커 시작
+    // TODO: 50 개까지 허용
     public func startImageSticker() {
         guard let imageStickerTray else { return }
         imageStickerTray.hideBlock = { [weak self] instantly in
@@ -929,6 +930,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     }
     
     // MARK: -- startTextSticker
+    
+    // TODO: 50 개까지 허용
     public func startTextSticker() {
         showInputTextVC(font: HEConfiguration.default().textStickerDefaultFont)
         

@@ -133,6 +133,7 @@ class ViewController: UIViewController {
                                             stickerDataSource: self)
         
         vc.modalPresentationStyle = .overFullScreen
+        vc.delegate = self
         present(vc, animated: true)
     }
 }
@@ -155,6 +156,37 @@ extension ViewController: HEImageStickerTrayViewDataSource {
         return imageStickers
     }
 }
+
+extension ViewController: HEImageEditorDelegate {
+    func didFinishEditImages(_ editor: HEImageEditor) {
+    }
+    
+    func confirmingResetEditImage(_ editor: HEImageEditor, hei: HEImage, completion: @escaping (Bool) -> Void) {
+        let alert = UIAlertController(title: nil, message: "현재 보이는 이미지를 원본으로 초기화 합니다.\n진행 하시겠습니까?", preferredStyle: .alert)
+        DispatchQueue.main.async {
+            let okayAction = UIAlertAction(title: "확인", style: .default, handler: { _ in completion(true) })
+            alert.addAction(okayAction)
+            alert.addAction(.init(title: "취소", style: .cancel, handler: { _ in completion(false) }))
+            
+            editor.present(alert, animated: true, completion: nil)
+        }
+    }
+}
+
+extension ViewController: HEEditImageViewDelegate {
+    func didFinishEditImage(_ editView: HEEditImageView, resultImage: UIImage, editId: String?, editModel: HEEditState?) {
+        self.resultImageView.image = resultImage
+        self.resultImageEditState = editModel
+    }
+}
+
+extension ViewController: HEEditorActionListener {
+    func didUpdatedActions(_ actions: [HEEditAction], redoActions: [HEEditAction]) {
+        editUndoBtn.isEnabled = !actions.isEmpty
+        editRedoBtn.isEnabled = actions.count != redoActions.count
+    }
+}
+
 
 extension ViewController: PHPickerViewControllerDelegate {
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
@@ -348,20 +380,6 @@ extension ViewController {
             toolView.revertClickListener = { clipView.revertEdit() }
             return (toolView, HEClipBottomView.estimateHeight)
         }
-    }
-}
-
-extension ViewController: HEEditImageViewDelegate {  
-    func didFinishEditImage(_ editView: HEEditImageView, resultImage: UIImage, editId: String?, editModel: HEEditState?) {
-        self.resultImageView.image = resultImage
-        self.resultImageEditState = editModel
-    }
-}
-
-extension ViewController: HEEditorActionListener {
-    func didUpdatedActions(_ actions: [HEEditAction], redoActions: [HEEditAction]) {
-        editUndoBtn.isEnabled = !actions.isEmpty
-        editRedoBtn.isEnabled = actions.count != redoActions.count
     }
 }
 
