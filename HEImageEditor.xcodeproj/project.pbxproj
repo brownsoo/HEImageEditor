@@ -13,7 +13,13 @@
 		17189EBA2C10461E00270F4D /* UIKit+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17189EB92C10461E00270F4D /* UIKit+.swift */; };
 		17189EBC2C105BE500270F4D /* Trace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17189EBB2C105BE500270F4D /* Trace.swift */; };
 		174095612C19FC1C00A4B18D /* Foundation+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 174095602C19FC1C00A4B18D /* Foundation+.swift */; };
-		1744B9DF2C32D04D00F5395B /* HESelectImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1744B9DE2C32D04D00F5395B /* HESelectImageView.swift */; };
+		1744BA3E2C330B4E00F5395B /* HEImagePicker.h in Headers */ = {isa = PBXBuildFile; fileRef = 1744BA3D2C330B4E00F5395B /* HEImagePicker.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		1744BA422C330B7800F5395B /* HEMediaItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1744B9E22C3300F000F5395B /* HEMediaItem.swift */; };
+		1744BA442C330BD300F5395B /* HEImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1744B9DE2C32D04D00F5395B /* HEImagePicker.swift */; };
+		1744BA462C330C2100F5395B /* HELibrarySelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1744BA452C330C2100F5395B /* HELibrarySelection.swift */; };
+		1744BA482C330C4A00F5395B /* HEPickerError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1744BA472C330C4A00F5395B /* HEPickerError.swift */; };
+		1744BA4A2C330C6E00F5395B /* HEDragDirection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1744BA492C330C6E00F5395B /* HEDragDirection.swift */; };
+		1744BA4D2C330DF300F5395B /* HEImagePickerConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1744BA4C2C330DF300F5395B /* HEImagePickerConfiguration.swift */; };
 		17A4FA752C280983002140BA /* HEImageDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17A4FA742C280983002140BA /* HEImageDataStore.swift */; };
 		17C8ED8A2C148390006F390A /* HEClipActionToolView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17C8ED892C148390006F390A /* HEClipActionToolView.swift */; };
 		17D691982C12EC32007443EC /* HEClipBottomView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D691972C12EC32007443EC /* HEClipBottomView.swift */; };
@@ -83,7 +89,14 @@
 		17189EB92C10461E00270F4D /* UIKit+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIKit+.swift"; sourceTree = "<group>"; };
 		17189EBB2C105BE500270F4D /* Trace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Trace.swift; sourceTree = "<group>"; };
 		174095602C19FC1C00A4B18D /* Foundation+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Foundation+.swift"; sourceTree = "<group>"; };
-		1744B9DE2C32D04D00F5395B /* HESelectImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HESelectImageView.swift; sourceTree = "<group>"; };
+		1744B9DE2C32D04D00F5395B /* HEImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEImagePicker.swift; sourceTree = "<group>"; };
+		1744B9E22C3300F000F5395B /* HEMediaItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEMediaItem.swift; sourceTree = "<group>"; };
+		1744BA3B2C330B4E00F5395B /* HEImagePicker.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = HEImagePicker.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		1744BA3D2C330B4E00F5395B /* HEImagePicker.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HEImagePicker.h; sourceTree = "<group>"; };
+		1744BA452C330C2100F5395B /* HELibrarySelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HELibrarySelection.swift; sourceTree = "<group>"; };
+		1744BA472C330C4A00F5395B /* HEPickerError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEPickerError.swift; sourceTree = "<group>"; };
+		1744BA492C330C6E00F5395B /* HEDragDirection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEDragDirection.swift; sourceTree = "<group>"; };
+		1744BA4C2C330DF300F5395B /* HEImagePickerConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEImagePickerConfiguration.swift; sourceTree = "<group>"; };
 		17A4FA742C280983002140BA /* HEImageDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEImageDataStore.swift; sourceTree = "<group>"; };
 		17C8ED892C148390006F390A /* HEClipActionToolView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEClipActionToolView.swift; sourceTree = "<group>"; };
 		17D691972C12EC32007443EC /* HEClipBottomView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEClipBottomView.swift; sourceTree = "<group>"; };
@@ -145,6 +158,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		1744BA382C330B4E00F5395B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E40208D4256B9BA60077F5DC /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -158,10 +178,10 @@
 		17189E8B2C1041DB00270F4D /* HEImageEditor */ = {
 			isa = PBXGroup;
 			children = (
+				E40208DA256B9BA60077F5DC /* HEImageEditor.h */,
 				1744B9DC2C32CF1D00F5395B /* Data */,
 				17189E9A2C1041DB00270F4D /* EditView */,
 				17C8ED692C118F2D006F390A /* Resources */,
-				1744B9DD2C32D00D00F5395B /* SelectView */,
 				17189E8C2C1041DB00270F4D /* Type */,
 				17189EB82C10460300270F4D /* Util */,
 			);
@@ -289,12 +309,34 @@
 			path = Data;
 			sourceTree = "<group>";
 		};
-		1744B9DD2C32D00D00F5395B /* SelectView */ = {
+		1744B9E12C3300AA00F5395B /* Model */ = {
 			isa = PBXGroup;
 			children = (
-				1744B9DE2C32D04D00F5395B /* HESelectImageView.swift */,
+				1744B9E22C3300F000F5395B /* HEMediaItem.swift */,
+				1744BA452C330C2100F5395B /* HELibrarySelection.swift */,
+				1744BA472C330C4A00F5395B /* HEPickerError.swift */,
+				1744BA492C330C6E00F5395B /* HEDragDirection.swift */,
 			);
-			path = SelectView;
+			path = Model;
+			sourceTree = "<group>";
+		};
+		1744BA3C2C330B4E00F5395B /* HEImagePicker */ = {
+			isa = PBXGroup;
+			children = (
+				1744BA4B2C330DCA00F5395B /* Configuration */,
+				1744B9DE2C32D04D00F5395B /* HEImagePicker.swift */,
+				1744B9E12C3300AA00F5395B /* Model */,
+				1744BA3D2C330B4E00F5395B /* HEImagePicker.h */,
+			);
+			path = HEImagePicker;
+			sourceTree = "<group>";
+		};
+		1744BA4B2C330DCA00F5395B /* Configuration */ = {
+			isa = PBXGroup;
+			children = (
+				1744BA4C2C330DF300F5395B /* HEImagePickerConfiguration.swift */,
+			);
+			path = Configuration;
 			sourceTree = "<group>";
 		};
 		17C8ED692C118F2D006F390A /* Resources */ = {
@@ -370,6 +412,7 @@
 			isa = PBXGroup;
 			children = (
 				E40208D7256B9BA60077F5DC /* HEImageEditor.framework */,
+				1744BA3B2C330B4E00F5395B /* HEImagePicker.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -377,7 +420,7 @@
 		E40208D9256B9BA60077F5DC /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				E40208DA256B9BA60077F5DC /* HEImageEditor.h */,
+				1744BA3C2C330B4E00F5395B /* HEImagePicker */,
 				E40208DB256B9BA60077F5DC /* Info.plist */,
 				17189E8B2C1041DB00270F4D /* HEImageEditor */,
 			);
@@ -387,6 +430,14 @@
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
+		1744BA362C330B4E00F5395B /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1744BA3E2C330B4E00F5395B /* HEImagePicker.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E40208D2256B9BA60077F5DC /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
@@ -399,6 +450,24 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		1744BA3A2C330B4E00F5395B /* HEImagePicker */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1744BA3F2C330B4E00F5395B /* Build configuration list for PBXNativeTarget "HEImagePicker" */;
+			buildPhases = (
+				1744BA362C330B4E00F5395B /* Headers */,
+				1744BA372C330B4E00F5395B /* Sources */,
+				1744BA382C330B4E00F5395B /* Frameworks */,
+				1744BA392C330B4E00F5395B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = HEImagePicker;
+			productName = HEImagePicker;
+			productReference = 1744BA3B2C330B4E00F5395B /* HEImagePicker.framework */;
+			productType = "com.apple.product-type.framework";
+		};
 		E40208D6256B9BA60077F5DC /* HEImageEditor */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = E40208DF256B9BA60077F5DC /* Build configuration list for PBXNativeTarget "HEImageEditor" */;
@@ -427,6 +496,9 @@
 				CLASSPREFIX = HE;
 				LastUpgradeCheck = 1540;
 				TargetAttributes = {
+					1744BA3A2C330B4E00F5395B = {
+						CreatedOnToolsVersion = 15.4;
+					};
 					E40208D6256B9BA60077F5DC = {
 						CreatedOnToolsVersion = 12.1;
 						LastSwiftMigration = 1500;
@@ -447,11 +519,19 @@
 			projectRoot = "";
 			targets = (
 				E40208D6256B9BA60077F5DC /* HEImageEditor */,
+				1744BA3A2C330B4E00F5395B /* HEImagePicker */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		1744BA392C330B4E00F5395B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E40208D5256B9BA60077F5DC /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -463,6 +543,19 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		1744BA372C330B4E00F5395B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1744BA462C330C2100F5395B /* HELibrarySelection.swift in Sources */,
+				1744BA442C330BD300F5395B /* HEImagePicker.swift in Sources */,
+				1744BA4D2C330DF300F5395B /* HEImagePickerConfiguration.swift in Sources */,
+				1744BA422C330B7800F5395B /* HEMediaItem.swift in Sources */,
+				1744BA482C330C4A00F5395B /* HEPickerError.swift in Sources */,
+				1744BA4A2C330C6E00F5395B /* HEDragDirection.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		E40208D3256B9BA60077F5DC /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -488,7 +581,6 @@
 				FDE1A559282E580900178B0F /* HEUIConfiguration.swift in Sources */,
 				17D6920D2C22B587007443EC /* HETextStickerColorCells.swift in Sources */,
 				17D691DA2C184616007443EC /* Also.swift in Sources */,
-				1744B9DF2C32D04D00F5395B /* HESelectImageView.swift in Sources */,
 				FDE1A561282E61B500178B0F /* HEEnlargeButton.swift in Sources */,
 				174095612C19FC1C00A4B18D /* Foundation+.swift in Sources */,
 				FDE1A55B282E58E700178B0F /* HEUIConfiguration+Chaining.swift in Sources */,
@@ -531,6 +623,81 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		1744BA402C330B4E00F5395B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = Hi.HEImagePicker;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_INSTALL_OBJC_HEADER = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		1744BA412C330B4E00F5395B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.5;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = Hi.HEImagePicker;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_INSTALL_OBJC_HEADER = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		E40208DD256B9BA60077F5DC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -660,9 +827,9 @@
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_STYLE = Manual;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = 47UY3G7UH6;
+				DEVELOPMENT_TEAM = "";
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -678,6 +845,7 @@
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++14";
 				PRODUCT_BUNDLE_IDENTIFIER = Hi.ImageEditor;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -690,9 +858,9 @@
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_STYLE = Manual;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = 47UY3G7UH6;
+				DEVELOPMENT_TEAM = "";
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -708,6 +876,7 @@
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++14";
 				PRODUCT_BUNDLE_IDENTIFIER = Hi.ImageEditor;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -717,6 +886,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		1744BA3F2C330B4E00F5395B /* Build configuration list for PBXNativeTarget "HEImagePicker" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1744BA402C330B4E00F5395B /* Debug */,
+				1744BA412C330B4E00F5395B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		E40208D1256B9BA60077F5DC /* Build configuration list for PBXProject "HEImageEditor" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

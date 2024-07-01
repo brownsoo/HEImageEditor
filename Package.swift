@@ -26,5 +26,8 @@ let package = Package(
             resources: [
                 .process("Resources/HEImageEditor.bundle")
             ]),
+        .target(
+            name: "HEImagePicker"
+        )
     ]
 )
