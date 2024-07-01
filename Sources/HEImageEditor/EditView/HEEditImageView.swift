@@ -23,7 +23,7 @@ public extension HEEditImageViewDelegate {
     func cancelledEditImage(_ editView: HEEditImageView) {}
 }
 
-public protocol HEEditImageView: AnyObject {
+public protocol HEEditImageView: UIViewController {
     
     var selectedTool: HEConfiguration.EditTool? { get }
     /// 편집 중

@@ -13,6 +13,7 @@
 		17189EBA2C10461E00270F4D /* UIKit+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17189EB92C10461E00270F4D /* UIKit+.swift */; };
 		17189EBC2C105BE500270F4D /* Trace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17189EBB2C105BE500270F4D /* Trace.swift */; };
 		174095612C19FC1C00A4B18D /* Foundation+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 174095602C19FC1C00A4B18D /* Foundation+.swift */; };
+		1744B9DF2C32D04D00F5395B /* HESelectImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1744B9DE2C32D04D00F5395B /* HESelectImageView.swift */; };
 		17A4FA752C280983002140BA /* HEImageDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17A4FA742C280983002140BA /* HEImageDataStore.swift */; };
 		17C8ED8A2C148390006F390A /* HEClipActionToolView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17C8ED892C148390006F390A /* HEClipActionToolView.swift */; };
 		17D691982C12EC32007443EC /* HEClipBottomView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D691972C12EC32007443EC /* HEClipBottomView.swift */; };
@@ -82,6 +83,7 @@
 		17189EB92C10461E00270F4D /* UIKit+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIKit+.swift"; sourceTree = "<group>"; };
 		17189EBB2C105BE500270F4D /* Trace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Trace.swift; sourceTree = "<group>"; };
 		174095602C19FC1C00A4B18D /* Foundation+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Foundation+.swift"; sourceTree = "<group>"; };
+		1744B9DE2C32D04D00F5395B /* HESelectImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HESelectImageView.swift; sourceTree = "<group>"; };
 		17A4FA742C280983002140BA /* HEImageDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEImageDataStore.swift; sourceTree = "<group>"; };
 		17C8ED892C148390006F390A /* HEClipActionToolView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEClipActionToolView.swift; sourceTree = "<group>"; };
 		17D691972C12EC32007443EC /* HEClipBottomView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEClipBottomView.swift; sourceTree = "<group>"; };
@@ -156,48 +158,46 @@
 		17189E8B2C1041DB00270F4D /* HEImageEditor */ = {
 			isa = PBXGroup;
 			children = (
-				17189E8C2C1041DB00270F4D /* Core */,
+				1744B9DC2C32CF1D00F5395B /* Data */,
+				17189E9A2C1041DB00270F4D /* EditView */,
 				17C8ED692C118F2D006F390A /* Resources */,
+				1744B9DD2C32D00D00F5395B /* SelectView */,
+				17189E8C2C1041DB00270F4D /* Type */,
 				17189EB82C10460300270F4D /* Util */,
-				17189E9A2C1041DB00270F4D /* View */,
 			);
 			path = HEImageEditor;
 			sourceTree = "<group>";
 		};
-		17189E8C2C1041DB00270F4D /* Core */ = {
+		17189E8C2C1041DB00270F4D /* Type */ = {
 			isa = PBXGroup;
 			children = (
 				17D692222C24380A007443EC /* HEAdjustStatus.swift */,
 				17D692202C2437EC007443EC /* HEClipStatus.swift */,
+				17D6919C2C168A9C007443EC /* HEEditState.swift */,
 				17D692262C253644007443EC /* HEError.swift */,
-				17D691DB2C198C68007443EC /* HEFaceDetection.swift */,
 				E40208EA256B9F9C0077F5DC /* HEFilter.swift */,
 				17189E8F2C1041DB00270F4D /* HEImage.swift */,
 				17D692242C24382F007443EC /* HEImageClipRatio.swift */,
-				17A4FA742C280983002140BA /* HEImageDataStore.swift */,
 				17E2D87A2C290272005F5E0B /* HEImageSticker.swift */,
 				FD3073382AD80D4000CFB618 /* HEPaths.swift */,
 				FD3073342AD80B7700CFB618 /* HEStickerEffect.swift */,
-				FDD5289126C3FFCA00338B06 /* HEWrapper.swift */,
-				17189EBD2C10615200270F4D /* Wrapper+ */,
 			);
-			path = Core;
+			path = Type;
 			sourceTree = "<group>";
 		};
-		17189E9A2C1041DB00270F4D /* View */ = {
+		17189E9A2C1041DB00270F4D /* EditView */ = {
 			isa = PBXGroup;
 			children = (
 				FD3073362AD80D0000CFB618 /* HEEditActionManager.swift */,
 				17189E9C2C1041DB00270F4D /* HEEditImageView.swift */,
 				E40208E4256B9F9C0077F5DC /* HEEditImageViewController.swift */,
-				17D6919C2C168A9C007443EC /* HEEditState.swift */,
 				17189E9B2C1041DB00270F4D /* HEImageEditor.swift */,
 				17C8ED842C147A35006F390A /* Clipping */,
 				17C8ED6B2C11D848006F390A /* Component */,
 				17C8ED6A2C11905E006F390A /* Configuration */,
 				17D691D52C18301E007443EC /* Sticker */,
 			);
-			path = View;
+			path = EditView;
 			sourceTree = "<group>";
 		};
 		17189EAD2C1041EB00270F4D /* Doc */ = {
@@ -251,15 +251,18 @@
 			children = (
 				FDC144952BABE0B4004C2BCD /* HEWeakProxy.h */,
 				FDC144942BABE0B4004C2BCD /* HEWeakProxy.m */,
-				FDB3113228752F7300845756 /* HEWeakProxy.swift */,
-				E40208FB256BA0080077F5DC /* Bundle.swift */,
-				17189EB92C10461E00270F4D /* UIKit+.swift */,
-				17189EBB2C105BE500270F4D /* Trace.swift */,
-				17D6919F2C16976B007443EC /* DebugLine.swift */,
 				17D691D92C184616007443EC /* Also.swift */,
+				E40208FB256BA0080077F5DC /* Bundle.swift */,
+				17D6919F2C16976B007443EC /* DebugLine.swift */,
 				174095602C19FC1C00A4B18D /* Foundation+.swift */,
+				17D691DB2C198C68007443EC /* HEFaceDetection.swift */,
 				17E2D87C2C290986005F5E0B /* HEImageUtil.swift */,
+				FDB3113228752F7300845756 /* HEWeakProxy.swift */,
+				FDD5289126C3FFCA00338B06 /* HEWrapper.swift */,
 				17E2D87E2C290B02005F5E0B /* TakePhoto.swift */,
+				17189EBB2C105BE500270F4D /* Trace.swift */,
+				17189EB92C10461E00270F4D /* UIKit+.swift */,
+				17189EBD2C10615200270F4D /* Wrapper+ */,
 			);
 			path = Util;
 			sourceTree = "<group>";
@@ -276,6 +279,22 @@
 				FDBD955D2B148C74005EE2F8 /* UIGraphicsImageRenderer+.swift */,
 			);
 			path = "Wrapper+";
+			sourceTree = "<group>";
+		};
+		1744B9DC2C32CF1D00F5395B /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				17A4FA742C280983002140BA /* HEImageDataStore.swift */,
+			);
+			path = Data;
+			sourceTree = "<group>";
+		};
+		1744B9DD2C32D00D00F5395B /* SelectView */ = {
+			isa = PBXGroup;
+			children = (
+				1744B9DE2C32D04D00F5395B /* HESelectImageView.swift */,
+			);
+			path = SelectView;
 			sourceTree = "<group>";
 		};
 		17C8ED692C118F2D006F390A /* Resources */ = {
@@ -469,6 +488,7 @@
 				FDE1A559282E580900178B0F /* HEUIConfiguration.swift in Sources */,
 				17D6920D2C22B587007443EC /* HETextStickerColorCells.swift in Sources */,
 				17D691DA2C184616007443EC /* Also.swift in Sources */,
+				1744B9DF2C32D04D00F5395B /* HESelectImageView.swift in Sources */,
 				FDE1A561282E61B500178B0F /* HEEnlargeButton.swift in Sources */,
 				174095612C19FC1C00A4B18D /* Foundation+.swift in Sources */,
 				FDE1A55B282E58E700178B0F /* HEUIConfiguration+Chaining.swift in Sources */,

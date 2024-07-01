@@ -9,7 +9,7 @@ import Foundation
 import UIKit
 import Combine
 
-public protocol HEImageEditor: AnyObject & UIViewController {
+public protocol HEImageEditor: UIViewController {
     /// 연속 편집 모드 여부
     ///
     /// - true: 편집을 종료해도 이전 편집 상태를 유지한다.
