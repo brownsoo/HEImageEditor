@@ -48,7 +48,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
         return lb
     }()
     
-    private var resetToastView: UIView!
+    private var resetToastView: UIButton!
     private var collView: UICollectionView!
     private var bottomToolView: HEEditToolView!
     private var bottomToolViewHeight: CGFloat = 0
@@ -104,12 +104,14 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
         topBarView.show()
     }
     
-    private func showResetToastIfNeed() {
+    private func showResetToastIfNeed(isEdited: Bool) {
         guard resetToastView.superview == nil else { return }
         view.addSubview(resetToastView)
         resetToastView.also { it in
             it.alpha = 0
             it.sizeToFit()
+            it.layer.cornerRadius = it.bounds.height / 2
+            it.isEnabled = isEdited
             it.frame = CGRect(x: (view.bounds.width - it.bounds.width) / 2,
                               y: bottomToolView.frame.minY - it.bounds.height - 14,
                               width: it.bounds.width,
@@ -363,12 +365,15 @@ extension HEImageEditorViewController {
         topBarView.hide(animate: false)
         
         let bt = UIButton()
-        bt.backgroundColor = UIColor.black.withAlphaComponent(0.72)
-        bt.layer.cornerRadius = 16
+        bt.layer.masksToBounds = true
         let icon = UIImage.he.getImage("ic_edit_refresh") ?? UIImage(systemName: "arrow.circlepath", withConfiguration: UIImage.SymbolConfiguration(pointSize: 20, weight: .regular, scale: .small))?.withTintColor(.white)
         bt.setImage(icon, for: .normal)
+        bt.setImage(icon?.he.alpha(value: 0.4), for: .disabled)
         bt.setTitle("원본으로 초기화", for: .normal)
-        bt.setTitleColor(.white, for: .normal)
+        bt.setTitleColor(UIColor.he.rgba(246, 246, 246), for: .normal)
+        bt.setTitleColor(UIColor.he.rgba(246, 246, 246, 0.4), for: .disabled)
+        bt.setBackgroundImage(UIImage().he.solid(UIColor.he.rgba(51, 51, 51, 0.4), width: 10, height: 10).resizableImage(withCapInsets: .zero, resizingMode: .tile), for: .normal)
+        bt.setBackgroundImage(UIImage().he.solid(UIColor.he.rgba(51, 51, 51, 0.2), width: 10, height: 10).resizableImage(withCapInsets: .zero, resizingMode: .tile), for: .disabled)
         bt.titleLabel?.font = .systemFont(ofSize: 14)
         bt.titleEdgeInsets = UIEdgeInsets(top: 0, left: 2, bottom: 0, right: -2)
         bt.contentEdgeInsets = UIEdgeInsets(top: 14, left: 16, bottom: 14, right: 16 + 2)
@@ -406,9 +411,13 @@ extension HEImageEditorViewController: UICollectionViewDataSource, UICollectionV
         
         if let cell = cell as? HEImageViewPageCell, let hei = imageStore.getHEImage(at: indexPath.row) {
             cell.loadImage(task: imageCache.editImage(forHei: hei))
+            
+            if resetToastView.superview == nil {
+                showResetToastIfNeed(isEdited: hei.editImageURL != nil)
+            } else {
+                hideResetToast()
+            }
         }
-        
-        hideResetToast()
     }
     
     public func collectionView(_ collectionView: UICollectionView, didEndDisplaying cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
@@ -421,8 +430,8 @@ extension HEImageEditorViewController: UICollectionViewDataSource, UICollectionV
         currentIndex = index
         trace()
         
-        if let hei = imageStore.getHEImage(at: index), hei.editImageURL != nil {
-            showResetToastIfNeed()
+        if let hei = imageStore.getHEImage(at: index) {
+            showResetToastIfNeed(isEdited: hei.editImageURL != nil)
         }
     }
     

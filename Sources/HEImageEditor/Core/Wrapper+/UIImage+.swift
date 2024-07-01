@@ -391,6 +391,13 @@ public extension HEWrapper where Base: UIImage {
         }
         return result
     }
+    
+    func alpha(value: CGFloat) -> UIImage {
+        let format = UIGraphicsImageRendererFormat()
+        return UIGraphicsImageRenderer(size: base.size, format: format).image { _ in
+            base.draw(at: CGPoint.zero, blendMode: .normal, alpha: value)
+        }
+    }
 }
 
 public extension HEWrapper where Base: UIImage {
