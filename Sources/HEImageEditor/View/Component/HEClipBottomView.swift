@@ -77,8 +77,9 @@ final public class HEClipBottomView: UIView {
             lineView.heightAnchor.constraint(equalToConstant: 1),
             lineView.leadingAnchor.constraint(equalTo: self.leadingAnchor),
             lineView.trailingAnchor.constraint(equalTo: self.trailingAnchor),
-            buttonStack.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 30),
-            buttonStack.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -30),
+            buttonStack.centerXAnchor.constraint(equalTo: self.centerXAnchor),
+            buttonStack.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: 30).withPriority(.defaultHigh),
+            buttonStack.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -30).withPriority(.defaultHigh),
             buttonStack.topAnchor.constraint(equalTo: self.topAnchor),
             buttonStack.bottomAnchor.constraint(equalTo: self.bottomAnchor).withPriority(.defaultHigh)
         ])

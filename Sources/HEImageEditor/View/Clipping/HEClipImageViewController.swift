@@ -134,12 +134,13 @@ public class HEClipImageViewController: UIViewController, HEClipImageView {
         self.originalImage = image
         self.editRect = status.editRect
         self.angle = status.angle
-        if angle == -90 {
-            editImage = image.he.rotate(orientation: .left)
-        } else if self.angle == -180 {
-            editImage = image.he.rotate(orientation: .down)
-        } else if self.angle == -270 {
+        let angle = (status.angle - 360).remainder(dividingBy: 360)
+        if angle == 90 || angle == -270 {
             editImage = image.he.rotate(orientation: .right)
+        } else if angle == 180 || angle == -180 {
+            editImage = image.he.rotate(orientation: .down)
+        } else if angle == 270 || angle == -90 {
+            editImage = image.he.rotate(orientation: .left)
         } else {
             editImage = image
         }
@@ -522,8 +523,8 @@ public class HEClipImageViewController: UIViewController, HEClipImageView {
         guard !isRotating else {
             return
         }
-        angle -= 90
-        if angle == -360 {
+        angle += 90
+        if angle == 360 {
             angle = 0
         }
         
@@ -541,14 +542,14 @@ public class HEClipImageViewController: UIViewController, HEClipImageView {
             
             //편집 사각형을 편집 이미지에 상대적인 사각형으로 변환합니다.
             let rect = convertClipRectToEditImageRect()
-            editImage = editImage.he.rotate(orientation: .left)
+            editImage = editImage.he.rotate(orientation: .right)
             // 직사각형을 회전하고 회전된 편집 이미지를 기준으로 직사각형으로 변환합니다.
             editRect = CGRect(x: rect.minY, y: editImage.size.height - rect.minX - rect.width, width: rect.height, height: rect.width)
         } else {
             // 다른 비율의 자르기 프레임은 회전 후 바로 편집할 수 있도록 재설정됩니다.
             
             // 이미지 회전
-            editImage = editImage.he.rotate(orientation: .left)
+            editImage = editImage.he.rotate(orientation: .right)
             calculateEditRect()
         }
         
@@ -556,7 +557,7 @@ public class HEClipImageViewController: UIViewController, HEClipImageView {
         layoutInitialImage()
         
         let toFrame = view.convert(containerView.frame, from: scrollView)
-        let transform = CGAffineTransform(rotationAngle: -CGFloat.pi / 2)
+        let transform = CGAffineTransform(rotationAngle: CGFloat.pi / 2)
         gridView.alpha = 0
         containerView.alpha = 0
         UIView.animate(withDuration: 0.3, animations: {
