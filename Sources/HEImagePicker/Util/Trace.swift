@@ -1,8 +1,8 @@
 //
 //  Trace.swift
-//  HEImageEditor
+//  HEImagePicker
 //
-//  Created by 브라운수 on 6/5/24.
+//  Created by 브라운수 on 7/2/24.
 //
 
 import Foundation
@@ -11,7 +11,7 @@ import Foundation
 import os
 
 fileprivate var logger: Logger = {
-    return Logger(subsystem: "hi", category: "image-editor")
+    return Logger(subsystem: "hi", category: "image-picker")
 }()
 
 fileprivate var timeFormatter: DateFormatter = {
@@ -24,7 +24,7 @@ func trace(filename: String = #file, line: Int = #line, funcName: String = #func
     let th = Thread.current.isMainThread ? "[main]": "[\(Thread.current.name ?? "-")]"
     let time = timeFormatter.string(from: Date())
     let file = filename.components(separatedBy: "/").last?.split(separator: ".").first ?? ""
-    let leading = "*HEEditor* \(time) \(th) \(file) (L\(line))::\(funcName)"
+    let leading = "*HEPicker* \(time) \(th) \(file) (L\(line))::\(funcName)"
     //print("\(leading) nil")
     logger.log("\(leading, privacy: .public)")
 }
@@ -33,7 +33,7 @@ func trace<T>(_ object: T?, filename: String = #file, line: Int = #line, funcNam
     let th = Thread.current.isMainThread ? "[main]": "[\(Thread.current.name ?? "-")]"
     let time = timeFormatter.string(from: Date())
     let file = filename.components(separatedBy: "/").last?.split(separator: ".").first ?? ""
-    let leading = "*HEEditor* \(time) \(th) \(file) (L\(line))::\(funcName)"
+    let leading = "*HEPicker* \(time) \(th) \(file) (L\(line))::\(funcName)"
     if let obj = object {
        // print("\(leading) \(obj)")
         logger.log("\(leading, privacy: .public) \(String(describing: obj), privacy: .public)")
@@ -47,7 +47,7 @@ func woops<T>(_ object: T?, filename: String = #file, line: Int = #line, funcNam
     let th = Thread.current.isMainThread ? "[main]": "[\(Thread.current.name ?? "-")]"
     let time = timeFormatter.string(from: Date())
     let file = filename.components(separatedBy: "/").last?.split(separator: ".").first ?? ""
-    let leading = "*HEEditor* 💥 \(time) \(th) \(file) (L\(line))::\(funcName)"
+    let leading = "*HEPicker* 💥 \(time) \(th) \(file) (L\(line))::\(funcName)"
     if let obj = object {
        // print("\(leading) \(obj)")
         logger.log("\(leading, privacy: .public) \(String(describing: obj), privacy: .public)")

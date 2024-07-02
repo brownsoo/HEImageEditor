@@ -8,11 +8,17 @@
 import Foundation
 
 enum HEPickerError: Error, LocalizedError {
-    case custom(message: String)
+    case fileFailed(message: String, underlyingError: Error?)
+    case videoTrimFailed(message: String, underlyingError: Error?)
+    case custom(message: String, underlyingError: Error?)
 
     var errorDescription: String? {
         switch self {
-        case .custom(let message):
+        case .fileFailed(let message, _):
+            return message
+        case .videoTrimFailed(let message, _):
+            return message
+        case .custom(let message, _):
             return message
         }
     }
