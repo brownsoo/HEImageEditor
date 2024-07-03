@@ -8,6 +8,7 @@
 import Foundation
 import UIKit
 
+/// 라이브러리 선택 아이템 모델
 struct HELibrarySelection {
     let index: Int
     var cropRect: CGRect?

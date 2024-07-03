@@ -51,4 +51,40 @@ struct UIHelper {
         let minutes = (interval / 60) % 60
         return String(format: "%02d:%02d", minutes, seconds)
     }
+    
+    static func videoTooLongAlert(_ sourceView: UIView) -> UIAlertController {
+        let msg = String(format: PickerConfig.wordings.videoDurationPopup.tooLongMessage,
+                         "\(PickerConfig.video.libraryTimeLimit)")
+        let alert = UIAlertController(title: PickerConfig.wordings.videoDurationPopup.title,
+                                      message: msg,
+                                      preferredStyle: .actionSheet)
+        if let popoverController = alert.popoverPresentationController {
+            popoverController.sourceView = sourceView
+            popoverController.sourceRect = CGRect(x: sourceView.bounds.midX,
+                                                  y: sourceView.bounds.midY,
+                                                  width: 0,
+                                                  height: 0)
+            popoverController.permittedArrowDirections = []
+        }
+        alert.addAction(UIAlertAction(title: PickerConfig.wordings.ok, style: UIAlertAction.Style.default, handler: nil))
+        return alert
+    }
+    
+    static func videoTooShortAlert(_ sourceView: UIView) -> UIAlertController {
+        let msg = String(format: PickerConfig.wordings.videoDurationPopup.tooShortMessage,
+                         "\(PickerConfig.video.minimumTimeLimit)")
+        let alert = UIAlertController(title: PickerConfig.wordings.videoDurationPopup.title,
+                                      message: msg,
+                                      preferredStyle: .actionSheet)
+        if let popoverController = alert.popoverPresentationController {
+            popoverController.sourceView = sourceView
+            popoverController.sourceRect = CGRect(x: sourceView.bounds.midX,
+                                                  y: sourceView.bounds.midY,
+                                                  width: 0,
+                                                  height: 0)
+            popoverController.permittedArrowDirections = []
+        }
+        alert.addAction(UIAlertAction(title: PickerConfig.wordings.ok, style: UIAlertAction.Style.default, handler: nil))
+        return alert
+    }
 }

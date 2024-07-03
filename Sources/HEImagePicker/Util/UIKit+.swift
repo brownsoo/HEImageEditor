@@ -8,6 +8,15 @@
 import UIKit
 import Photos
 
+
+extension UIBarButtonItem {
+    func setFont(font: UIFont?, forState state: UIControl.State) {
+        guard font != nil else { return }
+        self.setTitleTextAttributes([NSAttributedString.Key.font: font!], for: .normal)
+    }
+}
+
+
 extension UICollectionView {
     func aapl_indexPathsForElementsInRect(_ rect: CGRect) -> [IndexPath] {
         let allLayoutAttributes = collectionViewLayout.layoutAttributesForElements(in: rect)

@@ -8,6 +8,7 @@
 import Foundation
 import Photos
 import PhotosUI
+import Combine
 
 @objc
 public protocol HEPickerLibraryViewDelegate: AnyObject {
@@ -17,9 +18,10 @@ public protocol HEPickerLibraryViewDelegate: AnyObject {
     func libraryViewDidToggleMultipleSelection(enabled: Bool)
     func libraryViewShouldAddToSelection(indexPath: IndexPath, numSelections: Int) -> Bool
     func libraryViewHaveNoItems()
+    func libraryViewCaption(indexPath: IndexPath) -> String?
 }
 
-public final class HEPickerLibraryViewController: UIViewController, PermissionCheckable {
+public class HEPickerLibraryViewController: UIViewController, PermissionCheckable {
     internal weak var delegate: HEPickerLibraryViewDelegate?
     internal var v = LibraryView(frame: .zero)
     internal var isProcessing = false // true if video or image is in processing state
@@ -29,7 +31,7 @@ public final class HEPickerLibraryViewController: UIViewController, PermissionCh
     internal var currentlySelectedIndex: Int = 0
     internal let panGestureHelper = HEPanGestureHelper()
     internal var isInitialized = false
-
+    internal var cancellables = Set<AnyCancellable>()
     // MARK: - Init
 
     public override func loadView() {
@@ -160,7 +162,7 @@ public final class HEPickerLibraryViewController: UIViewController, PermissionCh
     @objc
     func squareCropButtonTapped() {
         doAfterLibraryPermissionCheck { [weak self] in
-            self?.v.assetViewContainer.squareCropButtonTapped()
+            self?.v.assetViewBox.squareCropButtonTapped()
         }
     }
     
@@ -173,7 +175,6 @@ public final class HEPickerLibraryViewController: UIViewController, PermissionCh
             if #available(iOS 14, *) {
                 PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: self)
             }
-
             return
         }
 
@@ -187,21 +188,21 @@ public final class HEPickerLibraryViewController: UIViewController, PermissionCh
     
     func toggleMultipleSelection() {
         // Prevent desactivating multiple selection when using `minNumberOfItems`
-        if YPConfig.library.minNumberOfItems > 1 && isMultipleSelectionEnabled {
-            print("Selected minNumberOfItems greater than one :\(YPConfig.library.minNumberOfItems). Don't deselecting multiple selection.")
+        if PickerConfig.library.minNumberOfItems > 1 && isMultipleSelectionEnabled {
+            print("Selected minNumberOfItems greater than one :\(PickerConfig.library.minNumberOfItems). Don't deselecting multiple selection.")
             return
         }
 
         isMultipleSelectionEnabled.toggle()
 
         if isMultipleSelectionEnabled {
-            let needPreselectItemsAndNotSelectedAnyYet = selectedItems.isEmpty && YPConfig.library.preSelectItemOnMultipleSelection
+            let needPreselectItemsAndNotSelectedAnyYet = selectedItems.isEmpty && PickerConfig.library.preSelectItemOnMultipleSelection
             let shouldSelectByDelegate = delegate?.libraryViewShouldAddToSelection(indexPath: IndexPath(row: currentlySelectedIndex, section: 0), numSelections: selectedItems.count) ?? true
             if needPreselectItemsAndNotSelectedAnyYet,
                shouldSelectByDelegate,
                let asset = mediaManager.getAsset(at: currentlySelectedIndex) {
                 selectedItems = [
-                    YPLibrarySelection(index: currentlySelectedIndex,
+                    HELibrarySelection(index: currentlySelectedIndex,
                                        cropRect: v.currentCropRect(),
                                        scrollViewContentOffset: v.assetZoomableView.contentOffset,
                                        scrollViewZoomScale: v.assetZoomableView.zoomScale,
@@ -213,7 +214,7 @@ public final class HEPickerLibraryViewController: UIViewController, PermissionCh
             addToSelection(indexPath: IndexPath(row: currentlySelectedIndex, section: 0))
         }
         
-        v.assetViewContainer.setMultipleSelectionMode(on: isMultipleSelectionEnabled)
+        v.assetViewBox.setMultipleSelectionMode(on: isMultipleSelectionEnabled)
         v.collectionView.reloadData()
         checkLimit()
         delegate?.libraryViewDidToggleMultipleSelection(enabled: isMultipleSelectionEnabled)
@@ -223,7 +224,7 @@ public final class HEPickerLibraryViewController: UIViewController, PermissionCh
     
     func registerForTapOnPreview() {
         let tapImageGesture = UITapGestureRecognizer(target: self, action: #selector(tappedImage))
-        v.assetViewContainer.addGestureRecognizer(tapImageGesture)
+        v.assetViewBox.addGestureRecognizer(tapImageGesture)
     }
     
     @objc
@@ -251,7 +252,7 @@ public final class HEPickerLibraryViewController: UIViewController, PermissionCh
             v.collectionView.selectItem(at: IndexPath(row: 0, section: 0),
                                         animated: false,
                                         scrollPosition: UICollectionView.ScrollPosition())
-            if !isMultipleSelectionEnabled && YPConfig.library.preSelectItemOnMultipleSelection {
+            if !isMultipleSelectionEnabled && PickerConfig.library.preSelectItemOnMultipleSelection {
                 addToSelection(indexPath: IndexPath(row: 0, section: 0))
             }
         } else {
@@ -263,13 +264,13 @@ public final class HEPickerLibraryViewController: UIViewController, PermissionCh
     
     func buildPHFetchOptions() -> PHFetchOptions {
         // Sorting condition
-        if let userOpt = YPConfig.library.options {
+        if let userOpt = PickerConfig.library.options {
             return userOpt
         }
 
         let options = PHFetchOptions()
         options.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
-        options.predicate = YPConfig.library.mediaType.predicate()
+        options.predicate = PickerConfig.library.mediaType.predicate()
         return options
     }
     
@@ -295,8 +296,7 @@ public final class HEPickerLibraryViewController: UIViewController, PermissionCh
         delegate?.libraryViewStartedLoadingImage()
         
         let completion = { (isLowResIntermediaryImage: Bool) in
-            self.v.hideOverlayView()
-            self.v.assetViewContainer.updateSquareCropButtonState()
+            self.v.assetViewBox.updateSquareCropButtonState()
             self.updateCropInfo()
             if !isLowResIntermediaryImage {
                 self.v.hideLoader()
@@ -326,7 +326,7 @@ public final class HEPickerLibraryViewController: UIViewController, PermissionCh
             case .audio, .unknown:
                 ()
             @unknown default:
-                ypLog("Bug. Unknown default.")
+                woops("Bug. Unknown default.")
             }
         }
     }
@@ -338,12 +338,12 @@ public final class HEPickerLibraryViewController: UIViewController, PermissionCh
             return true
         }
         
-        let tooLong = floor(asset.duration) > YPConfig.video.libraryTimeLimit
-        let tooShort = floor(asset.duration) < YPConfig.video.minimumTimeLimit
+        let tooLong = floor(asset.duration) > PickerConfig.video.libraryTimeLimit
+        let tooShort = floor(asset.duration) < PickerConfig.video.minimumTimeLimit
         
         if tooLong || tooShort {
             DispatchQueue.main.async {
-                let alert = tooLong ? YPAlert.videoTooLongAlert(self.view) : YPAlert.videoTooShortAlert(self.view)
+                let alert = tooLong ? UIHelper.videoTooLongAlert(self.view) : UIHelper.videoTooShortAlert(self.view)
                 self.present(alert, animated: true, completion: nil)
             }
             return false
@@ -374,7 +374,7 @@ public final class HEPickerLibraryViewController: UIViewController, PermissionCh
         selectedItems.insert(selectedAsset, at: selectedAssetIndex)
     }
     
-    internal func fetchStoredCrop() -> YPLibrarySelection? {
+    internal func fetchStoredCrop() -> HELibrarySelection? {
         if self.isMultipleSelectionEnabled,
             self.selectedItems.contains(where: { $0.index == self.currentlySelectedIndex }) {
             guard let selectedAssetIndex = self.selectedItems
@@ -398,7 +398,7 @@ public final class HEPickerLibraryViewController: UIViewController, PermissionCh
         delegate?.libraryViewDidTapNext()
         let cropRect = withCropRect ?? DispatchQueue.main.sync { v.currentCropRect() }
         let ts = targetSize(for: asset, cropRect: cropRect)
-        mediaManager.imageManager?.fetchImage(for: asset, cropRect: cropRect, targetSize: ts, callback: callback)
+        mediaManager.phImageManager?.fetchImage(for: asset, cropRect: cropRect, targetSize: ts, callback: callback)
     }
     
     private func fetchVideoAndApplySettings(for asset: PHAsset,
@@ -417,14 +417,19 @@ public final class HEPickerLibraryViewController: UIViewController, PermissionCh
             return
         }
         
-        if YPConfig.video.automaticTrimToTrimmerMaxDuration {
+        if PickerConfig.video.automaticTrimToTrimmerMaxDuration {
             fetchVideoAndCropWithDuration(for: asset,
                                           withCropRect: resultCropRect,
-                                          duration: YPConfig.video.trimmerMaxDuration,
+                                          duration: PickerConfig.video.trimmerMaxDuration,
                                           callback: callback)
         } else {
             delegate?.libraryViewDidTapNext()
-            mediaManager.fetchVideoUrlAndCrop(for: asset, cropRect: resultCropRect, callback: callback)
+            Task {
+                let videoURL = await mediaManager.fetchVideoUrlAndCrop(for: asset, cropRect: resultCropRect)
+                if Task.isCancelled { return }
+                callback(videoURL)
+            }
+            .store(in: &cancellables)
         }
     }
     
@@ -434,21 +439,25 @@ public final class HEPickerLibraryViewController: UIViewController, PermissionCh
                                                callback: @escaping (_ videoURL: URL?) -> Void) {
         delegate?.libraryViewDidTapNext()
         let timeDuration = CMTimeMakeWithSeconds(duration, preferredTimescale: 1000)
-        mediaManager.fetchVideoUrlAndCropWithDuration(for: asset,
-                                                      cropRect: rect,
-                                                      duration: timeDuration,
-                                                      callback: callback)
+        Task {
+            let videoURL = await mediaManager.fetchVideoUrlAndCropWithDuration(for: asset,
+                                                          cropRect: rect,
+                                                          duration: timeDuration)
+            if Task.isCancelled { return }
+            callback(videoURL)
+        }
+        .store(in: &cancellables)
     }
     
-    public func selectedMedia(photoCallback: @escaping (_ photo: YPMediaPhoto) -> Void,
-                              videoCallback: @escaping (_ videoURL: YPMediaVideo) -> Void,
-                              multipleItemsCallback: @escaping (_ items: [YPMediaItem]) -> Void) {
+    public func selectedMedia(photoCallback: @escaping (_ photo: HEMediaPhoto) -> Void,
+                              videoCallback: @escaping (_ videoURL: HEMediaVideo) -> Void,
+                              multipleItemsCallback: @escaping (_ items: [HEMediaItem]) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
             
             let selectedAssets: [(asset: PHAsset, cropRect: CGRect?)] = self.selectedItems.compactMap {
                 guard let asset = PHAsset.fetchAssets(withLocalIdentifiers: [$0.assetIdentifier],
                                                       options: PHFetchOptions()).firstObject else {
-                    ypLog("Error!")
+                    woops("Error!")
                     return nil
                 }
                 return (asset, $0.cropRect)
@@ -465,7 +474,7 @@ public final class HEPickerLibraryViewController: UIViewController, PermissionCh
                 }
                 
                 // Fill result media items array
-                var resultMediaItems: [YPMediaItem] = []
+                var resultMediaItems: [HEMediaItem] = []
                 let asyncGroup = DispatchGroup()
                 
                 var assetDictionary: [PHAsset?: Int] = .init()
@@ -479,9 +488,9 @@ public final class HEPickerLibraryViewController: UIViewController, PermissionCh
                     switch asset.asset.mediaType {
                     case .image:
                         self.fetchImageAndCrop(for: asset.asset, withCropRect: asset.cropRect) { image, exifMeta in
-                            let photo = YPMediaPhoto(image: image.resizedImageIfNeeded(),
+                            let photo = HEMediaPhoto(image: image.resizedImageIfNeeded(),
                                                      exifMeta: exifMeta, asset: asset.asset)
-                            resultMediaItems.append(YPMediaItem.photo(p: photo))
+                            resultMediaItems.append(HEMediaItem.photo(p: photo))
                             asyncGroup.leave()
                         }
                         
@@ -489,11 +498,11 @@ public final class HEPickerLibraryViewController: UIViewController, PermissionCh
                         self.fetchVideoAndApplySettings(for: asset.asset,
                                                              withCropRect: asset.cropRect) { videoURL in
                             if let videoURL = videoURL {
-                                let videoItem = YPMediaVideo(thumbnail: thumbnailFromVideoPath(videoURL),
+                                let videoItem = HEMediaVideo(thumbnail: thumbnailFromVideoPath(videoURL),
                                                              videoURL: videoURL, asset: asset.asset)
-                                resultMediaItems.append(YPMediaItem.video(v: videoItem))
+                                resultMediaItems.append(HEMediaItem.video(v: videoItem))
                             } else {
-                                ypLog("Problems with fetching videoURL.")
+                                woops("Problems with fetching videoURL.")
                             }
                             asyncGroup.leave()
                         }
@@ -544,11 +553,11 @@ public final class HEPickerLibraryViewController: UIViewController, PermissionCh
                         DispatchQueue.main.async {
                             if let videoURL = videoURL {
                                 self.delegate?.libraryViewFinishedLoading()
-                                let video = YPMediaVideo(thumbnail: thumbnailFromVideoPath(videoURL),
+                                let video = HEMediaVideo(thumbnail: thumbnailFromVideoPath(videoURL),
                                                          videoURL: videoURL, asset: asset)
                                 videoCallback(video)
                             } else {
-                                ypLog("Problems with fetching videoURL.")
+                                woops("Problems with fetching videoURL.")
                             }
                         }
                     })
@@ -556,14 +565,14 @@ public final class HEPickerLibraryViewController: UIViewController, PermissionCh
                     self.fetchImageAndCrop(for: asset) { image, exifMeta in
                         DispatchQueue.main.async {
                             self.delegate?.libraryViewFinishedLoading()
-                            let photo = YPMediaPhoto(image: image.resizedImageIfNeeded(),
+                            let photo = HEMediaPhoto(image: image.resizedImageIfNeeded(),
                                                      exifMeta: exifMeta,
                                                      asset: asset)
                             photoCallback(photo)
                         }
                     }
                 @unknown default:
-                    ypLog("unknown default reached. Check code.")
+                    woops("unknown default reached. Check code.")
                 }
                 return
             }
@@ -591,6 +600,6 @@ public final class HEPickerLibraryViewController: UIViewController, PermissionCh
     
     deinit {
         PHPhotoLibrary.shared().unregisterChangeObserver(self)
-        ypLog("\(type(of: self)) deinited 👌🏻")
+        trace("\(type(of: self)) deinited 👌🏻")
     }
 }

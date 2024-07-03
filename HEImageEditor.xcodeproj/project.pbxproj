@@ -42,6 +42,7 @@
 		173DE6972C34128E002BD7C6 /* PHCachingImageManager+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE6962C34128E002BD7C6 /* PHCachingImageManager+.swift */; };
 		173DE6992C3412CC002BD7C6 /* UIImage+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE6982C3412CC002BD7C6 /* UIImage+.swift */; };
 		173DE69B2C3417E7002BD7C6 /* HEPickerLibraryView+LigraryChanges.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE69A2C3417E7002BD7C6 /* HEPickerLibraryView+LigraryChanges.swift */; };
+		173DE69D2C352808002BD7C6 /* Foundation+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE69C2C352808002BD7C6 /* Foundation+.swift */; };
 		174095612C19FC1C00A4B18D /* Foundation+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 174095602C19FC1C00A4B18D /* Foundation+.swift */; };
 		1744BA3E2C330B4E00F5395B /* HEImagePicker.h in Headers */ = {isa = PBXBuildFile; fileRef = 1744BA3D2C330B4E00F5395B /* HEImagePicker.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1744BA422C330B7800F5395B /* HEMediaItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1744B9E22C3300F000F5395B /* HEMediaItem.swift */; };
@@ -150,6 +151,7 @@
 		173DE6962C34128E002BD7C6 /* PHCachingImageManager+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PHCachingImageManager+.swift"; sourceTree = "<group>"; };
 		173DE6982C3412CC002BD7C6 /* UIImage+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImage+.swift"; sourceTree = "<group>"; };
 		173DE69A2C3417E7002BD7C6 /* HEPickerLibraryView+LigraryChanges.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HEPickerLibraryView+LigraryChanges.swift"; sourceTree = "<group>"; };
+		173DE69C2C352808002BD7C6 /* Foundation+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Foundation+.swift"; sourceTree = "<group>"; };
 		174095602C19FC1C00A4B18D /* Foundation+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Foundation+.swift"; sourceTree = "<group>"; };
 		1744B9DE2C32D04D00F5395B /* HEImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEImagePicker.swift; sourceTree = "<group>"; };
 		1744B9E22C3300F000F5395B /* HEMediaItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEMediaItem.swift; sourceTree = "<group>"; };
@@ -377,6 +379,7 @@
 				173DE6942C340049002BD7C6 /* UIHelper.swift */,
 				173DE6962C34128E002BD7C6 /* PHCachingImageManager+.swift */,
 				173DE6982C3412CC002BD7C6 /* UIImage+.swift */,
+				173DE69C2C352808002BD7C6 /* Foundation+.swift */,
 			);
 			path = Util;
 			sourceTree = "<group>";
@@ -697,6 +700,7 @@
 				173DE67E2C33CE70002BD7C6 /* CoreGraphics+.swift in Sources */,
 				173DE6782C33CAAC002BD7C6 /* HEVideoView.swift in Sources */,
 				173DE66F2C33C918002BD7C6 /* HEPickerLibraryView.swift in Sources */,
+				173DE69D2C352808002BD7C6 /* Foundation+.swift in Sources */,
 				173DE67A2C33CB92002BD7C6 /* AutoLayout+.swift in Sources */,
 				173DE6932C33F954002BD7C6 /* LibraryViewCell.swift in Sources */,
 				173DE68F2C33F6B2002BD7C6 /* HEPanGestureHelper.swift in Sources */,

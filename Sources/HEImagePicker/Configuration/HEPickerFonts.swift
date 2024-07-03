@@ -36,7 +36,7 @@ public struct HEPickerFonts {
     public var navigationBarTitleFont: UIFont = .boldSystemFont(ofSize: 17)
 
     /// The font used in the UINavigationBar rightBarButtonItem
-    public var rightBarButtonFont: UIFont?
+    public var rightBarButtonFont: UIFont? = .systemFont(ofSize: 14, weight: .bold)
 
     /// The font used in the UINavigationBar leftBarButtonItem
     public var leftBarButtonFont: UIFont?

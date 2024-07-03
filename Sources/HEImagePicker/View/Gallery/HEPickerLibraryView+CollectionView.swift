@@ -159,8 +159,13 @@ extension HEPickerLibraryViewController: UICollectionViewDelegate {
         }
 
         // TODO: 캡션
-        cell.captionLabel.text = "편집 적용"
-        cell.captionLabelFilledHeight?.isActive = true
+        if let caption = delegate?.libraryViewCaption(indexPath: indexPath) {
+            cell.captionLabel.text = caption
+            cell.captionLabelFilledHeight?.isActive = true
+        } else {
+            cell.captionLabel.text = nil
+            cell.captionLabelFilledHeight?.isActive = false
+        }
         
         // Prevent weird animation where thumbnail fills cell on first scrolls.
         UIView.performWithoutAnimation {

@@ -15,6 +15,7 @@ final class LibraryView: UIView {
 
     internal let assetZoomableViewMinimalVisibleHeight: CGFloat  = 50
     internal var assetViewContainerConstraintTop: NSLayoutConstraint?
+    /// 앨범 이미지 콜렉션 
     internal let collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .vertical
@@ -25,6 +26,7 @@ final class LibraryView: UIView {
         v.alwaysBounceVertical = true
         return v
     }()
+    /// 상단 미리보기 
     internal lazy var assetViewBox: HEAssetViewBox = {
         let v = HEAssetViewBox(frame: .zero, zoomableView: assetZoomableView)
         v.accessibilityIdentifier = "assetViewContainer"
