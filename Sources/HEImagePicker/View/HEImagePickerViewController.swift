@@ -82,6 +82,24 @@ open class HEImagePickerViewController: UIViewController {
     }
     
     @objc
+    func albumListTapped() {
+        guard !libraryVc.isProcessing else {
+            return
+        }
+        
+//        let vc = YPAlbumVC(albumsManager: albumsManager)
+//        let navVC = UINavigationController(rootViewController: vc)
+//        navVC.navigationBar.tintColor = .ypLabel
+//        
+//        vc.didSelectAlbum = { [weak self] album in
+//            self?.libraryVC?.setAlbum(album)
+//            self?.setTitleViewWithTitle(aTitle: album.title)
+//            navVC.dismiss(animated: true, completion: nil)
+//        }
+//        present(navVC, animated: true, completion: nil)
+    }
+    
+    @objc
     func close() {
         // Cancelling exporting of all videos
         libraryVc.mediaManager.forseCancelExporting()

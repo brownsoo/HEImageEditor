@@ -21,9 +21,9 @@ public struct HEPickerFonts {
 
     public var multipleSelectionIndicatorFont: UIFont = .systemFont(ofSize: 12, weight: .bold)
 
-    public var albumCellTitleFont: UIFont = .systemFont(ofSize: 16, weight: .regular)
+    public var albumCellTitleFont: UIFont = .systemFont(ofSize: 13, weight: .bold)
 
-    public var albumCellNumberOfItemsFont: UIFont = .systemFont(ofSize: 12, weight: .regular)
+    public var albumCellNumberOfItemsFont: UIFont = .systemFont(ofSize: 14, weight: .bold)
 
     public var menuItemFont: UIFont = .systemFont(ofSize: 17, weight: .semibold)
 
@@ -33,7 +33,7 @@ public struct HEPickerFonts {
 
     public var cameraTimeElapsedFont: UIFont = .monospacedDigitSystemFont(ofSize: 13, weight: .medium)
 
-    public var navigationBarTitleFont: UIFont = .boldSystemFont(ofSize: 17)
+    public var navigationBarTitleFont: UIFont = .boldSystemFont(ofSize: 16)
 
     /// The font used in the UINavigationBar rightBarButtonItem
     public var rightBarButtonFont: UIFont? = .systemFont(ofSize: 14, weight: .bold)

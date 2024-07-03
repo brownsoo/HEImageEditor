@@ -47,62 +47,68 @@ extension UIView {
     
     
     @discardableResult
-    func topAnchorConstraintTo(_ view: UIView, constant: CGFloat = 0) -> NSLayoutConstraint? {
+    func topAnchorConstraintTo(_ view: UIView, constant: CGFloat = 0, priority: UILayoutPriority = .required) -> NSLayoutConstraint? {
         guard self.superview != nil else {
             return nil
         }
         let layout = self.topAnchor.constraint(equalTo: view.topAnchor, constant: constant)
+        layout.priority = priority
         layout.isActive = true
         return layout
     }
     
     @discardableResult
-    func topAnchorConstraintTo(_ anchor: NSLayoutYAxisAnchor, constant: CGFloat = 0) -> NSLayoutConstraint? {
+    func topAnchorConstraintTo(_ anchor: NSLayoutYAxisAnchor, constant: CGFloat = 0, priority: UILayoutPriority = .required) -> NSLayoutConstraint? {
         guard self.superview != nil else {
             return nil
         }
         let layout = self.topAnchor.constraint(equalTo: anchor, constant: constant)
+        layout.priority = priority
         layout.isActive = true
         return layout
     }
     
     @discardableResult
-    func bottomAnchorConstraintTo(_ view: UIView, constant: CGFloat = 0) -> NSLayoutConstraint? {
+    func bottomAnchorConstraintTo(_ view: UIView, constant: CGFloat = 0, priority: UILayoutPriority = .required) -> NSLayoutConstraint? {
         guard self.superview != nil else {
             return nil
         }
         let layout = self.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: constant)
+        layout.priority = priority
         layout.isActive = true
         return layout
     }
     
     @discardableResult
-    func bottomAnchorConstraintTo(_ anchor: NSLayoutYAxisAnchor, constant: CGFloat = 0) -> NSLayoutConstraint? {
+    func bottomAnchorConstraintTo(_ anchor: NSLayoutYAxisAnchor, constant: CGFloat = 0, priority: UILayoutPriority = .required) -> NSLayoutConstraint? {
         guard self.superview != nil else {
             return nil
         }
         let layout = self.bottomAnchor.constraint(equalTo: anchor, constant: constant)
+        layout.priority = priority
         layout.isActive = true
         return layout
     }
     
     
     @discardableResult
-    func leadingAnchorConstraintTo(_ view: UIView, constant: CGFloat = 0) -> NSLayoutConstraint? {
+    func leadingAnchorConstraintTo(_ view: UIView, constant: CGFloat = 0, priority: UILayoutPriority = .required) -> NSLayoutConstraint? {
         guard self.superview != nil else {
             return nil
         }
         let layout = self.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: constant)
+        layout.priority = priority
         layout.isActive = true
         return layout
     }
     
     @discardableResult
-    func leadingAnchorConstraintTo(_ anchor: NSLayoutXAxisAnchor, constant: CGFloat = 0) -> NSLayoutConstraint? {
+    func leadingAnchorConstraintTo(_ anchor: NSLayoutXAxisAnchor, constant: CGFloat = 0, priority: UILayoutPriority = .required) -> NSLayoutConstraint? {
         guard self.superview != nil else {
             return nil
         }
         let layout = self.leadingAnchor.constraint(equalTo: anchor, constant: constant)
+        layout.priority = priority
         layout.isActive = true
         return layout
     }
@@ -110,21 +116,23 @@ extension UIView {
     
     
     @discardableResult
-    func trailingAnchorConstraintTo(_ view: UIView, constant: CGFloat = 0) -> NSLayoutConstraint? {
+    func trailingAnchorConstraintTo(_ view: UIView, constant: CGFloat = 0, priority: UILayoutPriority = .required) -> NSLayoutConstraint? {
         guard self.superview != nil else {
             return nil
         }
         let layout = self.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: constant)
+        layout.priority = priority
         layout.isActive = true
         return layout
     }
     
     @discardableResult
-    func trailingAnchorConstraintTo(_ anchor: NSLayoutXAxisAnchor, constant: CGFloat = 0) -> NSLayoutConstraint? {
+    func trailingAnchorConstraintTo(_ anchor: NSLayoutXAxisAnchor, constant: CGFloat = 0, priority: UILayoutPriority = .required) -> NSLayoutConstraint? {
         guard self.superview != nil else {
             return nil
         }
         let layout = self.trailingAnchor.constraint(equalTo: anchor, constant: constant)
+        layout.priority = priority
         layout.isActive = true
         return layout
     }
@@ -133,37 +141,48 @@ extension UIView {
     //MARK: To width, height
     
     @discardableResult
-    func widthAnchorConstraintTo(_ constant: CGFloat) -> NSLayoutConstraint {
+    func widthAnchorConstraintTo(_ constant: CGFloat, priority: UILayoutPriority = .required) -> NSLayoutConstraint {
         let layout = self.widthAnchor.constraint(equalToConstant: constant)
+        layout.priority = priority
         layout.isActive = true
         return layout
     }
     
     @discardableResult
-    func heightAnchorConstraintTo(_ constant: CGFloat) -> NSLayoutConstraint {
+    func heightAnchorConstraintTo(_ constant: CGFloat, priority: UILayoutPriority = .required) -> NSLayoutConstraint {
         let layout = self.heightAnchor.constraint(equalToConstant: constant)
+        layout.priority = priority
         layout.isActive = true
         return layout
     }
     
-    func sizeAnchorConstraintTo(_ constant: CGFloat)  {
-        self.heightAnchor.constraint(equalToConstant: constant).isActive = true
-        self.widthAnchor.constraint(equalToConstant: constant).isActive = true
+    func sizeAnchorConstraintTo(_ constant: CGFloat, priority: UILayoutPriority = .required)  {
+        let hlayout = self.heightAnchor.constraint(equalToConstant: constant)
+        hlayout.priority = priority
+        hlayout.isActive = true
+        let vlayout = self.widthAnchor.constraint(equalToConstant: constant)
+        vlayout.priority = priority
+        vlayout.isActive = true
     }
     
-    func sizeAnchorConstraintTo(_ size: CGSize)  {
-        self.heightAnchor.constraint(equalToConstant: size.height).isActive = true
-        self.widthAnchor.constraint(equalToConstant: size.width).isActive = true
+    func sizeAnchorConstraintTo(_ size: CGSize, priority: UILayoutPriority = .required)  {
+        let hlayout = self.heightAnchor.constraint(equalToConstant: size.height)
+        hlayout.priority = priority
+        hlayout.isActive = true
+        let wlayout = self.widthAnchor.constraint(equalToConstant: size.width)
+        wlayout.priority = priority
+        wlayout.isActive = true
     }
     
     //MARK:  to centerX, centerY
     
     @discardableResult
-    func centerXAnchorConstraintToSuperview(_ anchor: NSLayoutXAxisAnchor? = nil, constant: CGFloat = 0, horizontalPadding: CGFloat? = nil) -> NSLayoutConstraint? {
+    func centerXAnchorConstraintToSuperview(_ anchor: NSLayoutXAxisAnchor? = nil, constant: CGFloat = 0, horizontalPadding: CGFloat? = nil, priority: UILayoutPriority = .required) -> NSLayoutConstraint? {
         guard let parent = self.superview else {
             return nil
         }
         let layout = self.centerXAnchor.constraint(equalTo: anchor ?? parent.centerXAnchor, constant: constant)
+        layout.priority = priority
         layout.isActive = true
         
         if let horizontalPadding = horizontalPadding {
@@ -174,11 +193,12 @@ extension UIView {
     }
     
     @discardableResult
-    func centerYAnchorConstraintToSuperview(_ anchor: NSLayoutYAxisAnchor? = nil, constant: CGFloat = 0, verticalPadding: CGFloat? = nil) -> NSLayoutConstraint? {
+    func centerYAnchorConstraintToSuperview(_ anchor: NSLayoutYAxisAnchor? = nil, constant: CGFloat = 0, verticalPadding: CGFloat? = nil, priority: UILayoutPriority = .required) -> NSLayoutConstraint? {
         guard let parent = self.superview else {
             return nil
         }
         let layout = self.centerYAnchor.constraint(equalTo: anchor ?? parent.centerYAnchor, constant: constant)
+        layout.priority = priority
         layout.isActive = true
         
         if let verticalPadding = verticalPadding {
@@ -189,60 +209,72 @@ extension UIView {
     }
     
     @discardableResult
-    func centerYAnchorConstraintTo(_ view: UIView, constant: CGFloat = 0) -> NSLayoutConstraint? {
+    func centerYAnchorConstraintTo(_ view: UIView, constant: CGFloat = 0, priority: UILayoutPriority = .required) -> NSLayoutConstraint? {
         guard self.superview != nil else {
             return nil
         }
         let layout = self.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: constant)
+        layout.priority = priority
         layout.isActive = true
         return layout
     }
     
     @discardableResult
-    func centerYAnchorConstraintTo(_ anchor: NSLayoutYAxisAnchor, constant: CGFloat = 0) -> NSLayoutConstraint? {
+    func centerYAnchorConstraintTo(_ anchor: NSLayoutYAxisAnchor, constant: CGFloat = 0, priority: UILayoutPriority = .required) -> NSLayoutConstraint? {
         guard self.superview != nil else {
             return nil
         }
         let layout = self.centerYAnchor.constraint(equalTo: anchor, constant: constant)
+        layout.priority = priority
         layout.isActive = true
         return layout
     }
     
     @discardableResult
-    func centerXAnchorConstraintTo(_ view: UIView, constant: CGFloat = 0) -> NSLayoutConstraint? {
+    func centerXAnchorConstraintTo(_ view: UIView, constant: CGFloat = 0, priority: UILayoutPriority = .required) -> NSLayoutConstraint? {
         guard self.superview != nil else {
             return nil
         }
         let layout = self.centerXAnchor.constraint(equalTo: view.centerXAnchor, constant: constant)
+        layout.priority = priority
         layout.isActive = true
         return layout
     }
     
     @discardableResult
-    func centerXAnchorConstraintTo(_ anchor: NSLayoutXAxisAnchor, constant: CGFloat = 0) -> NSLayoutConstraint? {
+    func centerXAnchorConstraintTo(_ anchor: NSLayoutXAxisAnchor, constant: CGFloat = 0, priority: UILayoutPriority = .required) -> NSLayoutConstraint? {
         guard self.superview != nil else {
             return nil
         }
         let layout = self.centerXAnchor.constraint(equalTo: anchor, constant: constant)
+        layout.priority = priority
         layout.isActive = true
         return layout
     }
     
     // MARK: To SafeLayoutGuide
     
-    func edgesConstraintTo(_ guide: UILayoutGuide, edges: AutoLayoutEdges, withInset inset: CGFloat = 0) {
+    func edgesConstraintTo(_ guide: UILayoutGuide, edges: AutoLayoutEdges, withInset inset: CGFloat = 0, priority: UILayoutPriority = .required) {
         if edges.contains(.leading) {
-            self.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: inset).isActive = true
+            let layout = self.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: inset)
+            layout.priority = priority
+            layout.isActive = true
         }
         if edges.contains(.trailing) {
-            self.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -inset).isActive = true
+            let layout = self.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -inset)
+            layout.priority = priority
+            layout.isActive = true
         }
         
         if edges.contains(.top) {
-            self.topAnchor.constraint(equalTo: guide.topAnchor, constant: inset).isActive = true
+            let layout = self.topAnchor.constraint(equalTo: guide.topAnchor, constant: inset)
+            layout.priority = priority
+            layout.isActive = true
         }
         if edges.contains(.bottom) {
-            self.bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -inset).isActive = true
+            let layout = self.bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -inset)
+            layout.priority = priority
+            layout.isActive = true
         }
     }
     
@@ -281,41 +313,45 @@ extension UIView {
     
     
     @discardableResult
-    func topAnchorConstraintToSuperview(_ constant: CGFloat = 0) -> NSLayoutConstraint? {
+    func topAnchorConstraintToSuperview(_ constant: CGFloat = 0, priority: UILayoutPriority = .required) -> NSLayoutConstraint? {
         guard let parent = self.superview else {
             return nil
         }
         let layout = self.topAnchor.constraint(equalTo: parent.topAnchor, constant: constant)
+        layout.priority = priority
         layout.isActive = true
         return layout
     }
     
     @discardableResult
-    func bottomAnchorConstraintToSuperview(_ constant: CGFloat = 0) -> NSLayoutConstraint? {
+    func bottomAnchorConstraintToSuperview(_ constant: CGFloat = 0, priority: UILayoutPriority = .required) -> NSLayoutConstraint? {
         guard let parent = self.superview else {
             return nil
         }
         let layout = self.bottomAnchor.constraint(equalTo: parent.bottomAnchor, constant: constant)
+        layout.priority = priority
         layout.isActive = true
         return layout
     }
     
     @discardableResult
-    func leadingAnchorConstraintToSuperview(_ constant: CGFloat = 0) -> NSLayoutConstraint? {
+    func leadingAnchorConstraintToSuperview(_ constant: CGFloat = 0, priority: UILayoutPriority = .required) -> NSLayoutConstraint? {
         guard let parent = self.superview else {
             return nil
         }
         let layout = self.leadingAnchor.constraint(equalTo: parent.leadingAnchor, constant: constant)
+        layout.priority = priority
         layout.isActive = true
         return layout
     }
     
     @discardableResult
-    func trailingAnchorConstraintToSuperview(_ constant: CGFloat = 0) -> NSLayoutConstraint? {
+    func trailingAnchorConstraintToSuperview(_ constant: CGFloat = 0, priority: UILayoutPriority = .required) -> NSLayoutConstraint? {
         guard let parent = self.superview else {
             return nil
         }
         let layout = self.trailingAnchor.constraint(equalTo: parent.trailingAnchor, constant: constant)
+        layout.priority = priority
         layout.isActive = true
         return layout
     }

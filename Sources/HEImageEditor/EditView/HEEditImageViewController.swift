@@ -393,9 +393,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     override open func viewDidLoad() {
         super.viewDidLoad()
-        
         setupUI()
-        
         rotationImageView()
         
         if tools.contains(.filter) {
