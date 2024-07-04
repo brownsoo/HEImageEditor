@@ -94,12 +94,22 @@ final class LibraryMediaManager {
         
         do {
             let assetComposition = AVMutableComposition()
-            let duration = try await asset.load(.duration)
+            let duration: CMTime
+            if #available(iOS 15, *) {
+                duration = try await asset.load(.duration)
+            } else {
+                duration = asset.duration
+            }
             let assetMaxDuration = self.getMaxVideoDuration(between: duration, andAssetDuration: duration)
             let trackTimeRange = CMTimeRangeMake(start: CMTime.zero, duration: assetMaxDuration)
             
             // 1. Inserting audio and video tracks in composition
-            let videoTracks = try await asset.loadTracks(withMediaType: .video)
+            let videoTracks: [AVAssetTrack]
+            if #available(iOS 15, *) {
+                videoTracks = try await asset.loadTracks(withMediaType: .video)
+            } else {
+                videoTracks = asset.tracks(withMediaType: AVMediaType.video)
+            }
             guard let videoTrack = videoTracks.first,
                   let videoCompositionTrack = assetComposition
                 .addMutableTrack(withMediaType: .video,
@@ -108,7 +118,12 @@ final class LibraryMediaManager {
                 return nil
                 
             }
-            let audioTracks = try await asset.loadTracks(withMediaType: .audio)
+            let audioTracks: [AVAssetTrack]
+            if #available(iOS 15, *) {
+                audioTracks = try await asset.loadTracks(withMediaType: .audio)
+            } else {
+                audioTracks = asset.tracks(withMediaType: AVMediaType.audio)
+            }
             if let audioTrack = audioTracks.first,
                let audioCompositionTrack = assetComposition
                 .addMutableTrack(withMediaType: AVMediaType.audio,
@@ -120,8 +135,16 @@ final class LibraryMediaManager {
             
             // Layer Instructions
             let layerInstructions = AVMutableVideoCompositionLayerInstruction(assetTrack: videoCompositionTrack)
-            var transform = (try? await videoTrack.load(.preferredTransform)) ?? .identity
-            let videoSize = (try await videoTrack.load(.naturalSize)).applying(transform)
+            var transform: CGAffineTransform
+            let videoSize: CGSize
+            if #available(iOS 15, *) {
+                transform = (try? await videoTrack.load(.preferredTransform)) ?? .identity
+                videoSize = (try await videoTrack.load(.naturalSize)).applying(transform)
+            } else {
+                transform = videoTrack.preferredTransform
+                videoSize = videoTrack.naturalSize.applying(transform)
+            }
+            
             transform.tx = (videoSize.width < 0) ? abs(videoSize.width) : 0.0
             transform.ty = (videoSize.height < 0) ? abs(videoSize.height) : 0.0
             transform.tx -= cropRect.minX

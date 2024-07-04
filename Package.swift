@@ -19,15 +19,18 @@ let package = Package(
             name: "HEImageEditor",
             //path: "Sources",
             exclude: [
-                "../Info.plist",
                 "Util/HEWeakProxy.h",
                 "Util/HEWeakProxy.m"
             ],
             resources: [
                 .process("Resources/HEImageEditor.bundle")
-            ]),
+            ]
+        ),
         .target(
-            name: "HEImagePicker"
+            name: "HEImagePicker",
+            resources: [
+                .process("Resources/HEImagePickerLocalizable.strings")
+            ]
         )
     ]
 )

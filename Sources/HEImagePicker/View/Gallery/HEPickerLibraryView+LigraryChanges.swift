@@ -69,7 +69,7 @@ extension HEPickerLibraryViewController: PHPhotoLibraryChangeObserver {
            self.mediaManager.hasResultItems == false {
             self.v.assetZoomableView.clearAsset()
             self.selectedItems.removeAll()
-            self.delegate?.libraryViewFinishedLoading()
+            self.libraryViewFinishedLoading()
         }
     }
 }

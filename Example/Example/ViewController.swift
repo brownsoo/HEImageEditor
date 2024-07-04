@@ -8,6 +8,7 @@
 import UIKit
 import SnapKit
 import HEImageEditor
+import HEImagePicker
 import PhotosUI
 import OrderedCollections
 
@@ -275,6 +276,12 @@ extension ViewController {
         showDetailViewController(picker, sender: nil)
     }
     
+    @objc func startHEPicker() {
+        let picker = HEImagePicker()
+//        picker.delegate = self
+        showDetailViewController(picker, sender: nil)
+    }
+    
     @objc func drawToolChanged() {
         if config.tools.contains(.draw) {
             config.tools.removeAll { $0 == .draw }
@@ -537,10 +544,7 @@ extension ViewController {
             make.bottom.equalTo(self.editImageToolView)
         }
         
-        let pickImageBtn = UIButton(type: .custom)
-        pickImageBtn.backgroundColor = .black
-        pickImageBtn.layer.cornerRadius = 5
-        pickImageBtn.layer.masksToBounds = true
+        let pickImageBtn = UIButton(type: .system)
         pickImageBtn.titleLabel?.font = UIFont.systemFont(ofSize: 14)
         pickImageBtn.setTitle("Pick an image", for: .normal)
         pickImageBtn.addTarget(self, action: #selector(pickImage), for: .touchUpInside)
@@ -550,14 +554,22 @@ extension ViewController {
             make.left.equalTo(self.editImageToolView)
         }
         
-        let pickMultipleBt = UIButton()
-        pickMultipleBt.backgroundColor = .black
+        let pickMultipleBt = UIButton(type: .system)
         pickMultipleBt.setTitle("Pick images", for: .normal)
         pickMultipleBt.addTarget(self, action: #selector(pickMutipleImages), for: .touchUpInside)
         view.addSubview(pickMultipleBt)
         pickMultipleBt.snp.makeConstraints { make in
             make.top.equalTo(pickImageBtn)
             make.left.equalTo(pickImageBtn.snp.right).offset(20)
+        }
+        
+        let hePickerBt = UIButton(type: .system)
+        hePickerBt.setTitle("HEPicker", for: .normal)
+        hePickerBt.addTarget(self, action: #selector(startHEPicker), for: .touchUpInside)
+        view.addSubview(hePickerBt)
+        hePickerBt.snp.makeConstraints { make in
+            make.top.equalTo(pickMultipleBt)
+            make.left.equalTo(pickMultipleBt.snp.right).offset(20)
         }
         
         resultImageView = UIImageView()

@@ -39,7 +39,13 @@ extension AVAsset {
         let timeRange = CMTimeRangeFromTimeToTime(start: startTime, end: endTime)
         let composition = AVMutableComposition()
         do {
-            let tracks = try await load(.tracks)
+            let tracks: [AVAssetTrack]
+            if #available(iOS 15, *) {
+                 tracks = try await load(.tracks)
+            } else {
+                // Fallback on earlier versions
+                tracks = self.tracks
+            }
             for track in tracks {
                 let compositionTrack = composition.addMutableTrack(withMediaType: track.mediaType,
                                                                    preferredTrackID: track.trackID)
@@ -50,10 +56,17 @@ extension AVAsset {
         }
         
         // Reaply correct transform to keep original orientation.
-        if let videoTrack = try? await self.loadTracks(withMediaType: .video).last,
-            let compositionTrack = composition.tracks(withMediaType: .video).last {
-            let transform = (try? await videoTrack.load(.preferredTransform)) ?? .identity
-            compositionTrack.preferredTransform = transform
+        if #available(iOS 15, *) {
+            if let videoTrack = try? await self.loadTracks(withMediaType: .video).last,
+               let compositionTrack = composition.tracks(withMediaType: .video).last {
+                let transform = (try? await videoTrack.load(.preferredTransform)) ?? .identity
+                compositionTrack.preferredTransform = transform
+            }
+        } else {
+            if let videoTrack = self.tracks(withMediaType: .video).last,
+                let compositionTrack = composition.tracks(withMediaType: .video).last {
+                compositionTrack.preferredTransform = videoTrack.preferredTransform
+            }
         }
 
         return composition
