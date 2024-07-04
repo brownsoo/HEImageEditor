@@ -9,19 +9,31 @@ import Foundation
 import Photos
 import UIKit
 
-struct HEAlbum {
-    var thumbnail: UIImage?
-    var title: String = ""
-    var numberOfItems: Int = 0
-    var collection: PHAssetCollection?
+public struct HEAlbum {
+    public var thumbnail: UIImage?
+    public var title: String = ""
+    public var numberOfItems: Int = 0
+    public var collection: PHAssetCollection?
+    
+    public init(thumbnail: UIImage? = nil, title: String = "", numberOfItems: Int = 0, collection: PHAssetCollection? = nil) {
+        self.thumbnail = thumbnail
+        self.title = title
+        self.numberOfItems = numberOfItems
+        self.collection = collection
+    }
 }
 
 
-class HEAlbumsManager {
+public class HEAlbumsManager {
     
     private var cachedAlbums: [HEAlbum]?
     
-    func fetchAlbums() -> [HEAlbum] {
+    
+    /// Collects albums from Photo Library
+    /// - Returns: album list
+    ///
+    /// if PickerConfig.library.mediaType is photo, this collects only photos.
+    public func fetchAlbums() -> [HEAlbum] {
         if let cachedAlbums = cachedAlbums {
             return cachedAlbums
         }
@@ -73,7 +85,7 @@ class HEAlbumsManager {
         return albums
     }
     
-    func mediaCountFor(collection: PHAssetCollection) -> Int {
+    public func mediaCountFor(collection: PHAssetCollection) -> Int {
         let options = PHFetchOptions()
         options.predicate = PickerConfig.library.mediaType.predicate()
         let result = PHAsset.fetchAssets(in: collection, options: options)

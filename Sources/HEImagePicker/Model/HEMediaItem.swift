@@ -10,7 +10,8 @@ import AVFoundation
 import Photos
 
 public class HEMediaPhoto {
-    
+    /// 지정된 아이디 or PHAsset의 identifier, or uuid
+    public var identifier: String
     public var image: UIImage { return modifiedImage ?? originalImage }
     public let originalImage: UIImage
     public var modifiedImage: UIImage?
@@ -19,11 +20,13 @@ public class HEMediaPhoto {
     public var asset: PHAsset?
     public var url: URL?
     
-    public init(image: UIImage,
+    public init(identifier: String? = nil,
+                image: UIImage,
                 exifMeta: [String: Any]? = nil,
                 fromCamera: Bool = false,
                 asset: PHAsset? = nil,
                 url: URL? = nil) {
+        self.identifier = identifier ?? asset?.localIdentifier ?? UUID().uuidString
         self.originalImage = image
         self.modifiedImage = nil
         self.fromCamera = fromCamera
@@ -34,13 +37,19 @@ public class HEMediaPhoto {
 }
 
 public class HEMediaVideo {
-    
+    /// 지정된 아이디 or PHAsset의 identifier, or uuid
+    public var identifier: String
     public var thumbnail: UIImage
     public var url: URL
     public let fromCamera: Bool
     public var asset: PHAsset?
 
-    public init(thumbnail: UIImage, videoURL: URL, fromCamera: Bool = false, asset: PHAsset? = nil) {
+    public init(identifier: String? = nil,
+                thumbnail: UIImage,
+                videoURL: URL,
+                fromCamera: Bool = false,
+                asset: PHAsset? = nil) {
+        self.identifier = identifier ?? asset?.localIdentifier ?? UUID().uuidString
         self.thumbnail = thumbnail
         self.url = videoURL
         self.fromCamera = fromCamera
@@ -48,6 +57,7 @@ public class HEMediaVideo {
     }
 }
 
+/// HEPicker's representive media item
 public enum HEMediaItem {
     case photo(p: HEMediaPhoto)
     case video(v: HEMediaVideo)

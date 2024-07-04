@@ -18,7 +18,6 @@
 		173DE6602C33B968002BD7C6 /* HEImagePickerLocalizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 173DE65C2C33B968002BD7C6 /* HEImagePickerLocalizable.strings */; };
 		173DE6642C33BAE1002BD7C6 /* HEPickerColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE6632C33BAE1002BD7C6 /* HEPickerColors.swift */; };
 		173DE6662C33BB43002BD7C6 /* HEPickerFonts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE6652C33BB43002BD7C6 /* HEPickerFonts.swift */; };
-		173DE6682C33BD8A002BD7C6 /* HEImagePickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE6672C33BD8A002BD7C6 /* HEImagePickerViewController.swift */; };
 		173DE66B2C33BEBD002BD7C6 /* HEAlbumsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE66A2C33BEBD002BD7C6 /* HEAlbumsManager.swift */; };
 		173DE66F2C33C918002BD7C6 /* HEPickerLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE66E2C33C918002BD7C6 /* HEPickerLibraryView.swift */; };
 		173DE6722C33C9BC002BD7C6 /* LibraryMediaManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE6712C33C9BC002BD7C6 /* LibraryMediaManager.swift */; };
@@ -44,6 +43,7 @@
 		173DE69B2C3417E7002BD7C6 /* HEPickerLibraryView+LigraryChanges.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE69A2C3417E7002BD7C6 /* HEPickerLibraryView+LigraryChanges.swift */; };
 		173DE69D2C352808002BD7C6 /* Foundation+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE69C2C352808002BD7C6 /* Foundation+.swift */; };
 		173DE69F2C353F55002BD7C6 /* AlbumListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE69E2C353F55002BD7C6 /* AlbumListViewController.swift */; };
+		173DE6A12C361BBE002BD7C6 /* HEPickerImageSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE6A02C361BBE002BD7C6 /* HEPickerImageSize.swift */; };
 		174095612C19FC1C00A4B18D /* Foundation+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 174095602C19FC1C00A4B18D /* Foundation+.swift */; };
 		1744BA3E2C330B4E00F5395B /* HEImagePicker.h in Headers */ = {isa = PBXBuildFile; fileRef = 1744BA3D2C330B4E00F5395B /* HEImagePicker.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1744BA422C330B7800F5395B /* HEMediaItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1744B9E22C3300F000F5395B /* HEMediaItem.swift */; };
@@ -128,7 +128,6 @@
 		173DE6622C33B9D1002BD7C6 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = ../en.lproj/HEImagePickerLocalizable.strings; sourceTree = "<group>"; };
 		173DE6632C33BAE1002BD7C6 /* HEPickerColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEPickerColors.swift; sourceTree = "<group>"; };
 		173DE6652C33BB43002BD7C6 /* HEPickerFonts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEPickerFonts.swift; sourceTree = "<group>"; };
-		173DE6672C33BD8A002BD7C6 /* HEImagePickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEImagePickerViewController.swift; sourceTree = "<group>"; };
 		173DE66A2C33BEBD002BD7C6 /* HEAlbumsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEAlbumsManager.swift; sourceTree = "<group>"; };
 		173DE66E2C33C918002BD7C6 /* HEPickerLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEPickerLibraryView.swift; sourceTree = "<group>"; };
 		173DE6712C33C9BC002BD7C6 /* LibraryMediaManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryMediaManager.swift; sourceTree = "<group>"; };
@@ -154,6 +153,7 @@
 		173DE69A2C3417E7002BD7C6 /* HEPickerLibraryView+LigraryChanges.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HEPickerLibraryView+LigraryChanges.swift"; sourceTree = "<group>"; };
 		173DE69C2C352808002BD7C6 /* Foundation+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Foundation+.swift"; sourceTree = "<group>"; };
 		173DE69E2C353F55002BD7C6 /* AlbumListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumListViewController.swift; sourceTree = "<group>"; };
+		173DE6A02C361BBE002BD7C6 /* HEPickerImageSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEPickerImageSize.swift; sourceTree = "<group>"; };
 		174095602C19FC1C00A4B18D /* Foundation+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Foundation+.swift"; sourceTree = "<group>"; };
 		1744B9DE2C32D04D00F5395B /* HEImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEImagePicker.swift; sourceTree = "<group>"; };
 		1744B9E22C3300F000F5395B /* HEMediaItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEMediaItem.swift; sourceTree = "<group>"; };
@@ -400,7 +400,6 @@
 			children = (
 				173DE6892C33F4C4002BD7C6 /* Permission */,
 				173DE6702C33C9A1002BD7C6 /* Gallery */,
-				173DE6672C33BD8A002BD7C6 /* HEImagePickerViewController.swift */,
 				173DE66A2C33BEBD002BD7C6 /* HEAlbumsManager.swift */,
 			);
 			path = View;
@@ -455,9 +454,9 @@
 		1744BA3C2C330B4E00F5395B /* HEImagePicker */ = {
 			isa = PBXGroup;
 			children = (
-				1744BA4B2C330DCA00F5395B /* Configuration */,
 				1744BA3D2C330B4E00F5395B /* HEImagePicker.h */,
 				1744B9DE2C32D04D00F5395B /* HEImagePicker.swift */,
+				1744BA4B2C330DCA00F5395B /* Configuration */,
 				1744B9E12C3300AA00F5395B /* Model */,
 				173DE6562C33B921002BD7C6 /* Resources */,
 				173DE6532C33B899002BD7C6 /* Util */,
@@ -473,6 +472,7 @@
 				173DE6512C33B85B002BD7C6 /* HEPickerWordings.swift */,
 				173DE6632C33BAE1002BD7C6 /* HEPickerColors.swift */,
 				173DE6652C33BB43002BD7C6 /* HEPickerFonts.swift */,
+				173DE6A02C361BBE002BD7C6 /* HEPickerImageSize.swift */,
 			);
 			path = Configuration;
 			sourceTree = "<group>";
@@ -691,6 +691,7 @@
 				173DE6662C33BB43002BD7C6 /* HEPickerFonts.swift in Sources */,
 				173DE68D2C33F59F002BD7C6 /* PermissionDeniedPopup.swift in Sources */,
 				1744BA462C330C2100F5395B /* HELibrarySelection.swift in Sources */,
+				173DE6A12C361BBE002BD7C6 /* HEPickerImageSize.swift in Sources */,
 				173DE6802C33CEB4002BD7C6 /* UIKit+.swift in Sources */,
 				173DE6522C33B85B002BD7C6 /* HEPickerWordings.swift in Sources */,
 				173DE6972C34128E002BD7C6 /* PHCachingImageManager+.swift in Sources */,
@@ -722,7 +723,6 @@
 				1744BA482C330C4A00F5395B /* HEPickerError.swift in Sources */,
 				173DE6952C340049002BD7C6 /* UIHelper.swift in Sources */,
 				173DE6992C3412CC002BD7C6 /* UIImage+.swift in Sources */,
-				173DE6682C33BD8A002BD7C6 /* HEImagePickerViewController.swift in Sources */,
 				1744BA4A2C330C6E00F5395B /* HEDragDirection.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

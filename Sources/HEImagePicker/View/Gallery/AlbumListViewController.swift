@@ -8,7 +8,7 @@
 import UIKit
 import Photos
 
-class AlbumListViewController: UIViewController {
+final class AlbumListViewController: UIViewController {
     override var prefersStatusBarHidden: Bool {
         PickerConfig.hidesStatusBar
     }
@@ -18,8 +18,9 @@ class AlbumListViewController: UIViewController {
     let albumsManager: HEAlbumsManager
     
     private let spinner = UIActivityIndicatorView(style: .medium)
-    private let collView: UICollectionView!
-    
+    private var collView: UICollectionView!
+    private var orientation: UIInterfaceOrientation = .portrait
+    private let minimumCellSpacing: CGFloat = 12
     required init(albumsManager: HEAlbumsManager) {
         self.albumsManager = albumsManager
         super.init(nibName: nil, bundle: nil)
@@ -36,14 +37,24 @@ class AlbumListViewController: UIViewController {
         fetchAlbumsInBackground()
     }
     
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+        orientation = UIApplication.shared.findKeyWindow()?.windowScene?.interfaceOrientation ?? .portrait
+    }
+    
+    override func viewWillLayoutSubviews() {
+        super.viewWillLayoutSubviews()
+        collView.collectionViewLayout.invalidateLayout()
+    }
+    
     func fetchAlbumsInBackground() {
        spinner.startAnimating()
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             self?.albums = self?.albumsManager.fetchAlbums() ?? []
             DispatchQueue.main.async {
-                self?.v.spinner.stopAnimating()
-                self?.v.tableView.isHidden = false
-                self?.v.tableView.reloadData()
+                self?.spinner.stopAnimating()
+                self?.collView.isHidden = false
+                self?.collView.reloadData()
             }
         }
     }
@@ -67,13 +78,13 @@ class AlbumListViewController: UIViewController {
         
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
-        layout.minimumLineSpacing = 0
-        layout.minimumInteritemSpacing = 0
-        layout.sectionInset = UIEdgeInsets.zero
+        layout.minimumLineSpacing = minimumCellSpacing
+        layout.minimumInteritemSpacing = minimumCellSpacing
+        layout.sectionInset = UIEdgeInsets(top: 20, left: 16, bottom: 40, right: 16)
         let coll = UICollectionView(frame: .zero, collectionViewLayout: layout)
         coll.backgroundColor = .clear
         coll.showsHorizontalScrollIndicator = false
-        HEImageViewPageCell.he.register(coll)
+        coll.register(AlbumListCell.self, forCellWithReuseIdentifier: AlbumListCell.reuseIdentitifer)
         coll.allowsSelection = false
         coll.isPagingEnabled = true
         coll.dataSource = self
@@ -81,13 +92,7 @@ class AlbumListViewController: UIViewController {
         view.addSubview(coll)
         self.collView = coll
         
-        v.tableView.isHidden = true
-        v.tableView.dataSource = self
-        v.tableView.delegate = self
-        v.tableView.rowHeight = UITableView.automaticDimension
-        v.tableView.estimatedRowHeight = 80
-        v.tableView.separatorStyle = .none
-        v.tableView.register(YPAlbumCell.self, forCellReuseIdentifier: "AlbumCell")
+        coll.isHidden = true
     }
 }
 
@@ -114,7 +119,16 @@ extension AlbumListViewController: UICollectionViewDelegate, UICollectionViewDel
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        <#code#>
+        var columns: CGFloat
+        if orientation == .landscapeLeft || orientation == .landscapeRight {
+            columns = 4
+        } else {
+            columns = 2
+        }
+        let interSpacing: CGFloat = (columns - 1) * minimumCellSpacing
+        let totalSpacing = interSpacing + collectionView.contentInset.left + collectionView.contentInset.right
+        let width = (collectionView.bounds.width - totalSpacing) / columns
+        return CGSize(width: width, height: width)
     }
 }
 

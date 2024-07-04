@@ -9,7 +9,8 @@ import Foundation
 import UIKit
 import AVFoundation
 
-/// The container for asset (video or image). It containts the YPGridView and YPAssetZoomableView.
+/// The container for asset (video or image). 
+/// It containts the HEAssetZoomableView.
 final class HEAssetViewBox: UIView {
     public var zoomableView: HEAssetZoomableView
     public let curtain = UIView()

@@ -81,7 +81,7 @@ internal extension UIImage {
     
     // Reduce image size further if needed targetImageSize is capped.
     func resizedImageIfNeeded() -> UIImage {
-        if case let YPImageSize.cappedTo(size: capped) = YPConfig.targetImageSize {
+        if case let HEPickerImageSize.cappedTo(size: capped) = PickerConfig.targetImageSize {
             let size = cappedSize(for: self.size, cappedAt: capped)
             if let resizedImage = self.resized(to: size) {
                 return resizedImage

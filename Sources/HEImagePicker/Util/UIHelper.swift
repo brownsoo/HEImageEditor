@@ -8,6 +8,23 @@
 import UIKit
 
 struct UIHelper {
+    
+    static var defaultLoader: UIBarButtonItem {
+        let spinner = UIActivityIndicatorView(style: .medium)
+        if let spinnerColor = PickerConfig.colors.navigationBarActivityIndicatorColor {
+            spinner.color = spinnerColor
+        } else {
+            if #available(iOS 13, *) {
+                let spinnerColor = UIColor { trait -> UIColor in
+                    return trait.userInterfaceStyle == .dark ? .white : .gray
+                }
+                spinner.color = spinnerColor
+            }
+        }
+        spinner.startAnimating()
+        return UIBarButtonItem(customView: spinner)
+    }
+    
     static func changeBackButtonIcon(_ controller: UIViewController) {
         if PickerConfig.icons.shouldChangeDefaultBackButtonIcon {
             let backButtonIcon = PickerConfig.icons.backButtonIcon

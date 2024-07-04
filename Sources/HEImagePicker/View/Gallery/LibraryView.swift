@@ -8,7 +8,7 @@
 import UIKit
 import Photos
 
-/// 라이브러리 메인 뷰
+/// 메인 뷰
 final class LibraryView: UIView {
 
     // MARK: - Public vars
@@ -27,11 +27,13 @@ final class LibraryView: UIView {
         return v
     }()
     /// 상단 미리보기 
+    // TODO: 이미지 리스트로 변경
     internal lazy var assetViewBox: HEAssetViewBox = {
         let v = HEAssetViewBox(frame: .zero, zoomableView: assetZoomableView)
         v.accessibilityIdentifier = "assetViewContainer"
         return v
     }()
+    // TODO: 변경하기 - 확대는... 편집 모드가 아닌 경우에 처리.
     internal let assetZoomableView: HEAssetZoomableView = {
         let v = HEAssetZoomableView(frame: .zero)
         v.accessibilityIdentifier = "assetZoomableView"
@@ -42,7 +44,7 @@ final class LibraryView: UIView {
 
     private let line: UIView = {
         let v = UIView()
-        v.backgroundColor = .ypSystemBackground
+        v.backgroundColor = .blue
         return v
     }()
     /// When video is processing this bar appears
@@ -150,6 +152,7 @@ final class LibraryView: UIView {
     // MARK: - Private Methods
 
     private func setupLayout() {
+        
         addSubview(collectionContainerView)
         collectionContainerView.addSubview(collectionView)
         addSubview(line)
@@ -161,6 +164,7 @@ final class LibraryView: UIView {
             v.edgesConstraintToSuperview(edges: .all)
         }
         collectionView.makeConstraints { v in
+            v.topAnchorConstraintTo(line.bottomAnchor)
             v.edgesConstraintToSuperview(edges: .horizontal)
             v.bottomAnchorConstraintToSuperview()
         }
@@ -182,7 +186,6 @@ final class LibraryView: UIView {
         assetZoomableView.makeConstraints { v in
             v.edgesConstraintToSuperview(edges: .all)
             v.heightAnchor.constraint(equalTo: self.widthAnchor, multiplier: 1).isActive = true
-            v.bottomAnchorConstraintTo(collectionView.topAnchor)
         }
         assetViewBox.sendSubviewToBack(assetZoomableView)
 
@@ -191,5 +194,9 @@ final class LibraryView: UIView {
             v.edgesConstraintToSuperview(edges: .horizontal)
             v.bottomAnchorConstraintTo(line.topAnchor)
         }
+        
+        // TODO: 사진 첨부 여부에 따라 버튼 추가
+        
+        // TODO: 멀티 선택 여부에 따라 카운트 추가 
     }
 }

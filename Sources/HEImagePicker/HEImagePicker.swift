@@ -9,9 +9,7 @@ import Foundation
 import UIKit
 
 
-public protocol HEImagePickerDelegate: AnyObject {
-    func imagePickerHasNoItemsInLibrary(_ picker: HEImagePicker)
-    func shouldAddToSelection(indexPath: IndexPath, numSelections: Int) -> Bool
+public protocol HEImagePickerDelegate: HEPickerLibraryViewDelegate {
     func imagePickerDidFinishPicking(_ picker: HEImagePicker, items: [HEMediaItem], cancelled: Bool) -> Void
 }
 
@@ -22,6 +20,8 @@ open class HEImagePicker: UINavigationController {
     open override var preferredStatusBarStyle: UIStatusBarStyle {
         PickerConfig.preferredStatusBarStyle
     }
+    
+    private lazy var mainVc: HEPickerLibraryViewController = HEPickerLibraryViewController()
     
     public convenience init() {
         self.init(configuration: HEImagePickerConfiguration.shared)
@@ -38,4 +38,10 @@ open class HEImagePicker: UINavigationController {
     required public init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+    open override func loadView() {
+        super.loadView()
+        setViewControllers([mainVc], animated: false)
+    }
+    
 }

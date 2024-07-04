@@ -7,6 +7,7 @@
 
 import Foundation
 import UIKit
+import Photos
 
 extension HEPickerLibraryViewController {
     
@@ -80,8 +81,8 @@ extension HEPickerLibraryViewController {
     
     /// Adds cell to selection
     func addToSelection(indexPath: IndexPath) {
-        if !(delegate?.libraryViewShouldAddToSelection(indexPath: indexPath,
-                                                       numSelections: selectedItems.count) ?? true) {
+        let shouldBeSelected = delegate?.libraryView(self, shouldAddToSelectionAt: indexPath, numSelections: selectedItems.count) ?? true
+        if !shouldBeSelected {
             return
         }
         guard let asset = mediaManager.getAsset(at: indexPath.item) else {
@@ -120,31 +121,60 @@ extension HEPickerLibraryViewController: UICollectionViewDelegate {
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: LibraryViewCell.reuseIdentifier, for: indexPath) as? LibraryViewCell else {
             fatalError("unexpected cell in collection view")
         }
-        guard let asset = mediaManager.getAsset(at: indexPath.item) else {
+        
+        var identifier: String
+        var mediaType: PHAssetMediaType
+        var phAsset: PHAsset?
+        
+        // Replacing thumbnail from external source
+        if let media = delegate?.libraryView(self, replacingItemAt: indexPath) {
+            switch media {
+            case .photo(let photo):
+                identifier = photo.identifier
+                mediaType = .image
+                phAsset = photo.asset
+            case .video(let video):
+                identifier = video.identifier
+                mediaType = .video
+                phAsset = video.asset
+            }
+            
+          // Original thumbnail from photo album
+        } else if let asset = mediaManager.getAsset(at: indexPath.item) {
+            identifier = asset.localIdentifier
+            mediaType = asset.mediaType
+            mediaManager.phImageManager?.requestImage(for: asset,
+                                                      targetSize: v.cellSize(),
+                                                      contentMode: .aspectFill,
+                                                      options: nil) { image, _ in
+                // The cell may have been recycled when the time this gets called
+                // set image only if it's still showing the same asset.
+                if cell.representedAssetIdentifier == asset.localIdentifier && image != nil {
+                    cell.imageView.image = image
+                }
+            }
+        } else {
             return cell
         }
 
-        cell.representedAssetIdentifier = asset.localIdentifier
+        cell.representedAssetIdentifier = identifier
         cell.multipleSelectionIndicator.selectionColor = PickerConfig.colors.multipleItemsSelectedCircleColor ?? PickerConfig.colors.tintColor
-        mediaManager.phImageManager?.requestImage(for: asset,
-                                                  targetSize: v.cellSize(),
-                                                  contentMode: .aspectFill,
-                                                  options: nil) { image, _ in
-            // The cell may have been recycled when the time this gets called
-            // set image only if it's still showing the same asset.
-            if cell.representedAssetIdentifier == asset.localIdentifier && image != nil {
-                cell.imageView.image = image
-            }
-        }
         
-        let isVideo = (asset.mediaType == .video)
-        cell.durationLabel.isHidden = !isVideo
-        cell.durationLabel.text = isVideo ? UIHelper.formattedStrigFrom(asset.duration) : ""
+        
+        let isVideo = (mediaType == .video)
+        if let asset = phAsset {
+            let duration = isVideo ? UIHelper.formattedStrigFrom(asset.duration) : ""
+            cell.durationLabel.text = duration
+            cell.durationLabel.isHidden = !isVideo || duration.isEmpty
+        } else {
+            cell.durationLabel.text = nil
+            cell.durationLabel.isHidden = true
+        }
         cell.multipleSelectionIndicator.isHidden = !isMultipleSelectionEnabled
         cell.isSelected = currentlySelectedIndex == indexPath.row
         
         // Set correct selection number
-        if let index = selectedItems.firstIndex(where: { $0.assetIdentifier == asset.localIdentifier }) {
+        if let index = selectedItems.firstIndex(where: { $0.assetIdentifier == identifier }) {
             let currentSelection = selectedItems[index]
             if currentSelection.index < 0 {
                 selectedItems[index] = HELibrarySelection(index: indexPath.row,
@@ -158,8 +188,7 @@ extension HEPickerLibraryViewController: UICollectionViewDelegate {
             cell.multipleSelectionIndicator.set(number: nil)
         }
 
-        // TODO: 캡션
-        if let caption = delegate?.libraryViewCaption(indexPath: indexPath) {
+        if let caption = delegate?.libraryView(self, captionAt: indexPath) {
             cell.captionLabel.text = caption
             cell.captionLabelFilledHeight?.isActive = true
         } else {
@@ -222,7 +251,7 @@ extension HEPickerLibraryViewController: UICollectionViewDelegate {
     }
 }
 
-extension YPLibraryVC: UICollectionViewDelegateFlowLayout {
+extension HEPickerLibraryViewController: UICollectionViewDelegateFlowLayout {
     public func collectionView(_ collectionView: UICollectionView,
                                layout collectionViewLayout: UICollectionViewLayout,
                                sizeForItemAt indexPath: IndexPath) -> CGSize {

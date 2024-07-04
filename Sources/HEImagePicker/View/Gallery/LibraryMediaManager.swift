@@ -9,7 +9,7 @@
 import UIKit
 import Photos
 
-class LibraryMediaManager {
+final class LibraryMediaManager {
     
     weak var v: LibraryView?
     var collection: PHAssetCollection?

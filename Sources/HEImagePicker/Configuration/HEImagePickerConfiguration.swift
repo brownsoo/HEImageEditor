@@ -20,7 +20,9 @@ public enum HELibraryMediaType {
     case photoAndVideo
 }
 
-public enum HEPickerScreen {
+/// 피커 소스
+public enum HEPickerSource {
+    /// 라이브러리 (필수)
     case library
     case photo
     case video
@@ -35,7 +37,7 @@ public struct HEImagePickerConfiguration {
     public static var screenWidth: CGFloat {
         var screenWidth: CGFloat = UIScreen.main.bounds.width
         if UIDevice.current.userInterfaceIdiom == .pad && HEImagePickerConfiguration.widthOniPad > 0 {
-            screenWidth =  HEImagePickerConfiguration.widthOniPad
+            screenWidth = HEImagePickerConfiguration.widthOniPad
         }
         return screenWidth
     }
@@ -65,6 +67,11 @@ public struct HEImagePickerConfiguration {
 
     /// Use this property to modify the default fonts provided
     public var fonts = HEPickerFonts()
+    
+    /// Adds a edit button in preview container
+    ///
+    /// - 
+    public var useEditor: Bool = false
 
     /// Scroll to change modes, defaults to true
     public var isScrollToChangeModesEnabled = true
@@ -72,30 +79,24 @@ public struct HEImagePickerConfiguration {
     /// Set this to true if you want to force the camera output to be a squared image. Defaults to true
     public var onlySquareImagesFromCamera = true
     
-    /// Enables selecting the front camera by default, useful for avatars. Defaults to false
-    public var usesFrontCamera = false
-    
-    /// Adds a Filter step in the photo taking process.  Defaults to true
-    public var showsPhotoFilters = true
-    
     /// Adds a Video Trimmer step in the video taking process.  Defaults to true
     public var showsVideoTrimmer = true
     
-    /// Enables you to opt out from saving new (or old but filtered) images to the
-    /// user's photo library. Defaults to true.
-    public var shouldSaveNewPicturesToAlbum = true
+    /// 카메라 촬영 후 사진 갤러리에 추가할 지 여부
+    /// Defaults to false.
+    public var shouldSaveNewPicturesToAlbum = false
     
     /// Defines the name of the album when saving pictures in the user's photo library.
     /// In general that would be your App name. Defaults to "DefaultYPImagePickerAlbumName"
     public var albumName = "DefaultHEImagePickerAlbumName"
-
-    /// Defines which screen is shown at launch. Video mode will only work if `showsVideo = true`.
-    /// Default value is `.photo`
-    public var startOnScreen: HEPickerScreen = .library
     
-    /// Defines which screens are shown at launch, and their order.
+    /// Defines which source type can be pick.
     /// Default value is `[.library, .photo]`
-    public var screens: [HEPickerScreen] = [.library, .photo]
+    public var pickerSources: [HEPickerSource] = [.library, .photo]
+    
+    /// Ex: cappedTo:1024 will make sure images from the library or the camera will be
+    /// resized to fit in a 1024x1024 box. Defaults to original image size.
+    public var targetImageSize = HEPickerImageSize.original
     
     /// Adds a Overlay View to the camera
     public var overlayView: UIView?
@@ -158,8 +159,8 @@ public struct HEImagePickerConfiguration {
         /// Set the number of items per row in collection view. Defaults to 4.
         public var numberOfItemsInRow: Int = 4
 
-        /// Set the spacing between items in collection view. Defaults to 1.0.
-        public var spacingBetweenItems: CGFloat = 1.0
+        /// Set the spacing between items in collection view. Defaults to 1.5.
+        public var spacingBetweenItems: CGFloat = 1.5
 
         /// Allow to skip the selections gallery when selecting the multiple media items. Defaults to false.
         public var skipSelectionsGallery = false
@@ -232,5 +233,6 @@ public struct HEImagePickerConfiguration {
         /// Defines if the remove button should be hidden when showing the gallery. Default is true.
         public var hidesRemoveButton = true
     }
+    
 }
 
