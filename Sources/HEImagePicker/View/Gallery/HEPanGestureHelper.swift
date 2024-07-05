@@ -14,25 +14,25 @@ enum DragDirection {
     case down
 }
 
-public class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
+class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
     
-    var v: LibraryView!
+    var libView: LibraryView!
     private let assetViewContainerOriginalConstraintTop: CGFloat = 0
     private var dragDirection = DragDirection.up
     private var imaginaryCollectionViewOffsetStartPosY: CGFloat = 0.0
     private var cropBottomY: CGFloat  = 0.0
-    private var dragStartPos: CGPoint = .zero
-    private let dragDiff: CGFloat = 0
+//    private var dragStartPos: CGPoint = .zero
+    private var dragDiff: CGFloat = 0
     private var _isImageShown = true
     
     // The height constraint of the view with main selected image
     var topHeight: CGFloat {
         get {
-            return v.assetViewContainerConstraintTop?.constant ?? 0
+            return libView.assetViewContainerConstraintTop?.constant ?? 0
         }
         set {
-            if newValue >= v.assetZoomableViewMinimalVisibleHeight - v.assetViewBox.frame.height {
-                v.assetViewContainerConstraintTop?.constant = newValue
+            if newValue >= libView.assetZoomableViewMinimalVisibleHeight - libView.assetViewBox.bounds.height {
+                libView.assetViewContainerConstraintTop?.constant = newValue
             }
         }
     }
@@ -43,15 +43,15 @@ public class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
         set {
             if newValue != isImageShown {
                 self._isImageShown = newValue
-                v.assetViewBox.isShown = newValue
+                libView.assetViewBox.isShown = newValue
                 // Update imageCropContainer
-                v.assetZoomableView.isScrollEnabled = isImageShown
+                libView.assetZoomableView.isScrollEnabled = isImageShown
             }
         }
     }
     
     func registerForPanGesture(on view: LibraryView) {
-        v = view
+        self.libView = view
         let panGesture = UIPanGestureRecognizer(target: self, action: #selector(panned(_:)))
         panGesture.delegate = self
         view.addGestureRecognizer(panGesture)
@@ -69,8 +69,8 @@ public class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
                        delay: 0.0,
                        options: [.curveEaseInOut, .beginFromCurrentState],
                        animations: {
-                        self.v.refreshImageCurtainAlpha()
-                        self.v.layoutIfNeeded()
+                        self.libView.refreshImageCurtainAlpha()
+                        self.libView.layoutIfNeeded()
         }
             ,
                        completion: nil)
@@ -82,10 +82,10 @@ public class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
     }
     
     public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-        let p = gestureRecognizer.location(ofTouch: 0, in: v)
+        let p = gestureRecognizer.location(ofTouch: 0, in: libView)
         // Desactivate pan on image when it is shown.
         if isImageShown {
-            if p.y < v.assetZoomableView.frame.height {
+            if p.y < libView.assetZoomableView.frame.height {
                 return false
             }
         }
@@ -94,10 +94,10 @@ public class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
     
     @objc
     func panned(_ sender: UIPanGestureRecognizer) {
-        
-        let containerHeight = v.assetViewBox.frame.height
-        let currentPos = sender.location(in: v)
-        let overYLimitToStartMovingUp = currentPos.y * 1.4 < cropBottomY - dragDiff
+        let collBarHeight: CGFloat = 56
+        let boxHeight = libView.assetViewBox.frame.height
+        let currentPos = sender.location(in: libView)
+        let overYLimitToStartMovingUp = currentPos.y * 1.4 < cropBottomY + collBarHeight
         
         switch sender.state {
         case .began:
@@ -105,45 +105,48 @@ public class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
             let loc     = sender.location(in: view)
             let subview = view?.hitTest(loc, with: nil)
             
-            if subview == v.assetZoomableView
+            if subview == libView.assetZoomableView
                 && topHeight == assetViewContainerOriginalConstraintTop {
                 return
             }
             
-            dragStartPos = sender.location(in: v)
-            cropBottomY = v.assetViewBox.frame.origin.y + containerHeight
-            
+            let dragStartPos = sender.location(in: view)
+            cropBottomY = libView.assetViewBox.frame.origin.y + boxHeight
+            dragDiff = dragStartPos.y - cropBottomY
             // Move
             if dragDirection == .stop {
                 dragDirection = (topHeight == assetViewContainerOriginalConstraintTop)
                     ? .up
                     : .down
             }
-            
+            trace("began- \(dragDirection)")
             // Scroll event of CollectionView is preferred.
-            if (dragDirection == .up && dragStartPos.y < cropBottomY + dragDiff) ||
-                (dragDirection == .down && dragStartPos.y > cropBottomY) {
+            if (dragDirection == .up && dragStartPos.y < cropBottomY) || // 어셋박스 영역이거나
+                (dragDirection == .down && dragStartPos.y > cropBottomY + collBarHeight) { // 콜랙션 리스트 영역이거나
+                trace("began- stop")
                 dragDirection = .stop
             }
         case .changed:
             switch dragDirection {
             case .up:
-                if currentPos.y < cropBottomY - dragDiff {
-                    topHeight =
-                        max(v.assetZoomableViewMinimalVisibleHeight - containerHeight,
-                            currentPos.y + dragDiff - containerHeight)
+                if currentPos.y < cropBottomY + collBarHeight {
+                    topHeight = min(assetViewContainerOriginalConstraintTop,
+                                    max(libView.assetZoomableViewMinimalVisibleHeight - boxHeight,
+                                        currentPos.y - boxHeight - dragDiff))
+                        
                 }
             case .down:
                 if currentPos.y > cropBottomY {
                     topHeight =
-                        min(assetViewContainerOriginalConstraintTop, currentPos.y - containerHeight)
+                        min(assetViewContainerOriginalConstraintTop, 
+                            currentPos.y - boxHeight - dragDiff)
                 }
             case .scroll:
                 topHeight =
-                    v.assetZoomableViewMinimalVisibleHeight - containerHeight
+                    libView.assetZoomableViewMinimalVisibleHeight - boxHeight
                     + currentPos.y - imaginaryCollectionViewOffsetStartPosY
             case .stop:
-                if v.collectionView.contentOffset.y < 0 {
+                if libView.albumCollectionView.contentOffset.y < 0 {
                     dragDirection = .scroll
                     imaginaryCollectionViewOffsetStartPosY = currentPos.y
                 }
@@ -151,6 +154,7 @@ public class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
             
         default:
             imaginaryCollectionViewOffsetStartPosY = 0.0
+            dragDiff = 0
             if sender.state == UIGestureRecognizer.State.ended && dragDirection == .stop {
                 return
             }
@@ -158,7 +162,7 @@ public class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
             if overYLimitToStartMovingUp && isImageShown == false {
                 // The largest movement
                 topHeight =
-                    v.assetZoomableViewMinimalVisibleHeight - containerHeight
+                    libView.assetZoomableViewMinimalVisibleHeight - boxHeight
                 animateView()
                 dragDirection = .down
             } else {

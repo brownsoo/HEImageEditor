@@ -11,16 +11,12 @@ import AVFoundation
 
 /// The container for asset (video or image). 
 /// It containts the HEAssetZoomableView.
-final class HEAssetViewBox: UIView {
+final public class HEAssetViewBox: UIView {
     public var zoomableView: HEAssetZoomableView
     public let curtain = UIView()
     public let spinnerView = UIView()
     public let squareCropButton = UIButton()
-    public let multipleSelectionButton: UIButton = {
-        let v = UIButton()
-        v.setImage(PickerConfig.icons.multipleSelectionOffIcon, for: .normal)
-        return v
-    }()
+    
     public var usingClop = PickerConfig.library.usingClop
     public var isShown = true
     public var spinnerIsShown = false
@@ -31,20 +27,20 @@ final class HEAssetViewBox: UIView {
 
     init(frame: CGRect, zoomableView: HEAssetZoomableView) {
         self.zoomableView = zoomableView
+        zoomableView.accessibilityIdentifier = "assetZoomableView"
         super.init(frame: frame)
 
-        self.zoomableView.zoomableViewDelegate = self
-
-        let touchDownGR = UILongPressGestureRecognizer(target: self,
-                                                       action: #selector(handleTouchDown))
-        touchDownGR.minimumPressDuration = 0
-        touchDownGR.delegate = self
-        addGestureRecognizer(touchDownGR)
-
-        // TODO: Add tap gesture to play/pause. Add double tap gesture to square/unsquare
         
+        zoomableView.zoomableViewDelegate = self
+        addSubview(zoomableView)
+        zoomableView.makeConstraints { v in
+            v.edgesConstraintToSuperview(edges: .all)
+        }
+        spinnerView.accessibilityIdentifier = "spinnerView"
         addSubview(spinnerView)
+        spinner.accessibilityIdentifier = "spinner"
         spinnerView.addSubview(spinner)
+        curtain.accessibilityIdentifier = "curtain"
         addSubview(curtain)
         spinner.makeConstraints { v in
             v.centerXAnchorConstraintToSuperview()
@@ -71,14 +67,6 @@ final class HEAssetViewBox: UIView {
                 v.leadingAnchorConstraintToSuperview(15)
                 v.bottomAnchorConstraintToSuperview(-15)
             }
-        }
-
-        // Multiple selection button
-        addSubview(multipleSelectionButton)
-        multipleSelectionButton.makeConstraints { v in
-            v.sizeAnchorConstraintTo(42)
-            v.trailingAnchorConstraintToSuperview(-15)
-            v.bottomAnchorConstraintToSuperview(-15)
         }
     }
 
@@ -123,8 +111,6 @@ final class HEAssetViewBox: UIView {
     /// Use this to update the multiple selection mode UI state for the YPAssetViewContainer
     public func setMultipleSelectionMode(on: Bool) {
         isMultipleSelectionEnabled = on
-        let image = on ? PickerConfig.icons.multipleSelectionOnIcon : PickerConfig.icons.multipleSelectionOffIcon
-        multipleSelectionButton.setImage(image, for: .normal)
         updateSquareCropButtonState()
     }
 }
@@ -160,8 +146,4 @@ extension HEAssetViewBox: UIGestureRecognizerDelegate {
         return !spinnerIsShown && !(touch.view is UIButton)
     }
     
-    @objc
-    private func handleTouchDown(sender: UILongPressGestureRecognizer) {
-        
-    }
 }

@@ -9,18 +9,19 @@
 import UIKit
 import Photos
 
-final class LibraryMediaManager {
+final public class LibraryMediaManager {
     
-    weak var v: LibraryView?
-    var collection: PHAssetCollection?
-    internal var fetchResult: PHFetchResult<PHAsset>?
+    public var collection: PHAssetCollection?
+    public var fetchResult: PHFetchResult<PHAsset>?
     internal var previousPreheatRect: CGRect = .zero
     internal var phImageManager: PHCachingImageManager?
     internal var exportTimer: Timer?
     internal var currentExportSessions: [AVAssetExportSession] = []
 
+    public var exportProgressListener: ((_ progress: Float) -> Void)?
+    
     /// If true then library has items to show. If false the user didn't allow any item to show in picker library.
-    internal var hasResultItems: Bool {
+    public var hasResultItems: Bool {
         if let fetchResult = self.fetchResult {
             return fetchResult.count > 0
         } else {
@@ -28,17 +29,17 @@ final class LibraryMediaManager {
         }
     }
     
-    func initialize() {
+    public func initialize() {
         phImageManager = PHCachingImageManager()
         resetCachedAssets()
     }
     
-    func resetCachedAssets() {
+    public func resetCachedAssets() {
         phImageManager?.stopCachingImagesForAllAssets()
         previousPreheatRect = .zero
     }
     
-    func updateCachedAssets(in collectionView: UICollectionView) {
+    public func updateCachedAssets(in collectionView: UICollectionView) {
         let screenWidth = HEImagePickerConfiguration.screenWidth
         let size = screenWidth / 4 * UIScreen.main.scale
         let cellSize = CGSize(width: size, height: size)
@@ -78,12 +79,12 @@ final class LibraryMediaManager {
         }
     }
     
-    func fetchVideoUrlAndCrop(for videoAsset: PHAsset,
+    public func fetchVideoUrlAndCrop(for videoAsset: PHAsset,
                               cropRect: CGRect) async -> URL? {
         await fetchVideoUrlAndCropWithDuration(for: videoAsset, cropRect: cropRect, duration: nil)
     }
     
-    func fetchVideoUrlAndCropWithDuration(for videoAsset: PHAsset,
+    public func fetchVideoUrlAndCropWithDuration(for videoAsset: PHAsset,
                                           cropRect: CGRect,
                                           duration: CMTime?) async -> URL? {
         
@@ -206,7 +207,7 @@ final class LibraryMediaManager {
         return nil
     }
     
-    private func extractAVAsset(for videoAsset: PHAsset) async -> AVAsset? {
+    public func extractAVAsset(for videoAsset: PHAsset) async -> AVAsset? {
         guard let phImageManager else { return nil }
         let videosOptions = PHVideoRequestOptions()
         videosOptions.isNetworkAccessAllowed = true
@@ -219,7 +220,7 @@ final class LibraryMediaManager {
         }
     }
     
-    private func getMaxVideoDuration(between duration: CMTime?, andAssetDuration assetDuration: CMTime) -> CMTime {
+    public func getMaxVideoDuration(between duration: CMTime?, andAssetDuration assetDuration: CMTime) -> CMTime {
         guard let duration = duration else { return assetDuration }
 
         if assetDuration <= duration {
@@ -231,27 +232,25 @@ final class LibraryMediaManager {
     
     @objc func onTickExportTimer(sender: Timer) {
         if let exportSession = sender.userInfo as? AVAssetExportSession {
-            if let v = v {
-                if exportSession.progress > 0 {
-                    v.updateProgress(exportSession.progress)
-                }
+            if exportSession.progress > 0 {
+                exportProgressListener?(exportSession.progress)
             }
             
             if exportSession.progress > 0.99 {
                 sender.invalidate()
-                v?.updateProgress(0)
+                exportProgressListener?(0)
                 self.exportTimer = nil
             }
         }
     }
     
-    func forseCancelExporting() {
+    public func forseCancelExporting() {
         for s in self.currentExportSessions {
             s.cancelExport()
         }
     }
 
-    func getAsset(at index: Int) -> PHAsset? {
+    public func getAsset(at index: Int) -> PHAsset? {
         guard let fetchResult = fetchResult else {
             print("FetchResult not contain this index: \(index)")
             return nil

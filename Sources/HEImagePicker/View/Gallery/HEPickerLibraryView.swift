@@ -23,14 +23,6 @@ public protocol HEPickerLibraryViewDelegate: AnyObject {
     func libraryView(_ libraryView: HEPickerLibraryViewController, replacingItemAt indexPath: IndexPath) -> HEMediaItem?
 }
 
-public extension HEPickerLibraryViewDelegate {
-    func libraryView(_ libraryView: HEPickerLibraryViewController, didToggleMultipleSelectionEnabled enabled: Bool) {}
-    func libraryView(_ libraryView: HEPickerLibraryViewController, shouldAddToSelectionAt indexPath: IndexPath, numSelections: Int) -> Bool { true }
-    func libraryView(_ libraryView: HEPickerLibraryViewController, captionAt indexPath: IndexPath) -> String? { nil }
-    func libraryViewHaveNoItems(_ libraryView: HEPickerLibraryViewController) {}
-    func libraryView(_ libraryView: HEPickerLibraryViewController, replacingItemAt indexPath: IndexPath) -> HEMediaItem? { nil }
-}
-
 public class HEPickerLibraryViewController: UIViewController, PermissionCheckable {
     
     override open var prefersStatusBarHidden: Bool {
@@ -55,10 +47,6 @@ public class HEPickerLibraryViewController: UIViewController, PermissionCheckabl
     
     // MARK: - Init
 
-    public override func loadView() {
-        view = v
-    }
-
     required public init() {
         super.init(nibName: nil, bundle: nil)
     }
@@ -67,67 +55,11 @@ public class HEPickerLibraryViewController: UIViewController, PermissionCheckabl
         fatalError("init(coder:) has not been implemented")
     }
     
-    func initialize() {
-        guard isInitialized == false else {
-            return
-        }
-
-        defer {
-            isInitialized = true
-        }
-
-        mediaManager.initialize()
-        mediaManager.v = v
-
-        setupCollectionView()
-        registerForLibraryChanges()
-        panGestureHelper.registerForPanGesture(on: v)
-        registerForTapOnPreview()
-        refreshMediaRequest()
-
-        v.assetViewBox.multipleSelectionButton.isHidden = !(PickerConfig.library.maxNumberOfItems > 1)
-        
-        if let preselectedItems = PickerConfig.library.preselectedItems,
-           !preselectedItems.isEmpty {
-            selectedItems = preselectedItems.compactMap { item -> HELibrarySelection? in
-                var itemAsset: PHAsset?
-                switch item {
-                case .photo(let photo):
-                    itemAsset = photo.asset
-                case .video(let video):
-                    itemAsset = video.asset
-                }
-                guard let asset = itemAsset else {
-                    return nil
-                }
-                
-                // The negative index will be corrected in the collectionView:cellForItemAt:
-                return HELibrarySelection(index: -1, assetIdentifier: asset.localIdentifier)
-            }
-            v.assetViewBox.setMultipleSelectionMode(on: isMultipleSelectionEnabled)
-            v.collectionView.reloadData()
-        }
-
-        guard mediaManager.hasResultItems else {
-            return
-        }
-
-        if PickerConfig.library.defaultMultipleSelection || selectedItems.count > 1 {
-            toggleMultipleSelection()
-        }
-    }
-
-    func setAlbum(_ album: HEAlbum) {
-        title = album.title
-        mediaManager.collection = album.collection
-        currentlySelectedIndex = 0
-        if !isMultipleSelectionEnabled {
-            selectedItems.removeAll()
-        }
-        refreshMediaRequest()
-    }
-
     // MARK: - View Lifecycle
+    
+    public override func loadView() {
+        view = v
+    }
     
     public override func viewDidLoad() {
         super.viewDidLoad()
@@ -146,10 +78,9 @@ public class HEPickerLibraryViewController: UIViewController, PermissionCheckabl
     
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(false, animated: true)
         pausePlayer()
-        doAfterCameraPermissionCheck { [weak self] in
-            self?.initialize()
-        }
+        initialize()
         updateUI()
     }
     
@@ -159,10 +90,6 @@ public class HEPickerLibraryViewController: UIViewController, PermissionCheckabl
         v.assetViewBox.squareCropButton
             .addTarget(self,
                        action: #selector(squareCropButtonTapped),
-                       for: .touchUpInside)
-        v.assetViewBox.multipleSelectionButton
-            .addTarget(self,
-                       action: #selector(multipleSelectionButtonTapped),
                        for: .touchUpInside)
         
         // Forces assetZoomableView to have a contentSize.
@@ -186,13 +113,70 @@ public class HEPickerLibraryViewController: UIViewController, PermissionCheckabl
         PHPhotoLibrary.shared().unregisterChangeObserver(self)
     }
     
-    private func updateUI() {
-        if !PickerConfig.hidesCancelButton {
-            navigationItem.leftBarButtonItem = UIBarButtonItem(image: imageFromBundle("icArrowRight"),
-                                                               style: .plain,
-                                                               target: self,
-                                                               action: #selector(close))
+    func initialize() {
+        guard isInitialized == false else {
+            return
         }
+
+        defer {
+            isInitialized = true
+        }
+
+        mediaManager.initialize()
+        mediaManager.exportProgressListener = { [weak self] progress in self?.v.updateProgress(progress) }
+
+        setupCollectionView()
+        registerForLibraryChanges()
+        panGestureHelper.registerForPanGesture(on: v)
+        registerForTapOnPreview()
+        refreshMediaRequest()
+        
+        if let preselectedItems = PickerConfig.library.preselectedItems,
+           !preselectedItems.isEmpty {
+            selectedItems = preselectedItems.compactMap { item -> HELibrarySelection? in
+                var itemAsset: PHAsset?
+                switch item {
+                case .photo(let photo):
+                    itemAsset = photo.asset
+                case .video(let video):
+                    itemAsset = video.asset
+                }
+                guard let asset = itemAsset else {
+                    return nil
+                }
+                
+                // The negative index will be corrected in the collectionView:cellForItemAt:
+                return HELibrarySelection(index: -1, assetIdentifier: asset.localIdentifier)
+            }
+            v.assetViewBox.setMultipleSelectionMode(on: isMultipleSelectionEnabled)
+            v.albumCollectionView.reloadData()
+        }
+
+        guard mediaManager.hasResultItems else {
+            return
+        }
+
+        if PickerConfig.library.defaultMultipleSelection || selectedItems.count > 1 {
+            toggleMultipleSelection()
+        }
+    }
+
+    func setAlbum(_ album: HEAlbum) {
+        title = album.title
+        mediaManager.collection = album.collection
+        currentlySelectedIndex = 0
+        if !isMultipleSelectionEnabled {
+            selectedItems.removeAll()
+        }
+        refreshMediaRequest()
+    }
+
+    
+    private func updateUI() {
+        navigationItem.leftBarButtonItem = UIBarButtonItem(image: imageFromBundle("icArrowRight"),
+                                                           style: .plain,
+                                                           target: self,
+                                                           action: #selector(close))
         // TODO: 첨부 갯수
         navigationItem.rightBarButtonItem = UIBarButtonItem(title: PickerConfig.wordings.attach,
                                                             style: .done,
@@ -226,14 +210,14 @@ public class HEPickerLibraryViewController: UIViewController, PermissionCheckabl
     }
     
     @objc
-    func close() {
+    private func close() {
         // Cancelling exporting of all videos
         mediaManager.forseCancelExporting()
         delegate?.libraryViewDidCancel(self)
     }
     
     @objc
-    func done() {
+    private func done() {
         selectedMedia(photoCallback: { [weak self] photo in
             if let self {
                 self.delegate?.libraryView(self, didSelectItems: [HEMediaItem.photo(p: photo)])
@@ -308,7 +292,7 @@ public class HEPickerLibraryViewController: UIViewController, PermissionCheckabl
         }
         
         v.assetViewBox.setMultipleSelectionMode(on: isMultipleSelectionEnabled)
-        v.collectionView.reloadData()
+        v.albumCollectionView.reloadData()
         checkLimit()
         delegate?.libraryView(self, didToggleMultipleSelectionEnabled: isMultipleSelectionEnabled)
     }
@@ -341,8 +325,8 @@ public class HEPickerLibraryViewController: UIViewController, PermissionCheckabl
         if mediaManager.hasResultItems,
         let firstAsset = mediaManager.getAsset(at: 0) {
             changeAsset(firstAsset)
-            v.collectionView.reloadData()
-            v.collectionView.selectItem(at: IndexPath(row: 0, section: 0),
+            v.albumCollectionView.reloadData()
+            v.albumCollectionView.selectItem(at: IndexPath(row: 0, section: 0),
                                         animated: false,
                                         scrollPosition: UICollectionView.ScrollPosition())
             if !isMultipleSelectionEnabled && PickerConfig.library.preSelectItemOnMultipleSelection {
@@ -369,14 +353,14 @@ public class HEPickerLibraryViewController: UIViewController, PermissionCheckabl
     
     func scrollToTop() {
         tappedImage()
-        v.collectionView.contentOffset = CGPoint.zero
+        v.albumCollectionView.contentOffset = CGPoint.zero
     }
     
     // MARK: - ScrollViewDelegate
     
     public func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        if scrollView == v.collectionView {
-            mediaManager.updateCachedAssets(in: self.v.collectionView)
+        if scrollView == v.albumCollectionView {
+            mediaManager.updateCachedAssets(in: self.v.albumCollectionView)
         }
     }
     

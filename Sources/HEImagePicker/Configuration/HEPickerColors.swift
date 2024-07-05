@@ -28,33 +28,9 @@ public struct HEPickerColors {
     /// The background color of the library and space between collection view cells.
     public var libraryScreenBackgroundColor: UIColor = .offWhiteOrBlack
 
-    /// The background color of safe area. For example under the menu items.
-    public var safeAreaBackgroundColor: UIColor = .offWhiteOrBlack
-
     /// A color for background of the asset container. You can see it when bouncing the image.
     public var assetViewBackgroundColor: UIColor = .offWhiteOrBlack
     
-    /// A color for background in filters.
-    public var filterBackgroundColor: UIColor = .offWhiteOrBlack
-
-    /// A color for background in selections gallery. When multiple items selected.
-    public var selectionsBackgroundColor: UIColor = .offWhiteOrBlack
-
-    /// A color for bottom buttons (photo, video, all photos).
-    public var bottomMenuItemBackgroundColor: UIColor = .clear
-
-    /// A color for for bottom buttons selected text.
-    public var bottomMenuItemSelectedTextColor: UIColor = .ypLabel
-
-    /// A color for for bottom buttons not selected text.
-    public var bottomMenuItemUnselectedTextColor: UIColor = .ypSecondaryLabel
-
-    /// The color of the crop overlay.
-    public var cropOverlayColor: UIColor = UIColor.ypSystemBackground.withAlphaComponent(0.4)
-
-    /// The default color of all navigation bars except album's.
-    public var defaultNavigationBarColor: UIColor = .offWhiteOrBlack
-
     // MARK: - Trimmer
     
     /// The color of the main border of the view

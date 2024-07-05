@@ -40,7 +40,7 @@
 		173DE6952C340049002BD7C6 /* UIHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE6942C340049002BD7C6 /* UIHelper.swift */; };
 		173DE6972C34128E002BD7C6 /* PHCachingImageManager+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE6962C34128E002BD7C6 /* PHCachingImageManager+.swift */; };
 		173DE6992C3412CC002BD7C6 /* UIImage+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE6982C3412CC002BD7C6 /* UIImage+.swift */; };
-		173DE69B2C3417E7002BD7C6 /* HEPickerLibraryView+LigraryChanges.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE69A2C3417E7002BD7C6 /* HEPickerLibraryView+LigraryChanges.swift */; };
+		173DE69B2C3417E7002BD7C6 /* HEPickerLibraryView+PHLibraryObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE69A2C3417E7002BD7C6 /* HEPickerLibraryView+PHLibraryObserver.swift */; };
 		173DE69D2C352808002BD7C6 /* Foundation+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE69C2C352808002BD7C6 /* Foundation+.swift */; };
 		173DE69F2C353F55002BD7C6 /* AlbumListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE69E2C353F55002BD7C6 /* AlbumListViewController.swift */; };
 		173DE6A12C361BBE002BD7C6 /* HEPickerImageSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE6A02C361BBE002BD7C6 /* HEPickerImageSize.swift */; };
@@ -147,7 +147,7 @@
 		173DE6942C340049002BD7C6 /* UIHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIHelper.swift; sourceTree = "<group>"; };
 		173DE6962C34128E002BD7C6 /* PHCachingImageManager+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PHCachingImageManager+.swift"; sourceTree = "<group>"; };
 		173DE6982C3412CC002BD7C6 /* UIImage+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImage+.swift"; sourceTree = "<group>"; };
-		173DE69A2C3417E7002BD7C6 /* HEPickerLibraryView+LigraryChanges.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HEPickerLibraryView+LigraryChanges.swift"; sourceTree = "<group>"; };
+		173DE69A2C3417E7002BD7C6 /* HEPickerLibraryView+PHLibraryObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HEPickerLibraryView+PHLibraryObserver.swift"; sourceTree = "<group>"; };
 		173DE69C2C352808002BD7C6 /* Foundation+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Foundation+.swift"; sourceTree = "<group>"; };
 		173DE69E2C353F55002BD7C6 /* AlbumListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumListViewController.swift; sourceTree = "<group>"; };
 		173DE6A02C361BBE002BD7C6 /* HEPickerImageSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEPickerImageSize.swift; sourceTree = "<group>"; };
@@ -377,17 +377,17 @@
 		173DE6702C33C9A1002BD7C6 /* Gallery */ = {
 			isa = PBXGroup;
 			children = (
+				173DE69E2C353F55002BD7C6 /* AlbumListViewController.swift */,
 				173DE6872C33E78D002BD7C6 /* HEAssetViewBox.swift */,
 				173DE6752C33CA6B002BD7C6 /* HEAssetZoomableView.swift */,
 				173DE68E2C33F6B2002BD7C6 /* HEPanGestureHelper.swift */,
 				173DE66E2C33C918002BD7C6 /* HEPickerLibraryView.swift */,
 				173DE6902C33F8EA002BD7C6 /* HEPickerLibraryView+CollectionView.swift */,
+				173DE69A2C3417E7002BD7C6 /* HEPickerLibraryView+PHLibraryObserver.swift */,
 				173DE6772C33CAAC002BD7C6 /* HEVideoView.swift */,
 				173DE6712C33C9BC002BD7C6 /* LibraryMediaManager.swift */,
 				173DE6732C33CA06002BD7C6 /* LibraryView.swift */,
 				173DE6922C33F954002BD7C6 /* LibraryViewCell.swift */,
-				173DE69A2C3417E7002BD7C6 /* HEPickerLibraryView+LigraryChanges.swift */,
-				173DE69E2C353F55002BD7C6 /* AlbumListViewController.swift */,
 			);
 			path = Gallery;
 			sourceTree = "<group>";
@@ -677,7 +677,7 @@
 				173DE67A2C33CB92002BD7C6 /* AutoLayout+.swift in Sources */,
 				173DE6932C33F954002BD7C6 /* LibraryViewCell.swift in Sources */,
 				173DE68F2C33F6B2002BD7C6 /* HEPanGestureHelper.swift in Sources */,
-				173DE69B2C3417E7002BD7C6 /* HEPickerLibraryView+LigraryChanges.swift in Sources */,
+				173DE69B2C3417E7002BD7C6 /* HEPickerLibraryView+PHLibraryObserver.swift in Sources */,
 				173DE68B2C33F4E6002BD7C6 /* PermissionCheckable.swift in Sources */,
 				1744BA422C330B7800F5395B /* HEMediaItem.swift in Sources */,
 				173DE6722C33C9BC002BD7C6 /* LibraryMediaManager.swift in Sources */,

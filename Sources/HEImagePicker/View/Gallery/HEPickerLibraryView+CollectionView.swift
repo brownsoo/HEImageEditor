@@ -14,14 +14,14 @@ extension HEPickerLibraryViewController {
     var isLimitExceeded: Bool { return selectedItems.count >= PickerConfig.library.maxNumberOfItems }
     
     func setupCollectionView() {
-        v.collectionView.dataSource = self
-        v.collectionView.delegate = self
-        v.collectionView.register(LibraryViewCell.self, forCellWithReuseIdentifier: LibraryViewCell.reuseIdentifier)
+        v.albumCollectionView.dataSource = self
+        v.albumCollectionView.delegate = self
+        v.albumCollectionView.register(LibraryViewCell.self, forCellWithReuseIdentifier: LibraryViewCell.reuseIdentifier)
         
         // Long press on cell to enable multiple selection
         let longPressGR = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(longPressGR:)))
         longPressGR.minimumPressDuration = 0.5
-        v.collectionView.addGestureRecognizer(longPressGR)
+        v.albumCollectionView.addGestureRecognizer(longPressGR)
     }
     
     /// When tapping on the cell with long press, clear all previously selected cells.
@@ -31,8 +31,8 @@ extension HEPickerLibraryViewController {
         }
         
         if longPressGR.state == .began {
-            let point = longPressGR.location(in: v.collectionView)
-            guard let indexPath = v.collectionView.indexPathForItem(at: point) else {
+            let point = longPressGR.location(in: v.albumCollectionView)
+            guard let indexPath = v.albumCollectionView.indexPathForItem(at: point) else {
                 return
             }
             startMultipleSelection(at: indexPath)
@@ -49,7 +49,7 @@ extension HEPickerLibraryViewController {
         // Bring preview down and keep selected cell visible.
         panGestureHelper.resetToOriginalState()
         if !panGestureHelper.isImageShown {
-            v.collectionView.scrollToItem(at: indexPath, at: .top, animated: true)
+            v.albumCollectionView.scrollToItem(at: indexPath, at: .top, animated: true)
         }
         v.refreshImageCurtainAlpha()
     }
@@ -65,12 +65,12 @@ extension HEPickerLibraryViewController {
 
             // Refresh the numbers
             let selectedIndexPaths = selectedItems.map { IndexPath(row: $0.index, section: 0) }
-            v.collectionView.reloadItems(at: selectedIndexPaths)
+            v.albumCollectionView.reloadItems(at: selectedIndexPaths)
             
             // Replace the current selected image with the previously selected one
             if let previouslySelectedIndexPath = selectedIndexPaths.last {
-                v.collectionView.deselectItem(at: indexPath, animated: false)
-                v.collectionView.selectItem(at: previouslySelectedIndexPath, animated: false, scrollPosition: [])
+                v.albumCollectionView.deselectItem(at: indexPath, animated: false)
+                v.albumCollectionView.selectItem(at: previouslySelectedIndexPath, animated: false, scrollPosition: [])
                 currentlySelectedIndex = previouslySelectedIndexPath.row
                 changeAsset(mediaManager.getAsset(at: previouslySelectedIndexPath.row))
             }

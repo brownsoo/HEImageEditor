@@ -22,7 +22,7 @@ extension HEPickerLibraryViewController: PHPhotoLibraryChangeObserver {
         }
 
         DispatchQueue.main.async {
-            let collectionView = self.v.collectionView
+            let collectionView = self.v.albumCollectionView
             self.mediaManager.fetchResult = collectionChanges.fetchResultAfterChanges
             if !collectionChanges.hasIncrementalChanges || collectionChanges.hasMoves {
                 collectionView.reloadData()

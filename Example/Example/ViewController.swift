@@ -248,6 +248,26 @@ extension ViewController: PHPickerViewControllerDelegate {
     
 }
 
+extension ViewController: HEImagePickerDelegate {
+    func imagePicker(_ picker: HEImagePicker, replacingItemAt indexPath: IndexPath) -> HEMediaItem? {
+        nil
+    }
+    
+    func imagePicker(_ picker: HEImagePicker, captionAt indexPath: IndexPath) -> String? {
+        "하이"
+    }
+    
+    func imagePicker(_ picker: HEImagePicker, didSelectItems items: [HEMediaItem]) {
+        print(items)
+    }
+    
+    func imagePickerDidCancel(_ picker: HEImagePicker) {
+        picker.dismiss(animated: true)
+    }
+    
+}
+
+
 extension ViewController {
     
     @objc func pickImage() {
@@ -276,10 +296,11 @@ extension ViewController {
         showDetailViewController(picker, sender: nil)
     }
     
-    @objc func startHEPicker() {
+    @objc func pickWithHEPicker() {
         let picker = HEImagePicker()
-//        picker.delegate = self
-        showDetailViewController(picker, sender: nil)
+        picker.pickerDelegate = self
+//        showDetailViewController(picker, sender: nil)
+        present(picker, animated: true)
     }
     
     @objc func drawToolChanged() {
@@ -565,7 +586,7 @@ extension ViewController {
         
         let hePickerBt = UIButton(type: .system)
         hePickerBt.setTitle("HEPicker", for: .normal)
-        hePickerBt.addTarget(self, action: #selector(startHEPicker), for: .touchUpInside)
+        hePickerBt.addTarget(self, action: #selector(pickWithHEPicker), for: .touchUpInside)
         view.addSubview(hePickerBt)
         hePickerBt.snp.makeConstraints { make in
             make.top.equalTo(pickMultipleBt)

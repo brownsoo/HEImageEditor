@@ -13,10 +13,10 @@ final class LibraryView: UIView {
 
     // MARK: - Public vars
 
-    internal let assetZoomableViewMinimalVisibleHeight: CGFloat  = 50
+    internal let assetZoomableViewMinimalVisibleHeight: CGFloat  = 104
     internal var assetViewContainerConstraintTop: NSLayoutConstraint?
     /// 앨범 이미지 콜렉션 
-    internal let collectionView: UICollectionView = {
+    internal let albumCollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .vertical
         let v = UICollectionView(frame: .zero, collectionViewLayout: layout)
@@ -29,16 +29,14 @@ final class LibraryView: UIView {
     /// 상단 미리보기 
     // TODO: 이미지 리스트로 변경
     internal lazy var assetViewBox: HEAssetViewBox = {
-        let v = HEAssetViewBox(frame: .zero, zoomableView: assetZoomableView)
+        let v = HEAssetViewBox(frame: .zero, zoomableView: HEAssetZoomableView(frame: .zero))
         v.accessibilityIdentifier = "assetViewContainer"
         return v
     }()
     // TODO: 변경하기 - 확대는... 편집 모드가 아닌 경우에 처리.
-    internal let assetZoomableView: HEAssetZoomableView = {
-        let v = HEAssetZoomableView(frame: .zero)
-        v.accessibilityIdentifier = "assetZoomableView"
-        return v
-    }()
+    internal var assetZoomableView: HEAssetZoomableView {
+        return assetViewBox.zoomableView
+    }
 
     // MARK: - Private vars
 
@@ -67,7 +65,6 @@ final class LibraryView: UIView {
         didSet {
             DispatchQueue.main.async {
                 self.assetViewBox.squareCropButton.isEnabled = !self.shouldShowLoader
-                self.assetViewBox.multipleSelectionButton.isEnabled = !self.shouldShowLoader
                 self.assetViewBox.spinnerIsShown = self.shouldShowLoader
             }
         }
@@ -154,16 +151,19 @@ final class LibraryView: UIView {
     private func setupLayout() {
         
         addSubview(collectionContainerView)
-        collectionContainerView.addSubview(collectionView)
-        addSubview(line)
+        collectionContainerView.addSubview(albumCollectionView)
+        collectionContainerView.addSubview(line)
         addSubview(assetViewBox)
-        assetViewBox.addSubview(assetZoomableView)
         addSubview(progressView)
         
+        assetViewBox.backgroundColor = .green
+        // assetViewBox.backgroundColor = PickerConfig.colors.assetViewBackgroundColor
+        
         collectionContainerView.makeConstraints { v in
-            v.edgesConstraintToSuperview(edges: .all)
+            v.edgesConstraintToSuperview(edges: [.horizontal, .bottom])
+            v.topAnchorConstraintTo(self.safeAreaLayoutGuide.topAnchor)
         }
-        collectionView.makeConstraints { v in
+        albumCollectionView.makeConstraints { v in
             v.topAnchorConstraintTo(line.bottomAnchor)
             v.edgesConstraintToSuperview(edges: .horizontal)
             v.bottomAnchorConstraintToSuperview()
@@ -182,12 +182,6 @@ final class LibraryView: UIView {
         }
 
         self.assetViewContainerConstraintTop = topConstraint
-        
-        assetZoomableView.makeConstraints { v in
-            v.edgesConstraintToSuperview(edges: .all)
-            v.heightAnchor.constraint(equalTo: self.widthAnchor, multiplier: 1).isActive = true
-        }
-        assetViewBox.sendSubviewToBack(assetZoomableView)
 
         progressView.makeConstraints { v in
             v.heightAnchorConstraintTo(5)

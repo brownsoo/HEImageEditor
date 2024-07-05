@@ -10,13 +10,13 @@
 import UIKit
 import Photos
 
-protocol AssetZoomableViewDelegate: AnyObject {
+public protocol AssetZoomableViewDelegate: AnyObject {
     func ypAssetZoomableViewDidLayoutSubviews(_ zoomableView: HEAssetZoomableView)
     func ypAssetZoomableViewScrollViewDidZoom()
     func ypAssetZoomableViewScrollViewDidEndZooming()
 }
 
-final class HEAssetZoomableView: UIScrollView {
+final public class HEAssetZoomableView: UIScrollView {
     public weak var zoomableViewDelegate: AssetZoomableViewDelegate?
     public var cropAreaDidChange = {}
     public var isVideoMode = false
@@ -149,8 +149,7 @@ final class HEAssetZoomableView: UIScrollView {
 
     override init(frame: CGRect) {
         super.init(frame: frame)
-
-        backgroundColor = PickerConfig.colors.assetViewBackgroundColor
+        backgroundColor = .clear
         clipsToBounds = true
         photoImageView.frame = CGRect(origin: CGPoint.zero, size: CGSize.zero)
         videoView.frame = CGRect(origin: CGPoint.zero, size: CGSize.zero)
@@ -169,7 +168,7 @@ final class HEAssetZoomableView: UIScrollView {
         fatalError("Only code layout.")
     }
 
-    override func layoutSubviews() {
+    public override func layoutSubviews() {
         super.layoutSubviews()
         zoomableViewDelegate?.ypAssetZoomableViewDidLayoutSubviews(self)
     }
@@ -258,17 +257,17 @@ fileprivate extension HEAssetZoomableView {
 
 // MARK: UIScrollViewDelegate Protocol
 extension HEAssetZoomableView: UIScrollViewDelegate {
-    func viewForZooming(in scrollView: UIScrollView) -> UIView? {
+    public func viewForZooming(in scrollView: UIScrollView) -> UIView? {
         return isVideoMode ? videoView : photoImageView
     }
     
-    func scrollViewDidZoom(_ scrollView: UIScrollView) {
+    public func scrollViewDidZoom(_ scrollView: UIScrollView) {
         zoomableViewDelegate?.ypAssetZoomableViewScrollViewDidZoom()
         
         centerAssetView()
     }
     
-    func scrollViewDidEndZooming(_ scrollView: UIScrollView, with view: UIView?, atScale scale: CGFloat) {
+    public func scrollViewDidEndZooming(_ scrollView: UIScrollView, with view: UIView?, atScale scale: CGFloat) {
         guard let view = view, view == photoImageView || view == videoView else { return }
         
         // prevent to zoom out
@@ -280,11 +279,11 @@ extension HEAssetZoomableView: UIScrollViewDelegate {
         cropAreaDidChange()
     }
     
-    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+    public func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
         cropAreaDidChange()
     }
     
-    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+    public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
         cropAreaDidChange()
     }
 }
