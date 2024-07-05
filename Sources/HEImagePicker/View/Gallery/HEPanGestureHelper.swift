@@ -16,7 +16,7 @@ enum DragDirection {
 
 class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
     
-    var libView: LibraryView!
+    var libView: HELibraryView!
     private let assetViewContainerOriginalConstraintTop: CGFloat = 0
     private var dragDirection = DragDirection.up
     private var imaginaryCollectionViewOffsetStartPosY: CGFloat = 0.0
@@ -50,7 +50,7 @@ class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
         }
     }
     
-    func registerForPanGesture(on view: LibraryView) {
+    func registerForPanGesture(on view: HELibraryView) {
         self.libView = view
         let panGesture = UIPanGestureRecognizer(target: self, action: #selector(panned(_:)))
         panGesture.delegate = self

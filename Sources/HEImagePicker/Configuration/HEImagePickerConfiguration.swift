@@ -53,9 +53,6 @@ public struct HEImagePickerConfiguration {
     /// Video configuration
     public var video = HEConfigVideo()
     
-    /// Gallery configuration
-    public var gallery = SelectionsGallery()
-    
     /// Use this property to modify the default wordings provided.
     public var wordings = HEPickerWordings()
     
@@ -118,9 +115,6 @@ public struct HEImagePickerConfiguration {
     
     /// Defines the text colour to be shown when a bottom option is unselected
     public var bottomMenuItemUnSelectedTextColour: UIColor = .ypSecondaryLabel
-    
-    /// Defines the max camera zoom factor for camera. Disable camera zoom with 1. Default is 1.
-    public var maxCameraZoomFactor: CGFloat = 1.0
     
     /// Encapsulates library specific settings.
     public struct Library {
@@ -226,12 +220,6 @@ public struct HEImagePickerConfiguration {
         /// so, the trimmer step becomes optional.
         /// - SeeAlso: [trimmerMaxDuration](x-source-tag://trimmerMaxDuration)
         public var automaticTrimToTrimmerMaxDuration: Bool = false
-    }
-
-    /// Encapsulates gallery specific settings.
-    public struct SelectionsGallery {
-        /// Defines if the remove button should be hidden when showing the gallery. Default is true.
-        public var hidesRemoveButton = true
     }
     
 }

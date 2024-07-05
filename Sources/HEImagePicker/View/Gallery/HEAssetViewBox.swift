@@ -118,7 +118,7 @@ final public class HEAssetViewBox: UIView {
 // MARK: - ZoomableViewDelegate
 extension HEAssetViewBox: AssetZoomableViewDelegate {
     public func ypAssetZoomableViewDidLayoutSubviews(_ zoomableView: HEAssetZoomableView) {
-        let newFrame = zoomableView.assetImageView.convert(zoomableView.assetImageView.bounds, to: self)
+        // let newFrame = zoomableView.assetImageView.convert(zoomableView.assetImageView.bounds, to: self)
         // Update play imageView position - bringing the playImageView from the videoView to assetViewContainer,
         // but the controll for appearing it still in videoView.
         if zoomableView.videoView.playImageView.isDescendant(of: self) == false {

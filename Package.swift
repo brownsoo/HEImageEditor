@@ -10,26 +10,30 @@ let package = Package(
         // Products define the executables and libraries a package produces, and make them visible to other packages.
         .library(
             name: "HEImageEditor",
-            targets: ["HEImageEditor"]),
+            targets: ["HEImageEditor", "HEImagePicker"]),
     ],
     dependencies: [
     ],
     targets: [
         .target(
             name: "HEImageEditor",
-            //path: "Sources",
+//            path: "Sources",
             exclude: [
                 "Util/HEWeakProxy.h",
                 "Util/HEWeakProxy.m"
             ],
+//            sources: ["HEImageEditor"],
             resources: [
                 .process("Resources/HEImageEditor.bundle")
             ]
         ),
         .target(
             name: "HEImagePicker",
+//            path: "Sources",
+//            sources: ["HEImagePicker"],
             resources: [
-                .process("Resources/HEImagePickerLocalizable.strings")
+                .process("Resources/HEImagePickerLocalizable.strings"),
+                .process("Resources/Assets.xcassets"),
             ]
         )
     ]

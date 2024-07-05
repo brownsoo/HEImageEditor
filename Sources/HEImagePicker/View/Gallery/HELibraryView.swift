@@ -9,7 +9,7 @@ import UIKit
 import Photos
 
 /// 메인 뷰
-final class LibraryView: UIView {
+final class HELibraryView: UIView {
 
     // MARK: - Public vars
 

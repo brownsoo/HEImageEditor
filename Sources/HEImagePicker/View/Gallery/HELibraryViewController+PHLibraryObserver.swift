@@ -9,7 +9,7 @@
 import UIKit
 import Photos
 
-extension HEPickerLibraryViewController: PHPhotoLibraryChangeObserver {
+extension HELibraryViewController: PHPhotoLibraryChangeObserver {
     func registerForLibraryChanges() {
         PHPhotoLibrary.shared().register(self)
     }

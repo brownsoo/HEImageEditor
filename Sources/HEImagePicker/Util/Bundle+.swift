@@ -37,8 +37,8 @@ public struct HEPickerIcons {
     public var shouldChangeDefaultBackButtonIcon = false
     public var hideBackButtonTitle = true
     
-    public var backButtonIcon: UIImage = imageFromBundle("yp_arrow_left")
-    public var arrowDownIcon: UIImage = imageFromBundle("yp_arrow_down")
+    public var backButtonIcon: UIImage = imageFromBundle("icArrowRight")
+    public var arrowDownIcon: UIImage = imageFromBundle("icArrowDown")
     public var cropIcon: UIImage = imageFromBundle("yp_iconCrop")
     public var flashOnIcon: UIImage = imageFromBundle("yp_iconFlash_on")
     public var flashOffIcon: UIImage = imageFromBundle("yp_iconFlash_off")

@@ -10,30 +10,30 @@ import Photos
 import PhotosUI
 import Combine
 
-public protocol HEPickerLibraryViewDelegate: AnyObject {
+public protocol HELibraryViewDelegate: AnyObject {
     
-    func libraryViewHaveNoItems(_ libraryView: HEPickerLibraryViewController)
-    func libraryView(_ libraryView: HEPickerLibraryViewController, didToggleMultipleSelectionEnabled enabled: Bool)
+    func libraryViewHaveNoItems(_ libraryView: HELibraryViewController)
+    func libraryView(_ libraryView: HELibraryViewController, didToggleMultipleSelectionEnabled enabled: Bool)
     
-    func libraryView(_ libraryView: HEPickerLibraryViewController, didSelectItems items: [HEMediaItem])
-    func libraryViewDidCancel(_ libraryView: HEPickerLibraryViewController)
+    func libraryView(_ libraryView: HELibraryViewController, didSelectItems items: [HEMediaItem])
+    func libraryViewDidCancel(_ libraryView: HELibraryViewController)
     
-    func libraryView(_ libraryView: HEPickerLibraryViewController, shouldAddToSelectionAt indexPath: IndexPath, numSelections: Int) -> Bool
-    func libraryView(_ libraryView: HEPickerLibraryViewController, captionAt indexPath: IndexPath) -> String?
-    func libraryView(_ libraryView: HEPickerLibraryViewController, replacingItemAt indexPath: IndexPath) -> HEMediaItem?
+    func libraryView(_ libraryView: HELibraryViewController, shouldAddToSelectionAt indexPath: IndexPath, numSelections: Int) -> Bool
+    func libraryView(_ libraryView: HELibraryViewController, captionAt indexPath: IndexPath) -> String?
+    func libraryView(_ libraryView: HELibraryViewController, replacingItemAt indexPath: IndexPath) -> HEMediaItem?
 }
 
-public class HEPickerLibraryViewController: UIViewController, PermissionCheckable {
+public class HELibraryViewController: UIViewController, PermissionCheckable {
     
     override open var prefersStatusBarHidden: Bool {
         return (shouldHideStatusBar || initialStatusBarHidden) && PickerConfig.hidesStatusBar
     }
     
-    public weak var delegate: HEPickerLibraryViewDelegate?
+    public weak var delegate: HELibraryViewDelegate?
     
     internal var shouldHideStatusBar = false
     internal var initialStatusBarHidden = false
-    internal var v = LibraryView(frame: .zero)
+    internal var v = HELibraryView(frame: .zero)
     internal var isProcessing = false // true if video or image is in processing state
     internal var selectedItems = [HELibrarySelection]()
     internal let mediaManager = LibraryMediaManager()
@@ -205,8 +205,18 @@ public class HEPickerLibraryViewController: UIViewController, PermissionCheckabl
     
     @objc
     func cameraCaptureTapped() {
-        // PickerConfig.shouldSaveNewPicturesToAlbum
-        // TODO: 카메라 촬용
+        let picker = UIImagePickerController()
+        picker.delegate = self
+        picker.sourceType = .camera
+        picker.mediaTypes = ["public.image"]
+        showDetailViewController(picker, sender: nil)
+    }
+    
+    private func didCameraCaptured(image: UIImage) {
+        // TODO: 카메라 촬용 -> 임시 저장 -> 찍은 사진을 앨범컬랙션에 표시
+        if PickerConfig.shouldSaveNewPicturesToAlbum {
+            HEPhotoSaver.trySaveImage(image, inAlbumNamed: PickerConfig.albumName)
+        }
     }
     
     @objc
@@ -683,7 +693,7 @@ public class HEPickerLibraryViewController: UIViewController, PermissionCheckabl
 }
 
 
-extension HEPickerLibraryViewController {
+extension HELibraryViewController {
     func libraryViewDidTapNext() {
         isProcessing = true
         DispatchQueue.main.async {
@@ -705,6 +715,23 @@ extension HEPickerLibraryViewController {
         DispatchQueue.main.async {
             self.v.hideLoader()
             self.updateUI()
+        }
+    }
+}
+
+
+extension HELibraryViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+    public func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        picker.dismiss(animated: true, completion: nil)
+    }
+    
+    public func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+        picker.dismiss(animated: true) {
+            guard var image = info[.originalImage] as? UIImage else { return }
+            let w = min(1500, image.size.width)
+            let h = w * image.size.height / image.size.width
+            image = image.resized(to: CGSize(width: w, height: h)) ?? image
+            self.didCameraCaptured(image: image)
         }
     }
 }

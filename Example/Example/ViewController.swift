@@ -226,7 +226,7 @@ extension ViewController: PHPickerViewControllerDelegate {
                 }
             }
             
-            
+            if newSelection.isEmpty { return }
             let images = newSelection.values.map({ $0 })
             startEditMultipleImages(images)
         }
@@ -296,8 +296,17 @@ extension ViewController {
         showDetailViewController(picker, sender: nil)
     }
     
+    // MARK: Start HEImagePicker
     @objc func pickWithHEPicker() {
-        let picker = HEImagePicker()
+        
+        var config = HEImagePickerConfiguration()
+        config.pickerSources = [.library, .photo, .video]
+        config.shouldSaveNewPicturesToAlbum = false
+        config.library.defaultMultipleSelection = true
+        config.library.maxNumberOfItems = 100
+        
+        
+        let picker = HEImagePicker(configuration: config)
         picker.pickerDelegate = self
 //        showDetailViewController(picker, sender: nil)
         present(picker, animated: true)
@@ -567,7 +576,7 @@ extension ViewController {
         
         let pickImageBtn = UIButton(type: .system)
         pickImageBtn.titleLabel?.font = UIFont.systemFont(ofSize: 14)
-        pickImageBtn.setTitle("Pick an image", for: .normal)
+        pickImageBtn.setTitle("UIImagePicker", for: .normal)
         pickImageBtn.addTarget(self, action: #selector(pickImage), for: .touchUpInside)
         view.addSubview(pickImageBtn)
         pickImageBtn.snp.makeConstraints { make in
@@ -576,7 +585,7 @@ extension ViewController {
         }
         
         let pickMultipleBt = UIButton(type: .system)
-        pickMultipleBt.setTitle("Pick images", for: .normal)
+        pickMultipleBt.setTitle("PHPicker", for: .normal)
         pickMultipleBt.addTarget(self, action: #selector(pickMutipleImages), for: .touchUpInside)
         view.addSubview(pickMultipleBt)
         pickMultipleBt.snp.makeConstraints { make in

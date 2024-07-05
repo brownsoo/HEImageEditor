@@ -33,7 +33,7 @@ open class HEImagePicker: UINavigationController {
         PickerConfig.preferredStatusBarStyle
     }
     
-    private lazy var mainVc: HEPickerLibraryViewController = HEPickerLibraryViewController()
+    private lazy var mainVc: HELibraryViewController = HELibraryViewController()
     
     public convenience init() {
         self.init(configuration: HEImagePickerConfiguration.shared)
@@ -54,7 +54,6 @@ open class HEImagePicker: UINavigationController {
     open override func viewDidLoad() {
         super.viewDidLoad()
         viewControllers = [mainVc]
-//        pushViewController(mainVc, animated: true)
         navigationBar.isTranslucent = false
         navigationBar.tintColor = .ypLabel
         view.backgroundColor = .ypSystemBackground
@@ -63,32 +62,32 @@ open class HEImagePicker: UINavigationController {
     
 }
 
-extension HEImagePicker: HEPickerLibraryViewDelegate {
-    public func libraryViewHaveNoItems(_ libraryView: HEPickerLibraryViewController) {
+extension HEImagePicker: HELibraryViewDelegate {
+    public func libraryViewHaveNoItems(_ libraryView: HELibraryViewController) {
         pickerDelegate?.imagePickerHaveNoItems(self)
     }
     
-    public func libraryView(_ libraryView: HEPickerLibraryViewController, didToggleMultipleSelectionEnabled enabled: Bool) {
+    public func libraryView(_ libraryView: HELibraryViewController, didToggleMultipleSelectionEnabled enabled: Bool) {
         trace(enabled)
     }
     
-    public func libraryView(_ libraryView: HEPickerLibraryViewController, shouldAddToSelectionAt indexPath: IndexPath, numSelections: Int) -> Bool {
+    public func libraryView(_ libraryView: HELibraryViewController, shouldAddToSelectionAt indexPath: IndexPath, numSelections: Int) -> Bool {
         pickerDelegate?.imagePicker(self, shouldAddToSelectionAt: indexPath, numSelections: numSelections) ?? true
     }
     
-    public func libraryView(_ libraryView: HEPickerLibraryViewController, captionAt indexPath: IndexPath) -> String? {
+    public func libraryView(_ libraryView: HELibraryViewController, captionAt indexPath: IndexPath) -> String? {
         pickerDelegate?.imagePicker(self, captionAt: indexPath)
     }
     
-    public func libraryView(_ libraryView: HEPickerLibraryViewController, replacingItemAt indexPath: IndexPath) -> HEMediaItem? {
+    public func libraryView(_ libraryView: HELibraryViewController, replacingItemAt indexPath: IndexPath) -> HEMediaItem? {
         pickerDelegate?.imagePicker(self, replacingItemAt: indexPath)
     }
     
-    public func libraryView(_ libraryView: HEPickerLibraryViewController, didSelectItems items: [HEMediaItem]) {
+    public func libraryView(_ libraryView: HELibraryViewController, didSelectItems items: [HEMediaItem]) {
         pickerDelegate?.imagePicker(self, didSelectItems: items)
     }
     
-    public func libraryViewDidCancel(_ libraryView: HEPickerLibraryViewController) {
+    public func libraryViewDidCancel(_ libraryView: HELibraryViewController) {
         pickerDelegate?.imagePickerDidCancel(self)
     }
     

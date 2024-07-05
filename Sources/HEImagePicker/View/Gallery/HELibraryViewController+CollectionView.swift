@@ -9,7 +9,7 @@ import Foundation
 import UIKit
 import Photos
 
-extension HEPickerLibraryViewController {
+extension HELibraryViewController {
     
     var isLimitExceeded: Bool { return selectedItems.count >= PickerConfig.library.maxNumberOfItems }
     
@@ -108,13 +108,13 @@ extension HEPickerLibraryViewController {
     }
 }
 
-extension HEPickerLibraryViewController: UICollectionViewDataSource {
+extension HELibraryViewController: UICollectionViewDataSource {
     public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return mediaManager.fetchResult?.count ?? 0
     }
 }
 
-extension HEPickerLibraryViewController: UICollectionViewDelegate {
+extension HELibraryViewController: UICollectionViewDelegate {
     
     public func collectionView(_ collectionView: UICollectionView,
                                cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -251,7 +251,7 @@ extension HEPickerLibraryViewController: UICollectionViewDelegate {
     }
 }
 
-extension HEPickerLibraryViewController: UICollectionViewDelegateFlowLayout {
+extension HELibraryViewController: UICollectionViewDelegateFlowLayout {
     public func collectionView(_ collectionView: UICollectionView,
                                layout collectionViewLayout: UICollectionViewLayout,
                                sizeForItemAt indexPath: IndexPath) -> CGSize {
