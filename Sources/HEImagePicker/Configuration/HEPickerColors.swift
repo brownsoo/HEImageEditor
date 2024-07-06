@@ -62,6 +62,13 @@ public struct HEPickerColors {
 
 
 extension UIColor {
+    
+    /// RGB 255
+    /// - Parameters:
+    ///   - r: 0~255
+    ///   - g: 0~255
+    ///   - b: 0~255
+    ///   - a: 0~1
     convenience init(r: CGFloat, g: CGFloat, b: CGFloat, a: CGFloat = 1.0) {
         self.init(red: r / 255.0, green: g / 255.0, blue: b / 255.0, alpha: a)
     }

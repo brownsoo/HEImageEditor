@@ -38,13 +38,33 @@ final class HELibraryView: UIView {
         return assetViewBox.zoomableView
     }
 
+    internal let albumNameBt: UIButton = {
+        let bt = UIButton()
+        bt.setTitle("모든 사진", for: .normal)
+        bt.setTitleColor(.init(white: 52/255.0, alpha: 1), for: .normal)
+        bt.titleLabel?.font = .systemFont(ofSize: 14, weight: .bold)
+        bt.semanticContentAttribute = .forceRightToLeft
+        bt.setImage(imageFromBundle("icArrowDown"), for: .normal)
+        bt.imageEdgeInsets = UIEdgeInsets(top: 0, left: 2, bottom: 0, right: -2)
+        bt.contentEdgeInsets = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 18)
+        return bt
+    }()
+    
+    internal var cameraPhotoButton: UIButton?
+    internal var cameraVideoButton: UIButton?
+    internal var countView: UIView?
+    internal var countLabel: UILabel?
+    
     // MARK: - Private vars
 
     private let line: UIView = {
         let v = UIView()
-        v.backgroundColor = .blue
+        v.backgroundColor = .white
         return v
     }()
+    
+    private var isMultipleSelectionEnabled = false
+    
     /// When video is processing this bar appears
     private let progressView: UIProgressView = {
         let v = UIProgressView()
@@ -146,6 +166,12 @@ final class HELibraryView: UIView {
         return CGSize(width: size, height: size)
     }
 
+    func setMultipleSelectionMode(on: Bool) {
+        isMultipleSelectionEnabled = on
+        assetViewBox.setMultipleSelectionMode(on: on)
+        countLabel?.isHidden = !on
+    }
+    
     // MARK: - Private Methods
 
     private func setupLayout() {
@@ -189,8 +215,94 @@ final class HELibraryView: UIView {
             v.bottomAnchorConstraintTo(line.topAnchor)
         }
         
-        // TODO: 사진 첨부 여부에 따라 버튼 추가
+        line.addSubview(albumNameBt)
+        albumNameBt.makeConstraints { v in
+            v.leadingAnchorConstraintToSuperview()
+            v.centerYAnchorConstraintToSuperview()
+        }
         
-        // TODO: 멀티 선택 여부에 따라 카운트 추가 
+        let rearStack = UIStackView()
+        rearStack.axis = .horizontal
+        rearStack.alignment = .center
+        rearStack.spacing = 0
+        rearStack.setContentHuggingPriority(.required, for: .horizontal)
+        rearStack.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        line.addSubview(rearStack)
+        rearStack.makeConstraints { v in
+            v.trailingAnchorConstraintToSuperview(-7)
+            v.topAnchorConstraintToSuperview()
+            v.bottomAnchorConstraintToSuperview()
+        }
+        
+        
+        // 카운트 추가
+        let lb = UILabel(frame: CGRect(origin: .zero, size: CGSize(width: 32, height: 32)))
+        lb.adjustsFontSizeToFitWidth = true
+        lb.font = UIFont.systemFont(ofSize: 13, weight: .bold)
+        lb.backgroundColor = UIColor(r: 71, g: 120, b: 222, a: 1)
+        lb.text = "0"
+        lb.textColor = .white
+        lb.translatesAutoresizingMaskIntoConstraints = false
+        lb.widthAnchor.constraint(equalToConstant: 32).isActive = true
+        lb.heightAnchor.constraint(equalToConstant: 32).isActive = true
+        lb.layer.cornerRadius = 16
+        lb.layer.masksToBounds = true
+        lb.textAlignment = .center
+        countLabel = lb
+        let lbWrap = UIView()
+        lbWrap.translatesAutoresizingMaskIntoConstraints = false
+        lbWrap.widthAnchor.constraint(equalToConstant: 42).isActive = true
+        lbWrap.heightAnchor.constraint(equalToConstant: 42).isActive = true
+        lbWrap.isHidden = !(PickerConfig.library.defaultMultipleSelection || isMultipleSelectionEnabled)
+        lbWrap.addSubview(lb)
+        lb.centerXAnchorConstraintToSuperview()
+        lb.centerYAnchorConstraintToSuperview()
+        rearStack.addArrangedSubview(lbWrap)
+        countView = lbWrap
+        
+        // 카메라 사용 여부에 따라 버튼 추가
+        if PickerConfig.pickerSources.contains(.photoCapture) || PickerConfig.pickerSources.contains(.videoCapture) {
+            if PickerConfig.pickerSources.contains(.videoCapture) {
+                let sfConfig = UIImage.SymbolConfiguration(pointSize: 16, weight: .regular, scale: .default)
+                let iconImage = UIImage(systemName: "video.fill", withConfiguration: sfConfig)?.withTintColor(.white, renderingMode: .alwaysOriginal)
+                let iconView = UIImageView(frame: .init(origin: .zero, size: CGSize(width: 32, height: 32)))
+                iconView.contentMode = .center
+                iconView.backgroundColor = UIColor(white: 136 / 255.0, alpha: 1.0)
+                iconView.layer.cornerRadius = 16
+                iconView.layer.masksToBounds = true
+                iconView.image = iconImage
+                let renderer = UIGraphicsImageRenderer(bounds: .init(origin: .zero, size: CGSize(width: 32, height: 32)))
+                let icon = renderer.image { rendererContext in
+                    iconView.layer.render(in: rendererContext.cgContext)
+                }
+                
+                let bt = UIButton(frame: .init(origin: .zero, size: CGSize(width: 42, height: 42)))
+                bt.contentEdgeInsets = .init(top: 5, left: 5, bottom: 5, right: 5)
+                bt.setImage(icon, for: .normal)
+                rearStack.addArrangedSubview(bt)
+                cameraVideoButton = bt
+            }
+            
+            if PickerConfig.pickerSources.contains(.photoCapture) {
+                let iconView = UIImageView(frame: .init(origin: .zero, size: CGSize(width: 32, height: 32)))
+                iconView.contentMode = .center
+                iconView.backgroundColor = UIColor(white: 136 / 255.0, alpha: 1.0)
+                iconView.layer.cornerRadius = 16
+                iconView.layer.masksToBounds = true
+                iconView.image = imageFromBundle("icCameraFill").resized(to: CGSize(width: 16, height: 16))
+                let renderer = UIGraphicsImageRenderer(bounds: .init(origin: .zero, size: CGSize(width: 32, height: 32)))
+                let icon = renderer.image { rendererContext in
+                    iconView.layer.render(in: rendererContext.cgContext)
+                }
+                
+                let bt = UIButton(frame: .init(origin: .zero, size: CGSize(width: 42, height: 42)))
+                bt.contentEdgeInsets = .init(top: 5, left: 5, bottom: 5, right: 5)
+                bt.setImage(icon, for: .normal)
+                rearStack.addArrangedSubview(bt)
+                cameraPhotoButton = bt
+            }
+            
+        }
+        
     }
 }

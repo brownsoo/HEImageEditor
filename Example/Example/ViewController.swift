@@ -300,11 +300,10 @@ extension ViewController {
     @objc func pickWithHEPicker() {
         
         var config = HEImagePickerConfiguration()
-        config.pickerSources = [.library, .photo, .video]
+        config.pickerSources = [.libraryPick, .photoCapture, .videoCapture]
         config.shouldSaveNewPicturesToAlbum = false
         config.library.defaultMultipleSelection = true
         config.library.maxNumberOfItems = 100
-        
         
         let picker = HEImagePicker(configuration: config)
         picker.pickerDelegate = self

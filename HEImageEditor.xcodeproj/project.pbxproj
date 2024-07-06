@@ -15,7 +15,6 @@
 		173DE6522C33B85B002BD7C6 /* HEPickerWordings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE6512C33B85B002BD7C6 /* HEPickerWordings.swift */; };
 		173DE6552C33B8AD002BD7C6 /* Bundle+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE6542C33B8AD002BD7C6 /* Bundle+.swift */; };
 		173DE65F2C33B968002BD7C6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 173DE65A2C33B968002BD7C6 /* Assets.xcassets */; };
-		173DE6602C33B968002BD7C6 /* HEImagePickerLocalizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 173DE65C2C33B968002BD7C6 /* HEImagePickerLocalizable.strings */; };
 		173DE6642C33BAE1002BD7C6 /* HEPickerColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE6632C33BAE1002BD7C6 /* HEPickerColors.swift */; };
 		173DE6662C33BB43002BD7C6 /* HEPickerFonts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE6652C33BB43002BD7C6 /* HEPickerFonts.swift */; };
 		173DE66B2C33BEBD002BD7C6 /* HEAlbumsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE66A2C33BEBD002BD7C6 /* HEAlbumsManager.swift */; };
@@ -71,6 +70,7 @@
 		17D692232C24380A007443EC /* HEAdjustStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D692222C24380A007443EC /* HEAdjustStatus.swift */; };
 		17D692252C24382F007443EC /* HEImageClipRatio.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D692242C24382F007443EC /* HEImageClipRatio.swift */; };
 		17D692272C253644007443EC /* HEError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D692262C253644007443EC /* HEError.swift */; };
+		17D9B7252C394CBF003874D4 /* HEImagePickerLocalizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 17D9B7232C394CBF003874D4 /* HEImagePickerLocalizable.strings */; };
 		17E2D87B2C290272005F5E0B /* HEImageSticker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E2D87A2C290272005F5E0B /* HEImageSticker.swift */; };
 		17E2D87D2C290986005F5E0B /* HEImageUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E2D87C2C290986005F5E0B /* HEImageUtil.swift */; };
 		17E2D87F2C290B02005F5E0B /* TakePhoto.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E2D87E2C290B02005F5E0B /* TakePhoto.swift */; };
@@ -121,9 +121,6 @@
 		173DE6512C33B85B002BD7C6 /* HEPickerWordings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEPickerWordings.swift; sourceTree = "<group>"; };
 		173DE6542C33B8AD002BD7C6 /* Bundle+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Bundle+.swift"; sourceTree = "<group>"; };
 		173DE65A2C33B968002BD7C6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		173DE65D2C33B968002BD7C6 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = HEImagePickerLocalizable.strings; sourceTree = "<group>"; };
-		173DE6612C33B9AC002BD7C6 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ../ko.lproj/HEImagePickerLocalizable.strings; sourceTree = "<group>"; };
-		173DE6622C33B9D1002BD7C6 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = ../en.lproj/HEImagePickerLocalizable.strings; sourceTree = "<group>"; };
 		173DE6632C33BAE1002BD7C6 /* HEPickerColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEPickerColors.swift; sourceTree = "<group>"; };
 		173DE6652C33BB43002BD7C6 /* HEPickerFonts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEPickerFonts.swift; sourceTree = "<group>"; };
 		173DE66A2C33BEBD002BD7C6 /* HEAlbumsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEAlbumsManager.swift; sourceTree = "<group>"; };
@@ -182,6 +179,8 @@
 		17D692222C24380A007443EC /* HEAdjustStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEAdjustStatus.swift; sourceTree = "<group>"; };
 		17D692242C24382F007443EC /* HEImageClipRatio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEImageClipRatio.swift; sourceTree = "<group>"; };
 		17D692262C253644007443EC /* HEError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEError.swift; sourceTree = "<group>"; };
+		17D9B7242C394CBF003874D4 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/HEImagePickerLocalizable.strings; sourceTree = "<group>"; };
+		17D9B7262C394CC9003874D4 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/HEImagePickerLocalizable.strings; sourceTree = "<group>"; };
 		17E2D87A2C290272005F5E0B /* HEImageSticker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEImageSticker.swift; sourceTree = "<group>"; };
 		17E2D87C2C290986005F5E0B /* HEImageUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEImageUtil.swift; sourceTree = "<group>"; };
 		17E2D87E2C290B02005F5E0B /* TakePhoto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TakePhoto.swift; sourceTree = "<group>"; };
@@ -360,8 +359,8 @@
 		173DE6562C33B921002BD7C6 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				17D9B7232C394CBF003874D4 /* HEImagePickerLocalizable.strings */,
 				173DE65A2C33B968002BD7C6 /* Assets.xcassets */,
-				173DE65C2C33B968002BD7C6 /* HEImagePickerLocalizable.strings */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -647,8 +646,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				17D9B7252C394CBF003874D4 /* HEImagePickerLocalizable.strings in Resources */,
 				173DE65F2C33B968002BD7C6 /* Assets.xcassets in Resources */,
-				173DE6602C33B968002BD7C6 /* HEImagePickerLocalizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -774,12 +773,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXVariantGroup section */
-		173DE65C2C33B968002BD7C6 /* HEImagePickerLocalizable.strings */ = {
+		17D9B7232C394CBF003874D4 /* HEImagePickerLocalizable.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
-				173DE65D2C33B968002BD7C6 /* en */,
-				173DE6612C33B9AC002BD7C6 /* ko */,
-				173DE6622C33B9D1002BD7C6 /* en */,
+				17D9B7242C394CBF003874D4 /* en */,
+				17D9B7262C394CC9003874D4 /* ko */,
 			);
 			name = HEImagePickerLocalizable.strings;
 			sourceTree = "<group>";

@@ -148,7 +148,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
                 // The negative index will be corrected in the collectionView:cellForItemAt:
                 return HELibrarySelection(index: -1, assetIdentifier: asset.localIdentifier)
             }
-            v.assetViewBox.setMultipleSelectionMode(on: isMultipleSelectionEnabled)
+            v.setMultipleSelectionMode(on: isMultipleSelectionEnabled)
             v.albumCollectionView.reloadData()
         }
 
@@ -301,7 +301,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
             addToSelection(indexPath: IndexPath(row: currentlySelectedIndex, section: 0))
         }
         
-        v.assetViewBox.setMultipleSelectionMode(on: isMultipleSelectionEnabled)
+        v.setMultipleSelectionMode(on: isMultipleSelectionEnabled)
         v.albumCollectionView.reloadData()
         checkLimit()
         delegate?.libraryView(self, didToggleMultipleSelectionEnabled: isMultipleSelectionEnabled)
@@ -630,8 +630,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
                     multipleItemsCallback(resultMediaItems)
                     self.libraryViewFinishedLoading()
                 }
-            } else {
-                let asset = selectedAssets.first!.asset
+            } else if let asset = selectedAssets.first?.asset {
                 switch asset.mediaType {
                 case .audio, .unknown:
                     return

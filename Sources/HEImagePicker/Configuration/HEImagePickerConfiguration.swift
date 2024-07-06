@@ -23,9 +23,9 @@ public enum HELibraryMediaType {
 /// 피커 소스
 public enum HEPickerSource {
     /// 라이브러리 (필수)
-    case library
-    case photo
-    case video
+    case libraryPick
+    case photoCapture
+    case videoCapture
 }
 
 public struct HEImagePickerConfiguration {
@@ -88,8 +88,8 @@ public struct HEImagePickerConfiguration {
     public var albumName = "DefaultHEImagePickerAlbumName"
     
     /// Defines which source type can be pick.
-    /// Default value is `[.library, .photo]`
-    public var pickerSources: [HEPickerSource] = [.library, .photo]
+    /// Default value is `[.libraryPick, .photoCapture, .videoCapture]`
+    public var pickerSources: [HEPickerSource] = [.libraryPick, .photoCapture, .videoCapture]
     
     /// Ex: cappedTo:1024 will make sure images from the library or the camera will be
     /// resized to fit in a 1024x1024 box. Defaults to original image size.
