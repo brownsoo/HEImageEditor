@@ -307,8 +307,8 @@ extension ViewController {
         
         let picker = HEImagePicker(configuration: config)
         picker.pickerDelegate = self
-//        showDetailViewController(picker, sender: nil)
-        present(picker, animated: true)
+        showDetailViewController(picker, sender: nil)
+//        present(picker, animated: true)
     }
     
     @objc func drawToolChanged() {

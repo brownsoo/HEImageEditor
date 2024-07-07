@@ -44,7 +44,7 @@ final class HELibraryView: UIView {
         bt.setTitleColor(.init(white: 52/255.0, alpha: 1), for: .normal)
         bt.titleLabel?.font = .systemFont(ofSize: 14, weight: .bold)
         bt.semanticContentAttribute = .forceRightToLeft
-        bt.setImage(imageFromBundle("icArrowDown"), for: .normal)
+        bt.setImage(PickerConfig.icons.arrowDownIcon?.resized(to: CGSize(width: 16, height: 16))?.withTintColor(UIColor(white: 51 / 255.0, alpha: 1.0), renderingMode: .alwaysOriginal), for: .normal)
         bt.imageEdgeInsets = UIEdgeInsets(top: 0, left: 2, bottom: 0, right: -2)
         bt.contentEdgeInsets = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 18)
         return bt
@@ -263,8 +263,7 @@ final class HELibraryView: UIView {
         // 카메라 사용 여부에 따라 버튼 추가
         if PickerConfig.pickerSources.contains(.photoCapture) || PickerConfig.pickerSources.contains(.videoCapture) {
             if PickerConfig.pickerSources.contains(.videoCapture) {
-                let sfConfig = UIImage.SymbolConfiguration(pointSize: 16, weight: .regular, scale: .default)
-                let iconImage = UIImage(systemName: "video.fill", withConfiguration: sfConfig)?.withTintColor(.white, renderingMode: .alwaysOriginal)
+                let iconImage = PickerConfig.icons.videoFillIcon?.withTintColor(.white, renderingMode: .alwaysOriginal)
                 let iconView = UIImageView(frame: .init(origin: .zero, size: CGSize(width: 32, height: 32)))
                 iconView.contentMode = .center
                 iconView.backgroundColor = UIColor(white: 136 / 255.0, alpha: 1.0)
@@ -289,7 +288,7 @@ final class HELibraryView: UIView {
                 iconView.backgroundColor = UIColor(white: 136 / 255.0, alpha: 1.0)
                 iconView.layer.cornerRadius = 16
                 iconView.layer.masksToBounds = true
-                iconView.image = imageFromBundle("icCameraFill").resized(to: CGSize(width: 16, height: 16))
+                iconView.image = PickerConfig.icons.cameraFillIcon?.resized(to: CGSize(width: 16, height: 16))
                 let renderer = UIGraphicsImageRenderer(bounds: .init(origin: .zero, size: CGSize(width: 32, height: 32)))
                 let icon = renderer.image { rendererContext in
                     iconView.layer.render(in: rendererContext.cgContext)

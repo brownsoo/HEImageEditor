@@ -28,8 +28,8 @@ internal func ypLocalized(_ str: String) -> String {
                              comment: "")
 }
 
-internal func imageFromBundle(_ named: String) -> UIImage {
-    return UIImage(named: named, in: Bundle.local, compatibleWith: nil) ?? UIImage()
+internal func imageFromBundle(_ named: String) -> UIImage? {
+    return UIImage(named: named, in: Bundle.local, compatibleWith: nil)
 }
 
 public struct HEPickerIcons {
@@ -37,17 +37,16 @@ public struct HEPickerIcons {
     public var shouldChangeDefaultBackButtonIcon = false
     public var hideBackButtonTitle = true
     
-    public var backButtonIcon: UIImage = imageFromBundle("icArrowRight")
-    public var arrowDownIcon: UIImage = imageFromBundle("icArrowDown")
-    public var cropIcon: UIImage = imageFromBundle("yp_iconCrop")
-    public var flashOnIcon: UIImage = imageFromBundle("yp_iconFlash_on")
-    public var flashOffIcon: UIImage = imageFromBundle("yp_iconFlash_off")
-    public var flashAutoIcon: UIImage = imageFromBundle("yp_iconFlash_auto")
-    public var loopIcon: UIImage = imageFromBundle("yp_iconLoop")
-    public var multipleSelectionOnIcon: UIImage = imageFromBundle("yp_multiple_colored")
-    public var capturePhotoImage: UIImage = imageFromBundle("yp_iconCapture")
-    public var captureVideoImage: UIImage = imageFromBundle("yp_iconVideoCapture")
-    public var captureVideoOnImage: UIImage = imageFromBundle("yp_iconVideoCaptureRecording")
-    public var playImage: UIImage = imageFromBundle("yp_play")
-    public var removeImage: UIImage = imageFromBundle("yp_remove")
+    public var editImageIcon = imageFromBundle("icMagicbar") ?? UIImage(systemName: "wand.and.rays")
+    public var backButtonIcon = imageFromBundle("icArrowRight") ?? UIImage(systemName: "chevron.left")
+    public var arrowDownIcon = imageFromBundle("icArrowDown") ?? UIImage(systemName: "chevron.down")
+    public var cropIcon = UIImage(systemName: "crop")
+    
+    public var captureVideoOnImage: UIImage? = imageFromBundle("yp_iconVideoCaptureRecording")
+    public var playImage: UIImage? = UIImage(systemName: "play.fill")
+    public var removeImage: UIImage? = UIImage(systemName: "x.circle")
+    // 16x16
+    public var cameraFillIcon = imageFromBundle("icCameraFill") ?? UIImage(systemName: "camera.fill", withConfiguration: UIImage.SymbolConfiguration(pointSize: 16, weight: .regular, scale: .default))
+    // 16x16
+    public var videoFillIcon: UIImage? = UIImage(systemName: "video.fill", withConfiguration: UIImage.SymbolConfiguration(pointSize: 16, weight: .regular, scale: .default))
 }

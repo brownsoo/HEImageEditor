@@ -25,11 +25,11 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     public var editId: String?
     
-    public var drawColViewH: CGFloat = 50
+    public var drawColViewH: CGFloat = 90
     /// 필터 컬렉션 트레이 높이
     public var filterColViewH: CGFloat = 90
     
-    public var adjustColViewH: CGFloat = 60
+    public var adjustColViewH: CGFloat = 90
     
     public var trashbinSize = CGSize(width: 56, height: 56)
     
@@ -217,7 +217,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     // Cache the filter image of original image
     private var filterImages: [String: UIImage] = [:]
-    
     private var currentFilter: HEFilter
     
     private var currentEditController: UIViewController?

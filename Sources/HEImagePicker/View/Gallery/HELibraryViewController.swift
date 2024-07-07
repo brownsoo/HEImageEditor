@@ -177,7 +177,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
 
     
     private func updateUI() {
-        navigationItem.leftBarButtonItem = UIBarButtonItem(image: imageFromBundle("icArrowRight"),
+        navigationItem.leftBarButtonItem = UIBarButtonItem(image: PickerConfig.icons.backButtonIcon,
                                                            style: .plain,
                                                            target: self,
                                                            action: #selector(close))

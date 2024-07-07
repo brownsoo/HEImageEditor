@@ -305,6 +305,7 @@
 		17189EB82C10460300270F4D /* Util */ = {
 			isa = PBXGroup;
 			children = (
+				17D691D92C184616007443EC /* Also.swift */,
 				FDC144952BABE0B4004C2BCD /* HEWeakProxy.h */,
 				FDC144942BABE0B4004C2BCD /* HEWeakProxy.m */,
 				E40208FB256BA0080077F5DC /* Bundle.swift */,
@@ -400,14 +401,6 @@
 				173DE68C2C33F59F002BD7C6 /* PermissionDeniedPopup.swift */,
 			);
 			path = Permission;
-			sourceTree = "<group>";
-		};
-		173DE6A52C37E255002BD7C6 /* Common */ = {
-			isa = PBXGroup;
-			children = (
-				17D691D92C184616007443EC /* Also.swift */,
-			);
-			path = Common;
 			sourceTree = "<group>";
 		};
 		1744B9DC2C32CF1D00F5395B /* Data */ = {
@@ -536,7 +529,6 @@
 		E40208D9256B9BA60077F5DC /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				173DE6A52C37E255002BD7C6 /* Common */,
 				1744BA3C2C330B4E00F5395B /* HEImagePicker */,
 				17189E8B2C1041DB00270F4D /* HEImageEditor */,
 			);

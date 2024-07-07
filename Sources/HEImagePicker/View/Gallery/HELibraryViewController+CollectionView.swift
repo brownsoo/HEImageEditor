@@ -105,6 +105,7 @@ extension HELibraryViewController {
     func checkLimit() {
         //v.maxNumberWarningView.isHidden = !isLimitExceeded || isMultipleSelectionEnabled == false
         trace(isLimitExceeded || isMultipleSelectionEnabled == false)
+        v.countLabel?.text = String(selectedItems.count)
     }
 }
 

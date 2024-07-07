@@ -66,7 +66,7 @@ final class AlbumListViewController: UIViewController {
     
     func setupUI() {
         view.backgroundColor = .white
-        navigationItem.leftBarButtonItem = UIBarButtonItem(image: imageFromBundle("icArrowRight"),
+        navigationItem.leftBarButtonItem = UIBarButtonItem(image: PickerConfig.icons.backButtonIcon,
                                                            style: .plain,
                                                            target: self,
                                                            action: #selector(close))
