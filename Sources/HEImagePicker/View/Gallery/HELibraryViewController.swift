@@ -151,7 +151,11 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
             v.setMultipleSelectionMode(on: isMultipleSelectionEnabled)
             v.albumCollectionView.reloadData()
         }
-
+        
+        v.albumNameBt.addTarget(self, action: #selector(albumListTapped), for: .touchUpInside)
+        v.cameraPhotoButton?.addTarget(self, action: #selector(imageCaptureTapped), for: .touchUpInside)
+        v.cameraVideoButton?.addTarget(self, action: #selector(videoCaptureTapped), for: .touchUpInside)
+        
         guard mediaManager.hasResultItems else {
             return
         }
@@ -184,7 +188,10 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
                                                             action: #selector(done))
         
         navigationItem.rightBarButtonItem?.setFont(font: PickerConfig.fonts.rightBarButtonFont, forState: .normal)
+        navigationItem.rightBarButtonItem?.setFont(font: PickerConfig.fonts.rightBarButtonFont, forState: .highlighted)
         navigationItem.rightBarButtonItem?.setFont(font: PickerConfig.fonts.rightBarButtonFont, forState: .disabled)
+        
+        
     }
     
     @objc
@@ -194,7 +201,6 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         }
         let vc = AlbumListViewController(albumsManager: albumsManager)
         let navVC = UINavigationController(rootViewController: vc)
-        navVC.navigationBar.tintColor = .ypLabel
         
         vc.didSelectAlbum = { [weak self] album in
             self?.setAlbum(album)
@@ -204,11 +210,20 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     }
     
     @objc
-    func cameraCaptureTapped() {
+    func imageCaptureTapped() {
         let picker = UIImagePickerController()
         picker.delegate = self
         picker.sourceType = .camera
-        picker.mediaTypes = ["public.image"]
+        picker.mediaTypes = [UTType.image.identifier]
+        showDetailViewController(picker, sender: nil)
+    }
+    
+    @objc
+    func videoCaptureTapped() {
+        let picker = UIImagePickerController()
+        picker.delegate = self
+        picker.sourceType = .camera
+        picker.mediaTypes = [UTType.video.identifier]
         showDetailViewController(picker, sender: nil)
     }
     

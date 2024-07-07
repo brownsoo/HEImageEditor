@@ -65,6 +65,7 @@ final class AlbumListViewController: UIViewController {
     }
     
     func setupUI() {
+        view.backgroundColor = .white
         navigationItem.leftBarButtonItem = UIBarButtonItem(image: imageFromBundle("icArrowRight"),
                                                            style: .plain,
                                                            target: self,
@@ -77,22 +78,30 @@ final class AlbumListViewController: UIViewController {
         
         
         let layout = UICollectionViewFlowLayout()
-        layout.scrollDirection = .horizontal
+        layout.scrollDirection = .vertical
         layout.minimumLineSpacing = minimumCellSpacing
         layout.minimumInteritemSpacing = minimumCellSpacing
         layout.sectionInset = UIEdgeInsets(top: 20, left: 16, bottom: 40, right: 16)
         let coll = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        //coll.contentInset = .zero
         coll.backgroundColor = .clear
         coll.showsHorizontalScrollIndicator = false
         coll.register(AlbumListCell.self, forCellWithReuseIdentifier: AlbumListCell.reuseIdentitifer)
-        coll.allowsSelection = false
-        coll.isPagingEnabled = true
+        coll.allowsSelection = true
+        coll.isPagingEnabled = false
         coll.dataSource = self
         coll.delegate = self
         view.addSubview(coll)
         self.collView = coll
         
         coll.isHidden = true
+//        coll.frame = view.frame
+        coll.makeConstraints { v in
+            v.topAnchorConstraintTo(view.safeAreaLayoutGuide.topAnchor)
+            v.leadingAnchorConstraintToSuperview()
+            v.trailingAnchorConstraintToSuperview()
+            v.bottomAnchorConstraintToSuperview()
+        }
     }
 }
 
@@ -103,13 +112,17 @@ extension AlbumListViewController: UICollectionViewDataSource {
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let album = albums[indexPath.row]
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: AlbumListCell.reuseIdentitifer, for: indexPath) as! AlbumListCell
+        return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+        let cell = cell as! AlbumListCell
+        let album = albums[indexPath.row]
         cell.thumbnailIv.backgroundColor = .ypSystemGray
         cell.thumbnailIv.image = album.thumbnail
         cell.titleLb.text = album.title
         cell.countLb.text = "\(album.numberOfItems)"
-        return cell
     }
 }
 
@@ -126,10 +139,19 @@ extension AlbumListViewController: UICollectionViewDelegate, UICollectionViewDel
             columns = 2
         }
         let interSpacing: CGFloat = (columns - 1) * minimumCellSpacing
-        let totalSpacing = interSpacing + collectionView.contentInset.left + collectionView.contentInset.right
-        let width = (collectionView.bounds.width - totalSpacing) / columns
-        return CGSize(width: width, height: width)
+        let layout = collectionViewLayout as! UICollectionViewFlowLayout
+        let totalSpacing = interSpacing + layout.sectionInset.left + layout.sectionInset.right
+        let width = (collectionView.frame.width - totalSpacing) / columns
+        return CGSize(width: width, height: width * 202.0 / 158.0)
     }
+    
+//    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
+//        minimumCellSpacing
+//    }
+//    
+//    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
+//        minimumCellSpacing
+//    }
 }
 
 
@@ -153,8 +175,8 @@ class AlbumListCell: UICollectionViewCell {
             NSLayoutConstraint.activate([
                 v.widthAnchor.constraint(equalTo: contentView.widthAnchor, multiplier: 1),
                 v.heightAnchor.constraint(equalTo: v.widthAnchor, multiplier: 1),
-                v.topAnchor.constraint(equalTo: v.topAnchor),
-                v.leadingAnchor.constraint(equalTo: v.leadingAnchor)
+                v.topAnchor.constraint(equalTo: contentView.topAnchor),
+                v.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             ])
         }
         
