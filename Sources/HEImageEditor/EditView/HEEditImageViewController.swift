@@ -25,11 +25,11 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     public var editId: String?
     
-    public var drawColViewH: CGFloat = 90
+    public var drawColViewH: CGFloat { bottomToolViewHeight }
     /// 필터 컬렉션 트레이 높이
-    public var filterColViewH: CGFloat = 90
+    public var filterColViewH: CGFloat { bottomToolViewHeight }
     
-    public var adjustColViewH: CGFloat = 90
+    public var adjustColViewH: CGFloat { bottomToolViewHeight }
     
     public var trashbinSize = CGSize(width: 56, height: 56)
     
@@ -611,7 +611,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         view.addSubview(bottomToolViewContainer)
         let builder = self.bottomToolViewBuilder(self)
         bottomToolView = builder?.toolView
-        bottomToolViewHeight = builder?.height ?? 0
+        bottomToolViewHeight = builder?.height ?? 76
         bottomToolViewContainer.backgroundColor = .yellow
         
         if let bottomToolView {

@@ -103,8 +103,7 @@ extension HELibraryViewController {
     
     /// Checks if there can be selected more items. If no - present warning.
     func checkLimit() {
-        //v.maxNumberWarningView.isHidden = !isLimitExceeded || isMultipleSelectionEnabled == false
-        trace(isLimitExceeded || isMultipleSelectionEnabled == false)
+//        trace(isLimitExceeded || isMultipleSelectionEnabled == false)
         v.countLabel?.text = String(selectedItems.count)
     }
 }
