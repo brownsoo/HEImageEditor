@@ -8,43 +8,73 @@ import UIKit
 import Foundation
 import AVFoundation
 import Photos
+import HECommon
 
+/// HEPicker 의 사진
 public class HEMediaPhoto {
     /// 지정된 아이디 or PHAsset의 identifier, or uuid
     public var identifier: String
-    public var image: UIImage { return modifiedImage ?? originalImage }
-    public let originalImage: UIImage
+    public let url: URL
+    public var thumbnail: UIImage
     public var modifiedImage: UIImage?
     public let fromCamera: Bool
     public let exifMeta: [String: Any]?
     public var asset: PHAsset?
-    public var url: URL?
     
-    public init(identifier: String? = nil,
-                image: UIImage,
+    public init(identifier: String?,
+                url: URL,
+                thumbnail: UIImage,
                 exifMeta: [String: Any]? = nil,
                 fromCamera: Bool = false,
-                asset: PHAsset? = nil,
-                url: URL? = nil) {
+                asset: PHAsset? = nil) {
         self.identifier = identifier ?? asset?.localIdentifier ?? UUID().uuidString
-        self.originalImage = image
+        self.url = url
+        self.thumbnail = thumbnail
         self.modifiedImage = nil
         self.fromCamera = fromCamera
         self.exifMeta = exifMeta
         self.asset = asset
-        self.url = url
     }
 }
 
+public extension HEImage {
+    func toMediaPhoto(imageCache: HEImageCache) async throws -> HEMediaPhoto {
+        let hei = self
+        let originURL: URL
+        let thumbnail: UIImage
+        let meta: [String : Any]?
+        if let url = try await imageCache.getCachedOriginImageURL(forId: hei.id) {
+            originURL = url
+            let image = try await imageCache.originImage(forHei: hei).value
+            thumbnail = image.he.thumbnail()
+            meta = image.pngData()?.he.metadataForImageData()
+        } else if let originImage = hei.originImage {
+            originURL = try await imageCache.cacheOriginImage(uiImage: originImage, forId: hei.id).value
+            thumbnail = originImage.he.thumbnail()
+            meta = originImage.pngData()?.he.metadataForImageData()
+        } else {
+            throw HEError.heImageHasNoData
+        }
+        
+        return HEMediaPhoto(identifier: hei.id,
+                            url: originURL,
+                            thumbnail: thumbnail,
+                            exifMeta: meta)
+    }
+}
+
+
+
+/// HEPicker 의 비디오 
 public class HEMediaVideo {
     /// 지정된 아이디 or PHAsset의 identifier, or uuid
     public var identifier: String
-    public var thumbnail: UIImage
     public var url: URL
+    public var thumbnail: UIImage
     public let fromCamera: Bool
     public var asset: PHAsset?
 
-    public init(identifier: String? = nil,
+    public init(identifier: String?,
                 thumbnail: UIImage,
                 videoURL: URL,
                 fromCamera: Bool = false,

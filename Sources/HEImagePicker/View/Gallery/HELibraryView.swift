@@ -84,7 +84,7 @@ final class HELibraryView: UIView {
     private var shouldShowLoader = false {
         didSet {
             DispatchQueue.main.async {
-                self.assetViewBox.squareCropButton.isEnabled = !self.shouldShowLoader
+                self.assetViewBox.squareCropButton?.isEnabled = !self.shouldShowLoader
                 self.assetViewBox.spinnerIsShown = self.shouldShowLoader
             }
         }
@@ -107,7 +107,7 @@ final class HELibraryView: UIView {
     // MARK: - Public Methods
 
     // MARK: Loader and progress
-
+    
     func fadeInLoader() {
         shouldShowLoader = true
         // Only show loader if full res image takes more than 0.5s to load.

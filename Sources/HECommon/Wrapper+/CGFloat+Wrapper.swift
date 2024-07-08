@@ -5,7 +5,7 @@
 
 import AVKit
 
-extension HEWrapper where Base == CGFloat {
+public extension HEWrapper where Base == CGFloat {
     var toPi: CGFloat {
         return base / 180 * .pi
     }

@@ -9,13 +9,27 @@ import Foundation
 import UIKit
 
 public protocol HEImageCache: AnyObject {
+    
+    /// 원본 이미지 캐시
+    func cacheOriginImage(uiImage: UIImage, forId id: String) -> Task<URL, Error>
+    /// 편집 이미지 캐시
+    func cacheEditImage(uiImage: UIImage, forHei hei: HEImage) -> Task<URL, Error>
+    /// 썸네일 이미지 캐시
+    func cacheThumbnailImage(uiImage: UIImage, forHei hei: HEImage) -> Task<URL, Error>
+    
+    /// 원본 이미지
     func originImage(forHei hei: HEImage) -> Task<UIImage, Error>
+    /// 편집 이미지
     func editImage(forHei hei: HEImage) -> Task<UIImage, Error>
+    /// 썸네일 이미지
     func thumbnailImage(forHei hei: HEImage) -> Task<UIImage, Error>
     
-    func cacheOriginImage(uiImage: UIImage, forId id: String) -> Task<URL?, Error>
-    func cacheEditImage(uiImage: UIImage, forHei hei: HEImage) -> Task<URL?, Error>
-    func cacheThumbnailImage(uiImage: UIImage, forHei hei: HEImage) -> Task<URL?, Error>
+    
+    /// 캐시된 URL 값만 확인
+    func getCachedOriginImageURL(forId id: String) async throws -> URL?
+    /// 캐시된 URL 값만 확인
+    func getCachedEditImageURL(forId id: String) async throws -> URL?
+    
     
     func clearCached(forHei hei: HEImage, includeOrigin: Bool) async
 }
@@ -24,8 +38,6 @@ public protocol HEImageCache: AnyObject {
 public protocol HEImageDataStore: AnyObject {
     func addHEImage(_ hei: HEImage, excepting: ((HEImage) -> Bool)?)
     func addHEImages(_ heis: [HEImage], excepting: ((HEImage) -> Bool)?)
-    func addImage(image: UIImage)
-    func addImage(url: URL)
     
     func removeHEImage(_ he: HEImage)
     func clearAll()
@@ -45,7 +57,11 @@ public extension HEImageDataStore {
     }
 }
 
-public class HESimpleImageStore: HEImageDataStore {
+
+
+
+/// 간단히 구현된 이미지 스토어
+public class HESimpleImageStore: HEImageDataStore, HEImageCache {
     
     public init(){}
     
@@ -85,14 +101,6 @@ public class HESimpleImageStore: HEImageDataStore {
         }
     }
     
-    public func addImage(image: UIImage) {
-        images.append(HEImage(image: image, editState: nil))
-    }
-    
-    public func addImage(url: URL) {
-        images.append(HEImage(origin: url, editState: nil))
-    }
-    
     public func all() -> [HEImage] {
         images
     }
@@ -113,7 +121,8 @@ public class HESimpleImageStore: HEImageDataStore {
     }
 }
 
-extension HESimpleImageStore: HEImageCache {
+// MARK: HEImageCache
+extension HESimpleImageStore {
     private func memCacheImage(_ image: UIImage, forUrl url: String) {
         memCache.setObject(image, forKey: url as AnyObject)
     }
@@ -157,7 +166,25 @@ extension HESimpleImageStore: HEImageCache {
         }
     }
     
-    public func cacheOriginImage(uiImage: UIImage, forId id: String) -> Task<URL?, Error> {
+    public func getCachedOriginImageURL(forId id: String) async throws -> URL? {
+        let fileName = id + ".png"
+        let fileURL: URL = try fileURL(fileName: fileName)
+        if FileManager.default.fileExists(atPath: fileURL.absoluteString) {
+            return fileURL
+        }
+        return nil
+    }
+    
+    public func getCachedEditImageURL(forId id: String) async throws -> URL? {
+        let fileName = id + ".edit.png"
+        let fileURL: URL = try fileURL(fileName: fileName)
+        if FileManager.default.fileExists(atPath: fileURL.absoluteString) {
+            return fileURL
+        }
+        return nil
+    }
+    
+    public func cacheOriginImage(uiImage: UIImage, forId id: String) -> Task<URL, Error> {
         let fileName = id + ".png"
         return Task.detached { [weak self] in
             guard let self, let data = uiImage.pngData() else {
@@ -172,7 +199,7 @@ extension HESimpleImageStore: HEImageCache {
         }
     }
     
-    public func cacheEditImage(uiImage: UIImage, forHei hei: HEImage) -> Task<URL?, Error> {
+    public func cacheEditImage(uiImage: UIImage, forHei hei: HEImage) -> Task<URL, Error> {
         let fileName = hei.id + ".edit.png"
         return Task.detached { [weak self] in
             guard let self, let data = uiImage.pngData() else {
@@ -188,10 +215,11 @@ extension HESimpleImageStore: HEImageCache {
         }
     }
     
-    public func cacheThumbnailImage(uiImage: UIImage, forHei hei: HEImage) -> Task<URL?, Error> {
+    public func cacheThumbnailImage(uiImage: UIImage, forHei hei: HEImage) -> Task<URL, Error> {
         let fileName = hei.id + ".thumb.png"
         return Task.detached { [weak self] in
-            guard let self, let data = uiImage.pngData() else {
+            let thumbnail = uiImage.he.thumbnail()
+            guard let self, let data = thumbnail.pngData() else {
                 throw HEError.generateFileData
             }
             let fileURL: URL = try await fileURL(fileName: fileName)

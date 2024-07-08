@@ -12,7 +12,7 @@ infix operator &/
 
 // With that you can devide to zero
 extension CGFloat {
-    public static func &/ (lhs: CGFloat, rhs: CGFloat) -> CGFloat {
+    static func &/ (lhs: CGFloat, rhs: CGFloat) -> CGFloat {
         if rhs == 0 {
             return 0
         }
@@ -21,7 +21,7 @@ extension CGFloat {
 }
 
 
-internal extension CGRect {
+extension CGRect {
     
     func differenceWith(rect: CGRect,
                         removedHandler: (CGRect) -> Void,

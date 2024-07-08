@@ -1,8 +1,8 @@
 //
 //  Trace.swift
-//  HEImagePicker
+//  HECommon
 //
-//  Created by 브라운수 on 7/2/24.
+//  Created by 브라운수 on 7/8/24.
 //
 
 import Foundation
@@ -10,7 +10,7 @@ import Foundation
 #if DEBUG
 import os
 
-fileprivate let tag = "*HEPicker*"
+fileprivate let tag = "*HECommon*"
 
 fileprivate var logger: Logger = {
     return Logger(subsystem: "hi", category: "image-editor")

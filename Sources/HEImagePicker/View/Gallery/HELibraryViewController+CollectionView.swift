@@ -44,7 +44,7 @@ extension HELibraryViewController {
         toggleMultipleSelection()
         
         // Update preview.
-        changeAsset(mediaManager.getAsset(at: indexPath.row))
+        changePreview(assetMediaManager.getAsset(at: indexPath.row))
 
         // Bring preview down and keep selected cell visible.
         panGestureHelper.resetToOriginalState()
@@ -59,7 +59,7 @@ extension HELibraryViewController {
     /// Removes cell from selection
     func deselect(indexPath: IndexPath) {
         if let positionIndex = selectedItems.firstIndex(where: {
-            $0.assetIdentifier == mediaManager.getAsset(at: indexPath.row)?.localIdentifier
+            $0.assetIdentifier == assetMediaManager.getAsset(at: indexPath.row)?.localIdentifier
         }) {
             selectedItems.remove(at: positionIndex)
 
@@ -72,7 +72,7 @@ extension HELibraryViewController {
                 v.albumCollectionView.deselectItem(at: indexPath, animated: false)
                 v.albumCollectionView.selectItem(at: previouslySelectedIndexPath, animated: false, scrollPosition: [])
                 currentlySelectedIndex = previouslySelectedIndexPath.row
-                changeAsset(mediaManager.getAsset(at: previouslySelectedIndexPath.row))
+                changePreview(assetMediaManager.getAsset(at: previouslySelectedIndexPath.row))
             }
             
             checkLimit()
@@ -85,7 +85,7 @@ extension HELibraryViewController {
         if !shouldBeSelected {
             return
         }
-        guard let asset = mediaManager.getAsset(at: indexPath.item) else {
+        guard let asset = assetMediaManager.getAsset(at: indexPath.item) else {
             print("No asset to add to selection.")
             return
         }
@@ -97,7 +97,7 @@ extension HELibraryViewController {
     
     func isInSelectionPool(indexPath: IndexPath) -> Bool {
         return selectedItems.contains(where: {
-            $0.assetIdentifier == mediaManager.getAsset(at: indexPath.row)?.localIdentifier
+            $0.assetIdentifier == assetMediaManager.getAsset(at: indexPath.row)?.localIdentifier
         })
     }
     
@@ -110,7 +110,7 @@ extension HELibraryViewController {
 
 extension HELibraryViewController: UICollectionViewDataSource {
     public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return mediaManager.fetchResult?.count ?? 0
+        return assetMediaManager.fetchResult?.count ?? 0
     }
 }
 
@@ -125,7 +125,7 @@ extension HELibraryViewController: UICollectionViewDelegate {
         var identifier: String
         var mediaType: PHAssetMediaType
         var phAsset: PHAsset?
-        
+        var thumbnail: UIImage?
         // Replacing thumbnail from external source
         if let media = delegate?.libraryView(self, replacingItemAt: indexPath) {
             switch media {
@@ -133,30 +133,41 @@ extension HELibraryViewController: UICollectionViewDelegate {
                 identifier = photo.identifier
                 mediaType = .image
                 phAsset = photo.asset
+                thumbnail = photo.thumbnail
             case .video(let video):
                 identifier = video.identifier
                 mediaType = .video
                 phAsset = video.asset
+                thumbnail = video.thumbnail
             }
             
           // Original thumbnail from photo album
-        } else if let asset = mediaManager.getAsset(at: indexPath.item) {
+        } else if let asset = assetMediaManager.getAsset(at: indexPath.item) {
             identifier = asset.localIdentifier
             mediaType = asset.mediaType
-            mediaManager.phImageManager?.requestImage(for: asset,
+            phAsset = asset
+        } else {
+            return cell
+        }
+        
+        // Load Image
+        
+        if let phAsset {
+            assetMediaManager.phImageManager?.requestImage(for: phAsset,
                                                       targetSize: v.cellSize(),
                                                       contentMode: .aspectFill,
                                                       options: nil) { image, _ in
                 // The cell may have been recycled when the time this gets called
                 // set image only if it's still showing the same asset.
-                if cell.representedAssetIdentifier == asset.localIdentifier && image != nil {
+                if cell.representedAssetIdentifier == phAsset.localIdentifier && image != nil {
                     cell.imageView.image = image
                 }
             }
         } else {
-            return cell
+            cell.imageView.image = thumbnail
         }
 
+        // Info
         cell.representedAssetIdentifier = identifier
         cell.multipleSelectionIndicator.selectionColor = PickerConfig.colors.multipleItemsSelectedCircleColor ?? PickerConfig.colors.tintColor
         
@@ -206,8 +217,7 @@ extension HELibraryViewController: UICollectionViewDelegate {
     public func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let previouslySelectedIndexPath = IndexPath(row: currentlySelectedIndex, section: 0)
         currentlySelectedIndex = indexPath.row
-
-        changeAsset(mediaManager.getAsset(at: indexPath.row))
+        changePreview(assetMediaManager.getAsset(at: indexPath.row))
         panGestureHelper.resetToOriginalState()
         
         // Only scroll cell to top if preview is hidden.

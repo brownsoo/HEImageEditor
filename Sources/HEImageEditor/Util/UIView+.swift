@@ -4,6 +4,7 @@
 //
 
 import UIKit
+import HECommon
 
 extension HEWrapper where Base: UIView {
     var top: CGFloat {

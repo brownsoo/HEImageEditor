@@ -7,6 +7,7 @@
 
 import UIKit
 import SnapKit
+import HECommon
 import HEImageEditor
 import HEImagePicker
 import PhotosUI
@@ -126,7 +127,7 @@ class ViewController: UIViewController {
     }
    
     
-    func startEditMultipleImages(_ images: [HEImage]) {
+    func startEditMultipleImages(_ images: [HEEditImage]) {
         imageStore.clearAll()
         imageStore.addHEImages(images)
         let vc = HEImageEditorViewController(imageStore: imageStore,
@@ -162,7 +163,7 @@ extension ViewController: HEImageEditorDelegate {
     func didFinishEditImages(_ editor: HEImageEditor) {
     }
     
-    func confirmingResetEditImage(_ editor: HEImageEditor, hei: HEImage, completion: @escaping (Bool) -> Void) {
+    func confirmingResetEditImage(_ editor: HEImageEditor, hei: HEEditImage, completion: @escaping (Bool) -> Void) {
         let alert = UIAlertController(title: nil, message: "현재 보이는 이미지를 원본으로 초기화 합니다.\n진행 하시겠습니까?", preferredStyle: .alert)
         DispatchQueue.main.async {
             let okayAction = UIAlertAction(title: "확인", style: .default, handler: { _ in completion(true) })
@@ -197,10 +198,11 @@ extension ViewController: PHPickerViewControllerDelegate {
         
         
         Task {
-            let existing: OrderedDictionary<String, HEImage> =  imageStore.all().reduce(into: OrderedDictionary<String, HEImage>()) {
+            let existing: OrderedDictionary<String, HEEditImage> = imageStore.all().reduce(into: OrderedDictionary<String, HEImage>()) {
                 $0[$1.id] = $1
-            }
-            var newSelection = OrderedDictionary<String, HEImage>()
+            }.compactMapValues({ $0 as? HEEditImage })
+            
+            var newSelection = OrderedDictionary<String, HEEditImage>()
             for result in results {
                 if let identifier = result.assetIdentifier?.replacingOccurrences(of: "/", with: "~") {
                     if let exist = existing[identifier] {
@@ -209,13 +211,13 @@ extension ViewController: PHPickerViewControllerDelegate {
                         if let image = await loadImageObject(result: result) {
                             print("image= \(image.size.width) x \(image.size.height)")
                             if let fileUrl = try? await imageStore.cacheOriginImage(uiImage: image, forId: identifier).value {
-                                newSelection[identifier] = HEImage(
+                                newSelection[identifier] = HEEditImage(
                                     id: identifier,
                                     origin: fileUrl,
                                     editState: nil
                                 )
                             } else {
-                                newSelection[identifier] = HEImage(
+                                newSelection[identifier] = HEEditImage(
                                     id: identifier,
                                     image: image,
                                     editState: nil
@@ -265,6 +267,9 @@ extension ViewController: HEImagePickerDelegate {
         picker.dismiss(animated: true)
     }
     
+    func imagePicker(_ picker: HEImagePicker, didSelectToEditItem item: HEMediaItem) {
+        
+    }
 }
 
 

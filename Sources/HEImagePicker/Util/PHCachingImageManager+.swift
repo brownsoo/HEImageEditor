@@ -7,6 +7,7 @@
 
 import UIKit
 import Photos
+import HECommon
 
 extension PHCachingImageManager {
     
@@ -38,20 +39,11 @@ extension PHCachingImageManager {
                                             height: targetSize.height)
                 if let imageRef = image.cgImage?.cropping(to: scaledCropRect) {
                     let croppedImage = UIImage(cgImage: imageRef)
-                    let exifs = self.metadataForImageData(data: data)
+                    let exifs = data.he.metadataForImageData()
                     callback(croppedImage, exifs)
                 }
             }
         }
-    }
-    
-    private func metadataForImageData(data: Data) -> [String: Any] {
-        if let imageSource = CGImageSourceCreateWithData(data as CFData, nil),
-        let imageProperties = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil),
-        let metaData = imageProperties as? [String: Any] {
-            return metaData
-        }
-        return [:]
     }
     
     func fetchPreviewFor(video asset: PHAsset, callback: @escaping (UIImage) -> Void) {

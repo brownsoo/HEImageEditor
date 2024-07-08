@@ -102,7 +102,7 @@ class HEAdjustSlider: UIView {
             separator.frame = CGRect(x: 0, y: (bounds.height - separatorH) / 2, width: sliderWidth, height: separatorH)
             valueLabel.frame = CGRect(x: 0, y: bounds.height / 2 - 10, width: 38, height: 20)
         } else {
-            valueLabel.frame = CGRect(x: 0, y: 0, width: he.width, height: 38)
+            valueLabel.frame = CGRect(x: 0, y: 0, width: frame.width, height: 38)
             shadowView.frame = CGRect(x: 0, y: valueLabel.he.bottom + 2, width: he.width, height: sliderWidth)
             whiteView.frame = shadowView.frame
             tintView.frame = calculateTintFrame()

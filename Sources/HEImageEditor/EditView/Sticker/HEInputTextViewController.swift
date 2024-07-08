@@ -3,6 +3,7 @@
 //  HEImageEditor
 
 import UIKit
+import HECommon
 
 protocol HEInputTextViewControllerDelegate: AnyObject {
     func inputTextViewController(_ controller: HEInputTextViewController, stickerId: String?, didInput text: String, textColor: UIColor, fillColor: UIColor, font: UIFont, image: UIImage?)
@@ -105,8 +106,8 @@ class HEInputTextViewController: UIViewController {
     
     private lazy var toolView = UIView(frame: CGRect(
         x: 0,
-        y: view.he.height - Self.toolViewHeight,
-        width: view.he.width,
+        y: view.bounds.height - Self.toolViewHeight,
+        width: view.bounds.width,
         height: Self.toolViewHeight
     ))
     
@@ -202,7 +203,7 @@ class HEInputTextViewController: UIViewController {
         bgImageView.frame = view.bounds
         
         if deviceIsiPad() {
-            if UIApplication.shared.findWindowScenes().first?.interfaceOrientation.isLandscape == true {
+            if UIApplication.shared.he.findWindowScenes().first?.interfaceOrientation.isLandscape == true {
                 bgImageView.contentMode = .scaleAspectFill
             } else {
                 bgImageView.contentMode = .scaleAspectFit
@@ -223,7 +224,7 @@ class HEInputTextViewController: UIViewController {
         toolView.frame = CGRect(
             x: 0,
             y: 0,
-            width: view.he.width,
+            width: view.bounds.width,
             height: Self.toolViewHeight
         )
         colorCollView.frame = toolView.bounds
@@ -417,8 +418,8 @@ class HEInputTextViewController: UIViewController {
     private func getToolViewFrame(keyboardHeight: CGFloat) -> CGRect {
         return CGRect(
             x: 0,
-            y: view.he.height - keyboardHeight - Self.toolViewHeight,
-            width: view.he.width,
+            y: view.bounds.height - keyboardHeight - Self.toolViewHeight,
+            width: view.bounds.width,
             height: Self.toolViewHeight
         )
     }

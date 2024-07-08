@@ -10,4 +10,5 @@ import Foundation
 public enum HEError: Error {
     case imageNotFound
     case generateFileData
+    case heImageHasNoData
 }

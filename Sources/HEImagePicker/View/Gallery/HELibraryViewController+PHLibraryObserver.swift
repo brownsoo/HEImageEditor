@@ -15,7 +15,7 @@ extension HELibraryViewController: PHPhotoLibraryChangeObserver {
     }
     
     public func photoLibraryDidChange(_ changeInstance: PHChange) {
-        guard let fetchResult = self.mediaManager.fetchResult,
+        guard let fetchResult = self.assetMediaManager.fetchResult,
               let collectionChanges = changeInstance.changeDetails(for: fetchResult) else {
             woops("Some problems there.")
             return
@@ -23,7 +23,7 @@ extension HELibraryViewController: PHPhotoLibraryChangeObserver {
 
         DispatchQueue.main.async {
             let collectionView = self.v.albumCollectionView
-            self.mediaManager.fetchResult = collectionChanges.fetchResultAfterChanges
+            self.assetMediaManager.fetchResult = collectionChanges.fetchResultAfterChanges
             if !collectionChanges.hasIncrementalChanges || collectionChanges.hasMoves {
                 collectionView.reloadData()
             } else {
@@ -49,7 +49,7 @@ extension HELibraryViewController: PHPhotoLibraryChangeObserver {
             }
 
             self.updateAssetSelection()
-            self.mediaManager.resetCachedAssets()
+            self.assetMediaManager.resetCachedAssets()
         }
     }
 
@@ -57,16 +57,16 @@ extension HELibraryViewController: PHPhotoLibraryChangeObserver {
         // If no items selected in assetView, but there are already photos
         // after photoLibraryDidChange, than select first item in library.
         // It can be when user add photos from limited permission.
-        if self.mediaManager.hasResultItems,
+        if self.assetMediaManager.hasResultItems,
            selectedItems.isEmpty,
-           let newAsset = self.mediaManager.getAsset(at: 0) {
-            self.changeAsset(newAsset)
+           let newAsset = self.assetMediaManager.getAsset(at: 0) {
+            self.changePreview(newAsset)
         }
 
         // If user decided to forbid all photos with limited permission
         // while using the lib we need to remove asset from assets view.
         if selectedItems.isEmpty == false,
-           self.mediaManager.hasResultItems == false {
+           self.assetMediaManager.hasResultItems == false {
             self.v.assetZoomableView.clearAsset()
             self.selectedItems.removeAll()
             self.libraryViewFinishedLoading()

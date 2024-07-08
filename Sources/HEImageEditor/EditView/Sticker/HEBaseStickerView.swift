@@ -4,6 +4,7 @@
 //
 
 import UIKit
+import HECommon
 
 protocol HEStickerViewDelegate: NSObject {
     /// Called when scale or rotate or move.

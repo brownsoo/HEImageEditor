@@ -14,7 +14,7 @@ public struct HEWrapper<Base> {
     }
 }
 
-/// HE 변환 모델 
+/// for Class type
 public protocol HECompatible: AnyObject { }
 extension HECompatible {
     public var he: HEWrapper<Self> {
@@ -28,13 +28,14 @@ extension HECompatible {
     }
 }
 
+extension UIApplication: HECompatible { }
 extension UIImage: HECompatible { }
 extension CIImage: HECompatible { }
 extension UIColor: HECompatible { }
 extension UIView: HECompatible { }
 extension UIGraphicsImageRenderer: HECompatible { }
 
-
+/// for Value type
 
 public protocol HECompatibleValue { }
 extension HECompatibleValue {
@@ -46,3 +47,4 @@ extension HECompatibleValue {
 
 extension String: HECompatibleValue { }
 extension CGFloat: HECompatibleValue { }
+extension Data: HECompatibleValue { }

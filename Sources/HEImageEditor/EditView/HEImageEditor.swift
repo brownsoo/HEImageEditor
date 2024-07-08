@@ -8,6 +8,7 @@
 import Foundation
 import UIKit
 import Combine
+import HECommon
 
 public protocol HEImageEditor: UIViewController {
     /// 연속 편집 모드 여부
@@ -15,18 +16,18 @@ public protocol HEImageEditor: UIViewController {
     /// - true: 편집을 종료해도 이전 편집 상태를 유지한다.
     /// - false: (기본값) 편집을 종료하면, 편집 상태를 없애고 합쳐진 이미지로 변경한다.
     var continuouslyMode: Bool { get set }
-    var editingImage: HEImage? { get }
+    var editingImage: HEEditImage? { get }
     var currentIndex: Int? { get }
 
 }
 
 public protocol HEImageEditorDelegate: AnyObject {
     func didFinishEditImages(_ editor: HEImageEditor)
-    func confirmingResetEditImage(_ editor: HEImageEditor, hei: HEImage, completion: @escaping (Bool) -> Void)
+    func confirmingResetEditImage(_ editor: HEImageEditor, hei: HEEditImage, completion: @escaping (Bool) -> Void)
 }
 
 public extension HEImageEditorDelegate {
-    func confirmingResetEditImage(_ editor: HEImageEditor, hei: HEImage, completion: @escaping (Bool) -> Void) {
+    func confirmingResetEditImage(_ editor: HEImageEditor, hei: HEEditImage, completion: @escaping (Bool) -> Void) {
         completion(true)
     }
 }
@@ -44,7 +45,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
     
     public var continuouslyMode: Bool = false
     
-    public private(set) var editingImage: HEImage?
+    public private(set) var editingImage: HEEditImage?
     public private(set) var currentIndex: Int?
     
     private lazy var indexLabel: UILabel = {
@@ -161,7 +162,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
     
     @objc
     private func clickOnResetToast() {
-        guard let currentIndex, let hei = imageStore.getHEImage(at: currentIndex) else { return }
+        guard let currentIndex, let hei = imageStore.getHEImage(at: currentIndex) as? HEEditImage else { return }
         if let delegate = delegate {
             delegate.confirmingResetEditImage(self, hei: hei) { [weak self] confirmed in
                 if confirmed {
@@ -171,7 +172,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
         }
     }
     
-    private func executeReset(_ hei: HEImage, index: Int) {
+    private func executeReset(_ hei: HEEditImage, index: Int) {
         self.perform(#selector(self.hideResetToast), with: nil, afterDelay: 0.0)
         Task {
             hei.setEditState(nil)
@@ -223,12 +224,12 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
     }
     
     private func onBottomToolSelected(type: HEConfiguration.EditTool) {
-        guard let currentIndex, let currentImage = imageStore.getHEImage(at: currentIndex) else {
+        guard let currentIndex, let hei = imageStore.getHEImage(at: currentIndex) as? HEEditImage else {
             return
         }
-        self.editingImage = currentImage
+        self.editingImage = hei
         Task { @MainActor in
-           await self.startEditImage(hei: currentImage, tool: type)
+           await self.startEditImage(hei: hei, tool: type)
         }
         .store(in: &cancellables)
         
@@ -272,7 +273,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
         }
     }
     
-    private func startEditImage(hei: HEImage, tool: HEConfiguration.EditTool?) async {
+    private func startEditImage(hei: HEEditImage, tool: HEConfiguration.EditTool?) async {
         let topBuilder = self.makeEditTopBarView()
         do {
             let image: UIImage
@@ -315,7 +316,7 @@ extension HEImageEditorViewController: HEEditImageViewDelegate {
         bottomToolView?.unselectTool()
         editingImage = nil
         // 편집 데이터 교체
-        guard let editId, let hei = imageStore.getHEImage(forId: editId) else {
+        guard let editId, let hei = imageStore.getHEImage(forId: editId) as? HEEditImage else {
             return
         }
         loadingView.show(inCenterOf: self.view)

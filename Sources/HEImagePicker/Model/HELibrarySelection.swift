@@ -9,12 +9,14 @@ import Foundation
 import UIKit
 
 /// 라이브러리 선택 아이템 모델
+///
+/// - 크롭 위치, 영역
 public struct HELibrarySelection {
     let index: Int
+    let assetIdentifier: String
     var cropRect: CGRect?
     var scrollViewContentOffset: CGPoint?
     var scrollViewZoomScale: CGFloat?
-    let assetIdentifier: String
     
     init(index: Int,
          cropRect: CGRect? = nil,

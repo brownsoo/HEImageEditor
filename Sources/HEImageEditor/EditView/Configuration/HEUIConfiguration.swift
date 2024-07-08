@@ -3,6 +3,7 @@
 //  HEImageEditor
 //
 import UIKit
+import HECommon
 
 public class HEUIConfiguration: NSObject {
     private static var single = HEUIConfiguration()

@@ -21,3 +21,4 @@
 "YPImagePickerVideoTooShort" = "The video must be at least %@ seconds";
 "YPImagePickerWarningItemsLimit" = "The limit is %d photos or videos";
 "HEImagePickerAttach" = "Attach";
+"HEImagePickerEditPhoto" = "Edit photo";

@@ -9,6 +9,7 @@ import Foundation
 import Photos
 import PhotosUI
 import Combine
+import HECommon
 
 public protocol HELibraryViewDelegate: AnyObject {
     
@@ -36,7 +37,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     internal var v = HELibraryView(frame: .zero)
     internal var isProcessing = false // true if video or image is in processing state
     internal var selectedItems = [HELibrarySelection]()
-    internal let mediaManager = LibraryMediaManager()
+    internal let assetMediaManager = LibraryMediaManager()
     internal var isMultipleSelectionEnabled = false
     internal var currentlySelectedIndex: Int = 0
     internal let panGestureHelper = HEPanGestureHelper()
@@ -44,6 +45,8 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     internal var cancellables = Set<AnyCancellable>()
     
     internal lazy var albumsManager = HEAlbumsManager()
+    
+    public lazy var editImageStore = HESimpleImageStore()
     
     // MARK: - Init
 
@@ -87,10 +90,8 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        v.assetViewBox.squareCropButton
-            .addTarget(self,
-                       action: #selector(squareCropButtonTapped),
-                       for: .touchUpInside)
+        v.assetViewBox.squareCropButton?.addTarget(self, action: #selector(squareCropButtonTapped), for: .touchUpInside)
+        v.assetViewBox.editButton?.addTarget(self, action: #selector(editPhotoButtonTapped), for: .touchUpInside)
         
         // Forces assetZoomableView to have a contentSize.
         // otherwise 0 in first selection triggering the bug : "invalid image size 0x0"
@@ -122,8 +123,8 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
             isInitialized = true
         }
 
-        mediaManager.initialize()
-        mediaManager.exportProgressListener = { [weak self] progress in self?.v.updateProgress(progress) }
+        assetMediaManager.initialize()
+        assetMediaManager.exportProgressListener = { [weak self] progress in self?.v.updateProgress(progress) }
 
         setupCollectionView()
         registerForLibraryChanges()
@@ -156,7 +157,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         v.cameraPhotoButton?.addTarget(self, action: #selector(imageCaptureTapped), for: .touchUpInside)
         v.cameraVideoButton?.addTarget(self, action: #selector(videoCaptureTapped), for: .touchUpInside)
         
-        guard mediaManager.hasResultItems else {
+        guard assetMediaManager.hasResultItems else {
             return
         }
 
@@ -167,7 +168,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
 
     func setAlbum(_ album: HEAlbum) {
         title = album.title
-        mediaManager.collection = album.collection
+        assetMediaManager.collection = album.collection
         currentlySelectedIndex = 0
         if !isMultipleSelectionEnabled {
             selectedItems.removeAll()
@@ -237,7 +238,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     @objc
     private func close() {
         // Cancelling exporting of all videos
-        mediaManager.forseCancelExporting()
+        assetMediaManager.forseCancelExporting()
         delegate?.libraryViewDidCancel(self)
     }
     
@@ -267,12 +268,17 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         }
     }
     
+    @objc
+    func editPhotoButtonTapped() {
+        // TODO: Edit
+    }
+    
     // MARK: - Multiple Selection
 
     @objc
     func multipleSelectionButtonTapped() {
         // If no items, than preventing multiple selection
-        guard mediaManager.hasResultItems else {
+        guard assetMediaManager.hasResultItems else {
             if #available(iOS 14, *) {
                 PHPhotoLibrary.shared().presentLimitedLibraryPicker(from: self)
             }
@@ -302,7 +308,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
             
             if needPreselectItemsAndNotSelectedAnyYet,
                shouldSelectByDelegate,
-               let asset = mediaManager.getAsset(at: currentlySelectedIndex) {
+               let asset = assetMediaManager.getAsset(at: currentlySelectedIndex) {
                 selectedItems = [
                     HELibrarySelection(index: currentlySelectedIndex,
                                        cropRect: v.currentCropRect(),
@@ -341,15 +347,15 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     func refreshMediaRequest() {
         let options = buildPHFetchOptions()
 
-        if let collection = mediaManager.collection {
-            mediaManager.fetchResult = PHAsset.fetchAssets(in: collection, options: options)
+        if let collection = assetMediaManager.collection {
+            assetMediaManager.fetchResult = PHAsset.fetchAssets(in: collection, options: options)
         } else {
-            mediaManager.fetchResult = PHAsset.fetchAssets(with: options)
+            assetMediaManager.fetchResult = PHAsset.fetchAssets(with: options)
         }
         
-        if mediaManager.hasResultItems,
-        let firstAsset = mediaManager.getAsset(at: 0) {
-            changeAsset(firstAsset)
+        if assetMediaManager.hasResultItems,
+        let firstAsset = assetMediaManager.getAsset(at: 0) {
+            changePreview(firstAsset)
             v.albumCollectionView.reloadData()
             v.albumCollectionView.selectItem(at: IndexPath(row: 0, section: 0),
                                         animated: false,
@@ -385,16 +391,51 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     
     public func scrollViewDidScroll(_ scrollView: UIScrollView) {
         if scrollView == v.albumCollectionView {
-            mediaManager.updateCachedAssets(in: self.v.albumCollectionView)
+            assetMediaManager.updateCachedAssets(in: self.v.albumCollectionView)
         }
     }
     
-    func changeAsset(_ asset: PHAsset?) {
+    private func changePreviewWithHEImage(_ hei: HEImage?) {
+        guard let hei = hei else {
+            print("No hei to change.")
+            return
+        }
+        libraryViewStartedLoadingImage()
+        
+        let completion = { (isLowResIntermediaryImage: Bool) in
+            self.v.assetViewBox.updateSquareCropButtonState()
+            self.updateCropInfo()
+            if !isLowResIntermediaryImage {
+                self.v.hideLoader()
+                self.libraryViewFinishedLoading()
+            }
+        }
+        
+        let updateCropInfo = {
+            self.updateCropInfo()
+        }
+        // MARK: add a func(updateCropInfo) after crop multiple
+        DispatchQueue.global(qos: .userInitiated).async {
+            self.v.assetZoomableView.setImage(hei,
+                                              mediaManager: self.assetMediaManager,
+                                              storedCropPosition: self.fetchStoredCrop(),
+                                              completion: completion,
+                                              updateCropInfo: updateCropInfo)
+        }
+    }
+    
+    func changePreview(_ asset: PHAsset?) {
         guard let asset = asset else {
             print("No asset to change.")
             return
         }
 
+        if let hei = editImageStore.getHEImage(forId: asset.localIdentifier) {
+            changePreviewWithHEImage(hei)
+            trace("편집 이미지다")
+            return
+        }
+        
         libraryViewStartedLoadingImage()
         
         let completion = { (isLowResIntermediaryImage: Bool) in
@@ -415,13 +456,14 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
             switch asset.mediaType {
             case .image:
                 self.v.assetZoomableView.setImage(asset,
-                                                  mediaManager: self.mediaManager,
+                                                  mediaManager: self.assetMediaManager,
                                                   storedCropPosition: self.fetchStoredCrop(),
                                                   completion: completion,
                                                   updateCropInfo: updateCropInfo)
+                
             case .video:
                 self.v.assetZoomableView.setVideo(asset,
-                                                  mediaManager: self.mediaManager,
+                                                  mediaManager: self.assetMediaManager,
                                                   storedCropPosition: self.fetchStoredCrop(),
                                                   completion: { completion(false) },
                                                   updateCropInfo: updateCropInfo)
@@ -500,7 +542,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         libraryViewDidTapNext()
         let cropRect = withCropRect ?? DispatchQueue.main.sync { v.currentCropRect() }
         let ts = targetSize(for: asset, cropRect: cropRect)
-        mediaManager.phImageManager?.fetchImage(for: asset, cropRect: cropRect, targetSize: ts, callback: callback)
+        assetMediaManager.phImageManager?.fetchImage(for: asset, cropRect: cropRect, targetSize: ts, callback: callback)
     }
     
     private func fetchVideoAndApplySettings(for asset: PHAsset,
@@ -527,7 +569,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         } else {
             libraryViewDidTapNext()
             Task {
-                let videoURL = await mediaManager.fetchVideoUrlAndCrop(for: asset, cropRect: resultCropRect)
+                let videoURL = await assetMediaManager.fetchVideoUrlAndCrop(for: asset, cropRect: resultCropRect)
                 if Task.isCancelled { return }
                 callback(videoURL)
             }
@@ -542,7 +584,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         libraryViewDidTapNext()
         let timeDuration = CMTimeMakeWithSeconds(duration, preferredTimescale: 1000)
         Task {
-            let videoURL = await mediaManager.fetchVideoUrlAndCropWithDuration(for: asset,
+            let videoURL = await assetMediaManager.fetchVideoUrlAndCropWithDuration(for: asset,
                                                           cropRect: rect,
                                                           duration: timeDuration)
             if Task.isCancelled { return }
@@ -556,21 +598,24 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
                               multipleItemsCallback: @escaping (_ items: [HEMediaItem]) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
             
-            let selectedAssets: [(asset: PHAsset, cropRect: CGRect?)] = self.selectedItems.compactMap {
-                guard let asset = PHAsset.fetchAssets(withLocalIdentifiers: [$0.assetIdentifier],
-                                                      options: PHFetchOptions()).firstObject else {
-                    woops("Error!")
-                    return nil
+            let selectedItems: [(asset: PHAsset?, hei: HEImage?, cropRect: CGRect?)] = self.selectedItems.compactMap {
+                if let asset = PHAsset.fetchAssets(withLocalIdentifiers: [$0.assetIdentifier],
+                                                      options: PHFetchOptions()).firstObject {
+                    return (asset, nil, $0.cropRect)
                 }
-                return (asset, $0.cropRect)
+                if let hei = self.editImageStore.getHEImage(forId: $0.assetIdentifier) {
+                    return (nil, hei, $0.cropRect)
+                }
+                woops("뭐냐??!!")
+                return nil
             }
             
             // Multiple selection
             if self.isMultipleSelectionEnabled && self.selectedItems.count > 1 {
                 
                 // Check video length
-                for asset in selectedAssets {
-                    if self.fitsVideoLengthLimits(asset: asset.asset) == false {
+                for asset in selectedItems {
+                    if let asset = asset.asset, self.fitsVideoLengthLimits(asset: asset) == false {
                         return
                     }
                 }
@@ -579,51 +624,84 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
                 var resultMediaItems: [HEMediaItem] = []
                 let asyncGroup = DispatchGroup()
                 
-                var assetDictionary: [PHAsset?: Int] = .init()
-                for (index, assetPair) in selectedAssets.enumerated() {
-                    assetDictionary[assetPair.asset] = index
+                var assetDictionary: [String?: Int] = .init()
+                for (index, itemTuple) in selectedItems.enumerated() {
+                    assetDictionary[itemTuple.asset?.localIdentifier ?? itemTuple.hei?.id] = index
                 }
                 
-                for asset in selectedAssets {
+                for item in selectedItems {
                     asyncGroup.enter()
-                    
-                    switch asset.asset.mediaType {
-                    case .image:
-                        self.fetchImageAndCrop(for: asset.asset, withCropRect: asset.cropRect) { image, exifMeta in
-                            let photo = HEMediaPhoto(image: image.resizedImageIfNeeded(),
-                                                     exifMeta: exifMeta, asset: asset.asset)
-                            resultMediaItems.append(HEMediaItem.photo(p: photo))
-                            asyncGroup.leave()
-                        }
-                        
-                    case .video:
-                        self.fetchVideoAndApplySettings(for: asset.asset,
-                                                             withCropRect: asset.cropRect) { videoURL in
-                            if let videoURL = videoURL {
-                                let videoItem = HEMediaVideo(thumbnail: thumbnailFromVideoPath(videoURL),
-                                                             videoURL: videoURL, asset: asset.asset)
-                                resultMediaItems.append(HEMediaItem.video(v: videoItem))
-                            } else {
-                                woops("Problems with fetching videoURL.")
+                    if let asset = item.asset {
+                        switch asset.mediaType {
+                        case .image:
+                            self.fetchImageAndCrop(for: asset, withCropRect: item.cropRect) { [weak self] image, exifMeta in
+                                guard let self else {
+                                    asyncGroup.leave()
+                                    return
+                                }
+                                // cache
+                                let image = image.resizedImageIfNeeded()
+                                Task {
+                                    do {
+                                        let url = try await self.editImageStore.cacheOriginImage(uiImage: image, forId: asset.localIdentifier).value
+                                        let thumbnail = image.he.thumbnail()
+                                        let photo = HEMediaPhoto(identifier: asset.localIdentifier,
+                                                                 url: url,
+                                                                 thumbnail: thumbnail,
+                                                                 exifMeta: exifMeta,
+                                                                 asset: asset)
+                                        resultMediaItems.append(HEMediaItem.photo(p: photo))
+                                    } catch {
+                                        woops(error)
+                                    }
+                                    asyncGroup.leave()
+                                }
                             }
+                            
+                        case .video:
+                            self.fetchVideoAndApplySettings(for: asset,
+                                                            withCropRect: item.cropRect) { videoURL in
+                                if let videoURL = videoURL {
+                                    let videoItem = HEMediaVideo(identifier: asset.localIdentifier,
+                                                                 thumbnail: thumbnailFromVideoPath(videoURL),
+                                                                 videoURL: videoURL,
+                                                                 asset: asset)
+                                    resultMediaItems.append(HEMediaItem.video(v: videoItem))
+                                } else {
+                                    woops("Problems with fetching videoURL.")
+                                }
+                                asyncGroup.leave()
+                            }
+                        default:
+                            break
+                        }
+                    } else if let hei = item.hei {
+                        Task {
+                            do {
+                                let photo = try await hei.toMediaPhoto(imageCache: self.editImageStore)
+                                resultMediaItems.append(HEMediaItem.photo(p: photo))
+                            } catch {
+                                woops(error)
+                            }
+                            
                             asyncGroup.leave()
                         }
-                    default:
-                        break
+                    } else {
+                        asyncGroup.leave()
                     }
                 }
                 
                 asyncGroup.notify(queue: .main) {
                     // TODO: sort the array based on the initial order of the assets in selectedAssets
                     resultMediaItems.sort { (first, second) -> Bool in
-                        var firstAsset: PHAsset?
-                        var secondAsset: PHAsset?
+                        var firstAsset: String?
+                        var secondAsset: String?
                         
                         switch first {
                         case .photo(let photo):
-                            firstAsset = photo.asset
+                            firstAsset = photo.identifier
                         case .video(let video):
-                            firstAsset = video.asset
+                            firstAsset = video.identifier
                         }
                         guard let firstIndex = assetDictionary[firstAsset] else {
                             return false
@@ -631,9 +709,9 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
                         
                         switch second {
                         case .photo(let photo):
-                            secondAsset = photo.asset
+                            secondAsset = photo.identifier
                         case .video(let video):
-                            secondAsset = video.asset
+                            secondAsset = video.identifier
                         }
                         
                         guard let secondIndex = assetDictionary[secondAsset] else {
@@ -645,37 +723,69 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
                     multipleItemsCallback(resultMediaItems)
                     self.libraryViewFinishedLoading()
                 }
-            } else if let asset = selectedAssets.first?.asset {
-                switch asset.mediaType {
-                case .audio, .unknown:
-                    return
-                case .video:
-                    self.fetchVideoAndApplySettings(for: asset, callback: { videoURL in
-                        DispatchQueue.main.async { [weak self] in
-                            if let videoURL = videoURL {
-                                self?.libraryViewFinishedLoading()
-                                let video = HEMediaVideo(thumbnail: thumbnailFromVideoPath(videoURL),
-                                                         videoURL: videoURL, asset: asset)
-                                videoCallback(video)
-                            } else {
-                                woops("Problems with fetching videoURL.")
+                // <-- 복수 선택
+                
+            } else if let item = selectedItems.first {
+                // 단일 선택
+                if let asset = item.asset {
+                    switch asset.mediaType {
+                    case .audio, .unknown:
+                        return
+                    case .video:
+                        self.fetchVideoAndApplySettings(for: asset, callback: { videoURL in
+                            DispatchQueue.main.async { [weak self] in
+                                if let videoURL = videoURL {
+                                    self?.libraryViewFinishedLoading()
+                                    let video = HEMediaVideo(identifier: asset.localIdentifier,
+                                                             thumbnail: thumbnailFromVideoPath(videoURL),
+                                                             videoURL: videoURL,
+                                                             asset: asset)
+                                    videoCallback(video)
+                                } else {
+                                    woops("Problems with fetching videoURL.")
+                                }
+                            }
+                        })
+                    case .image:
+                        self.fetchImageAndCrop(for: asset) { [self] image, exifMeta in
+                            // cache
+                            let image = image.resizedImageIfNeeded()
+                            Task {
+                                do {
+                                    let url = try await editImageStore.cacheOriginImage(uiImage: image, forId: asset.localIdentifier).value
+                                    let photo = HEMediaPhoto(identifier: asset.localIdentifier,
+                                                             url: url,
+                                                             thumbnail: image.he.thumbnail(),
+                                                             exifMeta: exifMeta,
+                                                             asset: asset)
+                                    DispatchQueue.main.async { [weak self] in
+                                        self?.libraryViewFinishedLoading()
+                                        photoCallback(photo)
+                                    }
+                                } catch {
+                                    woops(error)
+                                }
                             }
                         }
-                    })
-                case .image:
-                    self.fetchImageAndCrop(for: asset) { image, exifMeta in
-                        DispatchQueue.main.async { [weak self] in
-                            self?.libraryViewFinishedLoading()
-                            let photo = HEMediaPhoto(image: image.resizedImageIfNeeded(),
-                                                     exifMeta: exifMeta,
-                                                     asset: asset)
-                            photoCallback(photo)
+                    @unknown default:
+                        woops("unknown default reached. Check code.")
+                    }
+                    return
+                } else if let hei = item.hei {
+                    Task {
+                        do {
+                            let photo = try await hei.toMediaPhoto(imageCache: self.editImageStore)
+                            DispatchQueue.main.async { [weak self] in
+                                self?.libraryViewFinishedLoading()
+                                photoCallback(photo)
+                            }
+                        } catch {
+                            woops(error)
                         }
                     }
-                @unknown default:
-                    woops("unknown default reached. Check code.")
+                } else {
+                    woops("unknown item data reached. Check code.")
                 }
-                return
             }
         }
     }

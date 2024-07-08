@@ -21,3 +21,4 @@
 "YPImagePickerVideoTooShort" = "동영상 길이는 최소 %@초 이상이어야 합니다.";
 "YPImagePickerWarningItemsLimit" = "사진과 동영상은 최대 %d개 까지 선택할 수 있습니다.";
 "HEImagePickerAttach" = "첨부하기";
+"HEImagePickerEditPhoto" = "사진 편집";

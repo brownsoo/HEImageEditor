@@ -25,6 +25,7 @@ public struct HEPickerWordings {
         public var tooLongMessage = ypLocalized("YPImagePickerVideoTooLong")
     }
     
+    public var editPhoto = ypLocalized("HEImagePickerEditPhoto")
     public var attach = ypLocalized("HEImagePickerAttach")
     public var ok = ypLocalized("YPImagePickerOk")
     public var done = ypLocalized("YPImagePickerDone")

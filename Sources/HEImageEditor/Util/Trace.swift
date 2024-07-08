@@ -10,6 +10,8 @@ import Foundation
 #if DEBUG
 import os
 
+fileprivate let tag = "*HEEditor*"
+
 fileprivate var logger: Logger = {
     return Logger(subsystem: "hi", category: "image-editor")
 }()
@@ -24,7 +26,7 @@ func trace(filename: String = #file, line: Int = #line, funcName: String = #func
     let th = Thread.current.isMainThread ? "[main]": "[\(Thread.current.name ?? "-")]"
     let time = timeFormatter.string(from: Date())
     let file = filename.components(separatedBy: "/").last?.split(separator: ".").first ?? ""
-    let leading = "*HEEditor* \(time) \(th) \(file) (L\(line))::\(funcName)"
+    let leading = "\(tag) \(time) \(th) \(file) (L\(line))::\(funcName)"
     //print("\(leading) nil")
     logger.log("\(leading, privacy: .public)")
 }
@@ -33,7 +35,7 @@ func trace<T>(_ object: T?, filename: String = #file, line: Int = #line, funcNam
     let th = Thread.current.isMainThread ? "[main]": "[\(Thread.current.name ?? "-")]"
     let time = timeFormatter.string(from: Date())
     let file = filename.components(separatedBy: "/").last?.split(separator: ".").first ?? ""
-    let leading = "*HEEditor* \(time) \(th) \(file) (L\(line))::\(funcName)"
+    let leading = "\(tag) \(time) \(th) \(file) (L\(line))::\(funcName)"
     if let obj = object {
        // print("\(leading) \(obj)")
         logger.log("\(leading, privacy: .public) \(String(describing: obj), privacy: .public)")
@@ -47,7 +49,7 @@ func woops<T>(_ object: T?, filename: String = #file, line: Int = #line, funcNam
     let th = Thread.current.isMainThread ? "[main]": "[\(Thread.current.name ?? "-")]"
     let time = timeFormatter.string(from: Date())
     let file = filename.components(separatedBy: "/").last?.split(separator: ".").first ?? ""
-    let leading = "*HEEditor* 💥 \(time) \(th) \(file) (L\(line))::\(funcName)"
+    let leading = "\(tag) 💥 \(time) \(th) \(file) (L\(line))::\(funcName)"
     if let obj = object {
        // print("\(leading) \(obj)")
         logger.log("\(leading, privacy: .public) \(String(describing: obj), privacy: .public)")

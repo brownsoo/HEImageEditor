@@ -7,6 +7,7 @@
 
 import UIKit
 import Photos
+import HECommon
 
 final class AlbumListViewController: UIViewController {
     override var prefersStatusBarHidden: Bool {
@@ -39,7 +40,7 @@ final class AlbumListViewController: UIViewController {
     
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
-        orientation = UIApplication.shared.findKeyWindow()?.windowScene?.interfaceOrientation ?? .portrait
+        orientation = UIApplication.shared.he.findKeyWindow()?.windowScene?.interfaceOrientation ?? .portrait
     }
     
     override func viewWillLayoutSubviews() {

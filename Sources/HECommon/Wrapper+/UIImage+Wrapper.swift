@@ -7,6 +7,7 @@ import UIKit
 import Accelerate
 
 public extension HEWrapper where Base: UIImage {
+    
     // 회전 정정
     func fixOrientation() -> UIImage {
         if base.imageOrientation == .up {
@@ -214,6 +215,43 @@ public extension HEWrapper where Base: UIImage {
         return result
     }
     
+    
+    func thumbnail(maxWidthInPixel maxSide: CGFloat = 200) -> UIImage {
+        
+        if #available(iOS 15, *) {
+            if let thumb = base.preparingThumbnail(of: CGSize(width: maxSide, height: maxSide)) {
+                return thumb
+            }
+        }
+        
+        if let imageData = base.pngData() {
+            let options = [
+                kCGImageSourceCreateThumbnailWithTransform: true,
+                kCGImageSourceCreateThumbnailFromImageAlways: true,
+                kCGImageSourceThumbnailMaxPixelSize: maxSide] as CFDictionary
+
+            let thumbnail: UIImage? = imageData.withUnsafeBytes { ptr in
+               guard let bytes = ptr.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
+                  return nil
+               }
+               if let cfData = CFDataCreate(kCFAllocatorDefault, bytes, imageData.count) {
+                  let source = CGImageSourceCreateWithData(cfData, nil)!
+                  let imageReference = CGImageSourceCreateThumbnailAtIndex(source, 0, options)!
+                  return UIImage(cgImage: imageReference) // You get your thumbail here
+               }
+                return nil
+            }
+            if thumbnail != nil {
+                return thumbnail!
+            }
+        }
+        if base.size.width > base.size.height {
+            return resize(newWidth: maxSide)
+        } else {
+            return resize(newHeight: maxSide)
+        }
+    }
+    
     /// Resize image. Processing speed is better than resize(:) method
     /// - Parameters:
     ///   - size: Dest size of the image.
@@ -407,33 +445,6 @@ public extension HEWrapper where Base: UIImage {
     
     var height: CGFloat {
         base.size.height
-    }
-}
-
-public extension HEWrapper where Base: UIImage {
-    /// 사진 밝기, 대비, 채도 조정
-    /// - Parameters:
-    ///   - brightness: value in [-1, 1]
-    ///   - contrast: value in [-1, 1]
-    ///   - saturation: value in [-1, 1]
-    func adjust(brightness: Float, contrast: Float, saturation: Float) -> UIImage? {
-        guard let ciImage = toCIImage() else {
-            return base
-        }
-        
-        let filter = CIFilter(name: "CIColorControls")
-        filter?.setValue(ciImage, forKey: kCIInputImageKey)
-        filter?.setValue(HEConfiguration.AdjustTool.brightness.filterValue(brightness), forKey: HEConfiguration.AdjustTool.brightness.key)
-        filter?.setValue(HEConfiguration.AdjustTool.contrast.filterValue(contrast), forKey: HEConfiguration.AdjustTool.contrast.key)
-        filter?.setValue(HEConfiguration.AdjustTool.saturation.filterValue(saturation), forKey: HEConfiguration.AdjustTool.saturation.key)
-        let outputCIImage = filter?.outputImage
-        return outputCIImage?.he.toUIImage()
-    }
-}
-
-extension HEWrapper where Base: UIImage {
-    static func getImage(_ named: String) -> UIImage? {
-        return UIImage(named: named, in: Bundle.HEImageEditorBundle, compatibleWith: nil)
     }
 }
 

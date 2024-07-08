@@ -15,7 +15,8 @@ final public class HEAssetViewBox: UIView {
     public var zoomableView: HEAssetZoomableView
     public let curtain = UIView()
     public let spinnerView = UIView()
-    public let squareCropButton = UIButton()
+    public private(set) var squareCropButton: UIButton?
+    public private(set) var editButton: UIButton?
     
     public var usingClop = PickerConfig.library.usingClop
     public var isShown = true
@@ -60,13 +61,34 @@ final public class HEAssetViewBox: UIView {
 
         if !usingClop {
             // Crop Button
-            squareCropButton.setImage(PickerConfig.icons.cropIcon, for: .normal)
-            addSubview(squareCropButton)
-            squareCropButton.makeConstraints { v in
+            let button = UIButton()
+            button.setImage(PickerConfig.icons.cropIcon, for: .normal)
+            addSubview(button)
+            button.makeConstraints { v in
                 v.sizeAnchorConstraintTo(42)
                 v.leadingAnchorConstraintToSuperview(15)
                 v.bottomAnchorConstraintToSuperview(-15)
             }
+            self.squareCropButton = button
+        }
+        
+        if PickerConfig.useEditPhoto {
+            let button = UIButton()
+            button.setImage(PickerConfig.icons.editImageIcon?.withTintColor(.white), for: .normal)
+            button.setTitle(PickerConfig.wordings.editPhoto, for: .normal)
+            button.setTitleColor(UIColor(white: 246 / 255.0, alpha: 1.0), for: .normal)
+            button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .bold)
+            button.backgroundColor = UIColor(white: 51 / 255.0, alpha: 0.4)
+            button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 4, bottom: 0, right: -4)
+            button.contentEdgeInsets = UIEdgeInsets(top: 14, left: 16, bottom: 14, right: 16 + 4)
+            button.layer.cornerRadius = 22
+            button.layer.masksToBounds = true
+            addSubview(button)
+            button.makeConstraints { v in
+                v.bottomAnchorConstraintToSuperview(-24)
+                v.centerXAnchorConstraintToSuperview()
+            }
+            self.editButton = button
         }
     }
 
@@ -88,22 +110,22 @@ final public class HEAssetViewBox: UIView {
     public func updateSquareCropButtonState() {
         guard !isMultipleSelectionEnabled else {
             // If multiple selection enabled, the squareCropButton is not visible
-            squareCropButton.isHidden = true
+            squareCropButton?.isHidden = true
             return
         }
         guard !usingClop else {
             // If only square enabled, than the squareCropButton is not visible
-            squareCropButton.isHidden = true
+            squareCropButton?.isHidden = true
             return
         }
         guard let selectedAssetImage = zoomableView.assetImageView.image else {
             // If no selected asset, than the squareCropButton is not visible
-            squareCropButton.isHidden = true
+            squareCropButton?.isHidden = true
             return
         }
 
         let isImageASquare = selectedAssetImage.size.width == selectedAssetImage.size.height
-        squareCropButton.isHidden = isImageASquare
+        squareCropButton?.isHidden = isImageASquare
     }
     
     // MARK: - Multiple selection

@@ -5,6 +5,7 @@
 
 
 import UIKit
+import HECommon
 
 extension HEWrapper where Base: UICollectionViewCell {
     static var identifier: String {
