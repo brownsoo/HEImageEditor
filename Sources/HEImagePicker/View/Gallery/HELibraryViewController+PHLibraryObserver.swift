@@ -61,7 +61,8 @@ extension HELibraryViewController: PHPhotoLibraryChangeObserver {
         if self.assetMediaManager.hasResultItems,
            selectedItems.isEmpty,
            let newAsset = self.assetMediaManager.getAsset(at: 0) {
-            self.changePreview(newAsset)
+            //self.v.previewBox.reload(at: 0)
+            trace("선택된게 없네")
         }
 
         // If user decided to forbid all photos with limited permission
@@ -69,7 +70,7 @@ extension HELibraryViewController: PHPhotoLibraryChangeObserver {
         if selectedItems.isEmpty == false,
            self.assetMediaManager.hasResultItems == false {
             self.selectedItems.removeAll()
-            self.v.previewBox.collView.reloadData()
+            self.v.previewBox.reload()
             self.libraryViewFinishedLoading()
         }
     }

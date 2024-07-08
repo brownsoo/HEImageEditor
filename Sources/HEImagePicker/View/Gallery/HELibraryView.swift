@@ -34,8 +34,8 @@ final class HELibraryView: UIView {
         return v
     }()
     // TODO: 변경하기 - 확대는... 편집 모드가 아닌 경우에 처리.
-    internal var assetZoomableView: HEAssetZoomableView {
-        return previewBox.zoomableView
+    internal var assetZoomableView: HEAssetZoomableView? {
+        return previewBox.currentZoomableView
     }
 
     internal let albumNameBt: UIButton = {
@@ -109,7 +109,7 @@ final class HELibraryView: UIView {
     // MARK: Crop Rect
 
     func currentCropRect() -> CGRect {
-        let cropView = assetZoomableView
+        guard let cropView = assetZoomableView else { return CGRect(x: 0, y: 0, width: 1, height: 1) }
         let normalizedX = min(1, cropView.contentOffset.x &/ cropView.contentSize.width)
         let normalizedY = min(1, cropView.contentOffset.y &/ cropView.contentSize.height)
         let normalizedWidth = min(1, cropView.frame.width / cropView.contentSize.width)

@@ -31,7 +31,7 @@ class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
             return libView.previewBoxConstraintTop?.constant ?? 0
         }
         set {
-            if newValue >= libView.previewBoxMinimalVisibleHeight - libView.preivewBox.bounds.height {
+            if newValue >= libView.previewBoxMinimalVisibleHeight - libView.previewBox.bounds.height {
                 libView.previewBoxConstraintTop?.constant = newValue
             }
         }
@@ -43,9 +43,9 @@ class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
         set {
             if newValue != isImageShown {
                 self._isImageShown = newValue
-                libView.preivewBox.isShown = newValue
+                libView.previewBox.isShown = newValue
                 // Update imageCropContainer
-                libView.assetZoomableView.isScrollEnabled = isImageShown
+                libView.previewBox.reload()
             }
         }
     }
@@ -85,7 +85,7 @@ class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
         let p = gestureRecognizer.location(ofTouch: 0, in: libView)
         // Desactivate pan on image when it is shown.
         if isImageShown {
-            if p.y < libView.assetZoomableView.frame.height {
+            if p.y < libView.previewBox.frame.height {
                 return false
             }
         }
@@ -95,7 +95,7 @@ class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
     @objc
     func panned(_ sender: UIPanGestureRecognizer) {
         let collBarHeight: CGFloat = 56
-        let boxHeight = libView.preivewBox.frame.height
+        let boxHeight = libView.previewBox.frame.height
         let currentPos = sender.location(in: libView)
         let overYLimitToStartMovingUp = currentPos.y * 1.4 < cropBottomY + collBarHeight
         
@@ -111,7 +111,7 @@ class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
             }
             
             let dragStartPos = sender.location(in: view)
-            cropBottomY = libView.preivewBox.frame.origin.y + boxHeight
+            cropBottomY = libView.previewBox.frame.origin.y + boxHeight
             dragDiff = dragStartPos.y - cropBottomY
             // Move
             if dragDirection == .stop {

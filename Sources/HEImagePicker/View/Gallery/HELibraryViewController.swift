@@ -66,21 +66,6 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         view = v
     }
     
-    public override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        // When crop area changes in multiple selection mode,
-        // we need to update the scrollView values in order to restore
-        // them when user selects a previously selected item.
-        v.assetZoomableView.cropAreaDidChange = { [weak self] in
-            guard let self = self else {
-                return
-            }
-
-            self.updateCropInfo()
-        }
-    }
-    
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(false, animated: true)
@@ -92,14 +77,13 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        v.previewBox.squareCropButton?.addTarget(self, action: #selector(squareCropButtonTapped), for: .touchUpInside)
-        v.previewBox.editButton?.addTarget(self, action: #selector(editPhotoButtonTapped), for: .touchUpInside)
+        
         
         // Forces assetZoomableView to have a contentSize.
         // otherwise 0 in first selection triggering the bug : "invalid image size 0x0"
         // Also fits the first element to the square if the onlySquareFromLibrary = true
-        if !PickerConfig.library.onlySquare && v.assetZoomableView.contentSize == CGSize(width: 0, height: 0) {
-            v.assetZoomableView.setZoomScale(1, animated: false)
+        if !PickerConfig.library.onlySquare && v.previewBox.currentZoomableView?.contentSize == CGSize(width: 0, height: 0) {
+            v.previewBox.currentZoomableView?.setZoomScale(1, animated: false)
         }
         
         // Activate multiple selection when using `minNumberOfItems`
@@ -165,6 +149,8 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         // 첨부 갯수
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: attachButton)
         
+        v.previewBox.squareCropButton?.addTarget(self, action: #selector(squareCropButtonTapped), for: .touchUpInside)
+        v.previewBox.editButton?.addTarget(self, action: #selector(editPhotoButtonTapped), for: .touchUpInside)
         v.previewBox.assetMediaManager = self.assetMediaManager
         v.previewBox.editImageStore = self.editImageStore
         v.previewBox.delegate = self
@@ -312,8 +298,8 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
                 selectedItems = [
                     HELibrarySelection(index: currentlySelectedIndex,
                                        cropRect: v.currentCropRect(),
-                                       scrollViewContentOffset: v.assetZoomableView.contentOffset,
-                                       scrollViewZoomScale: v.assetZoomableView.zoomScale,
+                                       scrollViewContentOffset: v.previewBox.currentZoomableView?.contentOffset,
+                                       scrollViewZoomScale: v.previewBox.currentZoomableView?.zoomScale,
                                        assetIdentifier: asset.localIdentifier)
                 ]
             }
@@ -324,7 +310,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         
         v.setMultipleSelectionMode(on: isMultipleSelectionEnabled)
         v.albumCollectionView.reloadData()
-        v.previewBox.collView.reloadData()
+        v.previewBox.reload()
         
         checkLimit()
         delegate?.libraryView(self, didToggleMultipleSelectionEnabled: isMultipleSelectionEnabled)
@@ -356,20 +342,17 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         }
         
         if assetMediaManager.hasResultItems,
-        let firstAsset = assetMediaManager.getAsset(at: 0) {
+        let _ = assetMediaManager.getAsset(at: 0) {
             v.albumCollectionView.reloadData()
-            v.albumCollectionView.selectItem(at: IndexPath(row: 0, section: 0),
-                                        animated: false,
-                                        scrollPosition: UICollectionView.ScrollPosition())
+            v.albumCollectionView.selectItem(at: IndexPath(row: 0, section: 0), animated: false, scrollPosition: UICollectionView.ScrollPosition())
             if !isMultipleSelectionEnabled && PickerConfig.library.preSelectItemOnMultipleSelection {
                 addToSelection(indexPath: IndexPath(row: 0, section: 0))
             }
-            changePreview(firstAsset)
         } else {
             delegate?.libraryViewHaveNoItems(self)
         }
 
-        v.previewBox.collView.reloadData()
+        v.previewBox.reload()
         
         scrollToTop()
     }
@@ -424,25 +407,28 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     
     // MARK: - Stored Crop Position
     
-    internal func updateCropInfo(shouldUpdateOnlyIfNil: Bool = false) {
-        guard let selectedAssetIndex = selectedItems.firstIndex(where: { $0.index == currentlySelectedIndex }) else {
+    internal func updateCropInfo(assetIdentifier: String) {
+        guard let selectedAssetIndex = selectedItems.firstIndex(where: { $0.assetIdentifier == assetIdentifier }) else {
             return
         }
         
-        if shouldUpdateOnlyIfNil && selectedItems[selectedAssetIndex].scrollViewContentOffset != nil {
+        if selectedItems[selectedAssetIndex].scrollViewContentOffset != nil {
             return
         }
         
         // Fill new values
         var selectedAsset = selectedItems[selectedAssetIndex]
-        selectedAsset.scrollViewContentOffset = v.assetZoomableView.contentOffset
-        selectedAsset.scrollViewZoomScale = v.assetZoomableView.zoomScale
+        selectedAsset.scrollViewContentOffset = v.previewBox.currentZoomableView?.contentOffset
+        selectedAsset.scrollViewZoomScale = v.previewBox.currentZoomableView?.zoomScale
         selectedAsset.cropRect = v.currentCropRect()
         
         // Replace
         selectedItems.remove(at: selectedAssetIndex)
         selectedItems.insert(selectedAsset, at: selectedAssetIndex)
-        v.previewBox.collView.reloadItems(at: [IndexPath(row: selectedAssetIndex, section: 0)])
+        
+        trace()
+        
+        //v.previewBox.reload(at: selectedAssetIndex)
     }
     
     internal func fetchStoredCrop() -> HELibrarySelection? {
@@ -730,19 +716,23 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     // MARK: - Player
     
     func pausePlayer() {
-        v.assetZoomableView.videoView.pause()
+        v.previewBox.currentZoomableView?.videoView.pause()
     }
     
     // MARK: - Deinit
     
     deinit {
-        v.assetZoomableView.videoView.deallocate()
+        v.previewBox.currentZoomableView?.videoView.deallocate()
         PHPhotoLibrary.shared().unregisterChangeObserver(self)
         trace("\(type(of: self)) deinited 👌🏻")
     }
 }
 
 extension HELibraryViewController: HEPreviewBoxViewDelegate {
+    public func previewBoxViewUpdateCropInfo(_ box: HEPreiviewBoxView, assetIdentifier: String) {
+        updateCropInfo(assetIdentifier: assetIdentifier)
+    }
+    
     public func previewBoxViewItems(_ box: HEPreiviewBoxView) -> [HELibrarySelection] {
         return selectedItems
     }
@@ -774,7 +764,7 @@ extension HELibraryViewController {
     func libraryViewFinishedLoading() {
         isProcessing = false
         DispatchQueue.main.async {
-            self.v.hideLoader()
+            self.v.previewBox.hideLoader()
             self.updateUI()
         }
     }

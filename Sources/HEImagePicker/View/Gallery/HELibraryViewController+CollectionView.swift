@@ -42,9 +42,6 @@ extension HELibraryViewController {
     func startMultipleSelection(at indexPath: IndexPath) {
         currentlySelectedIndex = indexPath.row
         toggleMultipleSelection()
-        
-        // Update preview.
-        changePreview(assetMediaManager.getAsset(at: indexPath.row))
 
         // Bring preview down and keep selected cell visible.
         panGestureHelper.resetToOriginalState()
@@ -62,8 +59,7 @@ extension HELibraryViewController {
             $0.assetIdentifier == assetMediaManager.getAsset(at: indexPath.row)?.localIdentifier
         }) {
             selectedItems.remove(at: positionIndex)
-            v.previewBox.collView.deleteItems(at: [IndexPath(row: positionIndex, section: 0)])
-            
+            v.previewBox.removed(at: positionIndex)
             // Refresh the numbers
             let selectedIndexPaths = selectedItems.map { IndexPath(row: $0.index, section: 0) }
             v.albumCollectionView.reloadItems(at: selectedIndexPaths)
@@ -73,7 +69,9 @@ extension HELibraryViewController {
                 v.albumCollectionView.deselectItem(at: indexPath, animated: false)
                 v.albumCollectionView.selectItem(at: previouslySelectedIndexPath, animated: false, scrollPosition: [])
                 currentlySelectedIndex = previouslySelectedIndexPath.row
-                changePreview(assetMediaManager.getAsset(at: previouslySelectedIndexPath.row))
+                if let last = selectedItems.last {
+                    v.previewBox.select(last, animated: true)
+                }
             }
             
             checkLimit()
@@ -93,7 +91,6 @@ extension HELibraryViewController {
 
         let newSelection = HELibrarySelection(index: indexPath.row, assetIdentifier: asset.localIdentifier)
         selectedItems.append(newSelection)
-        v.previewBox.collView.insertItems(at: [IndexPath(row: selectedItems.count - 1, section: 0)])
         
         checkLimit()
     }
@@ -237,13 +234,14 @@ extension HELibraryViewController: UICollectionViewDelegate {
                 }
             } else if isLimitExceeded == false {
                 addToSelection(indexPath: indexPath)
+                v.previewBox.inserted(at: selectedItems.count - 1)
             }
             collectionView.reloadItems(at: [indexPath])
             collectionView.reloadItems(at: [previouslySelectedIndexPath])
         } else {
             selectedItems.removeAll()
             addToSelection(indexPath: indexPath)
-            
+            v.previewBox.reload()
             // Force deseletion of previously selected cell.
             // In the case where the previous cell was loaded from iCloud, a new image was fetched
             // which triggered photoLibraryDidChange() and reloadItems() which breaks selection.
@@ -252,8 +250,6 @@ extension HELibraryViewController: UICollectionViewDelegate {
                 previousCell.isSelected = false
             }
         }
-        
-        changePreview(assetMediaManager.getAsset(at: indexPath.row))
     }
     
     public func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {

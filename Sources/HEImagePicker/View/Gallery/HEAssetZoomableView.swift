@@ -108,6 +108,8 @@ final public class HEAssetZoomableView: UIScrollView {
             DispatchQueue.main.async { completion(false) }
             return
         }
+        trace()
+        
         currentAssetIdentifier = photo.localIdentifier
         
         mediaManager?.phImageManager?.fetch(photo: photo) { [weak self] image, isLowResIntermediaryImage in

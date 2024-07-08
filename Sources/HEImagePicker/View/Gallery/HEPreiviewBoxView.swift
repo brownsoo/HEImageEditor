@@ -15,7 +15,7 @@ public protocol HEPreviewBoxViewDelegate: AnyObject {
     func previewBoxViewItems(_ box: HEPreiviewBoxView) -> [HELibrarySelection]
     func previewBoxViewStartedLoadingImage(_ box: HEPreiviewBoxView)
     func previewBoxViewFinishedLoadingImage(_ box: HEPreiviewBoxView)
-    func previewBoxViewUpdateCropInfo(_ box: HEPreiviewBoxView)
+    func previewBoxViewUpdateCropInfo(_ box: HEPreiviewBoxView, assetIdentifier: String)
 }
 
 /// The container for asset (video or image). 
@@ -31,12 +31,25 @@ public class HEPreiviewBoxView: UIView {
     
     public private(set) var squareCropButton: UIButton?
     public private(set) var editButton: HECapsuleButton?
-    private(set) var collView: UICollectionView!
+    private var collView: UICollectionView!
+    public var currentZoomableView: HEAssetZoomableView? {
+        if (delegate?.previewBoxViewItems(self).isEmpty ?? true) {
+            return nil
+        }
+        if let cell = collView.cellForItem(at: IndexPath(row: currentIndex, section: 0)) as? HEPreviewCell {
+            return cell.zoomableView
+        }
+        return nil
+    }
     
     public var usingClop = PickerConfig.library.usingClop
     public var isShown = true
     public var spinnerIsShown = false
-    private var currentIndex: Int = 0
+    private var currentIndex: Int = 0 {
+        didSet {
+            trace(currentIndex)
+        }
+    }
     private let spinner = UIActivityIndicatorView(style: .medium)
     private var shouldCropToSquare = PickerConfig.library.isCropSquareByDefault
     private var isMultipleSelectionEnabled = false
@@ -48,6 +61,11 @@ public class HEPreiviewBoxView: UIView {
                 self.spinnerIsShown = self.shouldShowLoader
             }
         }
+    }
+    
+    
+    deinit {
+        trace()
     }
     
     init() {
@@ -184,6 +202,7 @@ public class HEPreiviewBoxView: UIView {
     public func setMultipleSelectionMode(on: Bool) {
         isMultipleSelectionEnabled = on
         updateSquareCropButtonState()
+        collView.reloadData()
     }
     
 }
@@ -201,7 +220,7 @@ extension HEPreiviewBoxView {
         let completion = { [weak self] (isLowResIntermediaryImage: Bool) in
             guard let self else { return }
             self.updateSquareCropButtonState()
-            self.delegate?.previewBoxViewUpdateCropInfo(self)
+            self.delegate?.previewBoxViewUpdateCropInfo(self, assetIdentifier: hei.id)
             if !isLowResIntermediaryImage {
                 self.hideLoader()
                 self.delegate?.previewBoxViewFinishedLoadingImage(self)
@@ -210,7 +229,7 @@ extension HEPreiviewBoxView {
         
         let updateCropInfo = { [weak self] in
             guard let self else { return }
-            self.delegate?.previewBoxViewUpdateCropInfo(self)
+            self.delegate?.previewBoxViewUpdateCropInfo(self, assetIdentifier: hei.id)
         }
         
         if let editImageStore {
@@ -235,7 +254,7 @@ extension HEPreiviewBoxView {
         let completion = { [weak self] (isLowResIntermediaryImage: Bool) in
             guard let self else { return }
             self.updateSquareCropButtonState()
-            self.delegate?.previewBoxViewUpdateCropInfo(self)
+            self.delegate?.previewBoxViewUpdateCropInfo(self, assetIdentifier: asset.localIdentifier)
             if !isLowResIntermediaryImage {
                 self.hideLoader()
                 self.delegate?.previewBoxViewFinishedLoadingImage(self)
@@ -244,7 +263,7 @@ extension HEPreiviewBoxView {
         
         let updateCropInfo = { [weak self] in
             guard let self else { return }
-            self.delegate?.previewBoxViewUpdateCropInfo(self)
+            self.delegate?.previewBoxViewUpdateCropInfo(self, assetIdentifier: asset.localIdentifier)
         }
         
         // MARK: add a func(updateCropInfo) after crop multiple
@@ -297,14 +316,55 @@ extension HEPreiviewBoxView: UICollectionViewDelegateFlowLayout, UICollectionVie
         coll.collectionViewLayout = layout
         coll.showsHorizontalScrollIndicator = false
         coll.register(HEPreviewCell.self, forCellWithReuseIdentifier: HEPreviewCell.reuseIdentifier)
-        coll.isPagingEnabled = true
+        coll.isPagingEnabled = false
         addSubview(coll)
         coll.translatesAutoresizingMaskIntoConstraints = false
         coll.edgesConstraintToSuperview(edges: .all)
+        coll.backgroundColor = .yellow
         
         collView = coll
         coll.delegate = self
         coll.dataSource = self
+    }
+    
+    func reload() {
+        self.collView.reloadData()
+    }
+    
+    func select(_ selection: HELibrarySelection, animated: Bool) {
+        if let items = self.delegate?.previewBoxViewItems(self),
+           let index = items.firstIndex(where: { $0.assetIdentifier == selection.assetIdentifier }) {
+            collView.scrollToItem(at: IndexPath(row: index, section: 0), at: .centeredHorizontally, animated: animated)
+        }
+    }
+    
+    func removed(at index: Int) {
+        if let items = self.delegate?.previewBoxViewItems(self), index <= items.count {
+            collView.deleteItems(at: [IndexPath(row: index, section: 0)])
+            if index - 1 >= 0 && items.count > 0 {
+                collView.scrollToItem(at: IndexPath(row: index - 1, section: 0), at: .centeredHorizontally, animated: true)
+            }
+        } else {
+            collView.reloadData()
+        }
+    }
+    
+    func inserted(at index: Int) {
+        if let items = self.delegate?.previewBoxViewItems(self), index < items.count {
+            let indexPath = IndexPath(row: index, section: 0)
+            collView.insertItems(at: [indexPath])
+            collView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
+        } else {
+            collView.reloadData()
+        }
+    }
+    
+    func reload(at index: Int) {
+        if let items = self.delegate?.previewBoxViewItems(self), index < items.count {
+            collView.reloadItems(at: [IndexPath(row: index, section: 0)])
+        } else {
+            collView.reloadData()
+        }
     }
     
     
@@ -314,6 +374,9 @@ extension HEPreiviewBoxView: UICollectionViewDelegateFlowLayout, UICollectionVie
     
     public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HEPreviewCell.reuseIdentifier, for: indexPath) as! HEPreviewCell
+        cell.isZoomable = collectionView.numberOfItems(inSection: indexPath.section) < 2
+        
+        
         if let item = self.delegate?.previewBoxViewItems(self)[indexPath.row] {
             if let hei = self.editImageStore?.getHEImage(forId: item.assetIdentifier) {
                 loadPreviewWithHEImage(hei, forCell: cell, selection: item)
@@ -321,6 +384,16 @@ extension HEPreiviewBoxView: UICollectionViewDelegateFlowLayout, UICollectionVie
                 loadPreview(asset, forCell: cell, selection: item)
             } else {
                 woops("뭐지?")
+            }
+            
+            // When crop area changes in multiple selection mode,
+            // we need to update the scrollView values in order to restore
+            // them when user selects a previously selected item.
+            cell.zoomableView.cropAreaDidChange = { [weak self] in
+                guard let self = self else {
+                    return
+                }
+                self.delegate?.previewBoxViewUpdateCropInfo(self, assetIdentifier: item.assetIdentifier)
             }
         }
         return cell
@@ -331,13 +404,16 @@ extension HEPreiviewBoxView: UICollectionViewDelegateFlowLayout, UICollectionVie
     }
     
     public func collectionView(_ collectionView: UICollectionView, didEndDisplaying cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-        (cell as? HEPreviewCell)?.zoomableView.clearAsset()
-        
         let center = self.convert(collectionView.center, to: collectionView)
         if let index = collectionView.indexPathForItem(at: center) {
-            currentIndex = indexPath.row
+            currentIndex = index.row
         }
         
+    }
+    
+    public func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        let w = collectionView.bounds.width
+        return CGSize(width: w, height: w)
     }
 }
 
@@ -357,6 +433,10 @@ class HEPreviewCell: UICollectionViewCell {
                 zoomableView.maximumZoomScale = 1
             }
         }
+    }
+    
+    deinit {
+        zoomableView.clearAsset()
     }
     
     override init(frame: CGRect) {
