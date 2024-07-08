@@ -28,14 +28,14 @@ final class HELibraryView: UIView {
     }()
     /// 상단 미리보기 
     // TODO: 이미지 리스트로 변경
-    internal lazy var preivewBox: HEAssetViewBox = {
-        let v = HEAssetViewBox(frame: .zero, zoomableView: HEAssetZoomableView(frame: .zero))
-        v.accessibilityIdentifier = "assetViewContainer"
+    internal lazy var previewBox: HEPreiviewBoxView = {
+        let v = HEPreiviewBoxView()
+        v.accessibilityIdentifier = "previewViewBox"
         return v
     }()
     // TODO: 변경하기 - 확대는... 편집 모드가 아닌 경우에 처리.
     internal var assetZoomableView: HEAssetZoomableView {
-        return preivewBox.zoomableView
+        return previewBox.zoomableView
     }
 
     internal let albumNameBt: UIButton = {
@@ -80,15 +80,6 @@ final class HELibraryView: UIView {
         v.accessibilityIdentifier = "collectionContainerView"
         return v
     }()
-    
-    private var shouldShowLoader = false {
-        didSet {
-            DispatchQueue.main.async {
-                self.preivewBox.squareCropButton?.isEnabled = !self.shouldShowLoader
-                self.preivewBox.spinnerIsShown = self.shouldShowLoader
-            }
-        }
-    }
 
     // MARK: - Init
 
@@ -108,29 +99,6 @@ final class HELibraryView: UIView {
 
     // MARK: Loader and progress
     
-    func fadeInLoader() {
-        shouldShowLoader = true
-        // Only show loader if full res image takes more than 0.5s to load.
-        if #available(iOS 10.0, *) {
-            Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { _ in
-                if self.shouldShowLoader == true {
-                    UIView.animate(withDuration: 0.2) {
-                        self.preivewBox.spinnerView.alpha = 1
-                    }
-                }
-            }
-        } else {
-            // Fallback on earlier versions
-            UIView.animate(withDuration: 0.2) {
-                self.preivewBox.spinnerView.alpha = 1
-            }
-        }
-    }
-
-    func hideLoader() {
-        shouldShowLoader = false
-        preivewBox.spinnerView.alpha = 0
-    }
 
     func updateProgress(_ progress: Float) {
         progressView.isHidden = progress > 0.99 || progress == 0
@@ -153,8 +121,8 @@ final class HELibraryView: UIView {
 
     func refreshImageCurtainAlpha() {
         let imageCurtainAlpha = abs(previewBoxConstraintTop?.constant ?? 0)
-        / (preivewBox.frame.height - previewBoxMinimalVisibleHeight)
-        preivewBox.curtain.alpha = imageCurtainAlpha
+        / (previewBox.frame.height - previewBoxMinimalVisibleHeight)
+        previewBox.curtain.alpha = imageCurtainAlpha
     }
 
     func cellSize() -> CGSize {
@@ -168,7 +136,7 @@ final class HELibraryView: UIView {
 
     func setMultipleSelectionMode(on: Bool) {
         isMultipleSelectionEnabled = on
-        preivewBox.setMultipleSelectionMode(on: on)
+        previewBox.setMultipleSelectionMode(on: on)
         countLabel?.isHidden = !on
     }
     
@@ -179,10 +147,10 @@ final class HELibraryView: UIView {
         addSubview(collectionContainerView)
         collectionContainerView.addSubview(albumCollectionView)
         collectionContainerView.addSubview(line)
-        addSubview(preivewBox)
+        addSubview(previewBox)
         addSubview(progressView)
         
-        preivewBox.backgroundColor = .green
+        previewBox.backgroundColor = .green
         // assetViewBox.backgroundColor = PickerConfig.colors.assetViewBackgroundColor
         
         collectionContainerView.makeConstraints { v in
@@ -196,7 +164,7 @@ final class HELibraryView: UIView {
         }
 
         var topConstraint: NSLayoutConstraint?
-        preivewBox.makeConstraints { v in
+        previewBox.makeConstraints { v in
             topConstraint = v.topAnchorConstraintToSuperview()
             v.bottomAnchorConstraintTo(line.topAnchor)
             v.edgesConstraintToSuperview(edges: .horizontal)

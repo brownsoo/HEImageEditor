@@ -58,10 +58,10 @@ public extension HEImageDataStore {
 }
 
 
-
+public protocol HEEditImageStore: HEImageDataStore, HEImageCache {}
 
 /// 간단히 구현된 이미지 스토어
-public class HESimpleImageStore: HEImageDataStore, HEImageCache {
+public class HESimpleImageStore: HEEditImageStore {
     
     public init(){}
     

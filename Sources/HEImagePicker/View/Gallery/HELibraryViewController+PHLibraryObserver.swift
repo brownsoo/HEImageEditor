@@ -54,6 +54,7 @@ extension HELibraryViewController: PHPhotoLibraryChangeObserver {
     }
 
     fileprivate func updateAssetSelection() {
+        trace()
         // If no items selected in assetView, but there are already photos
         // after photoLibraryDidChange, than select first item in library.
         // It can be when user add photos from limited permission.
@@ -67,8 +68,8 @@ extension HELibraryViewController: PHPhotoLibraryChangeObserver {
         // while using the lib we need to remove asset from assets view.
         if selectedItems.isEmpty == false,
            self.assetMediaManager.hasResultItems == false {
-            self.v.assetZoomableView.clearAsset()
             self.selectedItems.removeAll()
+            self.v.previewBox.collView.reloadData()
             self.libraryViewFinishedLoading()
         }
     }

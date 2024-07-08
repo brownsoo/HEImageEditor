@@ -31,7 +31,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     }
     
     public weak var delegate: HELibraryViewDelegate?
-    public lazy var editImageStore = HESimpleImageStore()
+    public lazy var editImageStore: HEEditImageStore = HESimpleImageStore()
     
     internal var shouldHideStatusBar = false
     internal var initialStatusBarHidden = false
@@ -92,8 +92,8 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        v.preivewBox.squareCropButton?.addTarget(self, action: #selector(squareCropButtonTapped), for: .touchUpInside)
-        v.preivewBox.editButton?.addTarget(self, action: #selector(editPhotoButtonTapped), for: .touchUpInside)
+        v.previewBox.squareCropButton?.addTarget(self, action: #selector(squareCropButtonTapped), for: .touchUpInside)
+        v.previewBox.editButton?.addTarget(self, action: #selector(editPhotoButtonTapped), for: .touchUpInside)
         
         // Forces assetZoomableView to have a contentSize.
         // otherwise 0 in first selection triggering the bug : "invalid image size 0x0"
@@ -162,8 +162,12 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
                                                            style: .plain,
                                                            target: self,
                                                            action: #selector(close))
-        // TODO: 첨부 갯수
+        // 첨부 갯수
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: attachButton)
+        
+        v.previewBox.assetMediaManager = self.assetMediaManager
+        v.previewBox.editImageStore = self.editImageStore
+        v.previewBox.delegate = self
         
         guard assetMediaManager.hasResultItems else {
             return
@@ -260,7 +264,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     @objc
     func squareCropButtonTapped() {
         doAfterLibraryPermissionCheck { [weak self] in
-            self?.v.preivewBox.squareCropButtonTapped()
+            self?.v.previewBox.squareCropButtonTapped()
         }
     }
     
@@ -320,6 +324,8 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         
         v.setMultipleSelectionMode(on: isMultipleSelectionEnabled)
         v.albumCollectionView.reloadData()
+        v.previewBox.collView.reloadData()
+        
         checkLimit()
         delegate?.libraryView(self, didToggleMultipleSelectionEnabled: isMultipleSelectionEnabled)
     }
@@ -328,7 +334,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     
     func registerForTapOnPreview() {
         let tapImageGesture = UITapGestureRecognizer(target: self, action: #selector(tappedImage))
-        v.preivewBox.addGestureRecognizer(tapImageGesture)
+        v.previewBox.addGestureRecognizer(tapImageGesture)
     }
     
     @objc
@@ -351,7 +357,6 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         
         if assetMediaManager.hasResultItems,
         let firstAsset = assetMediaManager.getAsset(at: 0) {
-            changePreview(firstAsset)
             v.albumCollectionView.reloadData()
             v.albumCollectionView.selectItem(at: IndexPath(row: 0, section: 0),
                                         animated: false,
@@ -359,10 +364,13 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
             if !isMultipleSelectionEnabled && PickerConfig.library.preSelectItemOnMultipleSelection {
                 addToSelection(indexPath: IndexPath(row: 0, section: 0))
             }
+            changePreview(firstAsset)
         } else {
             delegate?.libraryViewHaveNoItems(self)
         }
 
+        v.previewBox.collView.reloadData()
+        
         scrollToTop()
     }
     
@@ -391,85 +399,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         }
     }
     
-    private func changePreviewWithHEImage(_ hei: HEImage?) {
-        guard let hei = hei else {
-            print("No hei to change.")
-            return
-        }
-        libraryViewStartedLoadingImage()
-        
-        let completion = { (isLowResIntermediaryImage: Bool) in
-            self.v.preivewBox.updateSquareCropButtonState()
-            self.updateCropInfo()
-            if !isLowResIntermediaryImage {
-                self.v.hideLoader()
-                self.libraryViewFinishedLoading()
-            }
-        }
-        
-        let updateCropInfo = {
-            self.updateCropInfo()
-        }
-        // MARK: add a func(updateCropInfo) after crop multiple
-        DispatchQueue.global(qos: .userInitiated).async {
-            self.v.assetZoomableView.setImage(hei,
-                                              mediaManager: self.assetMediaManager,
-                                              storedCropPosition: self.fetchStoredCrop(),
-                                              completion: completion,
-                                              updateCropInfo: updateCropInfo)
-        }
-    }
     
-    func changePreview(_ asset: PHAsset?) {
-        guard let asset = asset else {
-            print("No asset to change.")
-            return
-        }
-
-        if let hei = editImageStore.getHEImage(forId: asset.localIdentifier) {
-            changePreviewWithHEImage(hei)
-            trace("편집 이미지다")
-            return
-        }
-        
-        libraryViewStartedLoadingImage()
-        
-        let completion = { (isLowResIntermediaryImage: Bool) in
-            self.v.preivewBox.updateSquareCropButtonState()
-            self.updateCropInfo()
-            if !isLowResIntermediaryImage {
-                self.v.hideLoader()
-                self.libraryViewFinishedLoading()
-            }
-        }
-        
-        let updateCropInfo = {
-            self.updateCropInfo()
-        }
-        
-        // MARK: add a func(updateCropInfo) after crop multiple
-        DispatchQueue.global(qos: .userInitiated).async {
-            switch asset.mediaType {
-            case .image:
-                self.v.assetZoomableView.setImage(asset,
-                                                  mediaManager: self.assetMediaManager,
-                                                  storedCropPosition: self.fetchStoredCrop(),
-                                                  completion: completion,
-                                                  updateCropInfo: updateCropInfo)
-                
-            case .video:
-                self.v.assetZoomableView.setVideo(asset,
-                                                  mediaManager: self.assetMediaManager,
-                                                  storedCropPosition: self.fetchStoredCrop(),
-                                                  completion: { completion(false) },
-                                                  updateCropInfo: updateCropInfo)
-            case .audio, .unknown:
-                ()
-            @unknown default:
-                woops("Bug. Unknown default.")
-            }
-        }
-    }
 
     // MARK: - Verification
     
@@ -512,6 +442,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         // Replace
         selectedItems.remove(at: selectedAssetIndex)
         selectedItems.insert(selectedAsset, at: selectedAssetIndex)
+        v.previewBox.collView.reloadItems(at: [IndexPath(row: selectedAssetIndex, section: 0)])
     }
     
     internal func fetchStoredCrop() -> HELibrarySelection? {
@@ -595,8 +526,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         DispatchQueue.global(qos: .userInitiated).async {
             
             let selectedItems: [(asset: PHAsset?, hei: HEImage?, cropRect: CGRect?)] = self.selectedItems.compactMap {
-                if let asset = PHAsset.fetchAssets(withLocalIdentifiers: [$0.assetIdentifier],
-                                                      options: PHFetchOptions()).firstObject {
+                if let asset = PHAsset.fetchAssets(withLocalIdentifiers: [$0.assetIdentifier], options: PHFetchOptions()).firstObject {
                     return (asset, nil, $0.cropRect)
                 }
                 if let hei = self.editImageStore.getHEImage(forId: $0.assetIdentifier) {
@@ -812,12 +742,26 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     }
 }
 
+extension HELibraryViewController: HEPreviewBoxViewDelegate {
+    public func previewBoxViewItems(_ box: HEPreiviewBoxView) -> [HELibrarySelection] {
+        return selectedItems
+    }
+    
+    public func previewBoxViewStartedLoadingImage(_ box: HEPreiviewBoxView) {
+        libraryViewStartedLoadingImage()
+    }
+    
+    public func previewBoxViewFinishedLoadingImage(_ box: HEPreiviewBoxView) {
+        libraryViewFinishedLoading()
+    }
+}
+
 
 extension HELibraryViewController {
     func libraryViewDidTapNext() {
         isProcessing = true
         DispatchQueue.main.async {
-            self.v.fadeInLoader()
+            self.v.previewBox.fadeInLoader()
             self.navigationItem.rightBarButtonItem = UIHelper.defaultLoader
         }
     }
@@ -825,9 +769,6 @@ extension HELibraryViewController {
     func libraryViewStartedLoadingImage() {
         // TODO remove to enable changing selection while loading but needs cancelling previous image requests.
         isProcessing = true
-        DispatchQueue.main.async {
-            self.v.fadeInLoader()
-        }
     }
     
     func libraryViewFinishedLoading() {

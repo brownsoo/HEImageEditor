@@ -58,12 +58,12 @@ final public class HEAssetZoomableView: UIScrollView {
         }
     }
     
-    public func setVideo(_ video: PHAsset,
-                         mediaManager: LibraryMediaManager,
-                         storedCropPosition: HELibrarySelection?,
-                         completion: @escaping () -> Void,
-                         updateCropInfo: @escaping () -> Void) {
-        mediaManager.phImageManager?.fetchPreviewFor(video: video) { [weak self] preview in
+    public func applyVideo(_ video: PHAsset,
+                           mediaManager: LibraryMediaManager?,
+                           storedCropPosition: HELibrarySelection?,
+                           completion: @escaping () -> Void,
+                           updateCropInfo: @escaping () -> Void) {
+        mediaManager?.phImageManager?.fetchPreviewFor(video: video) { [weak self] preview in
             guard let self = self else { return }
             guard self.currentAssetIdentifier != video.localIdentifier else { completion() ; return }
             
@@ -76,7 +76,7 @@ final public class HEAssetZoomableView: UIScrollView {
             self.videoView.setPreviewImage(preview)
             
             self.setAssetFrame(for: self.videoView, with: preview)
-
+            
             self.squaredZoomScale = self.calculateSquaredZoomScale()
             
             completion()
@@ -88,29 +88,29 @@ final public class HEAssetZoomableView: UIScrollView {
                 updateCropInfo()
             }
         }
-        mediaManager.phImageManager?.fetchPlayerItem(for: video) { [weak self] playerItem in
+        mediaManager?.phImageManager?.fetchPlayerItem(for: video) { [weak self] playerItem in
             guard let self = self else { return }
             guard self.currentAssetIdentifier != video.localIdentifier else { completion() ; return }
             self.currentAssetIdentifier = video.localIdentifier
-
+            
             self.videoView.loadVideo(playerItem)
             self.videoView.play()
             self.zoomableViewDelegate?.ypAssetZoomableViewDidLayoutSubviews(self)
         }
     }
     
-    public func setImage(_ photo: PHAsset,
-                         mediaManager: LibraryMediaManager,
-                         storedCropPosition: HELibrarySelection?,
-                         completion: @escaping (Bool) -> Void,
-                         updateCropInfo: @escaping () -> Void) {
+    public func applyImage(_ photo: PHAsset,
+                           mediaManager: LibraryMediaManager?,
+                           storedCropPosition: HELibrarySelection?,
+                           completion: @escaping (Bool) -> Void,
+                           updateCropInfo: @escaping () -> Void) {
         guard currentAssetIdentifier != photo.localIdentifier else {
             DispatchQueue.main.async { completion(false) }
             return
         }
         currentAssetIdentifier = photo.localIdentifier
         
-        mediaManager.phImageManager?.fetch(photo: photo) { [weak self] image, isLowResIntermediaryImage in
+        mediaManager?.phImageManager?.fetch(photo: photo) { [weak self] image, isLowResIntermediaryImage in
             guard let self = self else { return }
             
             if self.photoImageView.isDescendant(of: self) == false {
@@ -119,32 +119,32 @@ final public class HEAssetZoomableView: UIScrollView {
                 self.videoView.showPlayImage(show: false)
                 self.videoView.deallocate()
                 self.addSubview(self.photoImageView)
-            
+                
                 self.photoImageView.contentMode = .scaleAspectFill
                 self.photoImageView.clipsToBounds = true
             }
             
             self.photoImageView.image = image
             self.setAssetFrame(for: self.photoImageView, with: image)
-                
+            
             // Stored crop position in multiple selection
             if let scp173 = storedCropPosition {
                 self.applyStoredCropPosition(scp173)
                 // add update CropInfo after multiple
                 updateCropInfo()
             }
-
+            
             self.squaredZoomScale = self.calculateSquaredZoomScale()
             
             completion(isLowResIntermediaryImage)
         }
     }
     
-    public func setImage(_ hei: HEImage,
-                         mediaManager: LibraryMediaManager,
-                         storedCropPosition: HELibrarySelection?,
-                         completion: @escaping (Bool) -> Void,
-                         updateCropInfo: @escaping () -> Void) {
+    public func applyImage(_ hei: HEImage,
+                           imageCache: HEImageCache,
+                           storedCropPosition: HELibrarySelection?,
+                           completion: @escaping (Bool) -> Void,
+                           updateCropInfo: @escaping () -> Void) {
         guard currentAssetIdentifier != hei.id else {
             DispatchQueue.main.async { completion(false) }
             return
@@ -154,39 +154,42 @@ final public class HEAssetZoomableView: UIScrollView {
         Task { [weak self] in
             guard let self = self else { return }
             do {
-                let store = HESimpleImageStore()
                 let image: UIImage
                 if hei.editImageURL != nil {
-                    image = try await store.editImage(forHei: hei).value
+                    image = try await imageCache.editImage(forHei: hei).value
                 } else {
-                    image = try await store.originImage(forHei: hei).value
+                    image = try await imageCache.originImage(forHei: hei).value
                 }
-                if self.photoImageView.isDescendant(of: self) == false {
-                    self.isVideoMode = false
-                    self.videoView.removeFromSuperview()
-                    self.videoView.showPlayImage(show: false)
-                    self.videoView.deallocate()
-                    self.addSubview(self.photoImageView)
-                
-                    self.photoImageView.contentMode = .scaleAspectFill
-                    self.photoImageView.clipsToBounds = true
+                DispatchQueue.main.async {
+                    if self.photoImageView.isDescendant(of: self) == false {
+                        self.isVideoMode = false
+                        self.videoView.removeFromSuperview()
+                        self.videoView.showPlayImage(show: false)
+                        self.videoView.deallocate()
+                        self.addSubview(self.photoImageView)
+                        
+                        self.photoImageView.contentMode = .scaleAspectFill
+                        self.photoImageView.clipsToBounds = true
+                    }
+                    
+                    self.photoImageView.image = image
+                    self.setAssetFrame(for: self.photoImageView, with: image)
+                    // Stored crop position in multiple selection
+                    if let scp173 = storedCropPosition {
+                        self.applyStoredCropPosition(scp173)
+                        // add update CropInfo after multiple
+                        updateCropInfo()
+                    }
+                    
+                    self.squaredZoomScale = self.calculateSquaredZoomScale()
+                    
+                    completion(false)
                 }
-                
-                self.photoImageView.image = image
-                self.setAssetFrame(for: self.photoImageView, with: image)
-                // Stored crop position in multiple selection
-                if let scp173 = storedCropPosition {
-                    self.applyStoredCropPosition(scp173)
-                    // add update CropInfo after multiple
-                    updateCropInfo()
-                }
-
-                self.squaredZoomScale = self.calculateSquaredZoomScale()
-                
-                completion(false)
             } catch {
                 woops(error)
-                completion(false)
+                DispatchQueue.main.async {
+                    completion(false)                    
+                }
             }
         }
     }

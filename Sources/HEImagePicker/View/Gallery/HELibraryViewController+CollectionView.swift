@@ -62,7 +62,8 @@ extension HELibraryViewController {
             $0.assetIdentifier == assetMediaManager.getAsset(at: indexPath.row)?.localIdentifier
         }) {
             selectedItems.remove(at: positionIndex)
-
+            v.previewBox.collView.deleteItems(at: [IndexPath(row: positionIndex, section: 0)])
+            
             // Refresh the numbers
             let selectedIndexPaths = selectedItems.map { IndexPath(row: $0.index, section: 0) }
             v.albumCollectionView.reloadItems(at: selectedIndexPaths)
@@ -92,6 +93,8 @@ extension HELibraryViewController {
 
         let newSelection = HELibrarySelection(index: indexPath.row, assetIdentifier: asset.localIdentifier)
         selectedItems.append(newSelection)
+        v.previewBox.collView.insertItems(at: [IndexPath(row: selectedItems.count - 1, section: 0)])
+        
         checkLimit()
     }
     
@@ -217,7 +220,6 @@ extension HELibraryViewController: UICollectionViewDelegate {
     public func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let previouslySelectedIndexPath = IndexPath(row: currentlySelectedIndex, section: 0)
         currentlySelectedIndex = indexPath.row
-        changePreview(assetMediaManager.getAsset(at: indexPath.row))
         panGestureHelper.resetToOriginalState()
         
         // Only scroll cell to top if preview is hidden.
@@ -250,6 +252,8 @@ extension HELibraryViewController: UICollectionViewDelegate {
                 previousCell.isSelected = false
             }
         }
+        
+        changePreview(assetMediaManager.getAsset(at: indexPath.row))
     }
     
     public func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
