@@ -268,6 +268,7 @@ extension ViewController: HEImagePickerDelegate {
     }
     
     func imagePicker(_ picker: HEImagePicker, didSelectToEditItem item: HEMediaItem) {
+        // TODO: 편집 시작
         
     }
 }

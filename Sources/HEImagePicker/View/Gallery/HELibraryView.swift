@@ -13,8 +13,8 @@ final class HELibraryView: UIView {
 
     // MARK: - Public vars
 
-    internal let assetZoomableViewMinimalVisibleHeight: CGFloat  = 104
-    internal var assetViewContainerConstraintTop: NSLayoutConstraint?
+    internal let previewBoxMinimalVisibleHeight: CGFloat  = 104
+    internal var previewBoxConstraintTop: NSLayoutConstraint?
     /// 앨범 이미지 콜렉션 
     internal let albumCollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -28,19 +28,19 @@ final class HELibraryView: UIView {
     }()
     /// 상단 미리보기 
     // TODO: 이미지 리스트로 변경
-    internal lazy var assetViewBox: HEAssetViewBox = {
+    internal lazy var preivewBox: HEAssetViewBox = {
         let v = HEAssetViewBox(frame: .zero, zoomableView: HEAssetZoomableView(frame: .zero))
         v.accessibilityIdentifier = "assetViewContainer"
         return v
     }()
     // TODO: 변경하기 - 확대는... 편집 모드가 아닌 경우에 처리.
     internal var assetZoomableView: HEAssetZoomableView {
-        return assetViewBox.zoomableView
+        return preivewBox.zoomableView
     }
 
     internal let albumNameBt: UIButton = {
         let bt = UIButton()
-        bt.setTitle("모든 사진", for: .normal)
+        bt.setTitle(PickerConfig.wordings.allPhotos, for: .normal)
         bt.setTitleColor(.init(white: 52/255.0, alpha: 1), for: .normal)
         bt.titleLabel?.font = .systemFont(ofSize: 14, weight: .bold)
         bt.semanticContentAttribute = .forceRightToLeft
@@ -84,8 +84,8 @@ final class HELibraryView: UIView {
     private var shouldShowLoader = false {
         didSet {
             DispatchQueue.main.async {
-                self.assetViewBox.squareCropButton?.isEnabled = !self.shouldShowLoader
-                self.assetViewBox.spinnerIsShown = self.shouldShowLoader
+                self.preivewBox.squareCropButton?.isEnabled = !self.shouldShowLoader
+                self.preivewBox.spinnerIsShown = self.shouldShowLoader
             }
         }
     }
@@ -115,21 +115,21 @@ final class HELibraryView: UIView {
             Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { _ in
                 if self.shouldShowLoader == true {
                     UIView.animate(withDuration: 0.2) {
-                        self.assetViewBox.spinnerView.alpha = 1
+                        self.preivewBox.spinnerView.alpha = 1
                     }
                 }
             }
         } else {
             // Fallback on earlier versions
             UIView.animate(withDuration: 0.2) {
-                self.assetViewBox.spinnerView.alpha = 1
+                self.preivewBox.spinnerView.alpha = 1
             }
         }
     }
 
     func hideLoader() {
         shouldShowLoader = false
-        assetViewBox.spinnerView.alpha = 0
+        preivewBox.spinnerView.alpha = 0
     }
 
     func updateProgress(_ progress: Float) {
@@ -152,9 +152,9 @@ final class HELibraryView: UIView {
     // MARK: Curtain
 
     func refreshImageCurtainAlpha() {
-        let imageCurtainAlpha = abs(assetViewContainerConstraintTop?.constant ?? 0)
-        / (assetViewBox.frame.height - assetZoomableViewMinimalVisibleHeight)
-        assetViewBox.curtain.alpha = imageCurtainAlpha
+        let imageCurtainAlpha = abs(previewBoxConstraintTop?.constant ?? 0)
+        / (preivewBox.frame.height - previewBoxMinimalVisibleHeight)
+        preivewBox.curtain.alpha = imageCurtainAlpha
     }
 
     func cellSize() -> CGSize {
@@ -168,7 +168,7 @@ final class HELibraryView: UIView {
 
     func setMultipleSelectionMode(on: Bool) {
         isMultipleSelectionEnabled = on
-        assetViewBox.setMultipleSelectionMode(on: on)
+        preivewBox.setMultipleSelectionMode(on: on)
         countLabel?.isHidden = !on
     }
     
@@ -179,10 +179,10 @@ final class HELibraryView: UIView {
         addSubview(collectionContainerView)
         collectionContainerView.addSubview(albumCollectionView)
         collectionContainerView.addSubview(line)
-        addSubview(assetViewBox)
+        addSubview(preivewBox)
         addSubview(progressView)
         
-        assetViewBox.backgroundColor = .green
+        preivewBox.backgroundColor = .green
         // assetViewBox.backgroundColor = PickerConfig.colors.assetViewBackgroundColor
         
         collectionContainerView.makeConstraints { v in
@@ -196,7 +196,7 @@ final class HELibraryView: UIView {
         }
 
         var topConstraint: NSLayoutConstraint?
-        assetViewBox.makeConstraints { v in
+        preivewBox.makeConstraints { v in
             topConstraint = v.topAnchorConstraintToSuperview()
             v.bottomAnchorConstraintTo(line.topAnchor)
             v.edgesConstraintToSuperview(edges: .horizontal)
@@ -207,7 +207,7 @@ final class HELibraryView: UIView {
             v.edgesConstraintToSuperview(edges: .horizontal)
         }
 
-        self.assetViewContainerConstraintTop = topConstraint
+        self.previewBoxConstraintTop = topConstraint
 
         progressView.makeConstraints { v in
             v.heightAnchorConstraintTo(5)

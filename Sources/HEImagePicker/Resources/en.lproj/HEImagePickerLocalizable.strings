@@ -22,3 +22,4 @@
 "YPImagePickerWarningItemsLimit" = "The limit is %d photos or videos";
 "HEImagePickerAttach" = "Attach";
 "HEImagePickerEditPhoto" = "Edit photo";
+"HEImagePickerAllPhotos" = "All Photos";

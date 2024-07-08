@@ -73,6 +73,8 @@
 		17B2DCFF2C3BA50A00662FC4 /* HECommon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 17B2DCE12C3B83FF00662FC4 /* HECommon.framework */; };
 		17B2DD002C3BA50A00662FC4 /* HECommon.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 17B2DCE12C3B83FF00662FC4 /* HECommon.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		17B2DD052C3BABA700662FC4 /* Data+Wrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B2DD042C3BABA700662FC4 /* Data+Wrapper.swift */; };
+		17B2DD082C3BBFC000662FC4 /* HECapsuleButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B2DD072C3BBFC000662FC4 /* HECapsuleButton.swift */; };
+		17B2DD0A2C3BC62400662FC4 /* LibraryAttachButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B2DD092C3BC62400662FC4 /* LibraryAttachButton.swift */; };
 		17C8ED8A2C148390006F390A /* HEClipActionToolView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17C8ED892C148390006F390A /* HEClipActionToolView.swift */; };
 		17D691982C12EC32007443EC /* HEClipBottomView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D691972C12EC32007443EC /* HEClipBottomView.swift */; };
 		17D6919D2C168A9C007443EC /* HEEditState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D6919C2C168A9C007443EC /* HEEditState.swift */; };
@@ -219,6 +221,8 @@
 		17B2DCF72C3BA0C600662FC4 /* HEImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEImage.swift; sourceTree = "<group>"; };
 		17B2DCFD2C3BA46F00662FC4 /* Trace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Trace.swift; sourceTree = "<group>"; };
 		17B2DD042C3BABA700662FC4 /* Data+Wrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Data+Wrapper.swift"; sourceTree = "<group>"; };
+		17B2DD072C3BBFC000662FC4 /* HECapsuleButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HECapsuleButton.swift; sourceTree = "<group>"; };
+		17B2DD092C3BC62400662FC4 /* LibraryAttachButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryAttachButton.swift; sourceTree = "<group>"; };
 		17C8ED892C148390006F390A /* HEClipActionToolView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEClipActionToolView.swift; sourceTree = "<group>"; };
 		17D691972C12EC32007443EC /* HEClipBottomView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEClipBottomView.swift; sourceTree = "<group>"; };
 		17D6919C2C168A9C007443EC /* HEEditState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEEditState.swift; sourceTree = "<group>"; };
@@ -457,6 +461,7 @@
 				173DE6772C33CAAC002BD7C6 /* HEVideoView.swift */,
 				173DE6712C33C9BC002BD7C6 /* LibraryMediaManager.swift */,
 				173DE6922C33F954002BD7C6 /* LibraryViewCell.swift */,
+				17B2DD092C3BC62400662FC4 /* LibraryAttachButton.swift */,
 			);
 			path = Gallery;
 			sourceTree = "<group>";
@@ -517,6 +522,7 @@
 		17B2DCB02C3B835D00662FC4 /* HECommon */ = {
 			isa = PBXGroup;
 			children = (
+				17B2DD062C3BBFB500662FC4 /* Component */,
 				17B2DCE22C3B84AF00662FC4 /* HECommon.h */,
 				17D692262C253644007443EC /* HEError.swift */,
 				17B2DCF72C3BA0C600662FC4 /* HEImage.swift */,
@@ -541,6 +547,14 @@
 				17B2DCFD2C3BA46F00662FC4 /* Trace.swift */,
 			);
 			path = Util;
+			sourceTree = "<group>";
+		};
+		17B2DD062C3BBFB500662FC4 /* Component */ = {
+			isa = PBXGroup;
+			children = (
+				17B2DD072C3BBFC000662FC4 /* HECapsuleButton.swift */,
+			);
+			path = Component;
 			sourceTree = "<group>";
 		};
 		17C8ED692C118F2D006F390A /* Resources */ = {
@@ -824,6 +838,7 @@
 				173DE6722C33C9BC002BD7C6 /* LibraryMediaManager.swift in Sources */,
 				173DE6552C33B8AD002BD7C6 /* Bundle+.swift in Sources */,
 				173DE6742C33CA06002BD7C6 /* HELibraryView.swift in Sources */,
+				17B2DD0A2C3BC62400662FC4 /* LibraryAttachButton.swift in Sources */,
 				173DE6762C33CA6B002BD7C6 /* HEAssetZoomableView.swift in Sources */,
 				173DE6822C33CF3B002BD7C6 /* AVFoundation+.swift in Sources */,
 				173DE6842C33D1F7002BD7C6 /* URL+.swift in Sources */,
@@ -847,6 +862,7 @@
 				17B2DCE72C3B969200662FC4 /* String+Wrapper.swift in Sources */,
 				17B2DCEB2C3B96AA00662FC4 /* UIGraphicsImageRenderer+Wrapper.swift in Sources */,
 				17B2DCFE2C3BA46F00662FC4 /* Trace.swift in Sources */,
+				17B2DD082C3BBFC000662FC4 /* HECapsuleButton.swift in Sources */,
 				17B2DCFA2C3BA32500662FC4 /* HEImageDataStore.swift in Sources */,
 				17B2DCFB2C3BA3C600662FC4 /* HEError.swift in Sources */,
 				17B2DCE42C3B967200662FC4 /* HEWrapper.swift in Sources */,

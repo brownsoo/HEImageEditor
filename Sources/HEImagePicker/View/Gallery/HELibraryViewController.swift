@@ -31,10 +31,13 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     }
     
     public weak var delegate: HELibraryViewDelegate?
+    public lazy var editImageStore = HESimpleImageStore()
     
     internal var shouldHideStatusBar = false
     internal var initialStatusBarHidden = false
     internal var v = HELibraryView(frame: .zero)
+    internal let attachButton = LibraryAttachButton()
+    
     internal var isProcessing = false // true if video or image is in processing state
     internal var selectedItems = [HELibrarySelection]()
     internal let assetMediaManager = LibraryMediaManager()
@@ -46,7 +49,6 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     
     internal lazy var albumsManager = HEAlbumsManager()
     
-    public lazy var editImageStore = HESimpleImageStore()
     
     // MARK: - Init
 
@@ -90,8 +92,8 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        v.assetViewBox.squareCropButton?.addTarget(self, action: #selector(squareCropButtonTapped), for: .touchUpInside)
-        v.assetViewBox.editButton?.addTarget(self, action: #selector(editPhotoButtonTapped), for: .touchUpInside)
+        v.preivewBox.squareCropButton?.addTarget(self, action: #selector(squareCropButtonTapped), for: .touchUpInside)
+        v.preivewBox.editButton?.addTarget(self, action: #selector(editPhotoButtonTapped), for: .touchUpInside)
         
         // Forces assetZoomableView to have a contentSize.
         // otherwise 0 in first selection triggering the bug : "invalid image size 0x0"
@@ -156,6 +158,12 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         v.albumNameBt.addTarget(self, action: #selector(albumListTapped), for: .touchUpInside)
         v.cameraPhotoButton?.addTarget(self, action: #selector(imageCaptureTapped), for: .touchUpInside)
         v.cameraVideoButton?.addTarget(self, action: #selector(videoCaptureTapped), for: .touchUpInside)
+        navigationItem.leftBarButtonItem = UIBarButtonItem(image: PickerConfig.icons.backButtonIcon,
+                                                           style: .plain,
+                                                           target: self,
+                                                           action: #selector(close))
+        // TODO: 첨부 갯수
+        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: attachButton)
         
         guard assetMediaManager.hasResultItems else {
             return
@@ -177,23 +185,11 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     }
 
     
-    private func updateUI() {
-        navigationItem.leftBarButtonItem = UIBarButtonItem(image: PickerConfig.icons.backButtonIcon,
-                                                           style: .plain,
-                                                           target: self,
-                                                           action: #selector(close))
-        // TODO: 첨부 갯수
-        navigationItem.rightBarButtonItem = UIBarButtonItem(title: PickerConfig.wordings.attach,
-                                                            style: .done,
-                                                            target: self,
-                                                            action: #selector(done))
-        
-        navigationItem.rightBarButtonItem?.setFont(font: PickerConfig.fonts.rightBarButtonFont, forState: .normal)
-        navigationItem.rightBarButtonItem?.setFont(font: PickerConfig.fonts.rightBarButtonFont, forState: .highlighted)
-        navigationItem.rightBarButtonItem?.setFont(font: PickerConfig.fonts.rightBarButtonFont, forState: .disabled)
-        
-        
+    func updateUI() {
+        attachButton.countLabel.text = selectedItems.count > 0 ? String("\(selectedItems.count)") : nil
+        v.countLabel?.text = String(selectedItems.count)
     }
+    
     
     @objc
     func albumListTapped() {
@@ -264,7 +260,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     @objc
     func squareCropButtonTapped() {
         doAfterLibraryPermissionCheck { [weak self] in
-            self?.v.assetViewBox.squareCropButtonTapped()
+            self?.v.preivewBox.squareCropButtonTapped()
         }
     }
     
@@ -332,7 +328,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     
     func registerForTapOnPreview() {
         let tapImageGesture = UITapGestureRecognizer(target: self, action: #selector(tappedImage))
-        v.assetViewBox.addGestureRecognizer(tapImageGesture)
+        v.preivewBox.addGestureRecognizer(tapImageGesture)
     }
     
     @objc
@@ -403,7 +399,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         libraryViewStartedLoadingImage()
         
         let completion = { (isLowResIntermediaryImage: Bool) in
-            self.v.assetViewBox.updateSquareCropButtonState()
+            self.v.preivewBox.updateSquareCropButtonState()
             self.updateCropInfo()
             if !isLowResIntermediaryImage {
                 self.v.hideLoader()
@@ -439,7 +435,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         libraryViewStartedLoadingImage()
         
         let completion = { (isLowResIntermediaryImage: Bool) in
-            self.v.assetViewBox.updateSquareCropButtonState()
+            self.v.preivewBox.updateSquareCropButtonState()
             self.updateCropInfo()
             if !isLowResIntermediaryImage {
                 self.v.hideLoader()

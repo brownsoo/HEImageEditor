@@ -28,11 +28,11 @@ class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
     // The height constraint of the view with main selected image
     var topHeight: CGFloat {
         get {
-            return libView.assetViewContainerConstraintTop?.constant ?? 0
+            return libView.previewBoxConstraintTop?.constant ?? 0
         }
         set {
-            if newValue >= libView.assetZoomableViewMinimalVisibleHeight - libView.assetViewBox.bounds.height {
-                libView.assetViewContainerConstraintTop?.constant = newValue
+            if newValue >= libView.previewBoxMinimalVisibleHeight - libView.preivewBox.bounds.height {
+                libView.previewBoxConstraintTop?.constant = newValue
             }
         }
     }
@@ -43,7 +43,7 @@ class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
         set {
             if newValue != isImageShown {
                 self._isImageShown = newValue
-                libView.assetViewBox.isShown = newValue
+                libView.preivewBox.isShown = newValue
                 // Update imageCropContainer
                 libView.assetZoomableView.isScrollEnabled = isImageShown
             }
@@ -95,7 +95,7 @@ class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
     @objc
     func panned(_ sender: UIPanGestureRecognizer) {
         let collBarHeight: CGFloat = 56
-        let boxHeight = libView.assetViewBox.frame.height
+        let boxHeight = libView.preivewBox.frame.height
         let currentPos = sender.location(in: libView)
         let overYLimitToStartMovingUp = currentPos.y * 1.4 < cropBottomY + collBarHeight
         
@@ -111,7 +111,7 @@ class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
             }
             
             let dragStartPos = sender.location(in: view)
-            cropBottomY = libView.assetViewBox.frame.origin.y + boxHeight
+            cropBottomY = libView.preivewBox.frame.origin.y + boxHeight
             dragDiff = dragStartPos.y - cropBottomY
             // Move
             if dragDirection == .stop {
@@ -131,7 +131,7 @@ class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
             case .up:
                 if currentPos.y < cropBottomY + collBarHeight {
                     topHeight = min(assetViewContainerOriginalConstraintTop,
-                                    max(libView.assetZoomableViewMinimalVisibleHeight - boxHeight,
+                                    max(libView.previewBoxMinimalVisibleHeight - boxHeight,
                                         currentPos.y - boxHeight - dragDiff))
                         
                 }
@@ -143,7 +143,7 @@ class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
                 }
             case .scroll:
                 topHeight =
-                    libView.assetZoomableViewMinimalVisibleHeight - boxHeight
+                    libView.previewBoxMinimalVisibleHeight - boxHeight
                     + currentPos.y - imaginaryCollectionViewOffsetStartPosY
             case .stop:
                 if libView.albumCollectionView.contentOffset.y < 0 {
@@ -162,7 +162,7 @@ class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
             if overYLimitToStartMovingUp && isImageShown == false {
                 // The largest movement
                 topHeight =
-                    libView.assetZoomableViewMinimalVisibleHeight - boxHeight
+                    libView.previewBoxMinimalVisibleHeight - boxHeight
                 animateView()
                 dragDirection = .down
             } else {

@@ -36,7 +36,7 @@ public struct HEPickerIcons {
 
     public var shouldChangeDefaultBackButtonIcon = false
     public var hideBackButtonTitle = true
-    
+
     public var editImageIcon = imageFromBundle("icMagicbar") ?? UIImage(systemName: "wand.and.rays")
     public var backButtonIcon = imageFromBundle("icArrowRight") ?? UIImage(systemName: "chevron.left")
     public var arrowDownIcon = imageFromBundle("icArrowDown") ?? UIImage(systemName: "chevron.down")

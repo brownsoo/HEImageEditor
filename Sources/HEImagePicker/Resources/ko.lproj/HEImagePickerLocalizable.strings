@@ -22,3 +22,4 @@
 "YPImagePickerWarningItemsLimit" = "사진과 동영상은 최대 %d개 까지 선택할 수 있습니다.";
 "HEImagePickerAttach" = "첨부하기";
 "HEImagePickerEditPhoto" = "사진 편집";
+"HEImagePickerAllPhotos" = "모든 사진";

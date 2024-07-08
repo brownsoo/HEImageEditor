@@ -8,6 +8,7 @@
 import Foundation
 import UIKit
 import AVFoundation
+import HECommon
 
 /// The container for asset (video or image). 
 /// It containts the HEAssetZoomableView.
@@ -16,7 +17,7 @@ final public class HEAssetViewBox: UIView {
     public let curtain = UIView()
     public let spinnerView = UIView()
     public private(set) var squareCropButton: UIButton?
-    public private(set) var editButton: UIButton?
+    public private(set) var editButton: HECapsuleButton?
     
     public var usingClop = PickerConfig.library.usingClop
     public var isShown = true
@@ -73,16 +74,17 @@ final public class HEAssetViewBox: UIView {
         }
         
         if PickerConfig.useEditPhoto {
-            let button = UIButton()
+            let button = HECapsuleButton()
             button.setImage(PickerConfig.icons.editImageIcon?.withTintColor(.white), for: .normal)
             button.setTitle(PickerConfig.wordings.editPhoto, for: .normal)
             button.setTitleColor(UIColor(white: 246 / 255.0, alpha: 1.0), for: .normal)
             button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .bold)
-            button.backgroundColor = UIColor(white: 51 / 255.0, alpha: 0.4)
             button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 4, bottom: 0, right: -4)
             button.contentEdgeInsets = UIEdgeInsets(top: 14, left: 16, bottom: 14, right: 16 + 4)
-            button.layer.cornerRadius = 22
-            button.layer.masksToBounds = true
+            //button.layer.cornerRadius = 22
+            //button.layer.masksToBounds = true
+            button.setBackgroundColor(UIColor(white: 51 / 255.0, alpha: 0.4), for: .normal)
+            button.setBackgroundColor(UIColor(white: 151 / 255.0, alpha: 0.6), for: .highlighted)
             addSubview(button)
             button.makeConstraints { v in
                 v.bottomAnchorConstraintToSuperview(-24)
