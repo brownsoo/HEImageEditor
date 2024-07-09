@@ -10,3 +10,12 @@ import Combine
 
 // Combine Cancellable
 extension Task : Cancellable {}
+
+extension Array {
+    func get(at index: Int) -> Element? {
+        guard index >= 0, index < self.count else {
+            return nil
+        }
+        return self[index]
+    }
+}

@@ -149,7 +149,6 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         // 첨부 갯수
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: attachButton)
         
-        v.previewBox.squareCropButton?.addTarget(self, action: #selector(squareCropButtonTapped), for: .touchUpInside)
         v.previewBox.editButton?.addTarget(self, action: #selector(editPhotoButtonTapped), for: .touchUpInside)
         v.previewBox.assetMediaManager = self.assetMediaManager
         v.previewBox.editImageStore = self.editImageStore
@@ -246,13 +245,6 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     }
     
     // MARK: - Crop control
-    
-    @objc
-    func squareCropButtonTapped() {
-        doAfterLibraryPermissionCheck { [weak self] in
-            self?.v.previewBox.squareCropButtonTapped()
-        }
-    }
     
     @objc
     func editPhotoButtonTapped() {

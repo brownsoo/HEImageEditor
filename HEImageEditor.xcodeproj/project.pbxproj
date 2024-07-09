@@ -75,6 +75,8 @@
 		17B2DD052C3BABA700662FC4 /* Data+Wrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B2DD042C3BABA700662FC4 /* Data+Wrapper.swift */; };
 		17B2DD082C3BBFC000662FC4 /* HECapsuleButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B2DD072C3BBFC000662FC4 /* HECapsuleButton.swift */; };
 		17B2DD0A2C3BC62400662FC4 /* LibraryAttachButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B2DD092C3BC62400662FC4 /* LibraryAttachButton.swift */; };
+		17B2DD0E2C3CC99100662FC4 /* CenteredCellFlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B2DD0D2C3CC99100662FC4 /* CenteredCellFlowLayout.swift */; };
+		17B2DD102C3CCEC800662FC4 /* FullCellFlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B2DD0F2C3CCEC800662FC4 /* FullCellFlowLayout.swift */; };
 		17C8ED8A2C148390006F390A /* HEClipActionToolView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17C8ED892C148390006F390A /* HEClipActionToolView.swift */; };
 		17D691982C12EC32007443EC /* HEClipBottomView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D691972C12EC32007443EC /* HEClipBottomView.swift */; };
 		17D6919D2C168A9C007443EC /* HEEditState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D6919C2C168A9C007443EC /* HEEditState.swift */; };
@@ -223,6 +225,8 @@
 		17B2DD042C3BABA700662FC4 /* Data+Wrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Data+Wrapper.swift"; sourceTree = "<group>"; };
 		17B2DD072C3BBFC000662FC4 /* HECapsuleButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HECapsuleButton.swift; sourceTree = "<group>"; };
 		17B2DD092C3BC62400662FC4 /* LibraryAttachButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryAttachButton.swift; sourceTree = "<group>"; };
+		17B2DD0D2C3CC99100662FC4 /* CenteredCellFlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CenteredCellFlowLayout.swift; sourceTree = "<group>"; };
+		17B2DD0F2C3CCEC800662FC4 /* FullCellFlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullCellFlowLayout.swift; sourceTree = "<group>"; };
 		17C8ED892C148390006F390A /* HEClipActionToolView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEClipActionToolView.swift; sourceTree = "<group>"; };
 		17D691972C12EC32007443EC /* HEClipBottomView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEClipBottomView.swift; sourceTree = "<group>"; };
 		17D6919C2C168A9C007443EC /* HEEditState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEEditState.swift; sourceTree = "<group>"; };
@@ -440,6 +444,7 @@
 		173DE6692C33BDD7002BD7C6 /* View */ = {
 			isa = PBXGroup;
 			children = (
+				17B2DD0C2C3CC97D00662FC4 /* Layout */,
 				173DE6892C33F4C4002BD7C6 /* Permission */,
 				173DE6702C33C9A1002BD7C6 /* Gallery */,
 				173DE66A2C33BEBD002BD7C6 /* HEAlbumsManager.swift */,
@@ -555,6 +560,15 @@
 				17B2DD072C3BBFC000662FC4 /* HECapsuleButton.swift */,
 			);
 			path = Component;
+			sourceTree = "<group>";
+		};
+		17B2DD0C2C3CC97D00662FC4 /* Layout */ = {
+			isa = PBXGroup;
+			children = (
+				17B2DD0D2C3CC99100662FC4 /* CenteredCellFlowLayout.swift */,
+				17B2DD0F2C3CCEC800662FC4 /* FullCellFlowLayout.swift */,
+			);
+			path = Layout;
 			sourceTree = "<group>";
 		};
 		17C8ED692C118F2D006F390A /* Resources */ = {
@@ -829,6 +843,8 @@
 				173DE66F2C33C918002BD7C6 /* HELibraryViewController.swift in Sources */,
 				173DE69D2C352808002BD7C6 /* Foundation+.swift in Sources */,
 				173DE69F2C353F55002BD7C6 /* AlbumListViewController.swift in Sources */,
+				17B2DD0E2C3CC99100662FC4 /* CenteredCellFlowLayout.swift in Sources */,
+				17B2DD102C3CCEC800662FC4 /* FullCellFlowLayout.swift in Sources */,
 				173DE67A2C33CB92002BD7C6 /* AutoLayout+.swift in Sources */,
 				173DE6932C33F954002BD7C6 /* LibraryViewCell.swift in Sources */,
 				173DE68F2C33F6B2002BD7C6 /* HEPanGestureHelper.swift in Sources */,
