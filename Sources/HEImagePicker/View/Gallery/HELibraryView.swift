@@ -15,7 +15,7 @@ final class HELibraryView: UIView {
 
     internal let previewBoxMinimalVisibleHeight: CGFloat  = 104
     internal var previewBoxConstraintTop: NSLayoutConstraint?
-    /// 앨범 이미지 콜렉션 
+    /// 앨범 내 이미지 콜렉션 
     internal let albumCollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .vertical
@@ -34,7 +34,7 @@ final class HELibraryView: UIView {
         return v
     }()
     // TODO: 변경하기 - 확대는... 편집 모드가 아닌 경우에 처리.
-    internal var assetZoomableView: HEAssetZoomableView? {
+    internal var currentZoomableView: HEAssetZoomableView? {
         return previewBox.currentZoomableView
     }
 
@@ -109,7 +109,7 @@ final class HELibraryView: UIView {
     // MARK: Crop Rect
 
     func currentCropRect() -> CGRect {
-        guard let cropView = assetZoomableView else { return CGRect(x: 0, y: 0, width: 1, height: 1) }
+        guard let cropView = currentZoomableView else { return CGRect(x: 0, y: 0, width: 1, height: 1) }
         let normalizedX = min(1, cropView.contentOffset.x &/ cropView.contentSize.width)
         let normalizedY = min(1, cropView.contentOffset.y &/ cropView.contentSize.height)
         let normalizedWidth = min(1, cropView.frame.width / cropView.contentSize.width)

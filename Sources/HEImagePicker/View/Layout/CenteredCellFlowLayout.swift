@@ -10,7 +10,7 @@ import UIKit
 class CenteredCellFlowLayout: UICollectionViewFlowLayout {
     
     private var cache = [UICollectionViewLayoutAttributes]()
-    private var defaultSpacing: CGFloat = 24
+    private var defaultSpacing: CGFloat = 8
     private var defaultItemSize: CGSize? = nil
     
     private var contentHeight: CGFloat {
@@ -49,6 +49,8 @@ class CenteredCellFlowLayout: UICollectionViewFlowLayout {
         }
     }
     
+    public var widthRatio: CGFloat = 288.0 / 360.0
+    
     public override func prepare() {
         super.prepare()
         guard let collectionView = collectionView else {
@@ -58,7 +60,7 @@ class CenteredCellFlowLayout: UICollectionViewFlowLayout {
         //print("meme prepare-> \(collectionView.numberOfItems(inSection: 0))")
         
         let insets = collectionView.contentInset
-        let itemWidth = (collectionView.bounds.size.width - insets.left - insets.right) * 0.8
+        let itemWidth = (collectionView.bounds.size.width - insets.left - insets.right) * widthRatio
         let itemHeight = min(contentHeight, itemWidth * 1.6) // 컨텐츠 높이를 벗어나지 않는 범위내에서 가로 크기에 비례
         itemSize = CGSize(width: itemWidth, height: itemHeight)
         

@@ -26,7 +26,7 @@ final public class HEAssetZoomableView: UIScrollView {
     public var squaredZoomScale: CGFloat = 1
     public var minWidthForItem: CGFloat? = PickerConfig.library.minWidthForItem
     
-    fileprivate var currentAssetIdentifier: String?
+    fileprivate(set) var currentAssetIdentifier: String?
     
     // Image view of the asset for convenience. Can be video preview image view or photo image view.
     public var assetImageView: UIImageView {
@@ -114,7 +114,7 @@ final public class HEAssetZoomableView: UIScrollView {
         
         mediaManager?.phImageManager?.fetch(photo: photo) { [weak self] image, isLowResIntermediaryImage in
             guard let self = self else { return }
-            
+            // Main thread
             if self.photoImageView.isDescendant(of: self) == false {
                 self.isVideoMode = false
                 self.videoView.removeFromSuperview()

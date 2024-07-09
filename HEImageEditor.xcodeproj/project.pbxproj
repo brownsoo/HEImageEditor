@@ -456,17 +456,17 @@
 			isa = PBXGroup;
 			children = (
 				173DE69E2C353F55002BD7C6 /* AlbumListViewController.swift */,
-				173DE6872C33E78D002BD7C6 /* HEPreiviewBoxView.swift */,
 				173DE6752C33CA6B002BD7C6 /* HEAssetZoomableView.swift */,
 				173DE6732C33CA06002BD7C6 /* HELibraryView.swift */,
 				173DE66E2C33C918002BD7C6 /* HELibraryViewController.swift */,
 				173DE6902C33F8EA002BD7C6 /* HELibraryViewController+CollectionView.swift */,
 				173DE69A2C3417E7002BD7C6 /* HELibraryViewController+PHLibraryObserver.swift */,
 				173DE68E2C33F6B2002BD7C6 /* HEPanGestureHelper.swift */,
+				173DE6872C33E78D002BD7C6 /* HEPreiviewBoxView.swift */,
 				173DE6772C33CAAC002BD7C6 /* HEVideoView.swift */,
+				17B2DD092C3BC62400662FC4 /* LibraryAttachButton.swift */,
 				173DE6712C33C9BC002BD7C6 /* LibraryMediaManager.swift */,
 				173DE6922C33F954002BD7C6 /* LibraryViewCell.swift */,
-				17B2DD092C3BC62400662FC4 /* LibraryAttachButton.swift */,
 			);
 			path = Gallery;
 			sourceTree = "<group>";

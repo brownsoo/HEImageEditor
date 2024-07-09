@@ -157,87 +157,95 @@ public class HEPreiviewBoxView: UIView {
 // MARK: 미디어 설정
 extension HEPreiviewBoxView {
     
-    private func loadPreviewWithHEImage(_ hei: HEImage?, forCell cell: HEPreviewCell, selection: HELibrarySelection) {
-        guard let hei = hei else {
-            print("No hei to change.")
-            return
-        }
-        delegate?.previewBoxViewStartedLoadingImage(self)
-        
-        let completion = { [weak self] (isLowResIntermediaryImage: Bool) in
-            guard let self else { return }
-            cell.updateSquareCropButtonState()
-            cell.zoomableView.fitImage(true, animated: true)
-            self.delegate?.previewBoxViewUpdateCropInfo(self, assetIdentifier: hei.id)
-            if !isLowResIntermediaryImage {
-                self.hideLoader()
-                self.delegate?.previewBoxViewFinishedLoadingImage(self)
+    private func loadPreviewWithHEImage(_ hei: HEImage?, forCell cell: HEPreviewCell, selection: HELibrarySelection) -> Task<(), Never> {
+        Task {
+            guard let hei = hei else {
+                print("No hei to change.")
+                return
             }
-        }
-        
-        let updateCropInfo = { [weak self] in
-            guard let self else { return }
-            self.delegate?.previewBoxViewUpdateCropInfo(self, assetIdentifier: hei.id)
-        }
-        
-        if let editImageStore {
-            cell.squareCropButton?.isEnabled = false
-            DispatchQueue.global(qos: .userInitiated).async {
-                cell.zoomableView.applyImage(hei,
-                                             imageCache: editImageStore,
-                                             storedCropPosition: selection,
-                                             completion: completion,
-                                             updateCropInfo: updateCropInfo)
+            
+            delegate?.previewBoxViewStartedLoadingImage(self)
+            
+            let completion = { [weak self] (isLowResIntermediaryImage: Bool) in
+                guard let self else { return }
+                if Task.isCancelled { return }
+                cell.updateSquareCropButtonState()
+                cell.zoomableView.fitImage(true, animated: true)
+                self.delegate?.previewBoxViewUpdateCropInfo(self, assetIdentifier: hei.id)
+                if !isLowResIntermediaryImage {
+                    self.hideLoader()
+                    self.delegate?.previewBoxViewFinishedLoadingImage(self)
+                }
             }
-        } else {
-            woops("편집 이미지 스토어 !!")
+            
+            let updateCropInfo = { [weak self] in
+                guard let self else { return }
+                if Task.isCancelled { return }
+                self.delegate?.previewBoxViewUpdateCropInfo(self, assetIdentifier: hei.id)
+            }
+            
+            if let editImageStore {
+                cell.squareCropButton?.isEnabled = false
+                Task.detached {
+                    await cell.zoomableView.applyImage(hei,
+                                                       imageCache: editImageStore,
+                                                       storedCropPosition: selection,
+                                                       completion: completion,
+                                                       updateCropInfo: updateCropInfo)
+                }
+            } else {
+                woops("편집 이미지 스토어 !!")
+            }
         }
     }
     
-    func loadPreview(_ asset: PHAsset?, forCell cell: HEPreviewCell, selection: HELibrarySelection) {
-        guard let asset = asset else {
-            print("No asset to change.")
-            return
-        }
-        
-        delegate?.previewBoxViewStartedLoadingImage(self)
-        
-        let completion = { [weak self] (isLowResIntermediaryImage: Bool) in
-            guard let self else { return }
-            cell.updateSquareCropButtonState()
-            cell.zoomableView.fitImage(true, animated: true)
-            self.delegate?.previewBoxViewUpdateCropInfo(self, assetIdentifier: asset.localIdentifier)
-            if !isLowResIntermediaryImage {
-                self.hideLoader()
-                self.delegate?.previewBoxViewFinishedLoadingImage(self)
+    private func loadPreview(_ asset: PHAsset?, forCell cell: HEPreviewCell, selection: HELibrarySelection) -> Task<(), Never> {
+        Task {
+            guard let asset = asset else {
+                print("No asset to change.")
+                return
             }
-        }
-        
-        let updateCropInfo = { [weak self] in
-            guard let self else { return }
-            self.delegate?.previewBoxViewUpdateCropInfo(self, assetIdentifier: asset.localIdentifier)
-        }
-        
-        // MARK: add a func(updateCropInfo) after crop multiple
-        DispatchQueue.global(qos: .userInitiated).async {
-            switch asset.mediaType {
-            case .image:
-                cell.zoomableView.applyImage(asset,
-                                             mediaManager: self.assetMediaManager,
-                                             storedCropPosition: selection,
-                                             completion: completion,
-                                             updateCropInfo: updateCropInfo)
-                
-            case .video:
-                cell.zoomableView.applyVideo(asset,
-                                             mediaManager: self.assetMediaManager,
-                                             storedCropPosition: selection,
-                                             completion: { completion(false) },
-                                             updateCropInfo: updateCropInfo)
-            case .audio, .unknown:
-                ()
-            @unknown default:
-                woops("Bug. Unknown default.")
+            delegate?.previewBoxViewStartedLoadingImage(self)
+            
+            let completion = { [weak self] (isLowResIntermediaryImage: Bool) in
+                guard let self else { return }
+                if Task.isCancelled { return }
+                cell.updateSquareCropButtonState()
+                cell.zoomableView.fitImage(true, animated: false)
+                self.delegate?.previewBoxViewUpdateCropInfo(self, assetIdentifier: asset.localIdentifier)
+                if !isLowResIntermediaryImage {
+                    self.hideLoader()
+                    self.delegate?.previewBoxViewFinishedLoadingImage(self)
+                }
+            }
+            
+            let updateCropInfo = { [weak self] in
+                guard let self else { return }
+                if Task.isCancelled { return }
+                self.delegate?.previewBoxViewUpdateCropInfo(self, assetIdentifier: asset.localIdentifier)
+            }
+            
+            // MARK: add a func(updateCropInfo) after crop multiple
+            Task.detached {
+                switch asset.mediaType {
+                case .image:
+                    await cell.zoomableView.applyImage(asset,
+                                                       mediaManager: self.assetMediaManager,
+                                                       storedCropPosition: selection,
+                                                       completion: completion,
+                                                       updateCropInfo: updateCropInfo)
+                    
+                case .video:
+                    await cell.zoomableView.applyVideo(asset,
+                                                       mediaManager: self.assetMediaManager,
+                                                       storedCropPosition: selection,
+                                                       completion: { completion(false) },
+                                                       updateCropInfo: updateCropInfo)
+                case .audio, .unknown:
+                    ()
+                @unknown default:
+                    woops("Bug. Unknown default.")
+                }
             }
         }
     }
@@ -276,7 +284,6 @@ extension HEPreiviewBoxView: UICollectionViewDelegateFlowLayout, UICollectionVie
         addSubview(coll)
         coll.translatesAutoresizingMaskIntoConstraints = false
         coll.edgesConstraintToSuperview(edges: .all)
-        coll.backgroundColor = .yellow
         
         collView = coll
         coll.delegate = self
@@ -284,18 +291,29 @@ extension HEPreiviewBoxView: UICollectionViewDelegateFlowLayout, UICollectionVie
     }
     
     func changePreviewLayoutIfNeed() {
-        if items().count > 1 {
+        let count = items().count
+        if count > 1 {
             if !(collView.collectionViewLayout is CenteredCellFlowLayout) {
                 let layout = CenteredCellFlowLayout()
                 layout.scrollDirection = .horizontal
                 collView.collectionViewLayout = layout
+                collView.reloadItems(at: [IndexPath(row: 0, section: 0)])
             }
         } else {
             if !(collView.collectionViewLayout is FullCellFlowLayout) {
                 let layout = FullCellFlowLayout()
                 layout.scrollDirection = .horizontal
                 collView.collectionViewLayout = layout
+                if count == 1 {
+                    collView.reloadItems(at: [IndexPath(row: 0, section: 0)])
+                }
             }
+        }
+        
+        if count == 0 {
+            collView.backgroundColor = .lightGray
+        } else {
+            collView.backgroundColor = .white
         }
     }
     
@@ -305,8 +323,14 @@ extension HEPreiviewBoxView: UICollectionViewDelegateFlowLayout, UICollectionVie
     }
     
     func select(_ selection: HELibrarySelection, animated: Bool) {
-        changePreviewLayoutIfNeed()
         if let index = items().firstIndex(where: { $0.assetIdentifier == selection.assetIdentifier }) {
+            select(indexInSelection: index, animated: animated)
+        }
+    }
+    
+    func select(indexInSelection index: Int, animated: Bool) {
+        changePreviewLayoutIfNeed()
+        if index < items().count {
             collView.scrollToItem(at: IndexPath(row: index, section: 0), at: .centeredHorizontally, animated: animated)
         }
     }
@@ -327,7 +351,8 @@ extension HEPreiviewBoxView: UICollectionViewDelegateFlowLayout, UICollectionVie
     }
     
     func inserted(at index: Int) {
-        if let items = self.delegate?.previewBoxViewItems(self), index < items.count {
+        let items = items()
+        if index < items.count {
             let indexPath = IndexPath(row: index, section: 0)
             collView.insertItems(at: [indexPath])
             collView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
@@ -340,7 +365,8 @@ extension HEPreiviewBoxView: UICollectionViewDelegateFlowLayout, UICollectionVie
     }
     
     func reload(at index: Int) {
-        if let items = self.delegate?.previewBoxViewItems(self), index < items.count {
+        let items = items()
+        if index < items.count {
             collView.reloadItems(at: [IndexPath(row: index, section: 0)])
         } else {
             collView.reloadData()
@@ -353,28 +379,39 @@ extension HEPreiviewBoxView: UICollectionViewDelegateFlowLayout, UICollectionVie
     }
     
     public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let items = self.items()
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HEPreviewCell.reuseIdentifier, for: indexPath) as! HEPreviewCell
-        cell.isZoomable = collectionView.numberOfItems(inSection: indexPath.section) < 2
+        cell.isZoomable = items.count < 2
         cell.usingClop = self.usingClop
+        if items.count < 2 {
+            cell.contentView.layer.cornerRadius = 0
+            cell.contentView.layer.masksToBounds = false
+        } else {
+            cell.contentView.layer.cornerRadius = 12
+            cell.contentView.layer.masksToBounds = true
+        }
         
-        if let item = self.items().get(at: indexPath.row) {
-            if let hei = self.editImageStore?.getHEImage(forId: item.assetIdentifier) {
-                loadPreviewWithHEImage(hei, forCell: cell, selection: item)
-            } else if let asset = PHAsset.fetchAssets(withLocalIdentifiers: [item.assetIdentifier], options: PHFetchOptions()).firstObject {
-                loadPreview(asset, forCell: cell, selection: item)
-            } else {
-                woops("뭐지?")
-            }
-            
-            // When crop area changes in multiple selection mode,
-            // we need to update the scrollView values in order to restore
-            // them when user selects a previously selected item.
-            cell.zoomableView.cropAreaDidChange = { [weak self] in
-                guard let self = self else {
-                    return
+        if let item = items.get(at: indexPath.row) {
+            let task = Task {
+                if let hei = self.editImageStore?.getHEImage(forId: item.assetIdentifier) {
+                    await loadPreviewWithHEImage(hei, forCell: cell, selection: item).value
+                } else if let asset = PHAsset.fetchAssets(withLocalIdentifiers: [item.assetIdentifier], options: PHFetchOptions()).firstObject {
+                    await loadPreview(asset, forCell: cell, selection: item).value
+                } else {
+                    woops("뭐지?")
                 }
-                self.delegate?.previewBoxViewUpdateCropInfo(self, assetIdentifier: item.assetIdentifier)
+                
+                // When crop area changes in multiple selection mode,
+                // we need to update the scrollView values in order to restore
+                // them when user selects a previously selected item.
+                cell.zoomableView.cropAreaDidChange = { [weak self] in
+                    guard let self else { return }
+                    if Task.isCancelled { return }
+                    self.delegate?.previewBoxViewUpdateCropInfo(self, assetIdentifier: item.assetIdentifier)
+                }
             }
+            cell.loadTask?.cancel()
+            cell.loadTask = task
         }
         return cell
     }
@@ -406,8 +443,6 @@ class HEPreviewCell: UICollectionViewCell {
     var isZoomable: Bool = true {
         didSet {
             if isZoomable {
-                zoomableView.minimumZoomScale = 1
-                zoomableView.maximumZoomScale = 6.0
                 zoomableView.isScrollEnabled = true
             } else {
                 zoomableView.isScrollEnabled = false
@@ -422,8 +457,11 @@ class HEPreviewCell: UICollectionViewCell {
     }
     
     var shouldCropToSquare = PickerConfig.library.isCropSquareByDefault
+    var loadTask: Task<(), Never>?
     
     deinit {
+        loadTask?.cancel()
+        loadTask = nil
         zoomableView.clearAsset()
     }
     

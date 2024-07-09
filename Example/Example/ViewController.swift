@@ -251,11 +251,12 @@ extension ViewController: PHPickerViewControllerDelegate {
 }
 
 extension ViewController: HEImagePickerDelegate {
-    func imagePicker(_ picker: HEImagePicker, replacingItemAt indexPath: IndexPath) -> HEMediaItem? {
+    
+    func imagePicker(_ picker: HEImagePicker, replacingItemWithIdentifer identifier: String) -> HEMediaItem? {
         nil
     }
     
-    func imagePicker(_ picker: HEImagePicker, captionAt indexPath: IndexPath) -> String? {
+    func imagePicker(_ picker: HEImagePicker, captionWithIdentifer identifier: String) -> String? {
         "하이"
     }
     

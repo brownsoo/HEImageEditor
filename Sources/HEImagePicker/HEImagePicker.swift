@@ -14,12 +14,13 @@ public protocol HEImagePickerDelegate: AnyObject {
     func imagePicker(_ picker: HEImagePicker, didSelectItems items: [HEMediaItem])
     func imagePickerDidCancel(_ picker: HEImagePicker)
     func imagePicker(_ picker: HEImagePicker, shouldAddToSelectionAt indexPath: IndexPath, numSelections: Int) -> Bool
-    func imagePicker(_ picker: HEImagePicker, captionAt indexPath: IndexPath) -> String?
-    func imagePicker(_ picker: HEImagePicker, replacingItemAt indexPath: IndexPath) -> HEMediaItem?
+    func imagePicker(_ picker: HEImagePicker, captionWithIdentifer identifier: String) -> String?
+    func imagePicker(_ picker: HEImagePicker, replacingItemWithIdentifer identifier: String) -> HEMediaItem?
     func imagePicker(_ picker: HEImagePicker, didSelectToEditItem item: HEMediaItem)
 }
 
 public extension HEImagePickerDelegate {
+    // TODO: identifier 로 체크하기
     func imagePicker(_ picker: HEImagePicker, shouldAddToSelectionAt indexPath: IndexPath, numSelections: Int) -> Bool {
         true
     }
@@ -76,12 +77,12 @@ extension HEImagePicker: HELibraryViewDelegate {
         pickerDelegate?.imagePicker(self, shouldAddToSelectionAt: indexPath, numSelections: numSelections) ?? true
     }
     
-    public func libraryView(_ libraryView: HELibraryViewController, captionAt indexPath: IndexPath) -> String? {
-        pickerDelegate?.imagePicker(self, captionAt: indexPath)
+    public func libraryView(_ libraryView: HELibraryViewController, captionWithIdentifer identifier: String) -> String? {
+        pickerDelegate?.imagePicker(self, captionWithIdentifer: identifier)
     }
     
-    public func libraryView(_ libraryView: HELibraryViewController, replacingItemAt indexPath: IndexPath) -> HEMediaItem? {
-        pickerDelegate?.imagePicker(self, replacingItemAt: indexPath)
+    public func libraryView(_ libraryView: HELibraryViewController, replacingItemWithIdentifer identifier: String) -> HEMediaItem? {
+        pickerDelegate?.imagePicker(self, replacingItemWithIdentifer: identifier)
     }
     
     public func libraryView(_ libraryView: HELibraryViewController, didSelectItems items: [HEMediaItem]) {

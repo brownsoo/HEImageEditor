@@ -105,7 +105,7 @@ class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
             let loc     = sender.location(in: view)
             let subview = view?.hitTest(loc, with: nil)
             
-            if subview == libView.assetZoomableView
+            if subview == libView.currentZoomableView
                 && topHeight == assetViewContainerOriginalConstraintTop {
                 return
             }

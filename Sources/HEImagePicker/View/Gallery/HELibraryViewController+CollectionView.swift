@@ -39,8 +39,8 @@ extension HELibraryViewController {
         }
     }
     
-    func startMultipleSelection(at indexPath: IndexPath) {
-        currentlySelectedIndex = indexPath.row
+    private func startMultipleSelection(at indexPath: IndexPath) {
+        currentlySelectedIdentifier = (v.albumCollectionView.cellForItem(at: indexPath) as? LibraryViewCell)?.representedAssetIdentifier
         toggleMultipleSelection()
 
         // Bring preview down and keep selected cell visible.
@@ -55,23 +55,24 @@ extension HELibraryViewController {
     
     /// Removes cell from selection
     func deselect(indexPath: IndexPath) {
-        if let positionIndex = selectedItems.firstIndex(where: {
-            $0.assetIdentifier == assetMediaManager.getAsset(at: indexPath.row)?.localIdentifier
-        }) {
+        if let positionIndex = findIndexInSelectionPool(indexPath: indexPath) {
             selectedItems.remove(at: positionIndex)
             v.previewBox.removed(at: positionIndex)
             // Refresh the numbers
-            let selectedIndexPaths = selectedItems.map { IndexPath(row: $0.index, section: 0) }
+            let selectedIndexPaths = findSelectedIndexPathsInCurrentAlbum()
             v.albumCollectionView.reloadItems(at: selectedIndexPaths)
             
             // Replace the current selected image with the previously selected one
-            if let previouslySelectedIndexPath = selectedIndexPaths.last {
+            if let last = selectedItems.last {
                 v.albumCollectionView.deselectItem(at: indexPath, animated: false)
-                v.albumCollectionView.selectItem(at: previouslySelectedIndexPath, animated: false, scrollPosition: [])
-                currentlySelectedIndex = previouslySelectedIndexPath.row
-                if let last = selectedItems.last {
-                    v.previewBox.select(last, animated: true)
+                if let previouslySelectedIndexPath = findIndexPathInCurrentAlbum(identifier: last.assetIdentifier) {
+                    v.albumCollectionView.selectItem(at: previouslySelectedIndexPath, animated: false, scrollPosition: [])
                 }
+                currentlySelectedIdentifier = last.assetIdentifier
+            }
+            
+            if let last = selectedItems.last {
+                v.previewBox.select(last, animated: true)
             }
             
             checkLimit()
@@ -84,20 +85,50 @@ extension HELibraryViewController {
         if !shouldBeSelected {
             return
         }
-        guard let asset = assetMediaManager.getAsset(at: indexPath.item) else {
+        guard let asset = assetMediaManager.getAsset(at: indexPath.row) else {
             print("No asset to add to selection.")
             return
         }
 
-        let newSelection = HELibrarySelection(index: indexPath.row, assetIdentifier: asset.localIdentifier)
+        let newSelection = HELibrarySelection(assetIdentifier: asset.localIdentifier)
         selectedItems.append(newSelection)
         
         checkLimit()
     }
     
-    func isInSelectionPool(indexPath: IndexPath) -> Bool {
+    private func isInSelectionPool(indexPath: IndexPath) -> Bool {
+        let identifier = assetMediaManager.getAsset(at: indexPath.row)?.localIdentifier
         return selectedItems.contains(where: {
-            $0.assetIdentifier == assetMediaManager.getAsset(at: indexPath.row)?.localIdentifier
+            $0.assetIdentifier == identifier
+        })
+    }
+    
+    private func findIndexInSelectionPool(indexPath: IndexPath) -> Int? {
+        let identifier = assetMediaManager.getAsset(at: indexPath.row)?.localIdentifier
+        return selectedItems.firstIndex(where: {
+            $0.assetIdentifier == identifier
+        })
+    }
+    
+    private func findIndexPathInCurrentAlbum(identifier: String) -> IndexPath? {
+        guard let fetchResult = assetMediaManager.fetchResult else {
+            return nil
+        }
+        let tempArray = fetchResult.objects(at: IndexSet(integersIn: 0..<fetchResult.count))
+        guard let index = tempArray.firstIndex(where: { $0.localIdentifier == identifier }) else {
+            return nil
+        }
+        return IndexPath(row: index, section: 0)
+    }
+    
+    private func findSelectedIndexPathsInCurrentAlbum() -> [IndexPath] {
+        guard let fetchResult = assetMediaManager.fetchResult else {
+            return []
+        }
+        let tempArray = fetchResult.objects(at: IndexSet(integersIn: 0..<fetchResult.count)).map { $0.localIdentifier }
+        let selections = self.selectedItems.map({ $0.assetIdentifier })
+        return tempArray.enumerated().compactMap({
+            selections.contains($0.element) ? IndexPath(row: $0.offset, section: 0) : nil
         })
     }
     
@@ -116,8 +147,7 @@ extension HELibraryViewController: UICollectionViewDataSource {
 
 extension HELibraryViewController: UICollectionViewDelegate {
     
-    public func collectionView(_ collectionView: UICollectionView,
-                               cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+    public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: LibraryViewCell.reuseIdentifier, for: indexPath) as? LibraryViewCell else {
             fatalError("unexpected cell in collection view")
         }
@@ -126,8 +156,16 @@ extension HELibraryViewController: UICollectionViewDelegate {
         var mediaType: PHAssetMediaType
         var phAsset: PHAsset?
         var thumbnail: UIImage?
+        // Original thumbnail from photo album
+        if let asset = assetMediaManager.getAsset(at: indexPath.row) {
+            identifier = asset.localIdentifier
+            mediaType = asset.mediaType
+            phAsset = asset
+        } else {
+            return cell
+        }
         // Replacing thumbnail from external source
-        if let media = delegate?.libraryView(self, replacingItemAt: indexPath) {
+        if let asset = phAsset, let media = delegate?.libraryView(self, replacingItemWithIdentifer: asset.localIdentifier) {
             switch media {
             case .photo(let photo):
                 identifier = photo.identifier
@@ -140,14 +178,6 @@ extension HELibraryViewController: UICollectionViewDelegate {
                 phAsset = video.asset
                 thumbnail = video.thumbnail
             }
-            
-          // Original thumbnail from photo album
-        } else if let asset = assetMediaManager.getAsset(at: indexPath.item) {
-            identifier = asset.localIdentifier
-            mediaType = asset.mediaType
-            phAsset = asset
-        } else {
-            return cell
         }
         
         // Load Image
@@ -182,24 +212,21 @@ extension HELibraryViewController: UICollectionViewDelegate {
             cell.durationLabel.isHidden = true
         }
         cell.multipleSelectionIndicator.isHidden = !isMultipleSelectionEnabled
-        cell.isSelected = currentlySelectedIndex == indexPath.row
+        cell.isSelected = currentlySelectedIdentifier == identifier
         
         // Set correct selection number
         if let index = selectedItems.firstIndex(where: { $0.assetIdentifier == identifier }) {
             let currentSelection = selectedItems[index]
-            if currentSelection.index < 0 {
-                selectedItems[index] = HELibrarySelection(index: indexPath.row,
+            selectedItems[index] = HELibrarySelection(assetIdentifier: currentSelection.assetIdentifier,
                                                       cropRect: currentSelection.cropRect,
                                                       scrollViewContentOffset: currentSelection.scrollViewContentOffset,
-                                                      scrollViewZoomScale: currentSelection.scrollViewZoomScale,
-                                                      assetIdentifier: currentSelection.assetIdentifier)
-            }
+                                                      scrollViewZoomScale: currentSelection.scrollViewZoomScale)
             cell.multipleSelectionIndicator.set(number: index + 1) // start at 1, not 0
         } else {
             cell.multipleSelectionIndicator.set(number: nil)
         }
 
-        if let caption = delegate?.libraryView(self, captionAt: indexPath) {
+        if let caption = delegate?.libraryView(self, captionWithIdentifer: identifier) {
             cell.captionLabel.text = caption
             cell.captionLabelFilledHeight?.isActive = true
         } else {
@@ -215,8 +242,8 @@ extension HELibraryViewController: UICollectionViewDelegate {
     }
     
     public func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let previouslySelectedIndexPath = IndexPath(row: currentlySelectedIndex, section: 0)
-        currentlySelectedIndex = indexPath.row
+        let previouslySelected = currentlySelectedIdentifier ?? ""
+        currentlySelectedIdentifier = (collectionView.cellForItem(at: indexPath) as? LibraryViewCell)?.representedAssetIdentifier
         panGestureHelper.resetToOriginalState()
         
         // Only scroll cell to top if preview is hidden.
@@ -227,17 +254,23 @@ extension HELibraryViewController: UICollectionViewDelegate {
             
         if isMultipleSelectionEnabled {
             let cellIsInTheSelectionPool = isInSelectionPool(indexPath: indexPath)
-            let cellIsCurrentlySelected = previouslySelectedIndexPath.row == currentlySelectedIndex
+            let cellIsCurrentlySelected = previouslySelected == currentlySelectedIdentifier
             if cellIsInTheSelectionPool {
                 if cellIsCurrentlySelected {
                     deselect(indexPath: indexPath)
+                } else {
+                    if let index = findIndexInSelectionPool(indexPath: indexPath) {
+                        v.previewBox.select(indexInSelection: index, animated: true)
+                    }
                 }
             } else if isLimitExceeded == false {
                 addToSelection(indexPath: indexPath)
                 v.previewBox.inserted(at: selectedItems.count - 1)
             }
             collectionView.reloadItems(at: [indexPath])
-            collectionView.reloadItems(at: [previouslySelectedIndexPath])
+            if let previouslySelectedIndexPath = findIndexPathInCurrentAlbum(identifier: previouslySelected) {
+                collectionView.reloadItems(at: [previouslySelectedIndexPath])
+            }
         } else {
             selectedItems.removeAll()
             addToSelection(indexPath: indexPath)
@@ -246,7 +279,8 @@ extension HELibraryViewController: UICollectionViewDelegate {
             // In the case where the previous cell was loaded from iCloud, a new image was fetched
             // which triggered photoLibraryDidChange() and reloadItems() which breaks selection.
             //
-            if let previousCell = collectionView.cellForItem(at: previouslySelectedIndexPath) as? LibraryViewCell {
+            if let previouslySelectedIndexPath = findIndexPathInCurrentAlbum(identifier: previouslySelected),
+               let previousCell = collectionView.cellForItem(at: previouslySelectedIndexPath) as? LibraryViewCell {
                 previousCell.isSelected = false
             }
         }

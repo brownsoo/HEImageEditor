@@ -612,7 +612,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         let builder = self.bottomToolViewBuilder(self)
         bottomToolView = builder?.toolView
         bottomToolViewHeight = builder?.height ?? 76
-        bottomToolViewContainer.backgroundColor = .yellow
         
         if let bottomToolView {
             bottomToolViewContainer.addSubview(bottomToolView)

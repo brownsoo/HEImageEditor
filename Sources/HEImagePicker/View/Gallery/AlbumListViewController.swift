@@ -145,14 +145,6 @@ extension AlbumListViewController: UICollectionViewDelegate, UICollectionViewDel
         let width = (collectionView.frame.width - totalSpacing) / columns
         return CGSize(width: width, height: width * 202.0 / 158.0)
     }
-    
-//    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
-//        minimumCellSpacing
-//    }
-//    
-//    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
-//        minimumCellSpacing
-//    }
 }
 
 

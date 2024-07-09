@@ -20,8 +20,8 @@ public protocol HELibraryViewDelegate: AnyObject {
     func libraryViewDidCancel(_ libraryView: HELibraryViewController)
     
     func libraryView(_ libraryView: HELibraryViewController, shouldAddToSelectionAt indexPath: IndexPath, numSelections: Int) -> Bool
-    func libraryView(_ libraryView: HELibraryViewController, captionAt indexPath: IndexPath) -> String?
-    func libraryView(_ libraryView: HELibraryViewController, replacingItemAt indexPath: IndexPath) -> HEMediaItem?
+    func libraryView(_ libraryView: HELibraryViewController, captionWithIdentifer identifier: String) -> String?
+    func libraryView(_ libraryView: HELibraryViewController, replacingItemWithIdentifer identifier: String) -> HEMediaItem?
 }
 
 public class HELibraryViewController: UIViewController, PermissionCheckable {
@@ -42,7 +42,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     internal var selectedItems = [HELibrarySelection]()
     internal let assetMediaManager = LibraryMediaManager()
     internal var isMultipleSelectionEnabled = false
-    internal var currentlySelectedIndex: Int = 0
+    internal var currentlySelectedIdentifier: String? = nil
     internal let panGestureHelper = HEPanGestureHelper()
     internal var isInitialized = false
     internal var cancellables = Set<AnyCancellable>()
@@ -133,7 +133,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
                 }
                 
                 // The negative index will be corrected in the collectionView:cellForItemAt:
-                return HELibrarySelection(index: -1, assetIdentifier: asset.localIdentifier)
+                return HELibrarySelection(assetIdentifier: asset.localIdentifier)
             }
             v.setMultipleSelectionMode(on: isMultipleSelectionEnabled)
             v.albumCollectionView.reloadData()
@@ -164,12 +164,10 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     }
 
     func setAlbum(_ album: HEAlbum) {
-        title = album.title
+        let title = album.collection == nil ? PickerConfig.wordings.allPhotos : album.title
+        v.albumNameBt.setTitle(title, for: .normal)
         assetMediaManager.collection = album.collection
-        currentlySelectedIndex = 0
-        if !isMultipleSelectionEnabled {
-            selectedItems.removeAll()
-        }
+        currentlySelectedIdentifier = nil
         refreshMediaRequest()
     }
 
@@ -279,20 +277,20 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         }
 
         isMultipleSelectionEnabled.toggle()
-
+        let currentlySelectedIndex = selectedItems.firstIndex(where: { $0.assetIdentifier == currentlySelectedIdentifier }) ?? 0
+        
         if isMultipleSelectionEnabled {
             let needPreselectItemsAndNotSelectedAnyYet = selectedItems.isEmpty && PickerConfig.library.preSelectItemOnMultipleSelection
-            let shouldSelectByDelegate = delegate?.libraryView(self, shouldAddToSelectionAt: IndexPath(row: currentlySelectedIndex, section: 0), numSelections: selectedItems.count) ?? true
+            var shouldSelectByDelegate: Bool = delegate?.libraryView(self, shouldAddToSelectionAt: IndexPath(row: currentlySelectedIndex, section: 0), numSelections: selectedItems.count) ?? true
             
             if needPreselectItemsAndNotSelectedAnyYet,
                shouldSelectByDelegate,
                let asset = assetMediaManager.getAsset(at: currentlySelectedIndex) {
                 selectedItems = [
-                    HELibrarySelection(index: currentlySelectedIndex,
+                    HELibrarySelection(assetIdentifier: asset.localIdentifier,
                                        cropRect: v.currentCropRect(),
                                        scrollViewContentOffset: v.previewBox.currentZoomableView?.contentOffset,
-                                       scrollViewZoomScale: v.previewBox.currentZoomableView?.zoomScale,
-                                       assetIdentifier: asset.localIdentifier)
+                                       scrollViewZoomScale: v.previewBox.currentZoomableView?.zoomScale)
                 ]
             }
         } else {
@@ -334,7 +332,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         }
         
         if assetMediaManager.hasResultItems,
-        let _ = assetMediaManager.getAsset(at: 0) {
+           let _ = assetMediaManager.getAsset(at: 0) {
             v.albumCollectionView.reloadData()
             v.albumCollectionView.selectItem(at: IndexPath(row: 0, section: 0), animated: false, scrollPosition: UICollectionView.ScrollPosition())
             if !isMultipleSelectionEnabled && PickerConfig.library.preSelectItemOnMultipleSelection {
@@ -343,7 +341,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         } else {
             delegate?.libraryViewHaveNoItems(self)
         }
-
+        
         v.previewBox.reload()
         
         scrollToTop()
@@ -421,22 +419,6 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         trace()
         
         //v.previewBox.reload(at: selectedAssetIndex)
-    }
-    
-    internal func fetchStoredCrop() -> HELibrarySelection? {
-        if self.isMultipleSelectionEnabled,
-            self.selectedItems.contains(where: { $0.index == self.currentlySelectedIndex }) {
-            guard let selectedAssetIndex = self.selectedItems
-                .firstIndex(where: { $0.index == self.currentlySelectedIndex }) else {
-                return nil
-            }
-            return self.selectedItems[selectedAssetIndex]
-        }
-        return nil
-    }
-    
-    internal func hasStoredCrop(index: Int) -> Bool {
-        return self.selectedItems.contains(where: { $0.index == index })
     }
     
     // MARK: - Fetching Media

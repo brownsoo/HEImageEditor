@@ -261,4 +261,8 @@ final public class LibraryMediaManager {
         }
         return fetchResult.object(at: index)
     }
+    
+    public func fetchAsset(assetIdentifier: String) -> PHAsset? {
+        return PHAsset.fetchAssets(withLocalIdentifiers: [assetIdentifier], options: PHFetchOptions()).firstObject
+    }
 }
