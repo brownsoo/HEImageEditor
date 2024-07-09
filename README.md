@@ -1,7 +1,8 @@
 
-HEImageEditor was created based on [ZLImageEditor](https://github.com/longitachi/ZLImageEditor), improved functionality and added several features✨.
+HEImageEditor was created based on [ZLImageEditor](https://github.com/longitachi/ZLImageEditor), [YPImagePicker](https://github.com/Yummypets/YPImagePicker).
+I improved functionality and added several features✨.
 
-### <a id="Features"></a>Features
+### <a id="Editing Features"></a>Editing Features
 - Free draw line.
 - Free draw mosaic line.
 - Crop & Rotate.
@@ -14,6 +15,10 @@ HEImageEditor was created based on [ZLImageEditor](https://github.com/longitachi
 - Filter (Support custom filters).
 - Adjust (Brightness, Contrast, Saturation).
 - Multiple Images supports.✨
+
+### <a id="Picking Features"></a>Picking Features
+- Pick media source
+
 
 ### <a id="Requirements"></a>Requirements
  * Swift 5.x
