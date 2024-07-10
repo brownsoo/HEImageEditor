@@ -20,13 +20,14 @@ public protocol AssetZoomableViewDelegate: AnyObject {
 final public class HEAssetZoomableView: UIScrollView {
     public weak var zoomableViewDelegate: AssetZoomableViewDelegate?
     public var cropAreaDidChange = {}
-    public var isVideoMode = false
+    public private(set) var isVideoMode = false
     public var photoImageView = UIImageView()
     public var videoView = HEVideoView()
     public var squaredZoomScale: CGFloat = 1
     public var minWidthForItem: CGFloat? = PickerConfig.library.minWidthForItem
     
-    fileprivate(set) var currentAssetIdentifier: String?
+    public fileprivate(set) var currentAssetIdentifier: String?
+    public fileprivate(set) var currentAssetType: PHAssetMediaType?
     
     // Image view of the asset for convenience. Can be video preview image view or photo image view.
     public var assetImageView: UIImageView {
@@ -63,6 +64,8 @@ final public class HEAssetZoomableView: UIScrollView {
                            storedCropPosition: HELibrarySelection?,
                            completion: @escaping () -> Void,
                            updateCropInfo: @escaping () -> Void) {
+        guard self.currentAssetIdentifier != video.localIdentifier else { completion() ; return }
+        currentAssetType = video.mediaType
         mediaManager?.phImageManager?.fetchPreviewFor(video: video) { [weak self] preview in
             guard let self = self else { return }
             guard self.currentAssetIdentifier != video.localIdentifier else { completion() ; return }
@@ -109,8 +112,8 @@ final public class HEAssetZoomableView: UIScrollView {
             return
         }
         trace()
-        
         currentAssetIdentifier = photo.localIdentifier
+        currentAssetType = photo.mediaType
         
         mediaManager?.phImageManager?.fetch(photo: photo) { [weak self] image, isLowResIntermediaryImage in
             guard let self = self else { return }
@@ -152,6 +155,7 @@ final public class HEAssetZoomableView: UIScrollView {
             return
         }
         currentAssetIdentifier = hei.id
+        currentAssetType = .image
         
         Task { [weak self] in
             guard let self = self else { return }

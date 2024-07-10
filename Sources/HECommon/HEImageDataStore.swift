@@ -26,9 +26,9 @@ public protocol HEImageCache: AnyObject {
     
     
     /// 캐시된 URL 값만 확인
-    func getCachedOriginImageURL(forId id: String) async throws -> URL?
+    func getCachedOriginImageURL(forId id: String) throws -> URL?
     /// 캐시된 URL 값만 확인
-    func getCachedEditImageURL(forId id: String) async throws -> URL?
+    func getCachedEditImageURL(forId id: String) throws -> URL?
     
     
     func clearCached(forHei hei: HEImage, includeOrigin: Bool) async
@@ -60,8 +60,8 @@ public extension HEImageDataStore {
 
 public protocol HEEditImageStore: HEImageDataStore, HEImageCache {}
 
-/// 간단히 구현된 이미지 스토어
-public class HESimpleImageStore: HEEditImageStore {
+/// 간단히 구현된 편집용 이미지 스토어
+public class HESimpleEditImageStore: HEEditImageStore {
     
     public init(){}
     
@@ -122,7 +122,7 @@ public class HESimpleImageStore: HEEditImageStore {
 }
 
 // MARK: HEImageCache
-extension HESimpleImageStore {
+extension HESimpleEditImageStore {
     private func memCacheImage(_ image: UIImage, forUrl url: String) {
         memCache.setObject(image, forKey: url as AnyObject)
     }
@@ -166,7 +166,7 @@ extension HESimpleImageStore {
         }
     }
     
-    public func getCachedOriginImageURL(forId id: String) async throws -> URL? {
+    public func getCachedOriginImageURL(forId id: String) throws -> URL? {
         let fileName = id + ".png"
         let fileURL: URL = try fileURL(fileName: fileName)
         if FileManager.default.fileExists(atPath: fileURL.absoluteString) {
@@ -175,7 +175,7 @@ extension HESimpleImageStore {
         return nil
     }
     
-    public func getCachedEditImageURL(forId id: String) async throws -> URL? {
+    public func getCachedEditImageURL(forId id: String) throws -> URL? {
         let fileName = id + ".edit.png"
         let fileURL: URL = try fileURL(fileName: fileName)
         if FileManager.default.fileExists(atPath: fileURL.absoluteString) {
@@ -271,7 +271,7 @@ extension HESimpleImageStore {
     }
 }
 
-extension HESimpleImageStore {
+extension HESimpleEditImageStore {
     
     func fileURL(fileName: String) throws -> URL {
         let dir = directoryURL()

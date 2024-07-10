@@ -25,3 +25,6 @@
 "HEImagePickerAllPhotos" = "All Photos";
 "_confirm" = "Confirm";
 "_noSupportCameraDevice" = "Camera is not available.";
+"_noPhotoLibraryAuthor" = "App han no authorization for photo library.";
+"_errorOnSaveImageInLibrary" = "Failed to save image in photo library.";
+"_errorOnSaveVideoInLibrary" = "Failed to save video in photo library.";

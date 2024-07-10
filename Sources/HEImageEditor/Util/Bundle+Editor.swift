@@ -62,7 +62,9 @@ extension Bundle {
             bundle = Bundle(path: path)
         }
         
-        let value = bundle?.localizedString(forKey: key, value: nil, table: nil)
+        if let value = bundle?.localizedString(forKey: key, value: nil, table: nil) {
+            return value
+        }
         return NSLocalizedString(key,
                                  tableName: "HEImageEditorLocalizable",
                                  bundle: Bundle.local,

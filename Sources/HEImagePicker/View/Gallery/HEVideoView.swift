@@ -12,7 +12,7 @@ import AVFoundation
 /// A video view that contains video layer, supports play, pause and other actions.
 /// Supports xib initialization.
 public class HEVideoView: UIView {
-    public let playImageView = UIImageView(image: nil)
+    public let playIconView = UIImageView(image: nil)
     
     internal let playerView = UIView()
     internal let playerLayer = AVPlayerLayer()
@@ -23,7 +23,7 @@ public class HEVideoView: UIView {
             return AVPlayer()
         }
         
-        playImageView.image = PickerConfig.icons.playImage
+        playIconView.image = PickerConfig.icons.playImage?.withTintColor(.white, renderingMode: .alwaysOriginal)
         return player
     }
     
@@ -44,13 +44,14 @@ public class HEVideoView: UIView {
         addGestureRecognizer(singleTapGR)
         
         playerView.alpha = 0
-        playImageView.alpha = 0.8
+        playIconView.alpha = 0.8
+        playIconView.contentMode = .center
         playerLayer.videoGravity = .resizeAspect
         previewImageView.contentMode = .scaleAspectFit
         
         addSubview(previewImageView)
         addSubview(playerView)
-        addSubview(playImageView)
+        addSubview(playIconView)
         
         previewImageView.makeConstraints { v in
             v.edgesConstraintToSuperview(edges: .all)
@@ -58,8 +59,15 @@ public class HEVideoView: UIView {
         playerView.makeConstraints { v in
             v.edgesConstraintToSuperview(edges: .all)
         }
-        playImageView.makeConstraints { v in
-            v.edgesConstraintToSuperview(edges: .all)
+        playIconView.makeConstraints { v in
+            v.centerXAnchorConstraintToSuperview()
+            v.centerYAnchorConstraintToSuperview()
+            if let size = PickerConfig.icons.playImage?.size {
+                v.backgroundColor = .black.withAlphaComponent(0.3)
+                v.sizeAnchorConstraintTo(size.width * 2)
+                v.layer.cornerRadius = size.width
+                v.layer.masksToBounds = true
+            }
         }
         
         playerView.layer.addSublayer(playerLayer)
@@ -114,17 +122,20 @@ extension HEVideoView {
     }
     
     public func play() {
+        trace()
         player.play()
         showPlayImage(show: false)
         addReachEndObserver()
     }
     
     public func pause() {
+        trace()
         player.pause()
         showPlayImage(show: true)
     }
     
     public func stop() {
+        trace()
         player.pause()
         player.seek(to: CMTime.zero)
         showPlayImage(show: true)
@@ -133,7 +144,7 @@ extension HEVideoView {
     
     public func deallocate() {
         playerLayer.player = nil
-        playImageView.image = nil
+        playIconView.image = nil
     }
 }
 
@@ -146,7 +157,7 @@ extension HEVideoView {
     /// Shows or hide the play image over the view.
     public func showPlayImage(show: Bool) {
         UIView.animate(withDuration: 0.1) {
-            self.playImageView.alpha = show ? 0.8 : 0
+            self.playIconView.alpha = show ? 0.8 : 0
         }
     }
     

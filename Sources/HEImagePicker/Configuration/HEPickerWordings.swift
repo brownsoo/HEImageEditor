@@ -25,6 +25,9 @@ public struct HEPickerWordings {
         public var tooLongMessage = ypLocalized("YPImagePickerVideoTooLong")
     }
     
+    public var errorOnSaveVideoInLibrary = ypLocalized("_errorOnSaveVideoInLibrary")
+    public var errorOnSaveImageInLibrary = ypLocalized("_errorOnSaveImageInLibrary")
+    public var noPhotoLibraryAuthor = ypLocalized("_noPhotoLibraryAuthor")
     public var noSupportCameraDevice = ypLocalized("_noSupportCameraDevice")
     public var confirm = ypLocalized("_confirm")
     public var allPhotos = ypLocalized("HEImagePickerAllPhotos")

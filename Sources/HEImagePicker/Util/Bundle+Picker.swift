@@ -43,7 +43,7 @@ public struct HEPickerIcons {
     public var cropIcon = UIImage(systemName: "crop")
     
     public var captureVideoOnImage: UIImage? = imageFromBundle("yp_iconVideoCaptureRecording")
-    public var playImage: UIImage? = UIImage(systemName: "play.fill")
+    public var playImage: UIImage? = UIImage(systemName: "play.fill", withConfiguration: UIImage.SymbolConfiguration(pointSize: 26, weight: .regular, scale: .large))
     public var removeImage: UIImage? = UIImage(systemName: "x.circle")
     // 16x16
     public var cameraFillIcon = imageFromBundle("icCameraFill") ?? UIImage(systemName: "camera.fill", withConfiguration: UIImage.SymbolConfiguration(pointSize: 16, weight: .regular, scale: .default))

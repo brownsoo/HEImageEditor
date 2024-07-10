@@ -25,3 +25,6 @@
 "HEImagePickerAllPhotos" = "모든 사진";
 "_confirm" = "확인";
 "_noSupportCameraDevice" = "카메라가 지원되지 않습니다.";
+"_noPhotoLibraryAuthor" = "사진 앨범에 접근할 권한이 허락되지 않았습니다.";
+"_errorOnSaveImageInLibrary" = "사진 앱에 사진을 저장하는 데 실패했습니다.";
+"_errorOnSaveVideoInLibrary" = "사진 앱에 비디오를 저장하는 데 실패했습니다.";

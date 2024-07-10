@@ -85,7 +85,7 @@ class ViewController: UIViewController {
     
     var imageStickers: [HEImageSticker] = []
     
-    lazy var imageStore = HESimpleImageStore()
+    lazy var imageStore = HESimpleEditImageStore()
     
     
     func configImageEditor() {
@@ -257,11 +257,17 @@ extension ViewController: HEImagePickerDelegate {
     }
     
     func imagePicker(_ picker: HEImagePicker, captionWithIdentifer identifier: String) -> String? {
-        "하이"
+        let url = try? imageStore.getCachedEditImageURL(forId: identifier)
+        return url != nil ? "편집 적용" : nil
     }
     
     func imagePicker(_ picker: HEImagePicker, didSelectItems items: [HEMediaItem]) {
         print(items)
+        picker.dismiss(animated: true) {
+            let vc = UIAlertController(title: nil, message: "\(items.count)개가 선택됨.", preferredStyle: .alert)
+            vc.addAction(.init(title: "confirm", style: .default, handler: nil))
+            self.present(vc, animated: true)            
+        }
     }
     
     func imagePickerDidCancel(_ picker: HEImagePicker) {
@@ -277,6 +283,8 @@ extension ViewController: HEImagePickerDelegate {
 
 extension ViewController {
     
+    // MARK: Start HEImageEditor with picking a image
+    
     @objc func pickImage() {
         let picker = UIImagePickerController()
         picker.delegate = self
@@ -284,6 +292,8 @@ extension ViewController {
         picker.mediaTypes = ["public.image"]
         showDetailViewController(picker, sender: nil)
     }
+    
+    // MARK: Start HEImageEditor with picking multiple images
     
     @objc func pickMutipleImages() {
         var configuration = PHPickerConfiguration(photoLibrary: .shared())
@@ -295,7 +305,6 @@ extension ViewController {
         }
         if #available(iOS 15.0, *) {
             configuration.selection = .ordered
-            // TODO: configuration.preselectedAssetIdentifiers
         }
         let picker = PHPickerViewController(configuration: configuration)
         picker.delegate = self
@@ -303,19 +312,20 @@ extension ViewController {
         showDetailViewController(picker, sender: nil)
     }
     
-    // MARK: Start HEImagePicker
+    // MARK: Start HEImagePicker with HEImageEditor
+    
     @objc func pickWithHEPicker() {
         
         var config = HEImagePickerConfiguration()
         config.pickerSources = [.libraryPick, .photoCapture, .videoCapture]
-        config.shouldSaveNewPicturesToAlbum = false
+        config.shouldSaveNewPicturesToAlbum = true
+        config.library.mediaType = .photoAndVideo
         config.library.defaultMultipleSelection = true
         config.library.maxNumberOfItems = 100
         
         let picker = HEImagePicker(configuration: config)
         picker.pickerDelegate = self
         showDetailViewController(picker, sender: nil)
-//        present(picker, animated: true)
     }
     
     @objc func drawToolChanged() {

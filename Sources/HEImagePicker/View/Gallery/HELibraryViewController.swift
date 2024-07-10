@@ -31,7 +31,13 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     }
     
     public weak var delegate: HELibraryViewDelegate?
-    public lazy var editImageStore: HEEditImageStore = HESimpleImageStore()
+    public var editImageStore: HEEditImageStore = HESimpleEditImageStore() {
+        willSet {
+            if isInitialized {
+                v.previewBox.editImageStore = newValue
+            }
+        }
+    }
     
     internal var shouldHideStatusBar = false
     internal var initialStatusBarHidden = false
@@ -148,6 +154,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
                                                            action: #selector(close))
         // 첨부 갯수
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: attachButton)
+        attachButton.addTarget(self, action: #selector(done), for: .touchUpInside)
         
         v.previewBox.editButton?.addTarget(self, action: #selector(editPhotoButtonTapped), for: .touchUpInside)
         v.previewBox.assetMediaManager = self.assetMediaManager
@@ -221,10 +228,18 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     
     private func didCameraCaptured(image: UIImage) {
         // TODO: 카메라 촬용 -> 임시 저장 -> 찍은 사진을 앨범컬랙션에 표시
-        if PickerConfig.shouldSaveNewPicturesToAlbum {
-            HEPhotoSaver.trySaveImage(image, inAlbumNamed: PickerConfig.albumName)
-        } else {
-            // TODO: 앨범 추가 없이 콜랙션 진행
+        Task(priority: .userInitiated) { [weak self] in
+            do {
+                if PickerConfig.shouldSaveNewPicturesToAlbum {
+                    try await HEPhotoSaver.trySaveImage(image, inAlbumNamed: PickerConfig.albumName)
+                    self?.refreshMediaRequest()
+                } else {
+                    // TODO: 앨범 추가 없이 콜랙션 진행
+                }
+            } catch {
+                self?.showAlert(error.localizedDescription)
+            }
+            
         }
 //        Task.detached {
 //            let w = min(1500, image.size.width)
@@ -239,10 +254,17 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     }
     
     private func didVideoCaptured(videoURL: URL) {
-        if PickerConfig.shouldSaveNewPicturesToAlbum {
-            HEPhotoSaver.trySaveVideo(videoURL, inAlbumNamed: PickerConfig.albumName)
-        } else {
-            // TODO: 앨범 추가 없이 콜랙션 진행
+        Task(priority: .userInitiated) { [weak self] in
+            do {
+                if PickerConfig.shouldSaveNewPicturesToAlbum {
+                   try await HEPhotoSaver.trySaveVideo(videoURL, inAlbumNamed: PickerConfig.albumName)
+                    self?.refreshMediaRequest()
+                } else {
+                    // TODO: 앨범 추가 없이 콜랙션 진행
+                }
+            } catch {
+                self?.showAlert(error.localizedDescription)
+            }
         }
     }
     
@@ -336,13 +358,13 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     
     // MARK: - Tap Preview
     
-    func registerForTapOnPreview() {
+    private func registerForTapOnPreview() {
         let tapImageGesture = UITapGestureRecognizer(target: self, action: #selector(tappedImage))
         v.previewBox.addGestureRecognizer(tapImageGesture)
     }
     
     @objc
-    func tappedImage() {
+    private func tappedImage() {
         if !panGestureHelper.isImageShown {
             panGestureHelper.resetToOriginalState()
             // no dragup? needed? dragDirection = .up
@@ -350,7 +372,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         }
     }
     
-    func refreshMediaRequest() {
+    private func refreshMediaRequest() {
         let options = buildPHFetchOptions()
 
         if let collection = assetMediaManager.collection {
@@ -375,7 +397,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         scrollToTop()
     }
     
-    func buildPHFetchOptions() -> PHFetchOptions {
+    private func buildPHFetchOptions() -> PHFetchOptions {
         // Sorting condition
         if let userOpt = PickerConfig.library.options {
             return userOpt
@@ -387,7 +409,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         return options
     }
     
-    func scrollToTop() {
+    private func scrollToTop() {
         tappedImage()
         v.albumCollectionView.contentOffset = CGPoint.zero
     }
@@ -454,7 +476,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     private func fetchImageAndCrop(for asset: PHAsset,
                                    withCropRect: CGRect? = nil,
                                    callback: @escaping (_ photo: UIImage, _ exif: [String: Any]) -> Void) {
-        libraryViewDidTapNext()
+        libraryViewDidTapAttach()
         let cropRect = withCropRect ?? DispatchQueue.main.sync { v.currentCropRect() }
         let ts = targetSize(for: asset, cropRect: cropRect)
         assetMediaManager.phImageManager?.fetchImage(for: asset, cropRect: cropRect, targetSize: ts, callback: callback)
@@ -482,7 +504,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
                                           duration: PickerConfig.video.trimmerMaxDuration,
                                           callback: callback)
         } else {
-            libraryViewDidTapNext()
+            libraryViewDidTapAttach()
             Task {
                 let videoURL = await assetMediaManager.fetchVideoUrlAndCrop(for: asset, cropRect: resultCropRect)
                 if Task.isCancelled { return }
@@ -496,7 +518,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
                                                withCropRect rect: CGRect,
                                                duration: Double,
                                                callback: @escaping (_ videoURL: URL?) -> Void) {
-        libraryViewDidTapNext()
+        libraryViewDidTapAttach()
         let timeDuration = CMTimeMakeWithSeconds(duration, preferredTimescale: 1000)
         Task {
             let videoURL = await assetMediaManager.fetchVideoUrlAndCropWithDuration(for: asset,
@@ -750,10 +772,12 @@ extension HELibraryViewController: HEPreviewBoxViewDelegate {
 
 
 extension HELibraryViewController {
-    func libraryViewDidTapNext() {
+    func libraryViewDidTapAttach() {
         isProcessing = true
         DispatchQueue.main.async {
             self.v.previewBox.fadeInLoader()
+            self.v.previewBox.isUserInteractionEnabled = false
+            self.v.albumCollectionView.isUserInteractionEnabled = false
             self.navigationItem.rightBarButtonItem = UIHelper.defaultLoader
         }
     }
@@ -767,6 +791,8 @@ extension HELibraryViewController {
         isProcessing = false
         DispatchQueue.main.async {
             self.v.previewBox.hideLoader()
+            self.v.previewBox.isUserInteractionEnabled = true
+            self.v.albumCollectionView.isUserInteractionEnabled = true
             self.updateUI()
         }
     }

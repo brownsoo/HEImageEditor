@@ -13,7 +13,7 @@ import Photos
 var PickerConfig: HEImagePickerConfiguration {
     HEImagePickerConfiguration.shared
 }
-
+/// 앨범 조회 미디어 타입
 public enum HELibraryMediaType {
     case photo
     case video
@@ -135,8 +135,7 @@ public struct HEImagePickerConfiguration {
         public var minWidthForItem: CGFloat?
         
         /// Choose what media types are available in the library. Defaults to `.photo`.
-        /// If you define custom options PHFetchOptions var, than this will not work.
-        public var mediaType = HELibraryMediaType.photo
+        public var mediaType: HELibraryMediaType  = .photo
 
         /// Initial state of multiple selection button.
         public var defaultMultipleSelection = false

@@ -7,7 +7,7 @@
 
 import Foundation
 import UIKit
-
+import HECommon
 
 public protocol HEImagePickerDelegate: AnyObject {
     func imagePickerHaveNoItems(_ picker: HEImagePicker)
@@ -33,6 +33,12 @@ open class HEImagePicker: UINavigationController {
     
     open override var preferredStatusBarStyle: UIStatusBarStyle {
         PickerConfig.preferredStatusBarStyle
+    }
+    
+    public var editImageStore: HEEditImageStore? = nil {
+        willSet {
+            mainVc.editImageStore = newValue ?? HESimpleEditImageStore()
+        }
     }
     
     private lazy var mainVc: HELibraryViewController = HELibraryViewController()

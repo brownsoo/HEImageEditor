@@ -8,12 +8,15 @@
 import Foundation
 
 enum HEPickerError: Error, LocalizedError {
+    case noAuthorization(message: String)
     case fileFailed(message: String, underlyingError: Error?)
     case videoTrimFailed(message: String, underlyingError: Error?)
     case custom(message: String, underlyingError: Error?)
 
     var errorDescription: String? {
         switch self {
+        case .noAuthorization(let message):
+            return message
         case .fileFailed(let message, _):
             return message
         case .videoTrimFailed(let message, _):

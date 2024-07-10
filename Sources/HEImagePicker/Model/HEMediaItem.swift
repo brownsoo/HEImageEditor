@@ -43,16 +43,26 @@ public extension HEImage {
         let originURL: URL
         let thumbnail: UIImage
         let meta: [String : Any]?
-        if let url = try await imageCache.getCachedOriginImageURL(forId: hei.id) {
+        // 편집 이미지 우선
+        if let url = try imageCache.getCachedEditImageURL(forId: hei.id) {
+            originURL = url
+            let image = try await imageCache.editImage(forHei: hei).value
+            thumbnail = image.he.thumbnail()
+            meta = image.pngData()?.he.metadataForImageData()
+            
+        } else if let url = try imageCache.getCachedOriginImageURL(forId: hei.id) {
             originURL = url
             let image = try await imageCache.originImage(forHei: hei).value
             thumbnail = image.he.thumbnail()
             meta = image.pngData()?.he.metadataForImageData()
+            
         } else if let originImage = hei.originImage {
             originURL = try await imageCache.cacheOriginImage(uiImage: originImage, forId: hei.id).value
             thumbnail = originImage.he.thumbnail()
             meta = originImage.pngData()?.he.metadataForImageData()
+            
         } else {
+            
             throw HEError.heImageHasNoData
         }
         

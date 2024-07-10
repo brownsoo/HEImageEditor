@@ -94,7 +94,7 @@ class LibraryViewCell: UICollectionViewCell {
         }
         durationLabel.makeConstraints { v in
             v.trailingAnchorConstraintToSuperview(-5)
-            v.bottomAnchorConstraintTo(captionLabel.bottomAnchor, constant: -5)
+            v.bottomAnchorConstraintTo(captionLabel.topAnchor, constant: -5)
         }
         multipleSelectionIndicator.makeConstraints { v in
             v.topAnchorConstraintToSuperview(4)

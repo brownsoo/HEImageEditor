@@ -9,6 +9,7 @@
 import UIKit
 import Photos
 
+/// 포토 라이브러리 미디어 파일 관리 
 final public class LibraryMediaManager {
     
     public var collection: PHAssetCollection?

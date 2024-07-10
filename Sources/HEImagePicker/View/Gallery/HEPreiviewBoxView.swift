@@ -29,7 +29,6 @@ public class HEPreiviewBoxView: UIView {
     public let curtain = UIView()
     public let spinnerView = UIView()
     
-    
     public private(set) var editButton: HECapsuleButton?
     private var collView: UICollectionView!
     public var currentZoomableView: HEAssetZoomableView? {
@@ -111,6 +110,7 @@ public class HEPreiviewBoxView: UIView {
                 v.centerXAnchorConstraintToSuperview()
             }
             self.editButton = button
+            button.isHidden = true
         }
     }
 
@@ -143,6 +143,49 @@ public class HEPreiviewBoxView: UIView {
         spinnerView.alpha = 0
     }
     
+    @objc
+    func showEditButtonIfNeed(isVideoMode: Bool) {
+        NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(showEditButtonIfNeed), object: nil)
+        guard let button = editButton, button.isHidden else {
+            return
+        }
+        if isVideoMode {
+            button.isHidden = true
+            // TODO: editing video
+            return
+        }
+        button.isHidden = false
+        button.alpha = 0
+        button.sizeToFit()
+        button.transform = CGAffineTransform(translationX: 0, y: 10)
+        UIView.animate(withDuration: 0.24, delay: 0.0, options: [.curveEaseOut], animations: {
+            button.alpha = 1
+            button.transform = .identity
+        })
+    }
+    
+    @objc
+    func hideEditButton() {
+        NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(hideEditButton), object: nil)
+        guard let button = editButton, !button.isHidden else {
+            return
+        }
+        UIView.animate(withDuration: 0.24, delay: 0, animations: {
+            button.alpha = 0
+        }, completion: { _ in
+            button.isHidden = true
+        })
+    }
+    
+    private func checkEditButtonShowing() {
+        if let _ = editButton {
+            let point = self.convert(collView.center, to: collView)
+            if let indexPath = collView.indexPathForItem(at: point),
+               let cell = collView.cellForItem(at: indexPath) as? HEPreviewCell {
+                self.perform(#selector(self.showEditButtonIfNeed), with: cell.zoomableView.currentAssetType == .video, afterDelay: 0.2)
+            }
+        }
+    }
     
     // MARK: - Multiple selection
 
@@ -226,26 +269,24 @@ extension HEPreiviewBoxView {
             }
             
             // MARK: add a func(updateCropInfo) after crop multiple
-            Task.detached {
-                switch asset.mediaType {
-                case .image:
-                    await cell.zoomableView.applyImage(asset,
-                                                       mediaManager: self.assetMediaManager,
-                                                       storedCropPosition: selection,
-                                                       completion: completion,
-                                                       updateCropInfo: updateCropInfo)
-                    
-                case .video:
-                    await cell.zoomableView.applyVideo(asset,
-                                                       mediaManager: self.assetMediaManager,
-                                                       storedCropPosition: selection,
-                                                       completion: { completion(false) },
-                                                       updateCropInfo: updateCropInfo)
-                case .audio, .unknown:
-                    ()
-                @unknown default:
-                    woops("Bug. Unknown default.")
-                }
+            switch asset.mediaType {
+            case .image:
+                cell.zoomableView.applyImage(asset,
+                                                   mediaManager: self.assetMediaManager,
+                                                   storedCropPosition: selection,
+                                                   completion: completion,
+                                                   updateCropInfo: updateCropInfo)
+                
+            case .video:
+                cell.zoomableView.applyVideo(asset,
+                                                   mediaManager: self.assetMediaManager,
+                                                   storedCropPosition: selection,
+                                                   completion: { completion(false) },
+                                                   updateCropInfo: updateCropInfo)
+            case .audio, .unknown:
+                ()
+            @unknown default:
+                woops("Bug. Unknown default.")
             }
         }
     }
@@ -315,6 +356,13 @@ extension HEPreiviewBoxView: UICollectionViewDelegateFlowLayout, UICollectionVie
         } else {
             collView.backgroundColor = .white
         }
+        
+        if count == 1 {
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+                self?.checkEditButtonShowing()
+            }
+        }
     }
     
     func reload() {
@@ -336,6 +384,7 @@ extension HEPreiviewBoxView: UICollectionViewDelegateFlowLayout, UICollectionVie
     }
     
     func removed(at index: Int) {
+        hideEditButton()
         let items = items()
         if index <= items.count {
             collView.deleteItems(at: [IndexPath(row: index, section: 0)])
@@ -351,6 +400,7 @@ extension HEPreiviewBoxView: UICollectionViewDelegateFlowLayout, UICollectionVie
     }
     
     func inserted(at index: Int) {
+        hideEditButton()
         let items = items()
         if index < items.count {
             let indexPath = IndexPath(row: index, section: 0)
@@ -425,12 +475,28 @@ extension HEPreiviewBoxView: UICollectionViewDelegateFlowLayout, UICollectionVie
         if let index = collectionView.indexPathForItem(at: center) {
             currentIndex = index.row
         }
-        
     }
     
     public func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let w = collectionView.bounds.width
         return CGSize(width: w, height: w)
+    }
+    
+    public func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        trace()
+        if let _ = editButton {
+            hideEditButton()
+        }
+    }
+    
+    public func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
+        trace()
+        checkEditButtonShowing()
+    }
+    
+    public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        trace()
+        checkEditButtonShowing()
     }
 }
 
@@ -528,10 +594,10 @@ extension HEPreviewCell: AssetZoomableViewDelegate {
         // let newFrame = zoomableView.assetImageView.convert(zoomableView.assetImageView.bounds, to: self)
         // Update play imageView position - bringing the playImageView from the videoView to assetViewContainer,
         // but the controll for appearing it still in videoView.
-        if zoomableView.videoView.playImageView.isDescendant(of: self) == false {
-            self.addSubview(zoomableView.videoView.playImageView)
-            zoomableView.videoView.playImageView.centerYAnchorConstraintToSuperview()
-            zoomableView.videoView.playImageView.centerXAnchorConstraintToSuperview()
+        if zoomableView.videoView.playIconView.isDescendant(of: self) == false {
+            self.addSubview(zoomableView.videoView.playIconView)
+            zoomableView.videoView.playIconView.centerYAnchorConstraintToSuperview()
+            zoomableView.videoView.playIconView.centerXAnchorConstraintToSuperview()
         }
     }
     
