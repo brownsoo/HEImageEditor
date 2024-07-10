@@ -20,7 +20,7 @@ extension Bundle {
 
 private class BundleToken {}
 
-internal func ypLocalized(_ str: String) -> String {
+internal func pickerLocalized(_ str: String) -> String {
     return NSLocalizedString(str,
                              tableName: "HEImagePickerLocalizable",
                              bundle: Bundle.local,
