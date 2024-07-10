@@ -68,7 +68,7 @@ public struct HEImagePickerConfiguration {
     /// Adds a edit button in preview container
     ///
     /// - if it touch on it, the below delegate is called.
-    /// `func imagePicker(_ picker: HEImagePicker, didSelectToEditItem item: HEMediaItem)`
+    /// `func imagePicker(_ picker:, didSelectToEditItem:, inItems)`
     public var useEditPhoto: Bool = true
 
     /// Scroll to change modes, defaults to true

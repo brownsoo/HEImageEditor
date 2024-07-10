@@ -274,9 +274,40 @@ extension ViewController: HEImagePickerDelegate {
         picker.dismiss(animated: true)
     }
     
-    func imagePicker(_ picker: HEImagePicker, didSelectToEditItem item: HEMediaItem) {
+    func imagePicker(_ picker: HEImagePicker, didSelectToEditItem item: HEMediaItem, inItems items: [HEMediaItem]) {
         // TODO: 편집 시작
         
+        var news = [HEEditImage]()
+        let exists = self.imageStore.all()
+        items.enumerated().forEach { it in
+            switch it.element {
+            case .photo(let photo):
+                if let exist = exists.first(where: { $0.id == photo.identifier}),
+                   let hei = HEEditImage.toEditImage(hei: exist) {
+                    news.append(hei)
+                } else {
+                    news.append(HEEditImage(id: photo.identifier,
+                                            origin: photo.url,
+                                            editState: nil))
+                }
+                break
+            case .video(let video):
+                // TODO: 동영상 처리
+                break
+            }
+        }
+        
+        imageStore.clearAll()
+        imageStore.addHEImages(news)
+        
+        let vc = HEImageEditorViewController(imageStore: imageStore,
+                                            imageCache: imageStore,
+                                            stickerDataSource: self)
+        
+        vc.modalPresentationStyle = .overFullScreen
+        vc.delegate = self
+        // TODO: vc.initialIndex
+        present(vc, animated: true)
     }
 }
 

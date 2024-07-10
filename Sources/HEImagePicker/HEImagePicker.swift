@@ -16,7 +16,7 @@ public protocol HEImagePickerDelegate: AnyObject {
     func imagePicker(_ picker: HEImagePicker, shouldAddToSelectionAt indexPath: IndexPath, numSelections: Int) -> Bool
     func imagePicker(_ picker: HEImagePicker, captionWithIdentifer identifier: String) -> String?
     func imagePicker(_ picker: HEImagePicker, replacingItemWithIdentifer identifier: String) -> HEMediaItem?
-    func imagePicker(_ picker: HEImagePicker, didSelectToEditItem item: HEMediaItem)
+    func imagePicker(_ picker: HEImagePicker, didSelectToEditItem item: HEMediaItem, inItems items: [HEMediaItem])
 }
 
 public extension HEImagePickerDelegate {

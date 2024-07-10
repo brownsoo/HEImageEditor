@@ -27,4 +27,20 @@ public class HEEditImage: HEImage {
     public func setEditState(_ model: HEEditState?) {
         self.editState = model
     }
+    
+}
+
+public extension HEEditImage {
+    static func toEditImage(hei: HEImage) -> HEEditImage? {
+        if let e = hei as? HEEditImage {
+            return e
+        }
+        if let originURL = hei.originURL {
+            return HEEditImage(id: hei.id, origin: originURL, editState: nil)
+        }
+        if let originImage = hei.originImage {
+            return HEEditImage(id: hei.id, image: originImage, editState: nil)
+        }
+        return nil
+    }
 }
