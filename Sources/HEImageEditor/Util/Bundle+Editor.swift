@@ -50,21 +50,19 @@ extension Bundle {
         return local
     }
     
+    // TODO: 언어 변경 
     class func resetLanguage() {
         bundle = nil
     }
     
     class func heLocalizedString(_ key: String) -> String {
-        if bundle == nil {
-            guard let path = Bundle.HEImageEditorBundle?.path(forResource: HEUIConfiguration.default().languageType.key, ofType: "lproj") else {
-                return ""
-            }
-            bundle = Bundle(path: path)
-        }
+//        if bundle == nil {
+//            guard let path = Bundle.HEImageEditorBundle?.path(forResource: HEUIConfiguration.default().languageType.key, ofType: "lproj") else {
+//                return ""
+//            }
+//            bundle = Bundle(path: path)
+//        }
         
-        if let value = bundle?.localizedString(forKey: key, value: nil, table: nil) {
-            return value
-        }
         return NSLocalizedString(key,
                                  tableName: "HEImageEditorLocalizable",
                                  bundle: Bundle.local,

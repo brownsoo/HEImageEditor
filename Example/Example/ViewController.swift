@@ -266,7 +266,7 @@ extension ViewController: HEImagePickerDelegate {
         picker.dismiss(animated: true) {
             let vc = UIAlertController(title: nil, message: "\(items.count)개가 선택됨.", preferredStyle: .alert)
             vc.addAction(.init(title: "confirm", style: .default, handler: nil))
-            self.present(vc, animated: true)            
+            self.present(vc, animated: true)
         }
     }
     
@@ -325,6 +325,7 @@ extension ViewController {
         
         let picker = HEImagePicker(configuration: config)
         picker.pickerDelegate = self
+        picker.editImageStore = self.imageStore
         showDetailViewController(picker, sender: nil)
     }
     

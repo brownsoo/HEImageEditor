@@ -25,11 +25,11 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     public var editId: String?
     
-    public var drawColViewH: CGFloat { bottomToolViewHeight }
+    public var drawColViewH: CGFloat = 76
     /// 필터 컬렉션 트레이 높이
-    public var filterColViewH: CGFloat { bottomToolViewHeight }
+    public var filterColViewH: CGFloat = 90
     
-    public var adjustColViewH: CGFloat { bottomToolViewHeight }
+    public var adjustColViewH: CGFloat = 76
     
     public var trashbinSize = CGSize(width: 56, height: 56)
     
@@ -346,7 +346,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             // 기본 툴바
             let toolbar = HEEditImageBottomToolView(tools: ts)
             toolbar.toolSelectListener = { [weak editView] toolType in
-                guard let editView, editView.selectedTool != toolType else { return }
+//                guard let editView, editView.selectedTool != toolType else { return }
+                guard let editView else { return }
                 if editView.isImageEditing {
                     editView.stopCurrentEditing()
                     return
@@ -444,13 +445,21 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                                         width: view.he.width,
                                         height: bottomToolViewHeight + insets.bottom)
         
-        eraserBtn.frame = CGRect(x: 20, y: 30 + (drawColViewH - 36) / 2, width: 36, height: 36)
+        let toolTop = bottomToolViewContainer.frame.minY
+        
+        eraserBtn.frame = CGRect(x: 20, y: toolTop - drawColViewH + (drawColViewH - 36) / 2, width: 36, height: 36)
         eraserBtnBgBlurView.frame = eraserBtn.frame
         eraserLineView.frame = CGRect(x: eraserBtn.he.right + 11, y: eraserBtn.frame.midY - 10, width: 1, height: 20)
-        drawColorCollectionView?.frame = CGRect(x: eraserLineView.he.right + 11, y: 30, width: view.he.width - eraserLineView.he.right - 31, height: drawColViewH)
+        drawColorCollectionView?.frame = CGRect(x: eraserLineView.he.right + 11,
+                                                y: toolTop - drawColViewH,
+                                                width: view.he.width - eraserLineView.he.right - 31,
+                                                height: drawColViewH)
         
         if let adjustCollectionView {
-            adjustCollectionView.frame = CGRect(x: 20, y: 20, width: view.he.width - 40, height: adjustColViewH)
+            adjustCollectionView.frame = CGRect(x: 0, 
+                                                y: bottomToolViewContainer.frame.minY - adjustColViewH,
+                                                width: view.he.width,
+                                                height: adjustColViewH)
             if HEUIConfiguration.default().adjustSliderType == .vertical {
                 adjustSlider?.frame = CGRect(x: view.he.width - 60, y: view.he.height / 2 - 100, width: 60, height: 200)
             } else {
@@ -458,7 +467,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 let sliderWidth = UIDevice.current.userInterfaceIdiom == .phone ? view.he.width - 100 : view.he.width / 2
                 adjustSlider?.frame = CGRect(
                     x: (view.he.width - sliderWidth) / 2,
-                    y: bottomToolViewContainer.he.top - sliderHeight,
+                    y: bottomToolViewContainer.frame.minY - sliderHeight,
                     width: sliderWidth,
                     height: sliderHeight
                 )
@@ -466,7 +475,10 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         }
         
         if let filterCollectionView {
-            filterCollectionView.frame = CGRect(x: 20, y: 0, width: view.he.width - 40, height: filterColViewH)
+            filterCollectionView.frame = CGRect(x: 0,
+                                                y: bottomToolViewContainer.frame.minY - filterColViewH,
+                                                width: view.he.width,
+                                                height: filterColViewH)
         }
          
         trashbinView.frame = CGRect(
@@ -639,12 +651,13 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             drawCV.delegate = self
             drawCV.dataSource = self
             drawCV.isHidden = true
-            bottomToolViewContainer.addSubview(drawCV)
+            view.addSubview(drawCV)
             
             HEDrawColorCell.he.register(drawCV)
             drawColorCollectionView = drawCV
         }
         
+        // 필터
         if tools.contains(.filter) {
             if let applier = currentFilter.applier {
                 let image = applier(originalImage)
@@ -658,19 +671,22 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             filterLayout.minimumLineSpacing = 15
             filterLayout.minimumInteritemSpacing = 15
             filterLayout.scrollDirection = .horizontal
-            filterLayout.sectionInset = UIEdgeInsets(top: 0, left: 0, bottom: 10, right: 0)
+            filterLayout.sectionInset = UIEdgeInsets(top: 0, left: 20, bottom: 10, right: 20)
             
-            let filterCV = UICollectionView(frame: .zero, collectionViewLayout: filterLayout)
-            filterCV.backgroundColor = .clear
-            filterCV.delegate = self
-            filterCV.dataSource = self
-            filterCV.isHidden = true
-            bottomToolViewContainer.addSubview(filterCV)
+            let filterColl = UICollectionView(frame: .zero, collectionViewLayout: filterLayout)
+            filterColl.backgroundColor = .clear
+            filterColl.delegate = self
+            filterColl.dataSource = self
+            filterColl.isHidden = true
+            filterColl.backgroundColor = view.backgroundColor?.withAlphaComponent(0.4)
             
-            HEFilterImageCell.he.register(filterCV)
-            filterCollectionView = filterCV
+            HEFilterImageCell.he.register(filterColl)
+            filterCollectionView = filterColl
+            
+            view.addSubview(filterColl)
         }
         
+        // 색상 조정
         if tools.contains(.adjust) {
             editImage = editImage.he.adjust(
                 brightness: currentAdjustStatus.brightness,
@@ -690,13 +706,13 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             adjustCV.dataSource = self
             adjustCV.isHidden = true
             adjustCV.showsHorizontalScrollIndicator = false
-            bottomToolViewContainer.addSubview(adjustCV)
+            view.addSubview(adjustCV)
             
             HEAdjustToolCell.he.register(adjustCV)
             adjustCollectionView = adjustCV
             
             adjustSlider = HEAdjustSlider()
-            if let selectedAdjustTool = selectedAdjustTool {
+            if let selectedAdjustTool {
                 changeAdjustTool(selectedAdjustTool)
             }
             adjustSlider?.beginAdjust = { [weak self] in
@@ -798,30 +814,37 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         
         switch self.selectedTool {
         case .draw:
+            startDrawing() // toggling
             break
         case .clip:
+            if let vc = self.currentEditController as? HEClipImageViewController {
+                // TODO: 편집상태 제거 브레이크??
+                vc.doneEdit()
+            }
             break
         case .imageSticker:
             self.imageStickerTray?.hide()
             break
         case .textSticker:
+            if let vc = self.presentedViewController as? HEInputTextViewController {
+                vc.dismiss(animated: true)
+            }
             break
         case .mosaicDraw:
+            startMosaicDrawing() // toggling
             break
         case .filter:
+            startFiltering() // toggling
             break
         case .adjust:
+            startAdjusting() // toggling
             break
         case .none:
             break
         }
+        
         self.selectedTool = nil
         
-        guard let current = self.currentEditController else { return }
-        if let vc = current as? HEClipImageViewController {
-            // TODO: 편집상태 제거 브레이크??
-            vc.doneEdit()
-        }
     }
     
     // MARK: 자르기 시작
@@ -931,7 +954,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     public func startTextSticker() {
         showInputTextVC(font: HEConfiguration.default().textStickerDefaultFont)
         
-        selectedTool = nil
+        selectedTool = .textSticker
         setDrawViews(hidden: true)
         setFilterViews(hidden: true)
         setAdjustViews(hidden: true)
@@ -952,21 +975,21 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     }
     
     public func startFiltering() {
-        let isSelected = selectedTool != .filter
-        if isSelected {
+        let shouldSelected = selectedTool != .filter
+        if shouldSelected {
             selectedTool = .filter
         } else {
             selectedTool = nil
         }
         
         setDrawViews(hidden: true)
-        setFilterViews(hidden: !isSelected)
+        setFilterViews(hidden: !shouldSelected)
         setAdjustViews(hidden: true)
     }
     
     public func startAdjusting() {
-        let isSelected = selectedTool != .adjust
-        if isSelected {
+        let shouldSelected = selectedTool != .adjust
+        if shouldSelected {
             selectedTool = .adjust
         } else {
             selectedTool = nil
@@ -975,7 +998,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         generateAdjustImageRef()
         setDrawViews(hidden: true)
         setFilterViews(hidden: true)
-        setAdjustViews(hidden: !isSelected)
+        setAdjustViews(hidden: !shouldSelected)
     }
     
     private func setDrawViews(hidden: Bool) {
@@ -2106,7 +2129,7 @@ extension HEEditImageViewController: HEInputTextViewControllerDelegate {
     }
     
     func inputTextViewControllerDidCancel() {
-        bottomToolView?.unselectTool()
+        selectedTool = nil
     }
     
 }
