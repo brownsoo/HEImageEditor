@@ -24,7 +24,8 @@ let package = Package(
             ],
 //            sources: ["HEImageEditor"],
             resources: [
-                .process("Resources/HEImageEditor.bundle")
+                .process("Resources/HEImageEditorLocalizable.strings"),
+                .process("Resources/Assets.xcassets"),
             ]
         ),
         .target(

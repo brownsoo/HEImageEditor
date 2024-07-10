@@ -185,7 +185,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
         let topbar = HETopBarView()
         let cancelButton = UIButton()
         cancelButton.also { it in
-            let icon = UIImage.he.getImage("ic_arrow_right") ?? UIImage(systemName: "chevron.left")
+            let icon = UIImage.he.getImage("icArrowRight") ?? UIImage(systemName: "chevron.left")
             it.setImage(icon, for: .normal)
             it.frame = CGRect(origin: .zero, size: .init(width: 48, height: 48))
         }
@@ -250,7 +250,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
             let topbar = HETopBarView()
             let cancelButton = UIButton()
             cancelButton.also { it in
-                let icon = UIImage.he.getImage("ic_arrow_right") ?? UIImage(systemName: "chevron.left")
+                let icon = UIImage.he.getImage("icArrowRight") ?? UIImage(systemName: "chevron.left")
                 it.setImage(icon, for: .normal)
                 it.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
                 it.drawDebugOutline()
@@ -382,7 +382,7 @@ extension HEImageEditorViewController {
         
         let bt = UIButton()
         bt.layer.masksToBounds = true
-        let icon = UIImage.he.getImage("ic_edit_refresh") ?? UIImage(systemName: "arrow.circlepath", withConfiguration: UIImage.SymbolConfiguration(pointSize: 20, weight: .regular, scale: .small))?.withTintColor(.white)
+        let icon = UIImage.he.getImage("icEditRefresh") ?? UIImage(systemName: "arrow.circlepath", withConfiguration: UIImage.SymbolConfiguration(pointSize: 20, weight: .regular, scale: .small))?.withTintColor(.white)
         bt.setImage(icon, for: .normal)
         bt.setImage(icon?.he.alpha(value: 0.4), for: .disabled)
         bt.setTitle("원본으로 초기화", for: .normal)

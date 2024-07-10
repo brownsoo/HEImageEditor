@@ -15,8 +15,8 @@ class HETextColorCell: UICollectionViewCell {
         let view = UIImageView()
         view.layer.masksToBounds = true
         view.frame = CGRect(x: 0, y: 0, width: 24, height: 24)
-        view.image = UIImage.he.getImage("edit_color_white") ?? UIImage(systemName: "circle.fill")
-        view.highlightedImage = UIImage.he.getImage("edit_color_select_white") ?? UIImage(systemName: "record.circle")
+        view.image = UIImage.he.getImage("editColorWhite") ?? UIImage(systemName: "circle.fill")
+        view.highlightedImage = UIImage.he.getImage("editColorSelectWhite") ?? UIImage(systemName: "record.circle")
         return view
     }()
     
@@ -56,7 +56,7 @@ class HETextFillColorCell: UICollectionViewCell {
     }()
     
     private lazy var noneImage: UIImage? = {
-        UIImage.he.getImage("edit_color_bg_none") ?? UIImage(systemName: "nosign")?.withTintColor(.white)
+        UIImage.he.getImage("editColorBgNone") ?? UIImage(systemName: "nosign")?.withTintColor(.white)
     }()
     
     var color: UIColor = .clear {
@@ -64,8 +64,8 @@ class HETextFillColorCell: UICollectionViewCell {
             if newValue == UIColor.clear {
                 colorView.image = noneImage
             } else {
-                colorView.image = (UIImage.he.getImage("edit_color_white") ?? UIImage(systemName: "circle.fill"))?.withTintColor(newValue)
-                colorView.highlightedImage = (UIImage.he.getImage("edit_color_select_white") ?? UIImage(systemName: "record.circle"))?.withTintColor(newValue)
+                colorView.image = (UIImage.he.getImage("editColorWhite") ?? UIImage(systemName: "circle.fill"))?.withTintColor(newValue)
+                colorView.highlightedImage = (UIImage.he.getImage("editColorSelectWhite") ?? UIImage(systemName: "record.circle"))?.withTintColor(newValue)
             }
         }
     }

@@ -77,6 +77,8 @@
 		17B2DD0A2C3BC62400662FC4 /* LibraryAttachButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B2DD092C3BC62400662FC4 /* LibraryAttachButton.swift */; };
 		17B2DD0E2C3CC99100662FC4 /* CenteredCellFlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B2DD0D2C3CC99100662FC4 /* CenteredCellFlowLayout.swift */; };
 		17B2DD102C3CCEC800662FC4 /* FullCellFlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B2DD0F2C3CCEC800662FC4 /* FullCellFlowLayout.swift */; };
+		17B2DD122C3E0D6900662FC4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 17B2DD112C3E0D6900662FC4 /* Assets.xcassets */; };
+		17B2DD152C3E0E0600662FC4 /* HEImageEditorLocalizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 17B2DD132C3E0E0600662FC4 /* HEImageEditorLocalizable.strings */; };
 		17C8ED8A2C148390006F390A /* HEClipActionToolView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17C8ED892C148390006F390A /* HEClipActionToolView.swift */; };
 		17D691982C12EC32007443EC /* HEClipBottomView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D691972C12EC32007443EC /* HEClipBottomView.swift */; };
 		17D6919D2C168A9C007443EC /* HEEditState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D6919C2C168A9C007443EC /* HEEditState.swift */; };
@@ -106,7 +108,6 @@
 		E40208F1256B9F9C0077F5DC /* HEFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E40208EA256B9F9C0077F5DC /* HEFilter.swift */; };
 		E40208F4256B9FA70077F5DC /* HEClipImageDismissAnimatedTransition.swift in Sources */ = {isa = PBXBuildFile; fileRef = E40208F3256B9FA70077F5DC /* HEClipImageDismissAnimatedTransition.swift */; };
 		E40208FF256BA0080077F5DC /* Bundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = E40208FB256BA0080077F5DC /* Bundle.swift */; };
-		E4020905256BA0390077F5DC /* HEImageEditor.bundle in Resources */ = {isa = PBXBuildFile; fileRef = E4020904256BA0390077F5DC /* HEImageEditor.bundle */; };
 		E402090E256BA1F40077F5DC /* HELanguageDefine.swift in Sources */ = {isa = PBXBuildFile; fileRef = E402090D256BA1F40077F5DC /* HELanguageDefine.swift */; };
 		E4020912256BA27D0077F5DC /* HEConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4020911256BA27D0077F5DC /* HEConfiguration.swift */; };
 		FD3073352AD80B7700CFB618 /* HEStickerEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD3073342AD80B7700CFB618 /* HEStickerEffect.swift */; };
@@ -227,6 +228,9 @@
 		17B2DD092C3BC62400662FC4 /* LibraryAttachButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryAttachButton.swift; sourceTree = "<group>"; };
 		17B2DD0D2C3CC99100662FC4 /* CenteredCellFlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CenteredCellFlowLayout.swift; sourceTree = "<group>"; };
 		17B2DD0F2C3CCEC800662FC4 /* FullCellFlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullCellFlowLayout.swift; sourceTree = "<group>"; };
+		17B2DD112C3E0D6900662FC4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		17B2DD142C3E0E0600662FC4 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/HEImageEditorLocalizable.strings; sourceTree = "<group>"; };
+		17B2DD162C3E0E1100662FC4 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/HEImageEditorLocalizable.strings; sourceTree = "<group>"; };
 		17C8ED892C148390006F390A /* HEClipActionToolView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEClipActionToolView.swift; sourceTree = "<group>"; };
 		17D691972C12EC32007443EC /* HEClipBottomView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEClipBottomView.swift; sourceTree = "<group>"; };
 		17D6919C2C168A9C007443EC /* HEEditState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEEditState.swift; sourceTree = "<group>"; };
@@ -265,7 +269,6 @@
 		E40208FA256BA0080077F5DC /* String+Wrapper.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "String+Wrapper.swift"; sourceTree = "<group>"; };
 		E40208FB256BA0080077F5DC /* Bundle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Bundle.swift; sourceTree = "<group>"; };
 		E40208FC256BA0080077F5DC /* Cell+.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Cell+.swift"; sourceTree = "<group>"; };
-		E4020904256BA0390077F5DC /* HEImageEditor.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = HEImageEditor.bundle; sourceTree = "<group>"; };
 		E402090D256BA1F40077F5DC /* HELanguageDefine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HELanguageDefine.swift; sourceTree = "<group>"; };
 		E4020911256BA27D0077F5DC /* HEConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEConfiguration.swift; sourceTree = "<group>"; };
 		FD1551C928BE2C720043D844 /* UIView+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIView+.swift"; sourceTree = "<group>"; };
@@ -574,7 +577,8 @@
 		17C8ED692C118F2D006F390A /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				E4020904256BA0390077F5DC /* HEImageEditor.bundle */,
+				17B2DD132C3E0E0600662FC4 /* HEImageEditorLocalizable.strings */,
+				17B2DD112C3E0D6900662FC4 /* Assets.xcassets */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -813,7 +817,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E4020905256BA0390077F5DC /* HEImageEditor.bundle in Resources */,
+				17B2DD122C3E0D6900662FC4 /* Assets.xcassets in Resources */,
+				17B2DD152C3E0E0600662FC4 /* HEImageEditorLocalizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -959,6 +964,15 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
+		17B2DD132C3E0E0600662FC4 /* HEImageEditorLocalizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				17B2DD142C3E0E0600662FC4 /* en */,
+				17B2DD162C3E0E1100662FC4 /* ko */,
+			);
+			name = HEImageEditorLocalizable.strings;
+			sourceTree = "<group>";
+		};
 		17D9B7232C394CBF003874D4 /* HEImagePickerLocalizable.strings */ = {
 			isa = PBXVariantGroup;
 			children = (

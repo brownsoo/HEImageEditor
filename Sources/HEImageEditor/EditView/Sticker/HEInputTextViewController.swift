@@ -59,7 +59,7 @@ class HEInputTextViewController: UIViewController {
     }()
     
     private lazy var textColorBtn: UIButton = {
-        let icon = UIImage.he.getImage("ic_edit_color_text") ?? UIImage(systemName: "character")
+        let icon = UIImage.he.getImage("icEditColorText") ?? UIImage(systemName: "character")
         let bt = UIButton(type: .custom)
         bt.setImage(icon?.withTintColor(.white).withRenderingMode(.alwaysOriginal), for: .normal)
         bt.setImage(icon?.withTintColor(UIColor.he.rgba(71, 120, 222)), for: .highlighted)
@@ -69,7 +69,7 @@ class HEInputTextViewController: UIViewController {
     }()
     
     private lazy var textBackgroundBtn: UIButton = {
-        let icon = UIImage.he.getImage("ic_edit_background") ?? UIImage(systemName: "rectangle.fill")
+        let icon = UIImage.he.getImage("icEditBackground") ?? UIImage(systemName: "rectangle.fill")
         let bt = UIButton(type: .custom)
         bt.setImage(icon?.withTintColor(.white).withRenderingMode(.alwaysOriginal), for: .normal)
         bt.setImage(icon?.withTintColor(UIColor.he.rgba(71, 120, 222)), for: .highlighted)

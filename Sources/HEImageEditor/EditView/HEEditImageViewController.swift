@@ -131,7 +131,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     }()
     
     open lazy var trashbinImgView: UIImageView = {
-        UIImageView(image: .he.getImage("ic_delete") ?? UIImage(systemName: "trash"))
+        UIImageView(image: .he.getImage("icDelete") ?? UIImage(systemName: "trash"))
     }()
     
     var adjustSlider: HEAdjustSlider?
