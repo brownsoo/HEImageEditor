@@ -3,6 +3,7 @@
 "rotate" = "Rotate";
 "cancel" = "Cancel";
 "done" = "Done";
+"confirm" = "Confirm";
 "editFinish" = "Done";
 "revert" = "Undo";
 "brightness" = "Brightness";
@@ -17,11 +18,10 @@
 "effect-filter"="Filter";
 "effect-adjust"="Adjust";
 
-"camera"="카메라";
-"album"="앨범";
-"close"= "닫기";
-"cancel"="취소";
-"go_to_setting"="설정으로 이동";
+"camera"="Camera";
+"album"="Album";
+"close"= "Close";
+"go_to_setting"="open system setting";
 "perms_accessing_album"="사진 등록을 위해 앨범 접근을 허용해주세요.";
 "perms_limited_album"="사진 앨범에 접근 권한이 없습니다.";
 "perms_accessing_camera"="사진 등록을 위해 카메라 접근을 허용해주세요.";

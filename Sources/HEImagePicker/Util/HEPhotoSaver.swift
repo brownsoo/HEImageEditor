@@ -23,6 +23,31 @@ public class HEPhotoSaver {
         }
     }
     
+    class func trySaveVideo(_ videoURL: URL, inAlbumNamed: String) {
+        if PHPhotoLibrary.authorizationStatus() == .authorized {
+            if let album = album(named: inAlbumNamed) {
+                saveVideo(videoURL, toAlbum: album)
+            } else {
+                createAlbum(withName: inAlbumNamed) {
+                    if let album = album(named: inAlbumNamed) {
+                        saveVideo(videoURL, toAlbum: album)
+                    }
+                }
+            }
+        }
+    }
+    
+    fileprivate class func saveVideo(_ videoURL: URL, toAlbum album: PHAssetCollection) {
+        PHPhotoLibrary.shared().performChanges {
+            guard let changeRequest = PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: videoURL) else {
+                return
+            }
+            let albumChangeRequest = PHAssetCollectionChangeRequest(for: album)
+            let enumeration: NSArray = [changeRequest.placeholderForCreatedAsset!]
+            albumChangeRequest?.addAssets(enumeration)
+        }
+    }
+    
     fileprivate class func saveImage(_ image: UIImage, toAlbum album: PHAssetCollection) {
         PHPhotoLibrary.shared().performChanges({
             let changeRequest = PHAssetChangeRequest.creationRequestForAsset(from: image)

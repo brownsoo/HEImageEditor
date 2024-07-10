@@ -23,3 +23,5 @@
 "HEImagePickerAttach" = "Attach";
 "HEImagePickerEditPhoto" = "Edit photo";
 "HEImagePickerAllPhotos" = "All Photos";
+"_confirm" = "Confirm";
+"_noSupportCameraDevice" = "Camera is not available.";

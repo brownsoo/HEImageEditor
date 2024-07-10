@@ -60,9 +60,10 @@ extension HELibraryViewController: PHPhotoLibraryChangeObserver {
         // It can be when user add photos from limited permission.
         if self.assetMediaManager.hasResultItems,
            selectedItems.isEmpty,
-           let newAsset = self.assetMediaManager.getAsset(at: 0) {
-            //self.v.previewBox.reload(at: 0)
-            trace("선택된게 없네")
+           let _ = self.assetMediaManager.getAsset(at: 0) {
+            trace("선택된게 없어서 기본 선택")
+            addToSelection(indexPath: IndexPath(row: 0, section: 0))
+            v.previewBox.reload(at: 0)
         }
 
         // If user decided to forbid all photos with limited permission

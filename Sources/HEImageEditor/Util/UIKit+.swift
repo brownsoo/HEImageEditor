@@ -96,7 +96,7 @@ extension UIViewController {
     func showAlert(title: String? = nil, text: String, confirmAction: ((UIAlertAction) -> Void)? = nil) -> UIAlertController {
         let alert = UIAlertController(title: title, message: text, preferredStyle: .alert)
         DispatchQueue.main.async {
-            let okayAction = UIAlertAction(title: "확인", style: .default, handler: confirmAction)
+            let okayAction = UIAlertAction(title: Bundle.heLocalizedString("confirm"), style: .default, handler: confirmAction)
             alert.addAction(okayAction)
             self.present(alert, animated: true, completion: nil)
         }

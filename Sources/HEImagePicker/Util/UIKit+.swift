@@ -54,3 +54,21 @@ internal extension IndexSet {
         return indexPaths
     }
 }
+
+extension UIViewController {
+    @discardableResult
+    func showAlert(_ text: String, confirmAction: ((UIAlertAction) -> Void)? = nil) -> UIAlertController {
+        return self.showAlert(title: nil, text: text, confirmAction: confirmAction)
+    }
+    
+    @discardableResult
+    func showAlert(title: String? = nil, text: String, confirmAction: ((UIAlertAction) -> Void)? = nil) -> UIAlertController {
+        let alert = UIAlertController(title: title, message: text, preferredStyle: .alert)
+        DispatchQueue.main.async {
+            let okayAction = UIAlertAction(title: PickerConfig.wordings.confirm, style: .default, handler: confirmAction)
+            alert.addAction(okayAction)
+            self.present(alert, animated: true, completion: nil)
+        }
+        return alert
+    }
+}

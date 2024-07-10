@@ -16,7 +16,11 @@ let package = Package(
     ],
     targets: [
         .target(
+            name: "HECommon",
+        ),
+        .target(
             name: "HEImageEditor",
+            dependencies: ["HECommon"],
 //            path: "Sources",
             exclude: [
                 "Util/HEWeakProxy.h",
@@ -30,6 +34,7 @@ let package = Package(
         ),
         .target(
             name: "HEImagePicker",
+            dependencies: ["HECommon"],
 //            path: "Sources",
 //            sources: ["HEImagePicker"],
             resources: [

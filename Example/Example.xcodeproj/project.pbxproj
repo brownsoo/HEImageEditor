@@ -10,6 +10,8 @@
 		170DCE242C1291A100CF8477 /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 170DCE232C1291A100CF8477 /* SnapKit */; };
 		173DE6A32C37BE30002BD7C6 /* HEImagePicker.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 173DE6A22C37BE30002BD7C6 /* HEImagePicker.framework */; };
 		173DE6A42C37BE30002BD7C6 /* HEImagePicker.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 173DE6A22C37BE30002BD7C6 /* HEImagePicker.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		17B2DD182C3E164A00662FC4 /* HECommon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 17B2DD172C3E164A00662FC4 /* HECommon.framework */; };
+		17B2DD192C3E164A00662FC4 /* HECommon.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 17B2DD172C3E164A00662FC4 /* HECommon.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		17E2D8822C295FDC005F5E0B /* OrderedCollections in Frameworks */ = {isa = PBXBuildFile; productRef = 17E2D8812C295FDC005F5E0B /* OrderedCollections */; };
 		17F242592C0F429700F6A93E /* HEImageEditor.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 17F242582C0F429700F6A93E /* HEImageEditor.framework */; };
 		17F2425A2C0F429700F6A93E /* HEImageEditor.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 17F242582C0F429700F6A93E /* HEImageEditor.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -49,6 +51,7 @@
 			files = (
 				17F2425A2C0F429700F6A93E /* HEImageEditor.framework in Embed Frameworks */,
 				173DE6A42C37BE30002BD7C6 /* HEImagePicker.framework in Embed Frameworks */,
+				17B2DD192C3E164A00662FC4 /* HECommon.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -57,6 +60,7 @@
 
 /* Begin PBXFileReference section */
 		173DE6A22C37BE30002BD7C6 /* HEImagePicker.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = HEImagePicker.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		17B2DD172C3E164A00662FC4 /* HECommon.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = HECommon.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		17F242582C0F429700F6A93E /* HEImageEditor.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = HEImageEditor.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		985A2D57282A85B4007AE0C6 /* cubano-regular-webfont.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "cubano-regular-webfont.ttf"; sourceTree = "<group>"; };
 		985A2D58282A85B4007AE0C6 /* Homestead-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Homestead-Regular.ttf"; sourceTree = "<group>"; };
@@ -129,6 +133,7 @@
 			files = (
 				17F242592C0F429700F6A93E /* HEImageEditor.framework in Frameworks */,
 				173DE6A32C37BE30002BD7C6 /* HEImagePicker.framework in Frameworks */,
+				17B2DD182C3E164A00662FC4 /* HECommon.framework in Frameworks */,
 				170DCE242C1291A100CF8477 /* SnapKit in Frameworks */,
 				17E2D8822C295FDC005F5E0B /* OrderedCollections in Frameworks */,
 			);
@@ -199,6 +204,7 @@
 		E402098D256BAC560077F5DC /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				17B2DD172C3E164A00662FC4 /* HECommon.framework */,
 				173DE6A22C37BE30002BD7C6 /* HEImagePicker.framework */,
 				17F242582C0F429700F6A93E /* HEImageEditor.framework */,
 			);

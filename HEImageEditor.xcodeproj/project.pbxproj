@@ -62,7 +62,6 @@
 		17B2DCE92C3B969D00662FC4 /* UIColor+Wrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE1A55C282E595C00178B0F /* UIColor+Wrapper.swift */; };
 		17B2DCEB2C3B96AA00662FC4 /* UIGraphicsImageRenderer+Wrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDBD955D2B148C74005EE2F8 /* UIGraphicsImageRenderer+Wrapper.swift */; };
 		17B2DCED2C3B96DA00662FC4 /* HECommon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 17B2DCE12C3B83FF00662FC4 /* HECommon.framework */; };
-		17B2DCEE2C3B96DA00662FC4 /* HECommon.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 17B2DCE12C3B83FF00662FC4 /* HECommon.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		17B2DCF32C3B991800662FC4 /* Cell+.swift in Sources */ = {isa = PBXBuildFile; fileRef = E40208FC256BA0080077F5DC /* Cell+.swift */; };
 		17B2DCF42C3B9B4800662FC4 /* UIView+.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD1551C928BE2C720043D844 /* UIView+.swift */; };
 		17B2DCF62C3B9E0B00662FC4 /* UIApplication+Wrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B2DCF52C3B9E0B00662FC4 /* UIApplication+Wrapper.swift */; };
@@ -71,7 +70,6 @@
 		17B2DCFB2C3BA3C600662FC4 /* HEError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D692262C253644007443EC /* HEError.swift */; };
 		17B2DCFE2C3BA46F00662FC4 /* Trace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B2DCFD2C3BA46F00662FC4 /* Trace.swift */; };
 		17B2DCFF2C3BA50A00662FC4 /* HECommon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 17B2DCE12C3B83FF00662FC4 /* HECommon.framework */; };
-		17B2DD002C3BA50A00662FC4 /* HECommon.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 17B2DCE12C3B83FF00662FC4 /* HECommon.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		17B2DD052C3BABA700662FC4 /* Data+Wrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B2DD042C3BABA700662FC4 /* Data+Wrapper.swift */; };
 		17B2DD082C3BBFC000662FC4 /* HECapsuleButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B2DD072C3BBFC000662FC4 /* HECapsuleButton.swift */; };
 		17B2DD0A2C3BC62400662FC4 /* LibraryAttachButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B2DD092C3BC62400662FC4 /* LibraryAttachButton.swift */; };
@@ -141,31 +139,6 @@
 			remoteInfo = HECommon;
 		};
 /* End PBXContainerItemProxy section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		17B2DCF12C3B96DA00662FC4 /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				17B2DCEE2C3B96DA00662FC4 /* HECommon.framework in Embed Frameworks */,
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		17B2DD032C3BA50A00662FC4 /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				17B2DD002C3BA50A00662FC4 /* HECommon.framework in Embed Frameworks */,
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		17189E8F2C1041DB00270F4D /* HEEditImage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HEEditImage.swift; sourceTree = "<group>"; };
@@ -704,7 +677,6 @@
 				1744BA372C330B4E00F5395B /* Sources */,
 				1744BA382C330B4E00F5395B /* Frameworks */,
 				1744BA392C330B4E00F5395B /* Resources */,
-				17B2DD032C3BA50A00662FC4 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -742,7 +714,6 @@
 				E40208D3256B9BA60077F5DC /* Sources */,
 				E40208D4256B9BA60077F5DC /* Frameworks */,
 				E40208D5256B9BA60077F5DC /* Resources */,
-				17B2DCF12C3B96DA00662FC4 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);

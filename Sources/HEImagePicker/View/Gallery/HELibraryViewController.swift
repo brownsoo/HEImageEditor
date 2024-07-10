@@ -195,26 +195,54 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     
     @objc
     func imageCaptureTapped() {
-        let picker = UIImagePickerController()
-        picker.delegate = self
-        picker.sourceType = .camera
-        picker.mediaTypes = [UTType.image.identifier]
-        showDetailViewController(picker, sender: nil)
+        if UIImagePickerController.isSourceTypeAvailable(.camera) {
+            let picker = UIImagePickerController()
+            picker.delegate = self
+            picker.sourceType = .camera
+            picker.mediaTypes = [UTType.image.identifier]
+            showDetailViewController(picker, sender: nil)
+        } else {
+            showAlert(PickerConfig.wordings.noSupportCameraDevice, confirmAction: nil)
+        }
     }
     
     @objc
     func videoCaptureTapped() {
-        let picker = UIImagePickerController()
-        picker.delegate = self
-        picker.sourceType = .camera
-        picker.mediaTypes = [UTType.video.identifier]
-        showDetailViewController(picker, sender: nil)
+        if UIImagePickerController.isSourceTypeAvailable(.camera) {
+            let picker = UIImagePickerController()
+            picker.delegate = self
+            picker.sourceType = .camera
+            picker.mediaTypes = [UTType.movie.identifier]
+            showDetailViewController(picker, sender: nil)
+        } else {
+            showAlert(PickerConfig.wordings.noSupportCameraDevice, confirmAction: nil)
+        }
     }
     
     private func didCameraCaptured(image: UIImage) {
         // TODO: 카메라 촬용 -> 임시 저장 -> 찍은 사진을 앨범컬랙션에 표시
         if PickerConfig.shouldSaveNewPicturesToAlbum {
             HEPhotoSaver.trySaveImage(image, inAlbumNamed: PickerConfig.albumName)
+        } else {
+            // TODO: 앨범 추가 없이 콜랙션 진행
+        }
+//        Task.detached {
+//            let w = min(1500, image.size.width)
+//            let h = w * image.size.height / image.size.width
+//            let image = image.resized(to: CGSize(width: w, height: h)) ?? image
+//            
+//            await MainActor.run {
+//                
+//            }
+//        }
+        
+    }
+    
+    private func didVideoCaptured(videoURL: URL) {
+        if PickerConfig.shouldSaveNewPicturesToAlbum {
+            HEPhotoSaver.trySaveVideo(videoURL, inAlbumNamed: PickerConfig.albumName)
+        } else {
+            // TODO: 앨범 추가 없이 콜랙션 진행
         }
     }
     
@@ -281,7 +309,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         
         if isMultipleSelectionEnabled {
             let needPreselectItemsAndNotSelectedAnyYet = selectedItems.isEmpty && PickerConfig.library.preSelectItemOnMultipleSelection
-            var shouldSelectByDelegate: Bool = delegate?.libraryView(self, shouldAddToSelectionAt: IndexPath(row: currentlySelectedIndex, section: 0), numSelections: selectedItems.count) ?? true
+            let shouldSelectByDelegate: Bool = delegate?.libraryView(self, shouldAddToSelectionAt: IndexPath(row: currentlySelectedIndex, section: 0), numSelections: selectedItems.count) ?? true
             
             if needPreselectItemsAndNotSelectedAnyYet,
                shouldSelectByDelegate,
@@ -751,12 +779,14 @@ extension HELibraryViewController: UIImagePickerControllerDelegate, UINavigation
     }
     
     public func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+        trace(info[.mediaType] as? String) // UTType.movie.identifier or UTType.image.identifier
         picker.dismiss(animated: true) {
-            guard var image = info[.originalImage] as? UIImage else { return }
-            let w = min(1500, image.size.width)
-            let h = w * image.size.height / image.size.width
-            image = image.resized(to: CGSize(width: w, height: h)) ?? image
-            self.didCameraCaptured(image: image)
+            if let image = info[.originalImage] as? UIImage {
+                self.didCameraCaptured(image: image)
+            }
+            else if let mediaUrl = info[.mediaURL] as? URL {
+                self.didVideoCaptured(videoURL: mediaUrl)
+            }
         }
     }
 }
