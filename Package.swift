@@ -4,19 +4,25 @@ import PackageDescription
 
 let package = Package(
     name: "HEImageEditor",
-    defaultLocalization: "ko",
+    defaultLocalization: "en",
     platforms: [.iOS(.v14)],
     products: [
         // Products define the executables and libraries a package produces, and make them visible to other packages.
         .library(
             name: "HEImageEditor",
-            targets: ["HEImageEditor", "HEImagePicker"]),
+            targets: ["HEImageEditor"]),
+        .library(
+            name: "HEImagePicker",
+            targets: ["HEImagePicker"]),
+        .library(
+            name: "HECommon",
+            targets: ["HECommon"]),
     ],
     dependencies: [
     ],
     targets: [
         .target(
-            name: "HECommon",
+            name: "HECommon"
         ),
         .target(
             name: "HEImageEditor",
@@ -28,8 +34,8 @@ let package = Package(
             ],
 //            sources: ["HEImageEditor"],
             resources: [
-                .process("Resources/HEImageEditorLocalizable.strings"),
-                .process("Resources/Assets.xcassets"),
+                .process("Resources"),
+//                .process("Resources/Assets.xcassets"),
             ]
         ),
         .target(
@@ -38,9 +44,14 @@ let package = Package(
 //            path: "Sources",
 //            sources: ["HEImagePicker"],
             resources: [
-                .process("Resources/HEImagePickerLocalizable.strings"),
-                .process("Resources/Assets.xcassets"),
+                .process("Resources"),
+//                .process("Resources/HEImagePickerLocalizable.strings"),
+//                .process("Resources/Assets.xcassets"),
             ]
-        )
+        ),
+        .testTarget(name: "HEImageEditorTests",
+                   dependencies: ["HEImageEditor"]),
+        .testTarget(name: "HEImagePickerTests",
+                   dependencies: ["HEImagePicker"])
     ]
 )
