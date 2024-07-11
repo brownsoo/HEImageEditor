@@ -48,6 +48,8 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
     public private(set) var editingImage: HEEditImage?
     public private(set) var currentIndex: Int?
     
+    public var initialIndex: Int = 0
+    
     private lazy var indexLabel: UILabel = {
        let lb = UILabel()
         lb.text = "0/0"
@@ -84,13 +86,19 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
         setupUI()
     }
     
+    open override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        if navigationController is HEPickerNavigationController {
+            navigationController?.setNavigationBarHidden(true, animated: false)
+        }
+    }
+    
     public override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         guard shouldLayout else {
             return
         }
         shouldLayout = false
-        trace("pager didLayout")
         
         let insets = self.view.safeAreaInsets
         collView.frame = view.bounds
@@ -100,6 +108,13 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
                                       y: view.frame.height - bottomToolViewHeight - insets.bottom,
                                       width: view.bounds.width,
                                       height: bottomToolViewHeight + insets.bottom)
+        
+        
+        if initialIndex > 0 {
+            collView.isPagingEnabled = false
+            collView.scrollToItem(at: IndexPath(row: initialIndex, section: 0), at: .centeredHorizontally, animated: initialIndex < 3)
+            collView.isPagingEnabled = true
+        }
     }
     
     override open func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
@@ -146,7 +161,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
     
     @objc
     private func didClickCancel() {
-        // TODO: - 
+        imageStore.clearAll()
         if let nc = self.navigationController, nc.viewControllers.count > 1 {
             nc.popViewController(animated: true)
         } else {
@@ -156,7 +171,6 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
     
     @objc
     private func didConfirmClick() {
-        // TODO: -
         delegate?.didFinishEditImages(self)
     }
     

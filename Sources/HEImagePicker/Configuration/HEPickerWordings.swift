@@ -9,12 +9,22 @@ import Foundation
 
 public struct HEPickerWordings {
     
-    public var permissionPopup = PermissionPopup()
+    public var libraryPermissionPopup = LibraryPermissionPopup()
+    public var cameraPermissionPopup = CameraPermissionPopup()
     public var videoDurationPopup = VideoDurationPopup()
 
-    public struct PermissionPopup {
+    public struct LibraryPermissionPopup {
         public var title = pickerLocalized("_permissionDeniedPopupTitle")
-        public var message = pickerLocalized("_permissionDeniedPopupMessage")
+        public var messageAccess = pickerLocalized("_perms_accessing_album")
+        public var messageLimited = pickerLocalized("_perms_limited_album")
+        public var cancel = pickerLocalized("_permissionDeniedPopupCancel")
+        public var grantPermission = pickerLocalized("_permissionDeniedPopupGrantPermission")
+    }
+    
+    public struct CameraPermissionPopup {
+        public var title = pickerLocalized("_permissionDeniedPopupTitle")
+        public var messageAccess = pickerLocalized("_perms_accessing_camera")
+        public var messageLimited = pickerLocalized("_perms_limited_camera")
         public var cancel = pickerLocalized("_permissionDeniedPopupCancel")
         public var grantPermission = pickerLocalized("_permissionDeniedPopupGrantPermission")
     }
@@ -25,10 +35,13 @@ public struct HEPickerWordings {
         public var tooLongMessage = pickerLocalized("_videoTooLong")
     }
     
+    public var cannotFindMediaFile = pickerLocalized("_cannotFindMediaFile")
+    public var noSelectionToEdit = pickerLocalized("_noSelectionToEdit")
     public var errorOnSaveVideoInLibrary = pickerLocalized("_errorOnSaveVideoInLibrary")
     public var errorOnSaveImageInLibrary = pickerLocalized("_errorOnSaveImageInLibrary")
     public var noPhotoLibraryAuthor = pickerLocalized("_noPhotoLibraryAuthor")
     public var noSupportCameraDevice = pickerLocalized("_noSupportCameraDevice")
+    public var close = pickerLocalized("_close")
     public var confirm = pickerLocalized("_confirm")
     public var allPhotos = pickerLocalized("_allPhotos")
     public var editPhoto = pickerLocalized("_editPhoto")

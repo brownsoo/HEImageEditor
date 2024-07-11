@@ -12,6 +12,7 @@ public protocol HEImageCache: AnyObject {
     
     /// 원본 이미지 캐시
     func cacheOriginImage(uiImage: UIImage, forId id: String) -> Task<URL, Error>
+    func cacheOriginImageSync(uiImage: UIImage, forId id: String) throws -> URL
     /// 편집 이미지 캐시
     func cacheEditImage(uiImage: UIImage, forHei hei: HEImage) -> Task<URL, Error>
     /// 썸네일 이미지 캐시
@@ -19,10 +20,13 @@ public protocol HEImageCache: AnyObject {
     
     /// 원본 이미지
     func originImage(forHei hei: HEImage) -> Task<UIImage, Error>
+    func originImageSync(forHei hei: HEImage) throws -> UIImage?
     /// 편집 이미지
     func editImage(forHei hei: HEImage) -> Task<UIImage, Error>
+    func editImageSync(forHei hei: HEImage) throws -> UIImage?
     /// 썸네일 이미지
     func thumbnailImage(forHei hei: HEImage) -> Task<UIImage, Error>
+    func thumbnailImageSync(forHei hei: HEImage) throws -> UIImage?
     
     
     /// 캐시된 URL 값만 확인
@@ -54,6 +58,16 @@ public extension HEImageDataStore {
     }
     func addHEImages(_ heis: [HEImage]) {
         self.addHEImages(heis, excepting: nil)
+    }
+}
+
+public extension String {
+    func toHEImageCacheIdentifier() -> String {
+        return self.replacingOccurrences(of: "/", with: "~")
+    }
+    
+    func fromHEImageCacheIdentifier() -> String {
+        return self.replacingOccurrences(of: "~", with: "/")
     }
 }
 
@@ -166,8 +180,34 @@ extension HESimpleEditImageStore {
         }
     }
     
+    public func originImageSync(forHei hei: HEImage) throws -> UIImage? {
+        if let originImage = hei.originImage {
+            return originImage
+        }
+        guard let originURL = hei.originURL else {
+            throw HEError.imageNotFound
+        }
+        return try getImageSync(forURL: originURL)
+    }
+    
+    public func editImageSync(forHei hei: HEImage) throws -> UIImage? {
+        if let editImageURL = hei.editImageURL {
+            return try getImageSync(forURL: editImageURL)
+        } else {
+            return try originImageSync(forHei: hei)
+        }
+    }
+    
+    public func thumbnailImageSync(forHei hei: HEImage) throws -> UIImage? {
+        if let thumbnailURL = hei.thumbnailURL {
+            return try getImageSync(forURL: thumbnailURL)
+        } else {
+            throw HEError.imageNotFound
+        }
+    }
+    
     public func getCachedOriginImageURL(forId id: String) throws -> URL? {
-        let fileName = id + ".png"
+        let fileName = id.toHEImageCacheIdentifier() + ".png"
         let fileURL: URL = try fileURL(fileName: fileName)
         if FileManager.default.fileExists(atPath: fileURL.absoluteString) {
             return fileURL
@@ -176,7 +216,7 @@ extension HESimpleEditImageStore {
     }
     
     public func getCachedEditImageURL(forId id: String) throws -> URL? {
-        let fileName = id + ".edit.png"
+        let fileName = id.toHEImageCacheIdentifier() + ".edit.png"
         let fileURL: URL = try fileURL(fileName: fileName)
         if FileManager.default.fileExists(atPath: fileURL.absoluteString) {
             return fileURL
@@ -185,7 +225,7 @@ extension HESimpleEditImageStore {
     }
     
     public func cacheOriginImage(uiImage: UIImage, forId id: String) -> Task<URL, Error> {
-        let fileName = id + ".png"
+        let fileName = id.toHEImageCacheIdentifier() + ".png"
         return Task.detached { [weak self] in
             guard let self, let data = uiImage.pngData() else {
                 throw HEError.generateFileData
@@ -199,8 +239,22 @@ extension HESimpleEditImageStore {
         }
     }
     
+    public func cacheOriginImageSync(uiImage: UIImage, forId id: String) throws -> URL {
+        let fileName = id.toHEImageCacheIdentifier() + ".png"
+        guard let data = uiImage.pngData() else {
+            throw HEError.generateFileData
+        }
+        let fileURL: URL = try fileURL(fileName: fileName)
+        FileManager.default.createFile(atPath: fileURL.path, contents: data)
+        Task.detached { [weak self] in
+            await self?.memCacheImage(uiImage, forUrl: fileName)
+        }
+        trace(fileURL)
+        return fileURL
+    }
+    
     public func cacheEditImage(uiImage: UIImage, forHei hei: HEImage) -> Task<URL, Error> {
-        let fileName = hei.id + ".edit.png"
+        let fileName = hei.id.toHEImageCacheIdentifier() + ".edit.png"
         return Task.detached { [weak self] in
             guard let self, let data = uiImage.pngData() else {
                 throw HEError.generateFileData
@@ -216,7 +270,7 @@ extension HESimpleEditImageStore {
     }
     
     public func cacheThumbnailImage(uiImage: UIImage, forHei hei: HEImage) -> Task<URL, Error> {
-        let fileName = hei.id + ".thumb.png"
+        let fileName = hei.id.toHEImageCacheIdentifier() + ".thumb.png"
         return Task.detached { [weak self] in
             let thumbnail = uiImage.he.thumbnail()
             guard let self, let data = thumbnail.pngData() else {
@@ -250,8 +304,8 @@ extension HESimpleEditImageStore {
         hei.setEditImageURL(nil)
         hei.setThumbnailURL(nil)
         
-        let editFileURL = try? fileURL(fileName: hei.id + ".edit.png")
-        let thumbFileURL = try? fileURL(fileName: hei.id + ".thumb.png")
+        let editFileURL = try? fileURL(fileName: hei.id.toHEImageCacheIdentifier() + ".edit.png")
+        let thumbFileURL = try? fileURL(fileName: hei.id.toHEImageCacheIdentifier() + ".thumb.png")
         Task.detached {
             do {
                 if let editFileURL {
@@ -316,5 +370,23 @@ extension HESimpleEditImageStore {
         }
     }
     
+    func getImageSync(forURL url: URL) throws -> UIImage? {
+        if let cached = getMemCachedImage(forUrl: url.absoluteString) {
+            return cached
+        }
+        if url.isFileURL {
+            let data = try Data(contentsOf: url)
+            return UIImage(data: data)!
+        }
+        // TODO: download remove image?
+//        let (data, response) = try await URLSession.shared.data(from: url)
+//        trace(response)
+//        if let image = UIImage(data: data) {
+//            self.memCacheImage(image, forUrl: url.absoluteString)
+//            return image
+//        }
+        
+        throw HEError.imageNotFound
+    }
     
 }

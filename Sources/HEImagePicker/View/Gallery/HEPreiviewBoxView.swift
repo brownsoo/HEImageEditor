@@ -16,6 +16,7 @@ public protocol HEPreviewBoxViewDelegate: AnyObject {
     func previewBoxViewStartedLoadingImage(_ box: HEPreiviewBoxView)
     func previewBoxViewFinishedLoadingImage(_ box: HEPreiviewBoxView)
     func previewBoxViewUpdateCropInfo(_ box: HEPreiviewBoxView, assetIdentifier: String)
+    func previewBoxViewEditButtonTouched(_ box: HEPreiviewBoxView, selection: HELibrarySelection)
 }
 
 /// The container for asset (video or image). 
@@ -73,6 +74,7 @@ public class HEPreiviewBoxView: UIView {
         spinnerView.accessibilityIdentifier = "spinnerView"
         addSubview(spinnerView)
         spinner.accessibilityIdentifier = "spinner"
+        spinner.hidesWhenStopped = true
         spinnerView.addSubview(spinner)
         curtain.accessibilityIdentifier = "curtain"
         addSubview(curtain)
@@ -111,6 +113,7 @@ public class HEPreiviewBoxView: UIView {
             }
             self.editButton = button
             button.isHidden = true
+            button.addTarget(self, action: #selector(editPhotoButtonTapped), for: .touchUpInside)
         }
     }
 
@@ -118,22 +121,27 @@ public class HEPreiviewBoxView: UIView {
         super.init(coder: coder)
         fatalError("Only code layout.")
     }
+    
+    @objc
+    func editPhotoButtonTapped() {
+        let items = items()
+        if let item = items.get(at: currentIndex) {
+            delegate?.previewBoxViewEditButtonTouched(self, selection: item)
+        } else if let first = items.first {
+            delegate?.previewBoxViewEditButtonTouched(self, selection: first)
+        }
+    }
 
     func fadeInLoader() {
         shouldShowLoader = true
         // Only show loader if full res image takes more than 0.5s to load.
-        if #available(iOS 10.0, *) {
-            Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { _ in
-                if self.shouldShowLoader == true {
-                    UIView.animate(withDuration: 0.2) {
-                        self.spinnerView.alpha = 1
-                    }
+        Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { _ in
+            if self.shouldShowLoader {
+                self.spinner.isHidden = false
+                self.spinner.startAnimating()
+                UIView.animate(withDuration: 0.2) {
+                    self.spinnerView.alpha = 1
                 }
-            }
-        } else {
-            // Fallback on earlier versions
-            UIView.animate(withDuration: 0.2) {
-                self.spinnerView.alpha = 1
             }
         }
     }
@@ -141,6 +149,7 @@ public class HEPreiviewBoxView: UIView {
     func hideLoader() {
         shouldShowLoader = false
         spinnerView.alpha = 0
+        spinner.isHidden = true
     }
     
     @objc
@@ -178,12 +187,15 @@ public class HEPreiviewBoxView: UIView {
     }
     
     private func checkEditButtonShowing() {
-        if let _ = editButton {
-            let point = self.convert(collView.center, to: collView)
-            if let indexPath = collView.indexPathForItem(at: point),
+        let point = self.convert(collView.center, to: collView)
+        if let indexPath = collView.indexPathForItem(at: point) {
+            currentIndex = indexPath.row
+            if let _ = editButton,
                let cell = collView.cellForItem(at: indexPath) as? HEPreviewCell {
                 self.perform(#selector(self.showEditButtonIfNeed), with: cell.zoomableView.currentAssetType == .video, afterDelay: 0.2)
             }
+        } else {
+            currentIndex = 0
         }
     }
     
@@ -466,36 +478,22 @@ extension HEPreiviewBoxView: UICollectionViewDelegateFlowLayout, UICollectionVie
         return cell
     }
     
-    public func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-        currentIndex = indexPath.row
-    }
-    
-    public func collectionView(_ collectionView: UICollectionView, didEndDisplaying cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-        let center = self.convert(collectionView.center, to: collectionView)
-        if let index = collectionView.indexPathForItem(at: center) {
-            currentIndex = index.row
-        }
-    }
-    
     public func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let w = collectionView.bounds.width
         return CGSize(width: w, height: w)
     }
     
     public func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
-        trace()
         if let _ = editButton {
             hideEditButton()
         }
     }
     
     public func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
-        trace()
         checkEditButtonShowing()
     }
     
     public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-        trace()
         checkEditButtonShowing()
     }
 }

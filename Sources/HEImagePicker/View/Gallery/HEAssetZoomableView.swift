@@ -156,7 +156,7 @@ final public class HEAssetZoomableView: UIScrollView {
         }
         currentAssetIdentifier = hei.id
         currentAssetType = .image
-        
+        trace(hei)
         Task { [weak self] in
             guard let self = self else { return }
             do {

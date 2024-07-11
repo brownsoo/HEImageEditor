@@ -81,12 +81,12 @@ extension HELibraryViewController {
     
     /// Adds cell to selection
     func addToSelection(indexPath: IndexPath) {
-        let shouldBeSelected = delegate?.libraryView(self, shouldAddToSelectionAt: indexPath, numSelections: selectedItems.count) ?? true
-        if !shouldBeSelected {
-            return
-        }
         guard let asset = assetMediaManager.getAsset(at: indexPath.row) else {
             print("No asset to add to selection.")
+            return
+        }
+        let shouldBeSelected = delegate?.libraryView(self, shouldAddToSelection: asset.localIdentifier, numSelections: selectedItems.count) ?? true
+        if !shouldBeSelected {
             return
         }
 

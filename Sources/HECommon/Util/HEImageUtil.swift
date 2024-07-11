@@ -1,5 +1,5 @@
 //
-//  ImageUtil.swift
+//  HEImageUtil.swift
 //  HEImageEditor
 //
 //  Created by 브라운수 on 6/24/24.
@@ -10,19 +10,12 @@ import Foundation
 import AVFoundation
 import Photos
 
-public struct CannotMakeJpegError: Error {
-    public var localizedDescription: String {
-        return "Can't make a jpeg"
-    }
-}
-
-public struct CannotFindImageError: Error {
-    public var localizedDescription: String {
-        return "Can't find an image"
-    }
-}
-
 public class HEImageUtil {
+    
+    public enum EncodingType {
+        case jpeg(quailty: Float)
+        case png
+    }
     
     private init(){}
     
@@ -146,45 +139,53 @@ public class HEImageUtil {
         }
     }
     
-    public static func saveTempImageUsingJpeg(_ image: UIImage, name: String, completion: @escaping (URL?, Error?) -> Void) {
+    public static func saveTempImage(_ image: UIImage, name: String, encoding: EncodingType = .png, completion: @escaping (Result<URL, Error>) -> Void) {
         DispatchQueue.global().async {
             let tempDir = FileManager.default.temporaryDirectory
             let writeUrl = tempDir.appendingPathComponent(name)
             debugPrint("write to: \(writeUrl.absoluteString)")
+            
+            let data: Data
             do {
-                if let data = image.jpegData(compressionQuality: 0.7) {
-                    try data.write(to: writeUrl, options: [Data.WritingOptions.fileProtectionMask])
-                    DispatchQueue.main.async {
-                        completion(writeUrl, nil)
+                switch encoding {
+                case .png:
+                    if let raw = image.pngData() {
+                        data = raw
+                    } else {
+                        throw HEError.encodingPng
                     }
-                } else {
-                    DispatchQueue.main.async {
-                        completion(nil, CannotMakeJpegError())
+                case .jpeg(let quailty):
+                    if let raw = image.jpegData(compressionQuality: CGFloat(quailty)) {
+                        data = raw
+                    } else {
+                        throw HEError.encodingJpeg
                     }
                 }
-                
             } catch {
-                let e = error
                 DispatchQueue.main.async {
-                    completion(nil, e)
+                    completion(.failure(error))
                 }
+                return
             }
+            
+            saveTempImageData(data, name: name, completion: completion)
         }
     }
     
-    public static func saveTempImageUsingJpeg(_ data: Data, name: String, completion: @escaping (Result<URL, Error>) -> Void) {
+    public static func saveTempImageData(_ data: Data, name: String, completion: @escaping (Result<URL, Error>) -> Void) {
         DispatchQueue.global().async {
             let tempDir = FileManager.default.temporaryDirectory
             let writeUrl = tempDir.appendingPathComponent(name)
-            debugPrint("write to: \(writeUrl.absoluteString)")
+            trace("write to: \(writeUrl.absoluteString)")
             do {
                 try data.write(to: writeUrl, options: [Data.WritingOptions.fileProtectionMask])
                 DispatchQueue.main.async {
                     completion(.success(writeUrl))
                 }
             } catch {
+                let e = HEError.unknown(underlineError: error)
                 DispatchQueue.main.async {
-                    completion(.failure(error))
+                    completion(.failure(e))
                 }
             }
         }

@@ -21,8 +21,3 @@
 "camera"="Camera";
 "album"="Album";
 "close"= "Close";
-"go_to_setting"="open system setting";
-"perms_accessing_album"="사진 등록을 위해 앨범 접근을 허용해주세요.";
-"perms_limited_album"="사진 앨범에 접근 권한이 없습니다.";
-"perms_accessing_camera"="사진 등록을 위해 카메라 접근을 허용해주세요.";
-"perms_limited_camera"="카메라 접근 권한이 없습니다.";

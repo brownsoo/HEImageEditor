@@ -8,25 +8,42 @@
 import UIKit
 
 internal struct PermissionDeniedPopup {
-    static func buildGoToSettingsAlert(cancelBlock: @escaping () -> Void) -> UIAlertController {
-        let alert = UIAlertController(title: PickerConfig.wordings.permissionPopup.title,
-                                      message: PickerConfig.wordings.permissionPopup.message,
-                                      preferredStyle: .alert)
+    static func buildGoToSettingsAlertForCamera(cancelBlock: @escaping () -> Void) -> UIAlertController {
+        let alert = UIAlertController(
+            title: PickerConfig.wordings.cameraPermissionPopup.title,
+            message: PickerConfig.wordings.cameraPermissionPopup.messageAccess,
+            preferredStyle: .alert)
         alert.addAction(
-            UIAlertAction(title: PickerConfig.wordings.permissionPopup.cancel,
+            UIAlertAction(title: PickerConfig.wordings.cameraPermissionPopup.cancel,
                           style: UIAlertAction.Style.cancel,
                           handler: { _ in
-                            cancelBlock()
+                              cancelBlock()
                           }))
         alert.addAction(
-            UIAlertAction(title: PickerConfig.wordings.permissionPopup.grantPermission,
+            UIAlertAction(title: PickerConfig.wordings.cameraPermissionPopup.grantPermission,
                           style: .default,
                           handler: { _ in
-                            if #available(iOS 10.0, *) {
-                                UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
-                            } else {
-                                UIApplication.shared.openURL(URL(string: UIApplication.openSettingsURLString)!)
-                            }
+                              UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
+                          }))
+        return alert
+    }
+    
+    static func buildGoToSettingsAlertForLibrary(cancelBlock: @escaping () -> Void) -> UIAlertController {
+        let alert = UIAlertController(
+            title: PickerConfig.wordings.libraryPermissionPopup.title,
+            message: PickerConfig.wordings.libraryPermissionPopup.messageAccess,
+            preferredStyle: .alert)
+        alert.addAction(
+            UIAlertAction(title: PickerConfig.wordings.libraryPermissionPopup.cancel,
+                          style: UIAlertAction.Style.cancel,
+                          handler: { _ in
+                              cancelBlock()
+                          }))
+        alert.addAction(
+            UIAlertAction(title: PickerConfig.wordings.libraryPermissionPopup.grantPermission,
+                          style: .default,
+                          handler: { _ in
+                              UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
                           }))
         return alert
     }

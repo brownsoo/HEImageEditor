@@ -161,6 +161,11 @@ extension ViewController: HEImageStickerTrayViewDataSource {
 
 extension ViewController: HEImageEditorDelegate {
     func didFinishEditImages(_ editor: HEImageEditor) {
+        debugPrint("== didFinishEditImages ==")
+        if let picker = editor.navigationController as? HEImagePicker {
+            picker.reload()
+            picker.popToRootViewController(animated: true)
+        }
     }
     
     func confirmingResetEditImage(_ editor: HEImageEditor, hei: HEEditImage, completion: @escaping (Bool) -> Void) {
@@ -204,7 +209,7 @@ extension ViewController: PHPickerViewControllerDelegate {
             
             var newSelection = OrderedDictionary<String, HEEditImage>()
             for result in results {
-                if let identifier = result.assetIdentifier?.replacingOccurrences(of: "/", with: "~") {
+                if let identifier = result.assetIdentifier {
                     if let exist = existing[identifier] {
                         newSelection[identifier] = exist
                     } else {
@@ -248,12 +253,24 @@ extension ViewController: PHPickerViewControllerDelegate {
         }
     }
     
+    
 }
 
+var itemCaptured: HEMediaItem?
+
 extension ViewController: HEImagePickerDelegate {
-    
+
     func imagePicker(_ picker: HEImagePicker, replacingItemWithIdentifer identifier: String) -> HEMediaItem? {
-        nil
+        let imageStore = self.imageStore
+        do {
+            if let hei = imageStore.getHEImage(forId: identifier) {
+                let photo = try hei.toMediaPhoto(imageCache: imageStore)
+                return HEMediaItem.photo(p: photo)
+            }
+        } catch {
+            debugPrint(error)
+        }
+        return nil
     }
     
     func imagePicker(_ picker: HEImagePicker, captionWithIdentifer identifier: String) -> String? {
@@ -270,13 +287,16 @@ extension ViewController: HEImagePickerDelegate {
         }
     }
     
+    func imagePicker(_ picker: HEImagePicker, didCaptureItem item: HEMediaItem) {
+        debugPrint(item)
+    }
+    
     func imagePickerDidCancel(_ picker: HEImagePicker) {
         picker.dismiss(animated: true)
     }
     
     func imagePicker(_ picker: HEImagePicker, didSelectToEditItem item: HEMediaItem, inItems items: [HEMediaItem]) {
-        // TODO: 편집 시작
-        
+        // 편집 시작
         var news = [HEEditImage]()
         let exists = self.imageStore.all()
         items.enumerated().forEach { it in
@@ -291,7 +311,7 @@ extension ViewController: HEImagePickerDelegate {
                                             editState: nil))
                 }
                 break
-            case .video(let video):
+            case .video(_):
                 // TODO: 동영상 처리
                 break
             }
@@ -304,10 +324,9 @@ extension ViewController: HEImagePickerDelegate {
                                             imageCache: imageStore,
                                             stickerDataSource: self)
         
-        vc.modalPresentationStyle = .overFullScreen
         vc.delegate = self
-        // TODO: vc.initialIndex
-        present(vc, animated: true)
+        vc.initialIndex = items.firstIndex(where: { $0.identifier == item.identifier }) ?? 0
+        picker.pushViewController(vc, animated: true)
     }
 }
 
@@ -350,6 +369,7 @@ extension ViewController {
         var config = HEImagePickerConfiguration()
         config.pickerSources = [.libraryPick, .photoCapture, .videoCapture]
         config.shouldSaveNewPicturesToAlbum = true
+        config.targetImageSize = .cappedTo(size: 1500)
         config.library.mediaType = .photoAndVideo
         config.library.defaultMultipleSelection = true
         config.library.maxNumberOfItems = 100

@@ -64,7 +64,7 @@ struct PermissionManager {
        case .limited:
            completion(true)
        case .restricted, .denied:
-           let alert = PermissionDeniedPopup.buildGoToSettingsAlert(cancelBlock: {
+           let alert = PermissionDeniedPopup.buildGoToSettingsAlertForLibrary(cancelBlock: {
                completion(false)
            })
            sourceVC.present(alert, animated: true, completion: nil)
@@ -97,7 +97,7 @@ struct PermissionManager {
        case .authorized:
            completion(true)
        case .restricted, .denied:
-           let alert = PermissionDeniedPopup.buildGoToSettingsAlert(cancelBlock: {
+           let alert = PermissionDeniedPopup.buildGoToSettingsAlertForCamera(cancelBlock: {
                completion(false)
            })
            sourceVC.present(alert, animated: true, completion: nil)

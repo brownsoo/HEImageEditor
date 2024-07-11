@@ -50,3 +50,10 @@ public struct HEPickerIcons {
     // 16x16
     public var videoFillIcon: UIImage? = UIImage(systemName: "video.fill", withConfiguration: UIImage.SymbolConfiguration(pointSize: 16, weight: .regular, scale: .default))
 }
+
+
+extension String {
+    func localized() -> String {
+        return pickerLocalized(self)
+    }
+}

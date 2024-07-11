@@ -11,4 +11,7 @@ public enum HEError: Error {
     case imageNotFound
     case generateFileData
     case heImageHasNoData
+    case encodingJpeg
+    case encodingPng
+    case unknown(underlineError: Error)
 }
