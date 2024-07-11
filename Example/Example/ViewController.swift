@@ -274,7 +274,7 @@ extension ViewController: HEImagePickerDelegate {
     }
     
     func imagePicker(_ picker: HEImagePicker, captionWithIdentifer identifier: String) -> String? {
-        let url = try? imageStore.getCachedEditImageURL(forId: identifier)
+        let url = imageStore.getHEImage(forId: identifier)?.editImageURL
         return url != nil ? "편집 적용" : nil
     }
     
@@ -303,7 +303,7 @@ extension ViewController: HEImagePickerDelegate {
             switch it.element {
             case .photo(let photo):
                 if let exist = exists.first(where: { $0.id == photo.identifier}),
-                   let hei = HEEditImage.toEditImage(hei: exist) {
+                   let hei = HEEditImage.fromHEImage(exist) {
                     news.append(hei)
                 } else {
                     news.append(HEEditImage(id: photo.identifier,

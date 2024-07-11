@@ -31,7 +31,7 @@ public class HEEditImage: HEImage {
 }
 
 public extension HEEditImage {
-    static func toEditImage(hei: HEImage) -> HEEditImage? {
+    static func fromHEImage(_ hei: HEImage) -> HEEditImage? {
         if let e = hei as? HEEditImage {
             return e
         }

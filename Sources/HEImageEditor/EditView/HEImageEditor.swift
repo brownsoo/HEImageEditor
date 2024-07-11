@@ -161,7 +161,6 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
     
     @objc
     private func didClickCancel() {
-        imageStore.clearAll()
         if let nc = self.navigationController, nc.viewControllers.count > 1 {
             nc.popViewController(animated: true)
         } else {

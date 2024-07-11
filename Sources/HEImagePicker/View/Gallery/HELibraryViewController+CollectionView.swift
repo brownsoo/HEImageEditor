@@ -152,10 +152,10 @@ extension HELibraryViewController: UICollectionViewDelegate {
             fatalError("unexpected cell in collection view")
         }
         
-        var identifier: String
+        let identifier: String
+        let phAsset: PHAsset
         var mediaType: PHAssetMediaType
-        var phAsset: PHAsset?
-        var thumbnail: UIImage?
+        
         // Original thumbnail from photo album
         if let asset = assetMediaManager.getAsset(at: indexPath.row) {
             identifier = asset.localIdentifier
@@ -164,56 +164,55 @@ extension HELibraryViewController: UICollectionViewDelegate {
         } else {
             return cell
         }
-        // Replacing thumbnail from external source
-        if let asset = phAsset, let media = delegate?.libraryView(self, replacingItemWithIdentifer: asset.localIdentifier) {
-            switch media {
-            case .photo(let photo):
-                identifier = photo.identifier
-                mediaType = .image
-                phAsset = photo.asset
-                thumbnail = photo.thumbnail
-            case .video(let video):
-                identifier = video.identifier
-                mediaType = .video
-                phAsset = video.asset
-                thumbnail = video.thumbnail
+        
+        Task { [weak self] in
+            guard let self else { return }
+            // Replacing thumbnail from external source
+            let backTask = Task<HEMediaItem?, Never>.detached(priority: .userInitiated) {
+                return await self.delegate?.libraryView(self, replacingItemWithIdentifer: identifier)
             }
-        }
-        
-        // Load Image
-        
-        if let phAsset {
-            assetMediaManager.phImageManager?.requestImage(for: phAsset,
-                                                      targetSize: v.cellSize(),
-                                                      contentMode: .aspectFill,
-                                                      options: nil) { image, _ in
-                // The cell may have been recycled when the time this gets called
-                // set image only if it's still showing the same asset.
-                if cell.representedAssetIdentifier == phAsset.localIdentifier && image != nil {
-                    cell.imageView.image = image
+            
+            var thumbnail: UIImage?
+            if let media = await backTask.value {
+                switch media {
+                case .photo(let photo):
+                    mediaType = .image
+                    thumbnail = photo.thumbnail
+                case .video(let video):
+                    mediaType = .video
+                    thumbnail = video.thumbnail
                 }
             }
-        } else {
-            cell.imageView.image = thumbnail
-        }
-
-        // Info
-        cell.representedAssetIdentifier = identifier
-        cell.multipleSelectionIndicator.selectionColor = PickerConfig.colors.multipleItemsSelectedCircleColor ?? PickerConfig.colors.tintColor
-        
-        
-        let isVideo = (mediaType == .video)
-        if let asset = phAsset {
-            let duration = isVideo ? UIHelper.formattedStrigFrom(asset.duration) : ""
+            
+            // Load Image
+            if let thumbnail {
+                cell.imageView.image = thumbnail
+            } else {
+                assetMediaManager.phImageManager?.requestImage(for: phAsset,
+                                                               targetSize: v.cellSize(),
+                                                               contentMode: .aspectFill,
+                                                               options: nil) { image, _ in
+                    // The cell may have been recycled when the time this gets called
+                    // set image only if it's still showing the same asset.
+                    if cell.representedAssetIdentifier == phAsset.localIdentifier && image != nil {
+                        cell.imageView.image = image
+                    }
+                }
+            }
+            
+            // Info
+            cell.representedAssetIdentifier = identifier
+            cell.multipleSelectionIndicator.selectionColor = PickerConfig.colors.multipleItemsSelectedCircleColor ?? PickerConfig.colors.tintColor
+            
+            
+            let isVideo = (mediaType == .video)
+            let duration = isVideo ? UIHelper.formattedStrigFrom(phAsset.duration) : ""
             cell.durationLabel.text = duration
             cell.durationLabel.isHidden = !isVideo || duration.isEmpty
-        } else {
-            cell.durationLabel.text = nil
-            cell.durationLabel.isHidden = true
+            cell.multipleSelectionIndicator.isHidden = !isMultipleSelectionEnabled
+            cell.isSelected = currentlySelectedIdentifier == identifier
+            
         }
-        cell.multipleSelectionIndicator.isHidden = !isMultipleSelectionEnabled
-        cell.isSelected = currentlySelectedIdentifier == identifier
-        
         // Set correct selection number
         if let index = selectedItems.firstIndex(where: { $0.assetIdentifier == identifier }) {
             let currentSelection = selectedItems[index]

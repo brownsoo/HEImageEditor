@@ -292,8 +292,8 @@ public class HEClipImageViewController: UIViewController, HEClipImageView {
         
         // 상단 툴바
         view.addSubview(topView)
-        topView.cancelClickCallback = self.cancelEdit
-        topView.confirmClickCallback = self.doneEdit
+        topView.cancelClickCallback = { [weak self] in self?.cancelEdit() }
+        topView.confirmClickCallback = { [weak self] in self?.doneEdit() }
         topView.hide(animate: false)
         
         // 툴바

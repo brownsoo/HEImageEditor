@@ -823,7 +823,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             }
             break
         case .imageSticker:
-            self.imageStickerTray?.hide()
+            imageStickerTray?.hide()
             break
         case .textSticker:
             if let vc = self.presentedViewController as? HEInputTextViewController {
@@ -915,6 +915,10 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             guard let self else { return }
             if self.selectedTool == nil {
                 self.setToolView(show: true)
+                imageStickerTray.hideBlock = nil
+                imageStickerTray.selectImageStickerBlock = nil
+                self.editingTopView.confirmClickCallback = nil
+                self.editingTopView.cancelClickCallback = nil
             }
             self.hideAiStickerToast()
             self.editingTopView.hide()
@@ -2101,7 +2105,8 @@ extension HEEditImageViewController: UICollectionViewDataSource, UICollectionVie
 
 extension HEEditImageViewController: HEInputTextViewControllerDelegate {
     func inputTextViewController(_ controller: HEInputTextViewController, stickerId: String?, didInput text: String, textColor: UIColor, fillColor: UIColor, font: UIFont, image: UIImage?) {
-        bottomToolView?.unselectTool()
+        selectedTool = nil
+        
         if stickerId == nil { // new sticker
             self.addTextStickersView(text, textColor: textColor, fillColor: fillColor, font: font, image: image)
             return
@@ -2126,10 +2131,13 @@ extension HEEditImageViewController: HEInputTextViewControllerDelegate {
         textSticker.font = font
         let newSize = HETextStickerView.calculateSize(image: image)
         textSticker.changeSize(to: newSize)
+        
+        
     }
     
     func inputTextViewControllerDidCancel() {
         selectedTool = nil
+        
     }
     
 }
@@ -2160,7 +2168,9 @@ extension HEEditImageViewController: HEStickerViewDelegate {
             self.trashbinView.alpha = 1
         }
         // 스티커 트레이 숨김
-        imageStickerTray?.hide()
+        if imageStickerTray?.superview != nil {
+            imageStickerTray?.hide()            
+        }
         // 숨김
         setToolView(show: false)
         

@@ -14,6 +14,7 @@ open class HETopBarView: UIView {
     private lazy var centerContainer = UIStackView()
     private lazy var trailingContainer = UIStackView()
     private lazy var leadingContainer = UIStackView()
+    private var shouldShow = false
     
     public override init(frame: CGRect) {
         super.init(frame: frame)
@@ -25,12 +26,13 @@ open class HETopBarView: UIView {
     }
     
     public func show(animate: Bool = true) {
+        shouldShow = true
         if animate {
             self.isHidden = false
-            UIView.animate(withDuration: 0.2, delay: 0.1, options: [.curveEaseOut], animations: {
+            UIView.animate(withDuration: 0.2, delay: 0.1, options: [.curveEaseOut, .beginFromCurrentState], animations: {
                 self.alpha = 1
             })
-            UIView.animate(withDuration: 0.2, delay: 0.2, options: [.curveEaseOut], animations: {
+            UIView.animate(withDuration: 0.2, delay: 0.2, options: [.curveEaseOut, .beginFromCurrentState], animations: {
                 self.guideBottom?.constant = 0
             })
         } else {
@@ -41,12 +43,15 @@ open class HETopBarView: UIView {
     }
     
     public func hide(animate: Bool = true) {
+        shouldShow = false
         if animate {
-            UIView.animate(withDuration: 0.2, delay: 0, options: [.curveLinear], animations: {
+            UIView.animate(withDuration: 0.2, delay: 0, options: [.curveLinear, .beginFromCurrentState], animations: {
                 self.guideBottom?.constant = -12
                 self.alpha = 0
             }) { _ in
-                self.isHidden = true
+                if !self.shouldShow {
+                    self.isHidden = true
+                }
             }
         } else {
             self.alpha = 0

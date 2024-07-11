@@ -79,8 +79,8 @@ public class HESimpleEditImageStore: HEEditImageStore {
     
     public init(){}
     
-    let memCache = NSCache<AnyObject, AnyObject>()
-    let thumbCache = NSCache<AnyObject, AnyObject>()
+    let memCache = NSCache<NSString, UIImage>()
+    let thumbCache = NSCache<NSString, UIImage>()
     var images: [HEImage] = []
     
     public func removeHEImage(_ he: HEImage) {
@@ -137,16 +137,6 @@ public class HESimpleEditImageStore: HEEditImageStore {
 
 // MARK: HEImageCache
 extension HESimpleEditImageStore {
-    private func memCacheImage(_ image: UIImage, forUrl url: String) {
-        memCache.setObject(image, forKey: url as AnyObject)
-    }
-    
-    private func getMemCachedImage(forUrl url: String) -> UIImage? {
-        let cached = memCache.object(forKey: url as AnyObject) as? UIImage
-        trace(cached != nil)
-        return cached
-    }
-    
     public func originImage(forHei hei: HEImage) -> Task<UIImage, Error> {
         Task {
             if let originImage = hei.originImage {
@@ -233,7 +223,7 @@ extension HESimpleEditImageStore {
             let fileURL: URL = try await fileURL(fileName: fileName)
             FileManager.default.createFile(atPath: fileURL.path, contents: data)
             
-            await memCacheImage(uiImage, forUrl: fileName)
+            await memCacheImage(uiImage, forUrl: fileURL)
             trace(fileURL)
             return fileURL
         }
@@ -247,7 +237,7 @@ extension HESimpleEditImageStore {
         let fileURL: URL = try fileURL(fileName: fileName)
         FileManager.default.createFile(atPath: fileURL.path, contents: data)
         Task.detached { [weak self] in
-            await self?.memCacheImage(uiImage, forUrl: fileName)
+            await self?.memCacheImage(uiImage, forUrl: fileURL)
         }
         trace(fileURL)
         return fileURL
@@ -262,7 +252,7 @@ extension HESimpleEditImageStore {
             let fileURL: URL = try await fileURL(fileName: fileName)
             FileManager.default.createFile(atPath: fileURL.path, contents: data)
             
-            await memCacheImage(uiImage, forUrl: fileName)
+            await memCacheImage(uiImage, forUrl: fileURL)
             await hei.setEditImageURL(fileURL)
             
             return fileURL
@@ -279,7 +269,7 @@ extension HESimpleEditImageStore {
             let fileURL: URL = try await fileURL(fileName: fileName)
             FileManager.default.createFile(atPath: fileURL.path, contents: data)
             
-            await memCacheImage(uiImage, forUrl: fileName)
+            await memCacheImage(uiImage, forUrl: fileURL)
             await hei.setThumbnailURL(fileURL)
             
             return fileURL
@@ -289,17 +279,16 @@ extension HESimpleEditImageStore {
     public func clearCached(forHei hei: HEImage, includeOrigin: Bool) async {
         if includeOrigin {
             if let originURL = hei.originURL {
-                memCache.removeObject(forKey: originURL.absoluteString as AnyObject)
+                clearMemCachedImage(forUrl: originURL)
             }
         }
         
         if let editImageURL = hei.editImageURL {
-            memCache.removeObject(forKey: editImageURL.absoluteString as AnyObject)
+            clearMemCachedImage(forUrl: editImageURL)
         }
         if let thumbnailURL = hei.thumbnailURL {
-            memCache.removeObject(forKey: thumbnailURL.absoluteString as AnyObject)
+            clearMemCachedImage(forUrl: thumbnailURL)
         }
-        
         
         hei.setEditImageURL(nil)
         hei.setThumbnailURL(nil)
@@ -327,6 +316,20 @@ extension HESimpleEditImageStore {
 
 extension HESimpleEditImageStore {
     
+    func memCacheImage(_ image: UIImage, forUrl url: URL) {
+        memCache.setObject(image, forKey: NSString(string: url.absoluteString))
+    }
+    
+    func getMemCachedImage(forUrl url: URL) -> UIImage? {
+        let cached = memCache.object(forKey: NSString(string: url.absoluteString))
+        trace(cached != nil)
+        return cached
+    }
+    
+    func clearMemCachedImage(forUrl url: URL) {
+        memCache.removeObject(forKey: NSString(string: url.absoluteString))
+    }
+    
     func fileURL(fileName: String) throws -> URL {
         let dir = directoryURL()
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
@@ -347,7 +350,7 @@ extension HESimpleEditImageStore {
     
     func getImage(forURL url: URL) -> Task<UIImage, Error> {
         Task.detached { [weak self] in
-            if let cached = await self?.getMemCachedImage(forUrl: url.absoluteString) {
+            if let cached = await self?.getMemCachedImage(forUrl: url) {
                 return cached
             }
             
@@ -362,7 +365,7 @@ extension HESimpleEditImageStore {
             let (data, response) = try await URLSession.shared.data(from: url)
             trace(response)
             if let image = UIImage(data: data) {
-                await self?.memCacheImage(image, forUrl: url.absoluteString)
+                await self?.memCacheImage(image, forUrl: url)
                 return image
             }
             
@@ -371,7 +374,7 @@ extension HESimpleEditImageStore {
     }
     
     func getImageSync(forURL url: URL) throws -> UIImage? {
-        if let cached = getMemCachedImage(forUrl: url.absoluteString) {
+        if let cached = getMemCachedImage(forUrl: url) {
             return cached
         }
         if url.isFileURL {

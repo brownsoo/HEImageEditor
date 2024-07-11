@@ -28,6 +28,7 @@ final public class HEAssetZoomableView: UIScrollView {
     
     public fileprivate(set) var currentAssetIdentifier: String?
     public fileprivate(set) var currentAssetType: PHAssetMediaType?
+    private var currentEditImageURL: URL?
     
     // Image view of the asset for convenience. Can be video preview image view or photo image view.
     public var assetImageView: UIImageView {
@@ -150,12 +151,13 @@ final public class HEAssetZoomableView: UIScrollView {
                            storedCropPosition: HELibrarySelection?,
                            completion: @escaping (Bool) -> Void,
                            updateCropInfo: @escaping () -> Void) {
-        guard currentAssetIdentifier != hei.id else {
+        guard (currentAssetIdentifier != hei.id || hei.editImageURL != currentEditImageURL) else {
             DispatchQueue.main.async { completion(false) }
             return
         }
         currentAssetIdentifier = hei.id
         currentAssetType = .image
+        currentEditImageURL = hei.editImageURL
         trace(hei)
         Task { [weak self] in
             guard let self = self else { return }

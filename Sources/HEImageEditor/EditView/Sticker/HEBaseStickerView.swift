@@ -265,7 +265,7 @@ public class HEBaseStickerView: UIView, UIGestureRecognizerDelegate {
             setOperation(true)
         } else if ges.state == .changed {
             updateTransform()
-        } else if ges.state == .ended || ges.state == .cancelled {
+        } else if ges.state == .ended || ges.state == .cancelled || self.onOperation {
             totalTranslationPoint.x += point.x
             totalTranslationPoint.y += point.y
             setOperation(false)

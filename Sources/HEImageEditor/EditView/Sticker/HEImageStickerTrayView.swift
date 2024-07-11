@@ -99,29 +99,36 @@ public class HEImageStickerTrayView: UIView, HEImageStickerTray {
         
     }
     
+    private var shouldShow = false
+    
     public func show(in parent: UIView, frame: CGRect) {
+        shouldShow = true
         if self.superview !== parent {
             self.removeFromSuperview()
             parent.addSubview(self)
             self.frame = frame
             parent.layoutIfNeeded()
         }
-        
+        trace()
         self.isHidden = false
-        UIView.animate(withDuration: 0.24) {
+        UIView.animate(withDuration: 0.24, delay: 0, options: [.beginFromCurrentState]) {
             self.trayBottomConstraint.constant = 0
-            parent.layoutIfNeeded()
+            self.layoutIfNeeded()
         }
     }
     
     public func hide(instantly: Bool) {
-        
-        UIView.animate(withDuration: 0.24) {
+        trace()
+        shouldShow = false
+        UIView.animate(withDuration: 0.24, delay: 0, options: [.beginFromCurrentState]) {
             self.trayBottomConstraint.constant = Self.baseViewH
             self.superview?.layoutIfNeeded()
-        } completion: { (_) in
-            self.hideBlock?(instantly)
-            self.isHidden = true
+        } completion: { completed in
+            trace(completed)
+            if completed && !self.shouldShow {
+                self.hideBlock?(instantly)
+                self.isHidden = true
+            }
         }
 
     }
