@@ -1,0 +1,23 @@
+"custom ratio" = "Custom";
+"original" = "Original";
+"rotate" = "Rotate";
+"cancel" = "Cancel";
+"done" = "Done";
+"confirm" = "Confirm";
+"editFinish" = "Done";
+"revert" = "Undo";
+"brightness" = "Brightness";
+"contrast" = "Contrast";
+"saturation" = "Saturation";
+"hudProcessing" = "Processing";
+"effect-draw"="Draw";
+"effect-clip"="Clip";
+"effect-imageSticker"="Sticker";
+"effect-textSticker"="Text";
+"effect-mosaicDraw"="Mosaic";
+"effect-filter"="Filter";
+"effect-adjust"="Adjust";
+
+"camera"="Camera";
+"album"="Album";
+"close"= "Close";

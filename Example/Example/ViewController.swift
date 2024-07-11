@@ -3,45 +3,510 @@
 //  Example
 //
 //  Created by long on 2020/11/23.
-//
+//  Changed by brownsoo on 2024/summer
 
 import UIKit
+import SnapKit
+import HECommon
 import HEImageEditor
+import HEImagePicker
+import PhotosUI
+import OrderedCollections
 
 class ViewController: UIViewController {
     var editImageToolView: UIView!
-    
     var editImageDrawToolSwitch: UISwitch!
-    
     var editImageClipToolSwitch: UISwitch!
-    
     var editImageImageStickerToolSwitch: UISwitch!
-    
     var editImageTextStickerToolSwitch: UISwitch!
-    
     var editImageMosaicToolSwitch: UISwitch!
-    
     var editImageFilterToolSwitch: UISwitch!
-    
     var editImageAdjustToolSwitch: UISwitch!
-    
-    var pickImageBtn: UIButton!
-    
     var resultImageView: UIImageView!
-    
     var originalImage: UIImage?
+    var resultImageEditState: HEEditState?
+    let config = HEConfiguration.default()
     
-    var resultImageEditModel: HEEditImageModel?
+    private var editCancelBtn: UIButton = {
+        let btn = UIButton(type: .custom)
+        let icon = UIImage(systemName: "chevron.backward")?.withTintColor(.white)
+        btn.setImage(icon, for: .normal)
+        btn.setImage(icon?.withTintColor(.lightGray), for: .disabled)
+        btn.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
+        return btn
+    }()
     
-    let config = HEImageEditorConfiguration.default()
+    private var editDoneBtn: HEEnlargeButton = {
+        let btn = HEEnlargeButton(type: .custom)
+        btn.setTitleColor(.white, for: .normal)
+        btn.setTitle("완료", for: .normal)
+        btn.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
+        return btn
+    }()
+    
+    private var editUndoBtn: HEEnlargeButton = {
+        let btn = HEEnlargeButton(type: .custom)
+        btn.setImage(UIImage(systemName: "arrow.uturn.backward.circle"), for: .normal)
+        btn.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
+        return btn
+    }()
+    
+    private var editRedoBtn: HEEnlargeButton = {
+        let btn = HEEnlargeButton(type: .custom)
+        btn.setImage(UIImage(systemName: "arrow.uturn.forward.circle"), for: .normal)
+        btn.adjustsImageWhenHighlighted = false
+        btn.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
+        return btn
+    }()
+    
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         setupUI()
         configImageEditor()
+        
+        PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
+            switch status {
+                
+            case .limited:
+                print("limited authorization granted")
+                
+            case .authorized:
+                print("authorization granted")
+                
+            default:
+                print("Unimplemented")
+                
+            }
+        }
     }
     
+    
+    var imageStickers: [HEImageSticker] = []
+    
+    lazy var imageStore = HESimpleEditImageStore()
+    
+    
+    func configImageEditor() {
+        
+        let stickerTray = HEImageStickerTrayView()
+        stickerTray.dataSource = self
+        
+        imageStickers.append(HEImageSticker.faceAiIcon)
+        imageStickers.append(HEImageSticker.mosaicIcon)
+        imageStickers.append(contentsOf: (1...18).map { (v) -> String in
+            "imageSticker" + String(v)
+        }.compactMap { name in
+            HEImageSticker(id: name) {
+                UIImage(named: name) ?? UIImage()
+            }
+        })
+        
+        HEConfiguration.default()
+            .clipRatios([.origin, .custom, .wh1x1])
+            .imageStickerTray(stickerTray)
+    }
+    
+    
+    func startEditSingleImage(_ image: UIImage, editState: HEEditState?) {
+        HEEditImageViewController.showImageEditor(
+            parent: self,
+            image: image,
+            editState: editState,
+            delegate: self,
+            topToolViewBuilder: makeTopToolBuilder(),
+            clipImageBottomViewBuilder: { clipView in
+                let bottom = HEClipBottomView()
+                bottom.cancelClickListener = { [weak clipView] in clipView?.cancelEdit() }
+                bottom.doneClickListener = { [weak clipView] in clipView?.doneEdit() }
+                bottom.revertClickListener = { [weak clipView] in clipView?.revertEdit() }
+                return (bottom, HEClipBottomView.estimateHeight)
+            }
+        )
+    }
+   
+    
+    func startEditMultipleImages(_ images: [HEEditImage]) {
+        imageStore.clearAll()
+        imageStore.addHEImages(images)
+        let vc = HEImageEditorViewController(imageStore: imageStore,
+                                            imageCache: imageStore,
+                                            stickerDataSource: self)
+        
+        vc.modalPresentationStyle = .overFullScreen
+        vc.delegate = self
+        present(vc, animated: true)
+    }
+}
+
+extension ViewController: HEImageStickerTrayViewDataSource {
+    
+    func hasMosaicSticker(_ trayView: HEImageStickerTrayView) -> Bool {
+        true
+    }
+    
+    func imageStickerTrayView(_ trayView: HEImageStickerTrayView, numberOfItemsInSection section: Int) -> Int {
+        imageStickers.count
+    }
+    
+    func imageStickerTrayView(_ trayView: HEImageStickerTrayView, stickerForItemAt indexPath: IndexPath) -> HEImageSticker {
+        imageStickers[indexPath.row]
+    }
+    
+    func allStickers(_ trayView: HEImageStickerTrayView, numberOfItemsInSection section: Int) -> [HEImageSticker] {
+        return imageStickers
+    }
+}
+
+extension ViewController: HEImageEditorDelegate {
+    func didFinishEditImages(_ editor: HEImageEditor) {
+        debugPrint("== didFinishEditImages ==")
+        if let picker = editor.navigationController as? HEImagePicker {
+            picker.reload()
+            picker.popToRootViewController(animated: true)
+        }
+    }
+    
+    func confirmingResetEditImage(_ editor: HEImageEditor, hei: HEEditImage, completion: @escaping (Bool) -> Void) {
+        let alert = UIAlertController(title: nil, message: "현재 보이는 이미지를 원본으로 초기화 합니다.\n진행 하시겠습니까?", preferredStyle: .alert)
+        DispatchQueue.main.async {
+            let okayAction = UIAlertAction(title: "확인", style: .default, handler: { _ in completion(true) })
+            alert.addAction(okayAction)
+            alert.addAction(.init(title: "취소", style: .cancel, handler: { _ in completion(false) }))
+            
+            editor.present(alert, animated: true, completion: nil)
+        }
+    }
+}
+
+extension ViewController: HEEditImageViewDelegate {
+    func didFinishEditImage(_ editView: HEEditImageView, resultImage: UIImage, editId: String?, editModel: HEEditState?) {
+        self.resultImageView.image = resultImage
+        self.resultImageEditState = editModel
+    }
+}
+
+extension ViewController: HEEditorActionListener {
+    func didUpdatedActions(_ actions: [HEEditAction], redoActions: [HEEditAction]) {
+        editUndoBtn.isEnabled = !actions.isEmpty
+        editRedoBtn.isEnabled = actions.count != redoActions.count
+    }
+}
+
+
+extension ViewController: PHPickerViewControllerDelegate {
+    func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+        print(results)
+        
+        picker.dismiss(animated: true)
+        
+        
+        Task {
+            let existing: OrderedDictionary<String, HEEditImage> = imageStore.all().reduce(into: OrderedDictionary<String, HEImage>()) {
+                $0[$1.id] = $1
+            }.compactMapValues({ $0 as? HEEditImage })
+            
+            var newSelection = OrderedDictionary<String, HEEditImage>()
+            for result in results {
+                if let identifier = result.assetIdentifier {
+                    if let exist = existing[identifier] {
+                        newSelection[identifier] = exist
+                    } else {
+                        if let image = await loadImageObject(result: result) {
+                            print("image= \(image.size.width) x \(image.size.height)")
+                            if let fileUrl = try? await imageStore.cacheOriginImage(uiImage: image, forId: identifier).value {
+                                newSelection[identifier] = HEEditImage(
+                                    id: identifier,
+                                    origin: fileUrl,
+                                    editState: nil
+                                )
+                            } else {
+                                newSelection[identifier] = HEEditImage(
+                                    id: identifier,
+                                    image: image,
+                                    editState: nil
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if newSelection.isEmpty { return }
+            let images = newSelection.values.map({ $0 })
+            startEditMultipleImages(images)
+        }
+        
+    }
+    
+    private func loadImageObject(result: PHPickerResult) async -> UIImage? {
+        let itemProvider = result.itemProvider
+        return await withCheckedContinuation { continuation in
+            if itemProvider.canLoadObject(ofClass: UIImage.self) {
+                itemProvider.loadObject(ofClass: UIImage.self) { image, error in
+                    continuation.resume(with: .success(image as? UIImage))
+                }
+            } else {
+                continuation.resume(with: .success(nil))
+            }
+        }
+    }
+    
+    
+}
+
+var itemCaptured: HEMediaItem?
+
+extension ViewController: HEImagePickerDelegate {
+
+    func imagePicker(_ picker: HEImagePicker, replacingItemWithIdentifer identifier: String) -> HEMediaItem? {
+        let imageStore = self.imageStore
+        do {
+            if let hei = imageStore.getHEImage(forId: identifier) {
+                let photo = try hei.toMediaPhoto(imageCache: imageStore)
+                return HEMediaItem.photo(p: photo)
+            }
+        } catch {
+            debugPrint(error)
+        }
+        return nil
+    }
+    
+    func imagePicker(_ picker: HEImagePicker, captionWithIdentifer identifier: String) -> String? {
+        let url = imageStore.getHEImage(forId: identifier)?.editImageURL
+        return url != nil ? "편집 적용" : nil
+    }
+    
+    func imagePicker(_ picker: HEImagePicker, didSelectItems items: [HEMediaItem]) {
+        print(items)
+        picker.dismiss(animated: true) {
+            let vc = UIAlertController(title: nil, message: "\(items.count)개가 선택됨.", preferredStyle: .alert)
+            vc.addAction(.init(title: "confirm", style: .default, handler: nil))
+            self.present(vc, animated: true)
+        }
+    }
+    
+    func imagePicker(_ picker: HEImagePicker, didCaptureItem item: HEMediaItem) {
+        debugPrint(item)
+    }
+    
+    func imagePickerDidCancel(_ picker: HEImagePicker) {
+        picker.dismiss(animated: true)
+    }
+    
+    func imagePicker(_ picker: HEImagePicker, didSelectToEditItem item: HEMediaItem, inItems items: [HEMediaItem]) {
+        // 편집 시작
+        var news = [HEEditImage]()
+        let exists = self.imageStore.all()
+        items.enumerated().forEach { it in
+            switch it.element {
+            case .photo(let photo):
+                if let exist = exists.first(where: { $0.id == photo.identifier}),
+                   let hei = HEEditImage.fromHEImage(exist) {
+                    news.append(hei)
+                } else {
+                    news.append(HEEditImage(id: photo.identifier,
+                                            origin: photo.url,
+                                            editState: nil))
+                }
+                break
+            case .video(_):
+                // TODO: 동영상 처리
+                break
+            }
+        }
+        
+        imageStore.clearAll()
+        imageStore.addHEImages(news)
+        
+        let vc = HEImageEditorViewController(imageStore: imageStore,
+                                            imageCache: imageStore,
+                                            stickerDataSource: self)
+        
+        vc.delegate = self
+        vc.initialIndex = items.firstIndex(where: { $0.identifier == item.identifier }) ?? 0
+        picker.pushViewController(vc, animated: true)
+    }
+}
+
+
+extension ViewController {
+    
+    // MARK: Start HEImageEditor with picking a image
+    
+    @objc func pickImage() {
+        let picker = UIImagePickerController()
+        picker.delegate = self
+        picker.sourceType = .photoLibrary
+        picker.mediaTypes = ["public.image"]
+        showDetailViewController(picker, sender: nil)
+    }
+    
+    // MARK: Start HEImageEditor with picking multiple images
+    
+    @objc func pickMutipleImages() {
+        var configuration = PHPickerConfiguration(photoLibrary: .shared())
+        configuration.filter = PHPickerFilter.any(of: [.images, .livePhotos])
+        configuration.selectionLimit = 100
+        configuration.preferredAssetRepresentationMode = .current
+        if #available(iOS 17.0, *) {
+            configuration.mode = .default
+        }
+        if #available(iOS 15.0, *) {
+            configuration.selection = .ordered
+        }
+        let picker = PHPickerViewController(configuration: configuration)
+        picker.delegate = self
+        
+        showDetailViewController(picker, sender: nil)
+    }
+    
+    // MARK: Start HEImagePicker with HEImageEditor
+    
+    @objc func pickWithHEPicker() {
+        
+        var config = HEImagePickerConfiguration()
+        config.pickerSources = [.libraryPick, .photoCapture, .videoCapture]
+        config.shouldSaveNewPicturesToAlbum = true
+        config.targetImageSize = .cappedTo(size: 1500)
+        config.library.mediaType = .photoAndVideo
+        config.library.defaultMultipleSelection = true
+        config.library.maxNumberOfItems = 100
+        
+        let picker = HEImagePicker(configuration: config)
+        picker.pickerDelegate = self
+        picker.editImageStore = self.imageStore
+        showDetailViewController(picker, sender: nil)
+    }
+    
+    @objc func drawToolChanged() {
+        if config.tools.contains(.draw) {
+            config.tools.removeAll { $0 == .draw }
+        } else {
+            config.tools.append(.draw)
+        }
+    }
+    
+    @objc func clipToolChanged() {
+        if config.tools.contains(.clip) {
+            config.tools.removeAll { $0 == .clip }
+        } else {
+            config.tools.append(.clip)
+        }
+    }
+    
+    @objc func imageStickerToolChanged() {
+        if config.tools.contains(.imageSticker) {
+            config.tools.removeAll { $0 == .imageSticker }
+        } else {
+            config.tools.append(.imageSticker)
+        }
+    }
+    
+    @objc func textStickerToolChanged() {
+        if config.tools.contains(.textSticker) {
+            config.tools.removeAll { $0 == .textSticker }
+        } else {
+            config.tools.append(.textSticker)
+        }
+    }
+    
+    @objc func mosaicToolChanged() {
+        if config.tools.contains(.mosaicDraw) {
+            config.tools.removeAll { $0 == .mosaicDraw }
+        } else {
+            config.tools.append(.mosaicDraw)
+        }
+    }
+    
+    @objc func filterToolChanged() {
+        if config.tools.contains(.filter) {
+            config.tools.removeAll { $0 == .filter }
+        } else {
+            config.tools.append(.filter)
+        }
+    }
+    
+    @objc func adjustToolChanged() {
+        if config.tools.contains(.adjust) {
+            config.tools.removeAll { $0 == .adjust }
+        } else {
+            config.tools.append(.adjust)
+        }
+    }
+    
+    @objc func continueEditImage() {
+        guard let oi = originalImage else {
+            return
+        }
+        
+        startEditSingleImage(oi, editState: resultImageEditState)
+    }
+    
+    // ex
+    private func makeTopToolBuilder() -> HEEditImageTopToolViewBuilder {
+        return { [weak self] editView in
+            let toolView = HETopBarView()
+            if let self {
+                toolView.addLeadingView(editCancelBtn)
+                toolView.addTrailingView(editUndoBtn)
+                toolView.addTrailingView(editRedoBtn)
+                toolView.addTrailingView(editDoneBtn)
+                
+                editCancelBtn.addAction(.init(handler: { _ in
+                    editView.cancel()
+                }), for: .touchUpInside)
+                
+                editUndoBtn.addAction(.init(handler: { _ in
+                    editView.undo()
+                }), for: .touchUpInside)
+                
+                editRedoBtn.addAction(.init(handler: { _ in
+                    editView.redo()
+                }), for: .touchUpInside)
+                
+                editDoneBtn.addAction(.init(handler: { _ in
+                    editView.done()
+                }), for: .touchUpInside)
+                
+                editView.addActionChangedListener(self)
+            }
+            return (toolView, 44)
+        }
+    }
+    
+    // ex
+    private func makeDefaultClipImageBottomToolBuilder() -> HEClipImageBottomViewBuilder {
+        return { (clipView: HEClipImageView) in
+            let toolView = HEClipBottomView()
+            toolView.cancelClickListener = { clipView.cancelEdit() }
+            toolView.doneClickListener = { clipView.doneEdit() }
+            toolView.revertClickListener = { clipView.revertEdit() }
+            return (toolView, HEClipBottomView.estimateHeight)
+        }
+    }
+}
+
+extension ViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        picker.dismiss(animated: true, completion: nil)
+    }
+    
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+        picker.dismiss(animated: true) {
+            guard var image = info[.originalImage] as? UIImage else { return }
+            let w = min(1500, image.he.width)
+            let h = w * image.he.height / image.he.width
+            image = image.he.resize(CGSize(width: w, height: h)) ?? image
+            self.originalImage = image
+            self.startEditSingleImage(image, editState: nil)
+        }
+    }
+}
+
+
+extension ViewController {
     func setupUI() {
         title = "Main"
         view.backgroundColor = .white
@@ -128,7 +593,7 @@ class ViewController: UIViewController {
             make.centerY.equalTo(textStickerToolLabel)
         }
         
-        let mosaicToolLabel = createLabel("Mosaic")
+        let mosaicToolLabel = createLabel("Mosaic Draw")
         editImageToolView.addSubview(mosaicToolLabel)
         mosaicToolLabel.snp.makeConstraints { make in
             make.top.equalTo(imageStickerToolLabel.snp.bottom).offset(spacing)
@@ -136,7 +601,7 @@ class ViewController: UIViewController {
         }
         
         editImageMosaicToolSwitch = UISwitch()
-        editImageMosaicToolSwitch.isOn = config.tools.contains(.mosaic)
+        editImageMosaicToolSwitch.isOn = config.tools.contains(.mosaicDraw)
         editImageMosaicToolSwitch.addTarget(self, action: #selector(mosaicToolChanged), for: .valueChanged)
         editImageToolView.addSubview(editImageMosaicToolSwitch)
         editImageMosaicToolSwitch.snp.makeConstraints { make in
@@ -177,12 +642,9 @@ class ViewController: UIViewController {
             make.bottom.equalTo(self.editImageToolView)
         }
         
-        pickImageBtn = UIButton(type: .custom)
-        pickImageBtn.backgroundColor = .black
-        pickImageBtn.layer.cornerRadius = 5
-        pickImageBtn.layer.masksToBounds = true
+        let pickImageBtn = UIButton(type: .system)
         pickImageBtn.titleLabel?.font = UIFont.systemFont(ofSize: 14)
-        pickImageBtn.setTitle("Pick an image", for: .normal)
+        pickImageBtn.setTitle("UIImagePicker", for: .normal)
         pickImageBtn.addTarget(self, action: #selector(pickImage), for: .touchUpInside)
         view.addSubview(pickImageBtn)
         pickImageBtn.snp.makeConstraints { make in
@@ -190,12 +652,31 @@ class ViewController: UIViewController {
             make.left.equalTo(self.editImageToolView)
         }
         
+        let pickMultipleBt = UIButton(type: .system)
+        pickMultipleBt.setTitle("PHPicker", for: .normal)
+        pickMultipleBt.addTarget(self, action: #selector(pickMutipleImages), for: .touchUpInside)
+        view.addSubview(pickMultipleBt)
+        pickMultipleBt.snp.makeConstraints { make in
+            make.top.equalTo(pickImageBtn)
+            make.left.equalTo(pickImageBtn.snp.right).offset(20)
+        }
+        
+        let hePickerBt = UIButton(type: .system)
+        hePickerBt.setTitle("HEPicker", for: .normal)
+        hePickerBt.addTarget(self, action: #selector(pickWithHEPicker), for: .touchUpInside)
+        view.addSubview(hePickerBt)
+        hePickerBt.snp.makeConstraints { make in
+            make.top.equalTo(pickMultipleBt)
+            make.left.equalTo(pickMultipleBt.snp.right).offset(20)
+        }
+        
         resultImageView = UIImageView()
         resultImageView.contentMode = .scaleAspectFit
         resultImageView.clipsToBounds = true
+        resultImageView.backgroundColor = .systemGray
         view.addSubview(resultImageView)
         resultImageView.snp.makeConstraints { make in
-            make.top.equalTo(self.pickImageBtn.snp.bottom).offset(spacing)
+            make.top.equalTo(pickImageBtn.snp.bottom).offset(spacing)
             make.left.right.equalTo(self.view)
             make.bottom.equalTo(self.view.snp.bottomMargin)
         }
@@ -208,106 +689,4 @@ class ViewController: UIViewController {
         }
     }
     
-    func configImageEditor() {
-        HEImageEditorConfiguration.default()
-            // Provide a image sticker container view
-            .imageStickerContainerView(ImageStickerContainerView())
-            .fontChooserContainerView(FontChooserContainerView())
-    }
-    
-    @objc func pickImage() {
-        let picker = UIImagePickerController()
-        picker.delegate = self
-        picker.sourceType = .photoLibrary
-        picker.mediaTypes = ["public.image"]
-        showDetailViewController(picker, sender: nil)
-    }
-    
-    @objc func drawToolChanged() {
-        if config.tools.contains(.draw) {
-            config.tools.removeAll { $0 == .draw }
-        } else {
-            config.tools.append(.draw)
-        }
-    }
-    
-    @objc func clipToolChanged() {
-        if config.tools.contains(.clip) {
-            config.tools.removeAll { $0 == .clip }
-        } else {
-            config.tools.append(.clip)
-        }
-    }
-    
-    @objc func imageStickerToolChanged() {
-        if config.tools.contains(.imageSticker) {
-            config.tools.removeAll { $0 == .imageSticker }
-        } else {
-            config.tools.append(.imageSticker)
-        }
-    }
-    
-    @objc func textStickerToolChanged() {
-        if config.tools.contains(.textSticker) {
-            config.tools.removeAll { $0 == .textSticker }
-        } else {
-            config.tools.append(.textSticker)
-        }
-    }
-    
-    @objc func mosaicToolChanged() {
-        if config.tools.contains(.mosaic) {
-            config.tools.removeAll { $0 == .mosaic }
-        } else {
-            config.tools.append(.mosaic)
-        }
-    }
-    
-    @objc func filterToolChanged() {
-        if config.tools.contains(.filter) {
-            config.tools.removeAll { $0 == .filter }
-        } else {
-            config.tools.append(.filter)
-        }
-    }
-    
-    @objc func adjustToolChanged() {
-        if config.tools.contains(.adjust) {
-            config.tools.removeAll { $0 == .adjust }
-        } else {
-            config.tools.append(.adjust)
-        }
-    }
-    
-    @objc func continueEditImage() {
-        guard let oi = originalImage else {
-            return
-        }
-        
-        editImage(oi, editModel: resultImageEditModel)
-    }
-    
-    func editImage(_ image: UIImage, editModel: HEEditImageModel?) {
-        HEEditImageViewController.showEditImageVC(parentVC: self, image: image, editModel: editModel) { [weak self] resImage, editModel in
-            self?.resultImageView.image = resImage
-            self?.resultImageEditModel = editModel
-        }
-    }
-}
-
-extension ViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-        picker.dismiss(animated: true, completion: nil)
-    }
-    
-    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
-        picker.dismiss(animated: true) {
-            guard var image = info[.originalImage] as? UIImage else { return }
-            let w = min(1500, image.he.width)
-            let h = w * image.he.height / image.he.width
-            image = image.he.resize(CGSize(width: w, height: h)) ?? image
-            self.originalImage = image
-            self.editImage(image, editModel: nil)
-        }
-    }
 }

@@ -6,43 +6,116 @@
 //
 
 import UIKit
+import HECommon
 
-extension UIApplication {
-    @available(iOS 13.0, *)
-    func findWindowScenes() -> [UIWindowScene] {
-        return Self.shared.connectedScenes
-            .sorted {
-                $0.activationState.sortPriority < $1.activationState.sortPriority
-            }
-            .compactMap({ $0 as? UIWindowScene })
+func deviceIsiPhone() -> Bool {
+    return UIDevice.current.userInterfaceIdiom == .phone
+}
+
+func deviceIsiPad() -> Bool {
+    return UIDevice.current.userInterfaceIdiom == .pad
+}
+
+func deviceSafeAreaInsets() -> UIEdgeInsets {
+    var insets: UIEdgeInsets = .zero
+    insets = UIApplication.shared.he.findKeyWindow()?.safeAreaInsets ?? .zero
+    return insets
+}
+
+extension HEWrapper where Base: UIColor {
+    static var adjustSliderNormalColor: UIColor {
+        HEUIConfiguration.default().adjustSliderNormalColor
     }
     
-    func findKeyWindow() -> UIWindow? {
-        let scenes = findWindowScenes()
-        if #available(iOS 15, *) {
-            return scenes.first(where: { $0.keyWindow != nil })?.keyWindow ?? scenes.first?.keyWindow
-        } else {
-            return scenes.compactMap {
-                $0.windows.first { $0.isKeyWindow }
-            }
-            .first
-        }
+    static var adjustSliderTintColor: UIColor {
+        HEUIConfiguration.default().adjustSliderTintColor
     }
     
-    func findKeyRootViewController() -> UIViewController? {
-        return findKeyWindow()?.rootViewController
+    static var editDoneBtnBgColor: UIColor {
+        HEUIConfiguration.default().editDoneBtnBgColor
+    }
+    
+    static var editDoneBtnTitleColor: UIColor {
+        HEUIConfiguration.default().editDoneBtnTitleColor
+    }
+    
+    static var trashbinNormalBgColor: UIColor {
+        HEUIConfiguration.default().ashbinNormalBgColor
+    }
+    
+    static var trashbinTintBgColor: UIColor {
+        HEUIConfiguration.default().ashbinTintBgColor
+    }
+    
+    static var toolTitleNormalColor: UIColor {
+        HEUIConfiguration.default().toolTitleNormalColor
+    }
+    
+    static var toolTitleTintColor: UIColor {
+        HEUIConfiguration.default().toolTitleTintColor
+    }
+
+    static var toolIconHighlightedColor: UIColor? {
+        HEUIConfiguration.default().toolIconHighlightedColor
     }
 }
 
-@available(iOS 13.0, *)
-private extension UIScene.ActivationState {
-    var sortPriority: Int {
-        switch self {
-        case .foregroundActive: return 1
-        case .foregroundInactive: return 2
-        case .background: return 3
-        case .unattached: return 4
-        @unknown default: return 5
+
+extension HEWrapper where Base: UIImage {
+    /// 사진 밝기, 대비, 채도 조정
+    /// - Parameters:
+    ///   - brightness: value in [-1, 1]
+    ///   - contrast: value in [-1, 1]
+    ///   - saturation: value in [-1, 1]
+    func adjust(brightness: Float, contrast: Float, saturation: Float) -> UIImage? {
+        guard let ciImage = toCIImage() else {
+            return base
         }
+        
+        let filter = CIFilter(name: "CIColorControls")
+        filter?.setValue(ciImage, forKey: kCIInputImageKey)
+        filter?.setValue(HEConfiguration.AdjustTool.brightness.filterValue(brightness), forKey: HEConfiguration.AdjustTool.brightness.key)
+        filter?.setValue(HEConfiguration.AdjustTool.contrast.filterValue(contrast), forKey: HEConfiguration.AdjustTool.contrast.key)
+        filter?.setValue(HEConfiguration.AdjustTool.saturation.filterValue(saturation), forKey: HEConfiguration.AdjustTool.saturation.key)
+        let outputCIImage = filter?.outputImage
+        return outputCIImage?.he.toUIImage()
+    }
+    
+    static func getImage(_ named: String) -> UIImage? {
+        return UIImage(named: named, in: Bundle.HEImageEditorBundle, compatibleWith: nil)
+    }
+}
+
+extension UIViewController {
+    @discardableResult
+    func showAlert(_ text: String, confirmAction: ((UIAlertAction) -> Void)? = nil) -> UIAlertController {
+        return self.showAlert(title: nil, text: text, confirmAction: confirmAction)
+    }
+    
+    @discardableResult
+    func showAlert(title: String? = nil, text: String, confirmAction: ((UIAlertAction) -> Void)? = nil) -> UIAlertController {
+        let alert = UIAlertController(title: title, message: text, preferredStyle: .alert)
+        DispatchQueue.main.async {
+            let okayAction = UIAlertAction(title: Bundle.heLocalizedString("confirm"), style: .default, handler: confirmAction)
+            alert.addAction(okayAction)
+            self.present(alert, animated: true, completion: nil)
+        }
+        return alert
+    }
+}
+
+extension UIEdgeInsets {
+    var width: CGFloat {
+        self.left + self.right
+    }
+    var height: CGFloat {
+        self.top + self.bottom
+    }
+}
+
+extension NSLayoutConstraint {
+    func withPriority(_ priority: UILayoutPriority) -> Self {
+        self.priority = priority
+        return self
     }
 }
