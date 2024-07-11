@@ -263,19 +263,17 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
             let topbar = HETopBarView()
             let cancelButton = UIButton()
             cancelButton.also { it in
-                let icon = UIImage.he.getImage("icArrowRight") ?? UIImage(systemName: "chevron.left")
+                let icon = UIImage.he.getImage("icArrowRight") ?? UIImage(systemName: "chevron.left", withConfiguration: UIImage.SymbolConfiguration(pointSize: 24, weight: .regular, scale: .default))
                 it.setImage(icon, for: .normal)
                 it.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
-                it.drawDebugOutline()
             }
             topbar.addLeadingView(cancelButton)
             
             let confirmButton = UIButton()
             confirmButton.also { it in
-                let icon = UIImage.he.getImage("icCheck") ?? UIImage(systemName: "checkmark")
+                let icon = UIImage.he.getImage("icCheck") ?? UIImage(systemName: "checkmark", withConfiguration: UIImage.SymbolConfiguration(pointSize: 24, weight: .regular, scale: .default))
                 it.setImage(icon, for: .normal)
                 it.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
-                it.drawDebugOutline()
             }
             topbar.addTrailingView(confirmButton)
             
@@ -362,7 +360,7 @@ extension HEImageEditorViewController {
     
     private func setupUI() {
         
-        view.backgroundColor = .blue
+        view.backgroundColor = .black
         
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
