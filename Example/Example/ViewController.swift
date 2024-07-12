@@ -252,11 +252,7 @@ extension ViewController: PHPickerViewControllerDelegate {
             }
         }
     }
-    
-    
 }
-
-var itemCaptured: HEMediaItem?
 
 extension ViewController: HEImagePickerDelegate {
 
