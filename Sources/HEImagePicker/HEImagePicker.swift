@@ -26,12 +26,17 @@ public protocol HEImagePickerDelegate: AnyObject {
 }
 
 public extension HEImagePickerDelegate {
+    func imagePicker(_ picker: HEImagePicker, captionWithIdentifer identifier: String) -> String? {
+        return nil
+    }
     func imagePicker(_ picker: HEImagePicker, shouldAddToSelection identifier: String, numSelections: Int) -> Bool {
-        true
+        return true
     }
     func imagePickerHaveNoItems(_ picker: HEImagePicker) {}
     
     func imagePicker(_ picker: HEImagePicker, replacingItemWithIdentifer identifier: String) -> HEMediaItem? { nil }
+    func imagePicker(_ picker: HEImagePicker, didSelectToEditItem item: HEMediaItem, inItems items: [HEMediaItem]) {}
+    func imagePicker(_ picker: HEImagePicker, didCaptureItem item: HEMediaItem) {}
 }
 
 open class HEImagePicker: UINavigationController, HEPickerNavigationController {
@@ -42,9 +47,12 @@ open class HEImagePicker: UINavigationController, HEPickerNavigationController {
         PickerConfig.preferredStatusBarStyle
     }
     
-    public var editImageStore: HEEditImageStore? = nil {
-        willSet {
-            mainVc.editImageStore = newValue ?? HESimpleEditImageStore()
+    public var editImageStore: HEEditImageStore {
+        set {
+            mainVc.editImageStore = newValue
+        }
+        get {
+            mainVc.editImageStore
         }
     }
     
