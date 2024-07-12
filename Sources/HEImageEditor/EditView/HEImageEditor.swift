@@ -38,7 +38,11 @@ public extension HEImageEditorDelegate {
 open class HEImageEditorViewController: UIViewController, HEImageEditor {
     
     public weak var delegate: HEImageEditorDelegate?
-    public weak var stickerDataSource: HEImageStickerTrayViewDataSource?
+    public weak var stickerDataSource: HEImageStickerTrayViewDataSource? {
+        didSet {
+            HEConfiguration.default().imageStickerTray?.dataSource = stickerDataSource
+        }
+    }
     
     public weak var imageStore: HEImageDataStore!
     public weak var imageCache: HEImageCache!
@@ -67,6 +71,11 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
     private var shouldLayout = true
     private var cancellables = Set<AnyCancellable>()
     private lazy var loadingView = HELoadingView()
+    
+    deinit {
+        HEConfiguration.default().imageStickerTray(nil)
+        trace()
+    }
     
     public init(imageStore: HEImageDataStore,
                 imageCache: HEImageCache,
@@ -194,6 +203,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
         }
     }
     
+    /// 상단 툴바
     private func makeTopBarView() -> (HETopBarView, CGFloat) {
         let topbar = HETopBarView()
         let cancelButton = UIButton()
@@ -223,8 +233,9 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
         return (topbar, 44)
     }
     
+    /// 메인 하단 툴바
     private func makeBottomToolView() -> (HEEditToolView, CGFloat) {
-        // 기본 툴바
+        setupHEConfiguration()
         var ts = HEConfiguration.default().tools
         if ts.contains(.imageSticker), HEConfiguration.default().imageStickerTray == nil {
             ts.removeAll { $0 == .imageSticker }
@@ -249,11 +260,15 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
     }
     
     private func setupHEConfiguration() {
-        let stickerTray = HEImageStickerTrayView()
-        stickerTray.dataSource = self.stickerDataSource
-        HEConfiguration.default()
-            .clipRatios([.origin, .custom, .wh1x1])
-            .imageStickerTray(stickerTray)
+        if HEConfiguration.default().tools.contains(.imageSticker) {
+            let stickerTray = HEConfiguration.default().imageStickerTray ?? HEImageStickerTrayView()
+            stickerTray.dataSource = self.stickerDataSource
+            HEConfiguration.default()
+                .imageStickerTray(stickerTray)
+        } else {
+            HEConfiguration.default()
+                .imageStickerTray(nil)
+        }
     }
     
     
