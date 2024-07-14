@@ -338,19 +338,11 @@
 			isa = PBXGroup;
 			children = (
 				17D691F52C212D1D007443EC /* README.md */,
-				17189EAE2C1041EB00270F4D /* out */,
 				17189EB52C1041EB00270F4D /* view.puml */,
 				17189EB62C1041EB00270F4D /* interaction.puml */,
 				17189EB72C1041EB00270F4D /* effect.puml */,
 			);
 			path = Doc;
-			sourceTree = "<group>";
-		};
-		17189EAE2C1041EB00270F4D /* out */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = out;
 			sourceTree = "<group>";
 		};
 		17189EB82C10460300270F4D /* Util */ = {
