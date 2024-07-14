@@ -44,3 +44,9 @@ public extension HEEditImage {
         return nil
     }
 }
+
+public extension HEImage {
+    func toEditImage() -> HEEditImage? {
+        return HEEditImage.fromHEImage(self)
+    }
+}

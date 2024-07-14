@@ -129,6 +129,22 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         registerForLibraryChanges()
         panGestureHelper.registerForPanGesture(on: v)
         registerForTapOnPreview()
+        
+        v.albumNameBt.addTarget(self, action: #selector(albumListTapped), for: .touchUpInside)
+        v.cameraPhotoButton?.addTarget(self, action: #selector(imageCaptureTapped), for: .touchUpInside)
+        v.cameraVideoButton?.addTarget(self, action: #selector(videoCaptureTapped), for: .touchUpInside)
+        navigationItem.leftBarButtonItem = UIBarButtonItem(image: PickerConfig.icons.backButtonIcon,
+                                                           style: .plain,
+                                                           target: self,
+                                                           action: #selector(close))
+        // 첨부 갯수
+        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: attachButton)
+        attachButton.addTarget(self, action: #selector(done), for: .touchUpInside)
+        
+        v.previewBox.assetMediaManager = self.assetMediaManager
+        v.previewBox.editImageStore = self.editImageStore
+        v.previewBox.delegate = self
+        
         refreshMediaRequest()
         
         if let preselectedItems = PickerConfig.library.preselectedItems,
@@ -151,21 +167,6 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
             v.setMultipleSelectionMode(on: isMultipleSelectionEnabled)
             v.albumCollectionView.reloadData()
         }
-        
-        v.albumNameBt.addTarget(self, action: #selector(albumListTapped), for: .touchUpInside)
-        v.cameraPhotoButton?.addTarget(self, action: #selector(imageCaptureTapped), for: .touchUpInside)
-        v.cameraVideoButton?.addTarget(self, action: #selector(videoCaptureTapped), for: .touchUpInside)
-        navigationItem.leftBarButtonItem = UIBarButtonItem(image: PickerConfig.icons.backButtonIcon,
-                                                           style: .plain,
-                                                           target: self,
-                                                           action: #selector(close))
-        // 첨부 갯수
-        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: attachButton)
-        attachButton.addTarget(self, action: #selector(done), for: .touchUpInside)
-        
-        v.previewBox.assetMediaManager = self.assetMediaManager
-        v.previewBox.editImageStore = self.editImageStore
-        v.previewBox.delegate = self
         
         guard assetMediaManager.hasResultItems else {
             return
@@ -631,6 +632,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
                                 Task {
                                     do {
                                         let url = try await self.editImageStore.cacheOriginImage(uiImage: image, forId: asset.localIdentifier).value
+                                        self.editImageStore.addHEImage(HEImage(id: asset.localIdentifier, origin: url))
                                         let thumbnail = image.he.thumbnail()
                                         let photo = HEMediaPhoto(identifier: asset.localIdentifier,
                                                                  url: url,
@@ -703,7 +705,19 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
                 
             } else if let item = selectedItems.first {
                 // 단일 선택
-                if let asset = item.asset {
+                if let hei = item.hei {
+                   Task {
+                       do {
+                           let photo = try hei.toMediaPhoto(imageCache: self.editImageStore)
+                           DispatchQueue.main.async { [weak self] in
+                               self?.libraryViewFinishedLoading()
+                               photoCallback(photo)
+                           }
+                       } catch {
+                           woops(error)
+                       }
+                   }
+                } else if let asset = item.asset {
                     switch asset.mediaType {
                     case .audio, .unknown:
                         return
@@ -729,6 +743,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
                             Task {
                                 do {
                                     let url = try await editImageStore.cacheOriginImage(uiImage: image, forId: asset.localIdentifier).value
+                                    self.editImageStore.addHEImage(HEImage(id: asset.localIdentifier, origin: url))
                                     let photo = HEMediaPhoto(identifier: asset.localIdentifier,
                                                              url: url,
                                                              thumbnail: image.he.thumbnail(),
@@ -747,19 +762,8 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
                         woops("unknown default reached. Check code.")
                     }
                     return
-                } else if let hei = item.hei {
-                    Task {
-                        do {
-                            let photo = try hei.toMediaPhoto(imageCache: self.editImageStore)
-                            DispatchQueue.main.async { [weak self] in
-                                self?.libraryViewFinishedLoading()
-                                photoCallback(photo)
-                            }
-                        } catch {
-                            woops(error)
-                        }
-                    }
-                } else {
+                }
+                else {
                     woops("unknown item data reached. Check code.")
                 }
             }

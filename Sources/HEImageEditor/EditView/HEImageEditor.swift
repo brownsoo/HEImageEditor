@@ -11,6 +11,7 @@ import Combine
 import HECommon
 
 public protocol HEImageEditor: UIViewController {
+    var imageStore: HECommon.HEEditImageStore { get set }
     /// 연속 편집 모드 여부
     ///
     /// - true: 편집을 종료해도 이전 편집 상태를 유지한다.
@@ -44,8 +45,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
         }
     }
     
-    public weak var imageStore: HEImageDataStore!
-    public weak var imageCache: HEImageCache!
+    public var imageStore: HECommon.HEEditImageStore
     
     public var continuouslyMode: Bool = false
     
@@ -77,11 +77,9 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
         trace()
     }
     
-    public init(imageStore: HEImageDataStore,
-                imageCache: HEImageCache,
+    public init(imageStore: HEEditImageStore,
                 stickerDataSource: HEImageStickerTrayViewDataSource?) {
         self.imageStore = imageStore
-        self.imageCache = imageCache
         self.stickerDataSource = stickerDataSource
         super.init(nibName: nil, bundle: nil)
     }
@@ -198,7 +196,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
         self.perform(#selector(self.hideResetToast), with: nil, afterDelay: 0.0)
         Task {
             hei.setEditState(nil)
-            await imageCache.clearCached(forHei: hei, includeOrigin: false)
+            await imageStore.clearCached(forHei: hei, includeOrigin: false)
             collView.reloadItems(at: [IndexPath(row: index, section: 0)])
         }
     }
@@ -248,9 +246,18 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
     }
     
     private func onBottomToolSelected(type: HEConfiguration.EditTool) {
-        guard let currentIndex, let hei = imageStore.getHEImage(at: currentIndex) as? HEEditImage else {
+        guard let currentIndex, let he = imageStore.getHEImage(at: currentIndex) else {
             return
         }
+        // 편집 데이터가 없는 경우, 모델 치환
+        let hei: HEEditImage
+        if (he as? HEEditImage) == nil {
+            hei = he.toEditImage()!
+            imageStore.replaceHEImage(at: currentIndex, with: he.toEditImage()!)
+        } else {
+            hei = he.toEditImage()!
+        }
+        
         self.editingImage = hei
         Task { @MainActor in
            await self.startEditImage(hei: hei, tool: type)
@@ -305,9 +312,9 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
             let image: UIImage
             var editState: HEEditState? = hei.editState
             if continuouslyMode {
-                image = try await self.imageCache.originImage(forHei: hei).value
+                image = try await self.imageStore.originImage(forHei: hei).value
             } else {
-                image = try await self.imageCache.editImage(forHei: hei).value
+                image = try await self.imageStore.editImage(forHei: hei).value
                 editState = HEEditState(
                     drawPaths: editState?.drawPaths ?? [],
                     mosaicPaths: editState?.mosaicPaths ?? [],
@@ -349,9 +356,9 @@ extension HEImageEditorViewController: HEEditImageViewDelegate {
         Task {
             hei.setEditState(editModel)
             do {
-                let fileUrl = try await imageCache.cacheEditImage(uiImage: resultImage, forHei: hei).value
+                let fileUrl = try await imageStore.cacheEditImage(uiImage: resultImage, forHei: hei).value
                 trace(fileUrl)
-                let thumbUrl = try await imageCache.cacheThumbnailImage(uiImage: resultImage, forHei: hei).value
+                let thumbUrl = try await imageStore.cacheThumbnailImage(uiImage: resultImage, forHei: hei).value
                 trace(thumbUrl)
             } catch {
                 woops(error)
@@ -452,7 +459,7 @@ extension HEImageEditorViewController: UICollectionViewDataSource, UICollectionV
         trace()
         
         if let cell = cell as? HEImageViewPageCell, let hei = imageStore.getHEImage(at: indexPath.row) {
-            cell.loadImage(task: imageCache.editImage(forHei: hei))
+            cell.loadImage(task: imageStore.editImage(forHei: hei))
             
             if resetToastView.superview == nil {
                 showResetToastIfNeed(isEdited: hei.editImageURL != nil)

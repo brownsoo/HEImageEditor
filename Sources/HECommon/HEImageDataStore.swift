@@ -50,6 +50,9 @@ public protocol HEImageDataStore: AnyObject {
     func numberOfImages() -> Int
     func getHEImage(at index: Int) -> HEImage?
     func getHEImage(forId id: String) -> HEImage?
+    
+    @discardableResult
+    func replaceHEImage(at index: Int, with item: HEImage) -> Bool
 }
 
 public extension HEImageDataStore {
@@ -132,6 +135,14 @@ public class HESimpleEditImageStore: HEEditImageStore {
     
     public func getHEImage(forId id: String) -> HEImage? {
         images.first(where: { $0.id == id })
+    }
+    
+    public func replaceHEImage(at index: Int, with item: HEImage) -> Bool {
+        if index < images.count {
+            images[index] = item
+            return true
+        }
+        return false
     }
 }
 

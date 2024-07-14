@@ -131,7 +131,6 @@ class ViewController: UIViewController {
         imageStore.clearAll()
         imageStore.addHEImages(images)
         let vc = HEImageEditorViewController(imageStore: imageStore,
-                                            imageCache: imageStore,
                                             stickerDataSource: self)
         
         vc.modalPresentationStyle = .overFullScreen
@@ -317,7 +316,6 @@ extension ViewController: HEImagePickerDelegate {
         imageStore.addHEImages(news)
         
         let vc = HEImageEditorViewController(imageStore: imageStore,
-                                            imageCache: imageStore,
                                             stickerDataSource: self)
         
         vc.delegate = self
