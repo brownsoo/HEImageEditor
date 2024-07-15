@@ -9,6 +9,7 @@ import Foundation
 import UIKit
 import HECommon
 
+@MainActor
 public protocol HEImagePickerDelegate: AnyObject {
     func imagePickerHaveNoItems(_ picker: HEImagePicker)
     func imagePicker(_ picker: HEImagePicker, didSelectItems items: [HEMediaItem])
@@ -27,14 +28,26 @@ public protocol HEImagePickerDelegate: AnyObject {
 
 public extension HEImagePickerDelegate {
     func imagePicker(_ picker: HEImagePicker, captionWithIdentifer identifier: String) -> String? {
-        return nil
+        return picker.editImageStore.getHEImage(forId: identifier) == nil ? nil : "편집 상태"
     }
     func imagePicker(_ picker: HEImagePicker, shouldAddToSelection identifier: String, numSelections: Int) -> Bool {
         return true
     }
     func imagePickerHaveNoItems(_ picker: HEImagePicker) {}
     
-    func imagePicker(_ picker: HEImagePicker, replacingItemWithIdentifer identifier: String) -> HEMediaItem? { nil }
+    @MainActor
+    func imagePicker(_ picker: HEImagePicker, replacingItemWithIdentifer identifier: String) -> HEMediaItem? {
+        let imageStore = picker.editImageStore
+        do {
+            if let hei = imageStore.getHEImage(forId: identifier) {
+                let photo = try hei.toMediaPhoto(imageCache: imageStore)
+                return HEMediaItem.photo(p: photo)
+            }
+        } catch {
+            debugPrint(error)
+        }
+        return nil
+    }
     func imagePicker(_ picker: HEImagePicker, didSelectToEditItem item: HEMediaItem, inItems items: [HEMediaItem]) {}
     func imagePicker(_ picker: HEImagePicker, didCaptureItem item: HEMediaItem) {}
 }
@@ -56,12 +69,18 @@ open class HEImagePicker: UINavigationController, HEPickerNavigationController {
         }
     }
     
+    public var userInfo: [String: Any] = [:]
+    
     private lazy var mainVc: HELibraryViewController = HELibraryViewController()
+    
+    deinit {
+        userInfo = [:]
+        trace()
+    }
     
     public convenience init() {
         self.init(configuration: HEImagePickerConfiguration.shared)
     }
-    
     
     public required init(configuration: HEImagePickerConfiguration) {
         HEImagePickerConfiguration.shared = configuration

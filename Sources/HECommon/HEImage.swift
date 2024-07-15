@@ -8,8 +8,7 @@
 import Foundation
 import UIKit
 
-@MainActor
-open class HEImage {
+open class HEImage: CustomDebugStringConvertible {
     
     public let id: String
     public let originURL: URL?
@@ -36,5 +35,14 @@ open class HEImage {
     
     public func setThumbnailURL(_ url: URL?) {
         self.thumbnailURL = url
+    }
+    
+    public var debugDescription: String {
+        """
+HEImage::
+- id\(id)
+- originURL: \(originURL?.absoluteString ?? "nil")
+- editImageURL: \(editImageURL?.absoluteString ?? "nil")
+"""
     }
 }

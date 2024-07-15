@@ -27,7 +27,7 @@ func trace(filename: String = #file, line: Int = #line, funcName: String = #func
     let time = timeFormatter.string(from: Date())
     let file = filename.components(separatedBy: "/").last?.split(separator: ".").first ?? ""
     let leading = "\(tag) \(time) \(th) \(file) (L\(line))::\(funcName)"
-    //print("\(leading) nil")
+    print("\(leading) nil")
     logger.log("\(leading, privacy: .public)")
 }
 
@@ -37,10 +37,10 @@ func trace<T>(_ object: T?, filename: String = #file, line: Int = #line, funcNam
     let file = filename.components(separatedBy: "/").last?.split(separator: ".").first ?? ""
     let leading = "\(tag) \(time) \(th) \(file) (L\(line))::\(funcName)"
     if let obj = object {
-       // print("\(leading) \(obj)")
+        print("\(leading) \(obj)")
         logger.log("\(leading, privacy: .public) \(String(describing: obj), privacy: .public)")
     } else {
-        //print("\(leading) nil")
+        print("\(leading) nil")
         logger.log("\(leading, privacy: .public)  nil")
     }
 }
@@ -51,10 +51,10 @@ func woops<T>(_ object: T?, filename: String = #file, line: Int = #line, funcNam
     let file = filename.components(separatedBy: "/").last?.split(separator: ".").first ?? ""
     let leading = "\(tag) 💥 \(time) \(th) \(file) (L\(line))::\(funcName)"
     if let obj = object {
-       // print("\(leading) \(obj)")
+        print("\(leading) \(obj)")
         logger.log("\(leading, privacy: .public) \(String(describing: obj), privacy: .public)")
     } else {
-        //print("\(leading) nil")
+        print("\(leading) nil")
         logger.log("\(leading, privacy: .public)  nil")
     }
 }

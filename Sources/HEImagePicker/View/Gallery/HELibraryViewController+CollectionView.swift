@@ -177,10 +177,11 @@ extension HELibraryViewController: UICollectionViewDelegate {
                 switch media {
                 case .photo(let photo):
                     mediaType = .image
-                    thumbnail = photo.thumbnail
+                    thumbnail = await photo.extraTask?().thumbnail
+                    
                 case .video(let video):
                     mediaType = .video
-                    thumbnail = video.thumbnail
+                    thumbnail = await video.thumbnailTask?()
                 }
             }
             
@@ -246,7 +247,7 @@ extension HELibraryViewController: UICollectionViewDelegate {
         panGestureHelper.resetToOriginalState()
         
         // Only scroll cell to top if preview is hidden.
-        if !panGestureHelper.isImageShown {
+        if !panGestureHelper.isImageShown && PickerConfig.scrollTopIfSelectedWhenPreviewIsHidden {
             collectionView.scrollToItem(at: indexPath, at: .top, animated: true)
         }
         v.refreshImageCurtainAlpha()

@@ -11,6 +11,7 @@ import PhotosUI
 import Combine
 import HECommon
 
+@MainActor
 public protocol HELibraryViewDelegate: AnyObject {
     
     func libraryViewHaveNoItems(_ libraryView: HELibraryViewController)
@@ -146,6 +147,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         v.previewBox.delegate = self
         
         refreshMediaRequest()
+        
         
         if let preselectedItems = PickerConfig.library.preselectedItems,
            !preselectedItems.isEmpty {
@@ -330,13 +332,6 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         })
     }
     
-    // MARK: - Crop control
-    
-    @objc
-    func editPhotoButtonTapped() {
-        // TODO: Edit
-    }
-    
     // MARK: - Multiple Selection
 
     @objc
@@ -485,6 +480,50 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         return true
     }
     
+    private func checkVideoFileSize(forAsset asset: PHAsset,
+                                    complete: @escaping (_ isValid: Bool) -> Void) {
+        guard asset.mediaType == .video else { return complete(true) }
+        
+        let options = PHVideoRequestOptions()
+        options.version = .current
+        options.isNetworkAccessAllowed = true
+        
+        PHImageManager.default().requestAVAsset(forVideo: asset, options: options) { asset, _, _ in
+            guard let asset = asset else {
+                complete(true)
+                return
+            }
+            
+            if asset.isKind(of: AVComposition.self), ((asset as? AVComposition)?.tracks ?? []).isEmpty {
+                complete(true)
+                return
+            }
+            let maxFileSize: Int64 = PickerConfig.video.maxVideoFileSize
+            let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPreset960x540)
+            exportSession?.outputURL = self.fetchOutputURL("TEMP_FOR_SIZE_CHECK")
+            exportSession?.fileLengthLimit = maxFileSize
+            exportSession?.outputFileType = .mp4
+            exportSession?.shouldOptimizeForNetworkUse = true
+            exportSession?.timeRange = CMTimeRangeMake(start: .zero, duration: asset.duration)
+            
+            let estimatedOutputFileLength = exportSession?.estimatedOutputFileLength ?? 0
+            print("인코딩전 예상 용량 = \(estimatedOutputFileLength/1024/1024)")
+            
+            if estimatedOutputFileLength > maxFileSize {
+                complete(false)
+            } else {
+                complete(true)
+            }
+        }
+    }
+    
+    private func fetchOutputURL(_ fileName: String?) -> URL? {
+        guard let documentDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else { return nil }
+        let path = documentDirectory.appendingPathComponent(fileName ?? "video.mp4")
+        
+        return path
+    }
+    
     // MARK: - Stored Crop Position
     
     internal func updateCropInfo(assetIdentifier: String) {
@@ -535,7 +574,19 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
                                     height: ts.height)
         
         guard fitsVideoLengthLimits(asset: asset) else {
+            DispatchQueue.main.async {
+                let alert = UIHelper.videoTooHeavyAlert(self.view)
+                self.present(alert, animated: true, completion: nil)
+            }
+            callback(nil)
             return
+        }
+        
+        checkVideoFileSize(forAsset: asset) { isValid in
+            guard isValid else {
+                callback(nil)
+                return
+            }
         }
         
         if PickerConfig.video.automaticTrimToTrimmerMaxDuration {
@@ -570,6 +621,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         .store(in: &cancellables)
     }
     
+    // MARK: 내보내기
     public func extractSelectedMedia(photoCallback: @escaping (_ photo: HEMediaPhoto) -> Void,
                               videoCallback: @escaping (_ videoURL: HEMediaVideo) -> Void,
                               multipleItemsCallback: @escaping (_ items: [HEMediaItem]) -> Void) {
@@ -703,8 +755,8 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
                 }
                 // <-- 복수 선택
                 
-            } else if let item = selectedItems.first {
-                // 단일 선택
+            } else if let item = selectedItems.first { // 단일 선택
+                
                 if let hei = item.hei {
                    Task {
                        do {
@@ -717,7 +769,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
                            woops(error)
                        }
                    }
-                } else if let asset = item.asset {
+               } else if let asset = item.asset {
                     switch asset.mediaType {
                     case .audio, .unknown:
                         return
@@ -801,23 +853,23 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
 }
 
 extension HELibraryViewController: HEPreviewBoxViewDelegate {
-    public func previewBoxViewUpdateCropInfo(_ box: HEPreiviewBoxView, assetIdentifier: String) {
+    public func previewBoxViewUpdateCropInfo(_ box: HEPreviewBoxView, assetIdentifier: String) {
         updateCropInfo(assetIdentifier: assetIdentifier)
     }
     
-    public func previewBoxViewItems(_ box: HEPreiviewBoxView) -> [HELibrarySelection] {
+    public func previewBoxViewItems(_ box: HEPreviewBoxView) -> [HELibrarySelection] {
         return selectedItems
     }
     
-    public func previewBoxViewStartedLoadingImage(_ box: HEPreiviewBoxView) {
+    public func previewBoxViewStartedLoadingImage(_ box: HEPreviewBoxView) {
         libraryViewStartedLoadingImage()
     }
     
-    public func previewBoxViewFinishedLoadingImage(_ box: HEPreiviewBoxView) {
+    public func previewBoxViewFinishedLoadingImage(_ box: HEPreviewBoxView) {
         libraryViewFinishedLoading()
     }
     
-    public func previewBoxViewEditButtonTouched(_ box: HEPreiviewBoxView, selection: HELibrarySelection) {
+    public func previewBoxViewEditButtonTouched(_ box: HEPreviewBoxView, selection: HELibrarySelection) {
         extractSelectedMedia(photoCallback: { [weak self] photo in
             if let self {
                 self.delegate?.libraryView(self, didSelectItems: [HEMediaItem.photo(p: photo)], wantsEditSelection: selection)

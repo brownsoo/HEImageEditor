@@ -119,7 +119,7 @@ class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
                     ? .up
                     : .down
             }
-            trace("began- \(dragDirection)")
+//            trace("began- \(dragDirection)")
             // Scroll event of CollectionView is preferred.
             if (dragDirection == .up && dragStartPos.y < cropBottomY) || // 어셋박스 영역이거나
                 (dragDirection == .down && dragStartPos.y > cropBottomY + collBarHeight) { // 콜랙션 리스트 영역이거나

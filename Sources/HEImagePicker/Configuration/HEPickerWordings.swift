@@ -35,6 +35,7 @@ public struct HEPickerWordings {
         public var tooLongMessage = pickerLocalized("_videoTooLong")
     }
     
+    public var videoFileTooHeavy = pickerLocalized("_videoTooHeavy")
     public var cannotFindMediaFile = pickerLocalized("_cannotFindMediaFile")
     public var noSelectionToEdit = pickerLocalized("_noSelectionToEdit")
     public var errorOnSaveVideoInLibrary = pickerLocalized("_errorOnSaveVideoInLibrary")

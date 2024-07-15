@@ -35,3 +35,4 @@
 "_errorOnSaveVideoInLibrary" = "Failed to save video in photo library.";
 "_noSelectionToEdit" = "Cannot find a item to edit.";
 "_cannotFindMediaFile" = "Cannot find a media file.";
+"_videoTooHeavy" = "Pick a video less than %@ MB of file size.";

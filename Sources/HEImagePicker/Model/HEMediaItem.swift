@@ -10,15 +10,16 @@ import AVFoundation
 import Photos
 import HECommon
 
+public typealias HEMediaPhotoExtraTask = () async -> (thumbnail: UIImage?, exifMeta:  [String: Any]?)
+
 /// HEPicker 의 사진
 public class HEMediaPhoto {
     /// 지정된 아이디 or PHAsset의 identifier, or uuid
     public var identifier: String
     public let url: URL
-    public var thumbnail: UIImage?
     public let fromCamera: Bool
-    public let exifMeta: [String: Any]?
     public var asset: PHAsset?
+    public var extraTask: HEMediaPhotoExtraTask?
     
     public init(identifier: String?,
                 url: URL,
@@ -28,10 +29,20 @@ public class HEMediaPhoto {
                 asset: PHAsset? = nil) {
         self.identifier = identifier ?? asset?.localIdentifier ?? UUID().uuidString
         self.url = url
-        self.thumbnail = thumbnail
-//        self.modifiedImage = nil
+        self.extraTask = { (thumbnail, exifMeta) }
         self.fromCamera = fromCamera
-        self.exifMeta = exifMeta
+        self.asset = asset
+    }
+    
+    public init(identifier: String?,
+                url: URL,
+                extraTask: HEMediaPhotoExtraTask? = nil,
+                fromCamera: Bool = false,
+                asset: PHAsset? = nil) {
+        self.identifier = identifier ?? asset?.localIdentifier ?? UUID().uuidString
+        self.url = url
+        self.extraTask = extraTask
+        self.fromCamera = fromCamera
         self.asset = asset
     }
 }
@@ -40,27 +51,34 @@ public extension HEImage {
     func toMediaPhoto(imageCache: HEImageCache) throws -> HEMediaPhoto {
         let hei = self
         let originURL: URL
-        let thumbnail: UIImage?
-        let meta: [String : Any]?
+        let extraTask: HEMediaPhotoExtraTask
         // 편집 이미지 우선
         
         if let url = self.editImageURL {
             originURL = url
-            let image = try imageCache.editImageSync(forHei: hei)
-            thumbnail = image?.he.thumbnail()
-            meta = image?.pngData()?.he.metadataForImageData()
+            extraTask = {
+                let image = try? await imageCache.editImage(forHei: hei).value
+                let thumbnail = image?.he.thumbnail()
+                let meta = image?.pngData()?.he.metadataForImageData()
+                return (thumbnail, meta)
+            }
             
         } else if let url = self.originURL {
             originURL = url
-            let image = try imageCache.originImageSync(forHei: hei)
-            thumbnail = image?.he.thumbnail()
-            meta = image?.pngData()?.he.metadataForImageData()
+            extraTask = {
+                let image = try? await imageCache.originImage(forHei: hei).value
+                let thumbnail = image?.he.thumbnail()
+                let meta = image?.pngData()?.he.metadataForImageData()
+                return (thumbnail, meta)
+            }
             
         } else if let originImage = hei.originImage {
             originURL = try imageCache.cacheOriginImageSync(uiImage: originImage, forId: hei.id)
-            thumbnail = originImage.he.thumbnail()
-            meta = originImage.pngData()?.he.metadataForImageData()
-            
+            extraTask = {
+                let thumbnail = originImage.he.thumbnail()
+                let meta = originImage.pngData()?.he.metadataForImageData()
+                return (thumbnail, meta)
+            }
         } else {
             
             throw HEError.heImageHasNoData
@@ -68,8 +86,7 @@ public extension HEImage {
         
         return HEMediaPhoto(identifier: hei.id,
                             url: originURL,
-                            thumbnail: thumbnail,
-                            exifMeta: meta)
+                            extraTask: extraTask)
     }
 }
 
@@ -80,9 +97,9 @@ public class HEMediaVideo {
     /// 지정된 아이디 or PHAsset의 identifier, or uuid
     public var identifier: String
     public var url: URL
-    public var thumbnail: UIImage
     public let fromCamera: Bool
     public var asset: PHAsset?
+    public var thumbnailTask: (() async -> UIImage?)?
 
     public init(identifier: String?,
                 thumbnail: UIImage,
@@ -90,7 +107,19 @@ public class HEMediaVideo {
                 fromCamera: Bool = false,
                 asset: PHAsset? = nil) {
         self.identifier = identifier ?? asset?.localIdentifier ?? UUID().uuidString
-        self.thumbnail = thumbnail
+        self.thumbnailTask = { thumbnail }
+        self.url = videoURL
+        self.fromCamera = fromCamera
+        self.asset = asset
+    }
+    
+    public init(identifier: String?,
+                videoURL: URL,
+                thumbnailTask: (() async -> UIImage?)?,
+                fromCamera: Bool = false,
+                asset: PHAsset? = nil) {
+        self.identifier = identifier ?? asset?.localIdentifier ?? UUID().uuidString
+        self.thumbnailTask = thumbnailTask
         self.url = videoURL
         self.fromCamera = fromCamera
         self.asset = asset
@@ -108,6 +137,13 @@ public extension HEMediaItem {
         switch self {
         case .photo(let p): return p.identifier
         case .video(let v): return v.identifier
+        }
+    }
+    
+    var phAsset: PHAsset? {
+        switch self {
+        case .photo(let p): return p.asset
+        case .video(let v): return v.asset
         }
     }
 }

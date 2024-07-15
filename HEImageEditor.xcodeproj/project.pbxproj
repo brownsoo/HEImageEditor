@@ -30,7 +30,7 @@
 		173DE6822C33CF3B002BD7C6 /* AVFoundation+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE6812C33CF3B002BD7C6 /* AVFoundation+.swift */; };
 		173DE6842C33D1F7002BD7C6 /* URL+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE6832C33D1F7002BD7C6 /* URL+.swift */; };
 		173DE6862C33D489002BD7C6 /* File+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE6852C33D489002BD7C6 /* File+.swift */; };
-		173DE6882C33E78D002BD7C6 /* HEPreiviewBoxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE6872C33E78D002BD7C6 /* HEPreiviewBoxView.swift */; };
+		173DE6882C33E78D002BD7C6 /* HEPreviewBoxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE6872C33E78D002BD7C6 /* HEPreviewBoxView.swift */; };
 		173DE68B2C33F4E6002BD7C6 /* PermissionCheckable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE68A2C33F4E6002BD7C6 /* PermissionCheckable.swift */; };
 		173DE68D2C33F59F002BD7C6 /* PermissionDeniedPopup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE68C2C33F59F002BD7C6 /* PermissionDeniedPopup.swift */; };
 		173DE68F2C33F6B2002BD7C6 /* HEPanGestureHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE68E2C33F6B2002BD7C6 /* HEPanGestureHelper.swift */; };
@@ -97,6 +97,7 @@
 		17D692252C24382F007443EC /* HEImageClipRatio.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D692242C24382F007443EC /* HEImageClipRatio.swift */; };
 		17D9B7252C394CBF003874D4 /* HEImagePickerLocalizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 17D9B7232C394CBF003874D4 /* HEImagePickerLocalizable.strings */; };
 		17E2D87B2C290272005F5E0B /* HEImageSticker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E2D87A2C290272005F5E0B /* HEImageSticker.swift */; };
+		17E74E642C4533A500302946 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 17E74E632C4533A500302946 /* Kingfisher */; };
 		E40208DC256B9BA60077F5DC /* HEImageEditor.h in Headers */ = {isa = PBXBuildFile; fileRef = E40208DA256B9BA60077F5DC /* HEImageEditor.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		E40208EB256B9F9C0077F5DC /* HEEditImageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E40208E4256B9F9C0077F5DC /* HEEditImageViewController.swift */; };
 		E40208EC256B9F9C0077F5DC /* HEImageStickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E40208E5256B9F9C0077F5DC /* HEImageStickerView.swift */; };
@@ -167,7 +168,7 @@
 		173DE6812C33CF3B002BD7C6 /* AVFoundation+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AVFoundation+.swift"; sourceTree = "<group>"; };
 		173DE6832C33D1F7002BD7C6 /* URL+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "URL+.swift"; sourceTree = "<group>"; };
 		173DE6852C33D489002BD7C6 /* File+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "File+.swift"; sourceTree = "<group>"; };
-		173DE6872C33E78D002BD7C6 /* HEPreiviewBoxView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEPreiviewBoxView.swift; sourceTree = "<group>"; };
+		173DE6872C33E78D002BD7C6 /* HEPreviewBoxView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEPreviewBoxView.swift; sourceTree = "<group>"; };
 		173DE68A2C33F4E6002BD7C6 /* PermissionCheckable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionCheckable.swift; sourceTree = "<group>"; };
 		173DE68C2C33F59F002BD7C6 /* PermissionDeniedPopup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionDeniedPopup.swift; sourceTree = "<group>"; };
 		173DE68E2C33F6B2002BD7C6 /* HEPanGestureHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEPanGestureHelper.swift; sourceTree = "<group>"; };
@@ -276,6 +277,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				17E74E642C4533A500302946 /* Kingfisher in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -294,7 +296,7 @@
 			isa = PBXGroup;
 			children = (
 				E40208DA256B9BA60077F5DC /* HEImageEditor.h */,
-				1744B9DC2C32CF1D00F5395B /* Data */,
+				17189E9B2C1041DB00270F4D /* HEImageEditor.swift */,
 				17189E9A2C1041DB00270F4D /* EditView */,
 				17C8ED692C118F2D006F390A /* Resources */,
 				17189E8C2C1041DB00270F4D /* Type */,
@@ -325,7 +327,6 @@
 				FD3073362AD80D0000CFB618 /* HEEditActionManager.swift */,
 				17189E9C2C1041DB00270F4D /* HEEditImageView.swift */,
 				E40208E4256B9F9C0077F5DC /* HEEditImageViewController.swift */,
-				17189E9B2C1041DB00270F4D /* HEImageEditor.swift */,
 				17C8ED842C147A35006F390A /* Clipping */,
 				17C8ED6B2C11D848006F390A /* Component */,
 				17C8ED6A2C11905E006F390A /* Configuration */,
@@ -428,7 +429,7 @@
 				173DE6902C33F8EA002BD7C6 /* HELibraryViewController+CollectionView.swift */,
 				173DE69A2C3417E7002BD7C6 /* HELibraryViewController+PHLibraryObserver.swift */,
 				173DE68E2C33F6B2002BD7C6 /* HEPanGestureHelper.swift */,
-				173DE6872C33E78D002BD7C6 /* HEPreiviewBoxView.swift */,
+				173DE6872C33E78D002BD7C6 /* HEPreviewBoxView.swift */,
 				173DE6772C33CAAC002BD7C6 /* HEVideoView.swift */,
 				17B2DD092C3BC62400662FC4 /* LibraryAttachButton.swift */,
 				173DE6712C33C9BC002BD7C6 /* LibraryMediaManager.swift */,
@@ -444,13 +445,6 @@
 				173DE68C2C33F59F002BD7C6 /* PermissionDeniedPopup.swift */,
 			);
 			path = Permission;
-			sourceTree = "<group>";
-		};
-		1744B9DC2C32CF1D00F5395B /* Data */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Data;
 			sourceTree = "<group>";
 		};
 		1744B9E12C3300AA00F5395B /* Model */ = {
@@ -694,6 +688,9 @@
 			dependencies = (
 			);
 			name = HECommon;
+			packageProductDependencies = (
+				17E74E632C4533A500302946 /* Kingfisher */,
+			);
 			productName = HEImagePicker;
 			productReference = 17B2DCE12C3B83FF00662FC4 /* HECommon.framework */;
 			productType = "com.apple.product-type.framework";
@@ -746,6 +743,9 @@
 				ko,
 			);
 			mainGroup = E40208CD256B9BA60077F5DC;
+			packageReferences = (
+				17E74E622C4533A500302946 /* XCRemoteSwiftPackageReference "Kingfisher" */,
+			);
 			productRefGroup = E40208D8256B9BA60077F5DC /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -826,7 +826,7 @@
 				173DE6762C33CA6B002BD7C6 /* HEAssetZoomableView.swift in Sources */,
 				173DE6822C33CF3B002BD7C6 /* AVFoundation+.swift in Sources */,
 				173DE6842C33D1F7002BD7C6 /* URL+.swift in Sources */,
-				173DE6882C33E78D002BD7C6 /* HEPreiviewBoxView.swift in Sources */,
+				173DE6882C33E78D002BD7C6 /* HEPreviewBoxView.swift in Sources */,
 				173DE66B2C33BEBD002BD7C6 /* HEAlbumsManager.swift in Sources */,
 				1744BA482C330C4A00F5395B /* HEPickerError.swift in Sources */,
 				173DE6952C340049002BD7C6 /* UIHelper.swift in Sources */,
@@ -1315,6 +1315,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		17E74E622C4533A500302946 /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/onevcat/Kingfisher.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.12.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		17E74E632C4533A500302946 /* Kingfisher */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 17E74E622C4533A500302946 /* XCRemoteSwiftPackageReference "Kingfisher" */;
+			productName = Kingfisher;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = E40208CE256B9BA60077F5DC /* Project object */;
 }

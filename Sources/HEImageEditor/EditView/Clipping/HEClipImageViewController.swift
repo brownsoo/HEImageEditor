@@ -149,7 +149,7 @@ public class HEClipImageViewController: UIViewController, HEClipImageView {
             selectedRatio = ratio
         } else {
             firstEnter = true
-            selectedRatio = .custom
+            selectedRatio = HEConfiguration.default().clipRatios.first ?? .custom
         }
         
         self.toolView = HEClipActionToolView(clipRatios: HEConfiguration.default().clipRatios,

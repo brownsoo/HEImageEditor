@@ -35,3 +35,4 @@
 "_errorOnSaveVideoInLibrary" = "사진 앱에 비디오를 저장하는 데 실패했습니다.";
 "_noSelectionToEdit" = "편집할 대상을 찾지 못했습니다.";
 "_cannotFindMediaFile" = "미디어 파일을 찾지 못했습니다.";
+"_videoTooHeavy" = "%@MB 이하인 동영상을 선택해주세요.";

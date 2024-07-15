@@ -28,8 +28,8 @@ final class HELibraryView: UIView {
     }()
     /// 상단 미리보기 
     // TODO: 이미지 리스트로 변경
-    internal lazy var previewBox: HEPreiviewBoxView = {
-        let v = HEPreiviewBoxView()
+    internal lazy var previewBox: HEPreviewBoxView = {
+        let v = HEPreviewBoxView()
         v.accessibilityIdentifier = "previewViewBox"
         return v
     }()

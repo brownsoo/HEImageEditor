@@ -14,8 +14,8 @@ public protocol HEImageEditor: UIViewController {
     var imageStore: HECommon.HEEditImageStore { get set }
     /// 연속 편집 모드 여부
     ///
-    /// - true: 편집을 종료해도 이전 편집 상태를 유지한다.
-    /// - false: (기본값) 편집을 종료하면, 편집 상태를 없애고 합쳐진 이미지로 변경한다.
+    /// - true: (기본값) 편집을 종료해도 이전 편집 상태를 유지한다.
+    /// - false: 편집을 종료하면, 편집 상태를 없애고 합쳐진 이미지로 변경한다.
     var continuouslyMode: Bool { get set }
     var editingImage: HEEditImage? { get }
     var currentIndex: Int? { get }
@@ -47,7 +47,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
     
     public var imageStore: HECommon.HEEditImageStore
     
-    public var continuouslyMode: Bool = false
+    public var continuouslyMode: Bool = true
     
     public private(set) var editingImage: HEEditImage?
     public private(set) var currentIndex: Int?

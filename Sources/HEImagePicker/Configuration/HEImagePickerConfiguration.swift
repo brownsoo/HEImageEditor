@@ -71,8 +71,8 @@ public struct HEImagePickerConfiguration {
     /// `func imagePicker(_ picker:, didSelectToEditItem:, inItems)`
     public var useEditPhoto: Bool = true
 
-    /// Scroll to change modes, defaults to true
-    public var isScrollToChangeModesEnabled = true
+    /// Scroll to top if item is selected when preview box is hidden.
+    public var scrollTopIfSelectedWhenPreviewIsHidden = false
 
     /// Set this to true if you want to force the camera output to be a squared image. Defaults to true
     public var onlySquareImagesFromCamera = true
@@ -161,6 +161,7 @@ public struct HEImagePickerConfiguration {
         
         /// Allow to preselected media items
         public var preselectedItems: [HEMediaItem]?
+        
     }
 
     /// Encapsulates video specific settings.
@@ -204,6 +205,11 @@ public struct HEImagePickerConfiguration {
         /// Defines the minimum time for the video
         /// Defaults to 3 seconds.
         public var minimumTimeLimit: TimeInterval = 3.0
+        
+        /// max file size for video to select
+        ///
+        /// - default: 500MB
+        public var maxVideoFileSize: Int64 = 500 * 1024 * 1024
         
         /// The maximum duration allowed for the trimming. Change it before setting the asset, as the asset preview
         /// - Tag: trimmerMaxDuration

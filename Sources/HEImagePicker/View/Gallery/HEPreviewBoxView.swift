@@ -1,5 +1,5 @@
 //
-//  HEAssetViewBox.swift
+//  HEPreviewBoxView.swift
 //  HEImagePicker
 //
 //  Created by 브라운수 on 7/2/24.
@@ -12,16 +12,16 @@ import HECommon
 import Photos
 
 public protocol HEPreviewBoxViewDelegate: AnyObject {
-    func previewBoxViewItems(_ box: HEPreiviewBoxView) -> [HELibrarySelection]
-    func previewBoxViewStartedLoadingImage(_ box: HEPreiviewBoxView)
-    func previewBoxViewFinishedLoadingImage(_ box: HEPreiviewBoxView)
-    func previewBoxViewUpdateCropInfo(_ box: HEPreiviewBoxView, assetIdentifier: String)
-    func previewBoxViewEditButtonTouched(_ box: HEPreiviewBoxView, selection: HELibrarySelection)
+    func previewBoxViewItems(_ box: HEPreviewBoxView) -> [HELibrarySelection]
+    func previewBoxViewStartedLoadingImage(_ box: HEPreviewBoxView)
+    func previewBoxViewFinishedLoadingImage(_ box: HEPreviewBoxView)
+    func previewBoxViewUpdateCropInfo(_ box: HEPreviewBoxView, assetIdentifier: String)
+    func previewBoxViewEditButtonTouched(_ box: HEPreviewBoxView, selection: HELibrarySelection)
 }
 
 /// The container for asset (video or image). 
 /// It containts the collections of HEAssetZoomableView.
-public class HEPreiviewBoxView: UIView {
+public class HEPreviewBoxView: UIView {
     
     public weak var delegate: HEPreviewBoxViewDelegate?
     public weak var editImageStore: HEEditImageStore?
@@ -210,7 +210,7 @@ public class HEPreiviewBoxView: UIView {
 }
 
 // MARK: 미디어 설정
-extension HEPreiviewBoxView {
+extension HEPreviewBoxView {
     
     private func loadPreviewWithHEImage(_ hei: HEImage?, forCell cell: HEPreviewCell, selection: HELibrarySelection) -> Task<(), Never> {
         Task {
@@ -308,7 +308,7 @@ extension HEPreiviewBoxView {
 
 
 // MARK: - Gesture recognizer Delegate
-extension HEPreiviewBoxView: UIGestureRecognizerDelegate {
+extension HEPreviewBoxView: UIGestureRecognizerDelegate {
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith
         otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         return true
@@ -320,7 +320,7 @@ extension HEPreiviewBoxView: UIGestureRecognizerDelegate {
     
 }
 
-extension HEPreiviewBoxView: UICollectionViewDelegateFlowLayout, UICollectionViewDataSource {
+extension HEPreviewBoxView: UICollectionViewDelegateFlowLayout, UICollectionViewDataSource {
     
     func items() -> [HELibrarySelection] {
         return self.delegate?.previewBoxViewItems(self) ?? []

@@ -33,16 +33,20 @@ class HEClipActionToolView: UIView {
         actionItems = [:]
         actionItems[.rotate] = [] // 회전
         actionItems[.separator] = [] // 구분 선
-        actionItems[.crop] = clipRatios // 크롭
-        // 원본 비율 설정
-        actionItems[.crop]?.first(where: { $0 == .origin })?.whRatio = originImageSize.width / originImageSize.height
+        actionItems[.crop] = clipRatios.map {
+            if $0.title == HEImageClipRatio.origin.title {
+                $0.whRatio = originImageSize.width / originImageSize.height // 원본 비율 설정
+            }
+            return $0
+        } // 크롭
+        
         
         let spaceBetweenCell: CGFloat = 20
         let numberOfClipItems: CGFloat = CGFloat(self.actionItems[.crop]?.count ?? 0)
         let totalWidth = (ClipActionCell.itemSize.width * (numberOfClipItems + 1)) + ClipActionSeparatorCell.itemSize.width // 1 => rotate
         let totalSpacingWidth = spaceBetweenCell * (numberOfClipItems - 1)
         clipActionColContentViewWidth = totalWidth + totalSpacingWidth
-        self.selectedRatio = selectedRatio ?? .custom
+        self.selectedRatio = selectedRatio ?? HEConfiguration.default().clipRatios.first ?? .custom
         
         super.init(frame: .zero)
         

@@ -105,6 +105,25 @@ struct UIHelper {
         return alert
     }
     
+    
+    static func videoTooHeavyAlert(_ sourceView: UIView) -> UIAlertController {
+        let msg = String(format: PickerConfig.wordings.videoFileTooHeavy,
+                         "\(PickerConfig.video.maxVideoFileSize)")
+        let alert = UIAlertController(title: nil,
+                                      message: msg,
+                                      preferredStyle: .actionSheet)
+        if let popoverController = alert.popoverPresentationController {
+            popoverController.sourceView = sourceView
+            popoverController.sourceRect = CGRect(x: sourceView.bounds.midX,
+                                                  y: sourceView.bounds.midY,
+                                                  width: 0,
+                                                  height: 0)
+            popoverController.permittedArrowDirections = []
+        }
+        alert.addAction(UIAlertAction(title: PickerConfig.wordings.ok, style: UIAlertAction.Style.default, handler: nil))
+        return alert
+    }
+    
     static func cannotFindMediaAlert(_ sourceView: UIView) -> UIAlertController {
         let alert = UIAlertController(title: nil,
                                       message: PickerConfig.wordings.cannotFindMediaFile,

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Kingfisher
 import UIKit
 
 public protocol HEImageCache: AnyObject {
@@ -39,7 +40,7 @@ public protocol HEImageCache: AnyObject {
 }
 
 @MainActor
-public protocol HEImageDataStore: AnyObject {
+public protocol HEImageDataStore {
     func addHEImage(_ hei: HEImage, excepting: ((HEImage) -> Bool)?)
     func addHEImages(_ heis: [HEImage], excepting: ((HEImage) -> Bool)?)
     
@@ -49,6 +50,7 @@ public protocol HEImageDataStore: AnyObject {
     func all() -> [HEImage]
     func numberOfImages() -> Int
     func getHEImage(at index: Int) -> HEImage?
+    
     func getHEImage(forId id: String) -> HEImage?
     
     @discardableResult
@@ -79,7 +81,7 @@ public protocol HEEditImageStore: HEImageDataStore, HEImageCache {}
 
 /// 간단히 구현된 편집용 이미지 스토어
 public class HESimpleEditImageStore: HEEditImageStore {
-    
+
     public init(){}
     
     let memCache = NSCache<NSString, UIImage>()
@@ -264,7 +266,7 @@ extension HESimpleEditImageStore {
             FileManager.default.createFile(atPath: fileURL.path, contents: data)
             
             await memCacheImage(uiImage, forUrl: fileURL)
-            await hei.setEditImageURL(fileURL)
+            hei.setEditImageURL(fileURL)
             
             return fileURL
         }
@@ -281,7 +283,7 @@ extension HESimpleEditImageStore {
             FileManager.default.createFile(atPath: fileURL.path, contents: data)
             
             await memCacheImage(uiImage, forUrl: fileURL)
-            await hei.setThumbnailURL(fileURL)
+            hei.setThumbnailURL(fileURL)
             
             return fileURL
         }
@@ -373,9 +375,8 @@ extension HESimpleEditImageStore {
                 return image
             }
             
-            let (data, response) = try await URLSession.shared.data(from: url)
-            trace(response)
-            if let image = UIImage(data: data) {
+            let remoteImage = await HERemoteImageDownloader().download(url)
+            if let image = remoteImage {
                 await self?.memCacheImage(image, forUrl: url)
                 return image
             }
@@ -392,6 +393,7 @@ extension HESimpleEditImageStore {
             let data = try Data(contentsOf: url)
             return UIImage(data: data)!
         }
+        
         // TODO: download remove image?
 //        let (data, response) = try await URLSession.shared.data(from: url)
 //        trace(response)
@@ -403,4 +405,21 @@ extension HESimpleEditImageStore {
         throw HEError.imageNotFound
     }
     
+}
+
+
+final class HERemoteImageDownloader {
+    func download(_ url: URL) async -> UIImage? {
+        await withUnsafeContinuation { continuation in
+            ImageDownloader.default.downloadImage(with: url) { result in
+                switch result {
+                case .success(let value):
+                    continuation.resume(returning: value.image.withRenderingMode(.alwaysOriginal))
+                case .failure(let error):
+                    woops(error)
+                    continuation.resume(returning: nil)
+                }
+            }
+        }
+    }
 }

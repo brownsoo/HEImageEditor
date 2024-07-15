@@ -9,7 +9,6 @@ import Foundation
 import UIKit
 import HECommon
 
-@MainActor
 public class HEEditImage: HEImage {
     
     public internal(set) var editState: HEEditState?

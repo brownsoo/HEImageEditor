@@ -128,7 +128,7 @@ class ViewController: UIViewController {
    
     
     func startEditMultipleImages(_ images: [HEEditImage]) {
-        imageStore.clearAll()
+        let imageStore = HESimpleEditImageStore()
         imageStore.addHEImages(images)
         let vc = HEImageEditorViewController(imageStore: imageStore,
                                             stickerDataSource: self)
