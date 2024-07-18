@@ -175,4 +175,22 @@ public extension Array where Element == HEMediaItem {
         }
         return nil
     }
+    
+    var photoItems: [HEMediaPhoto] {
+        self.compactMap { it in
+            if case let .photo(p) = it {
+                return p
+            }
+            return nil
+        }
+    }
+    
+    var videoItems: [HEMediaVideo] {
+        self.compactMap { it in
+            if case let .video(v) = it {
+                return v
+            }
+            return nil
+        }
+    }
 }

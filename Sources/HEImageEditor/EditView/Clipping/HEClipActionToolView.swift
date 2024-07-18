@@ -46,7 +46,7 @@ class HEClipActionToolView: UIView {
         let totalWidth = (ClipActionCell.itemSize.width * (numberOfClipItems + 1)) + ClipActionSeparatorCell.itemSize.width // 1 => rotate
         let totalSpacingWidth = spaceBetweenCell * (numberOfClipItems - 1)
         clipActionColContentViewWidth = totalWidth + totalSpacingWidth
-        self.selectedRatio = selectedRatio ?? HEConfiguration.default().clipRatios.first ?? .custom
+        self.selectedRatio = selectedRatio ?? HEImageEditorConfiguration.default().clipRatios.first ?? .custom
         
         super.init(frame: .zero)
         

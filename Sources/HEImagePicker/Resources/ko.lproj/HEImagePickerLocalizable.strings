@@ -27,6 +27,7 @@
 "_attach" = "첨부하기";
 "_editPhoto" = "사진 편집";
 "_allPhotos" = "모든 사진";
+"_allVideos" = "모든 영상";
 "_confirm" = "확인";
 "_close" = "닫기";
 "_noSupportCameraDevice" = "카메라가 지원되지 않습니다.";

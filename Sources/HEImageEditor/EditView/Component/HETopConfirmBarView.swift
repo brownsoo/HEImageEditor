@@ -9,8 +9,8 @@ import UIKit
 
 class HETopConfirmBarView: HETopBarView {
     
-    private lazy var cancelButton = UIButton()
-    private lazy var confirmButton = UIButton()
+    lazy var cancelButton = UIButton()
+    lazy var confirmButton = UIButton()
     private let contentView = UIView()
     var cancelClickCallback: (() -> Void)?
     var confirmClickCallback: (() -> Void)?

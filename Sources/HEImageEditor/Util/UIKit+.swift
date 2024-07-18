@@ -24,39 +24,39 @@ func deviceSafeAreaInsets() -> UIEdgeInsets {
 
 extension HEWrapper where Base: UIColor {
     static var adjustSliderNormalColor: UIColor {
-        HEUIConfiguration.default().adjustSliderNormalColor
+        HEImageEditorUIConfiguration.default().adjustSliderNormalColor
     }
     
     static var adjustSliderTintColor: UIColor {
-        HEUIConfiguration.default().adjustSliderTintColor
+        HEImageEditorUIConfiguration.default().adjustSliderTintColor
     }
     
     static var editDoneBtnBgColor: UIColor {
-        HEUIConfiguration.default().editDoneBtnBgColor
+        HEImageEditorUIConfiguration.default().editDoneBtnBgColor
     }
     
     static var editDoneBtnTitleColor: UIColor {
-        HEUIConfiguration.default().editDoneBtnTitleColor
+        HEImageEditorUIConfiguration.default().editDoneBtnTitleColor
     }
     
     static var trashbinNormalBgColor: UIColor {
-        HEUIConfiguration.default().ashbinNormalBgColor
+        HEImageEditorUIConfiguration.default().ashbinNormalBgColor
     }
     
     static var trashbinTintBgColor: UIColor {
-        HEUIConfiguration.default().ashbinTintBgColor
+        HEImageEditorUIConfiguration.default().ashbinTintBgColor
     }
     
     static var toolTitleNormalColor: UIColor {
-        HEUIConfiguration.default().toolTitleNormalColor
+        HEImageEditorUIConfiguration.default().toolTitleNormalColor
     }
     
     static var toolTitleTintColor: UIColor {
-        HEUIConfiguration.default().toolTitleTintColor
+        HEImageEditorUIConfiguration.default().toolTitleTintColor
     }
 
     static var toolIconHighlightedColor: UIColor? {
-        HEUIConfiguration.default().toolIconHighlightedColor
+        HEImageEditorUIConfiguration.default().toolIconHighlightedColor
     }
 }
 
@@ -74,9 +74,9 @@ extension HEWrapper where Base: UIImage {
         
         let filter = CIFilter(name: "CIColorControls")
         filter?.setValue(ciImage, forKey: kCIInputImageKey)
-        filter?.setValue(HEConfiguration.AdjustTool.brightness.filterValue(brightness), forKey: HEConfiguration.AdjustTool.brightness.key)
-        filter?.setValue(HEConfiguration.AdjustTool.contrast.filterValue(contrast), forKey: HEConfiguration.AdjustTool.contrast.key)
-        filter?.setValue(HEConfiguration.AdjustTool.saturation.filterValue(saturation), forKey: HEConfiguration.AdjustTool.saturation.key)
+        filter?.setValue(HEImageEditorConfiguration.AdjustTool.brightness.filterValue(brightness), forKey: HEImageEditorConfiguration.AdjustTool.brightness.key)
+        filter?.setValue(HEImageEditorConfiguration.AdjustTool.contrast.filterValue(contrast), forKey: HEImageEditorConfiguration.AdjustTool.contrast.key)
+        filter?.setValue(HEImageEditorConfiguration.AdjustTool.saturation.filterValue(saturation), forKey: HEImageEditorConfiguration.AdjustTool.saturation.key)
         let outputCIImage = filter?.outputImage
         return outputCIImage?.he.toUIImage()
     }

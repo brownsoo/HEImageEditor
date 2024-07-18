@@ -1,3 +1,4 @@
+"complete pick" = "Done";
 "custom ratio" = "Custom";
 "original" = "Original";
 "rotate" = "Rotate";
@@ -21,3 +22,5 @@
 "camera"="Camera";
 "album"="Album";
 "close"= "Close";
+"cannot_more_image_stickers" = "Cannot more image stickers.";
+"cannot_more_text_stickers" = "Cannot more text stickers.";

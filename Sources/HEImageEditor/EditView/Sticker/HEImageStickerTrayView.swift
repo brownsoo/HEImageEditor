@@ -14,11 +14,13 @@ public protocol HEImageStickerTrayViewDataSource {
     @objc func imageStickerTrayView(_ trayView: HEImageStickerTrayView, stickerForItemAt indexPath: IndexPath) -> HEImageSticker
     @objc optional func numberOfSections(in trayView: HEImageStickerTrayView) -> Int
     @objc optional func allStickers(_ trayView: HEImageStickerTrayView, numberOfItemsInSection section: Int) -> [HEImageSticker]
+    /// 얼굴 이미지 스티커 전용 
+    @objc optional func allStickersOnFace(_ trayView: HEImageStickerTrayView) -> [HEImageSticker]
 }
 
 public class HEImageStickerTrayView: UIView, HEImageStickerTray {
     
-    static let baseViewH: CGFloat = HEConfiguration.imageStickerTrayHeight
+    static let baseViewH: CGFloat = HEImageEditorConfiguration.imageStickerTrayHeight
     
     public var selectImageStickerBlock: ((HEImageSticker) -> Void)?
     public var hideBlock: ((Bool) -> Void)?
@@ -133,8 +135,13 @@ public class HEImageStickerTrayView: UIView, HEImageStickerTray {
 
     }
     
-    public func randomSticker(inSection section: Int) -> HEImageSticker? {
+    public func randomStickerOnFace(inSection section: Int) -> HEImageSticker? {
         guard let dataSource else { return nil }
+        
+        if let allStickers = dataSource.allStickersOnFace?(self) {
+            return allStickers.randomElement()
+        }
+        
         if let allStickers = dataSource.allStickers?(self, numberOfItemsInSection: section).filter({ !$0.isSpecialSticker }) {
             return allStickers.randomElement()
         }

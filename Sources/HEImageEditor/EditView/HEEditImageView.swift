@@ -16,6 +16,8 @@ public protocol HEEditorActionListener: Equatable {
 public protocol HEEditImageViewDelegate: AnyObject {
     func didFinishEditImage(_ editView: HEEditImageView, resultImage: UIImage, editId: String?, editModel: HEEditState?) -> Void
     func cancelledEditImage(_ editView: HEEditImageView)
+    func cannotAttachMoreImageStickers(_ editView: HEEditImageView)
+    func cannotAttachMoreTextStickers(_ editView: HEEditImageView)
 }
 
 
@@ -25,7 +27,7 @@ public extension HEEditImageViewDelegate {
 
 public protocol HEEditImageView: UIViewController {
     
-    var selectedTool: HEConfiguration.EditTool? { get }
+    var selectedTool: HEImageEditorConfiguration.EditTool? { get }
     /// 편집 중
     ///
     /// - selectedTool 이 있음.

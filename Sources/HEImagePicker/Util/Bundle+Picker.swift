@@ -40,7 +40,7 @@ public struct HEPickerIcons {
     public var editImageIcon = imageFromBundle("icMagicbar") ?? UIImage(systemName: "wand.and.rays")
     public var backButtonIcon = imageFromBundle("icArrowRight") ?? UIImage(systemName: "chevron.left")
     public var arrowDownIcon = imageFromBundle("icArrowDown") ?? UIImage(systemName: "chevron.down")
-    public var cropIcon = UIImage(systemName: "crop")
+    public var cropIcon = UIImage(systemName: "crop")?.withTintColor(.white, renderingMode: .alwaysOriginal)
     
     public var captureVideoOnImage: UIImage? = imageFromBundle("yp_iconVideoCaptureRecording")
     public var playImage: UIImage? = UIImage(systemName: "play.fill", withConfiguration: UIImage.SymbolConfiguration(pointSize: 26, weight: .regular, scale: .large))

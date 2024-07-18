@@ -63,7 +63,9 @@ extension HELibraryViewController: PHPhotoLibraryChangeObserver {
            let _ = self.assetMediaManager.getAsset(at: 0) {
             trace("선택된게 없어서 기본 선택")
             addToSelection(indexPath: IndexPath(row: 0, section: 0))
-            v.previewBox.reload(at: 0)
+            DispatchQueue.main.async {
+                self.v.previewBox.reload()
+            }
         }
 
         // If user decided to forbid all photos with limited permission

@@ -5,15 +5,15 @@
 import UIKit
 import HECommon
 
-public class HEUIConfiguration: NSObject {
-    private static var single = HEUIConfiguration()
+public class HEImageEditorUIConfiguration: NSObject {
+    private static var single = HEImageEditorUIConfiguration()
     
-    @objc public class func `default`() -> HEUIConfiguration {
-        return HEUIConfiguration.single
+    @objc public class func `default`() -> HEImageEditorUIConfiguration {
+        return HEImageEditorUIConfiguration.single
     }
     
     @objc public class func resetConfiguration() {
-        HEUIConfiguration.single = HEUIConfiguration()
+        HEImageEditorUIConfiguration.single = HEImageEditorUIConfiguration()
     }
         
     /// Adjust Slider Type
@@ -66,10 +66,10 @@ public class HEUIConfiguration: NSObject {
     @objc public var editDoneBtnTitleColor = UIColor.white
     
     /// The normal background color of ashbin.
-    @objc public var ashbinNormalBgColor: UIColor = .he.rgba(248, 9, 9, 0.62)
+    @objc public var ashbinNormalBgColor: UIColor = .he.rgba(51, 51, 51, 0.2)
     
     /// The tint background color of ashbin.
-    @objc public var ashbinTintBgColor: UIColor = .he.rgba(248, 9, 9, 0.88)
+    @objc public var ashbinTintBgColor: UIColor = .he.rgba(248, 9, 9, 0.62)
     
     /// The normal color of the title below the various tools in the image editor.
     @objc public var toolTitleNormalColor: UIColor = .he.rgba(160, 160, 160)

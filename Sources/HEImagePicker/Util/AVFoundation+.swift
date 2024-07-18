@@ -27,8 +27,13 @@ internal func thumbnailFromVideoPath(_ path: URL) -> UIImage {
 extension AVFileType {
     /// Fetch and extension for a file from UTI string
     var fileExtension: String {
-        if let ext = UTType(tag: (self as NSString) as String, tagClass: UTTagClass.filenameExtension, conformingTo: nil) {
-            return ext.preferredFilenameExtension ?? "None"
+        if let ext = UTTypeCopyPreferredTagWithClass(self as CFString, kUTTagClassFilenameExtension)?.takeRetainedValue() {
+            return ext as String
+        }
+        
+        if let ext = UTType(tag: (self as NSString) as String, tagClass: UTTagClass.filenameExtension, conformingTo: nil),
+           let prefer = ext.preferredFilenameExtension {
+            return prefer
         }
         return "None"
     }

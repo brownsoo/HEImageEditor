@@ -79,7 +79,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     private var bottomToolViewHeight: CGFloat!
     
     private var imageStickerTray: (UIView & HEImageStickerTray)? {
-        HEConfiguration.default().imageStickerTray
+        EditorConfig.imageStickerTray
     }
     
     open var drawColorCollectionView: UICollectionView?
@@ -124,7 +124,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     open lazy var trashbinView: UIView = {
         let view = UIView()
         view.backgroundColor = .he.trashbinNormalBgColor
-        view.layer.cornerRadius = 15
+        view.layer.cornerRadius = trashbinSize.width / 2
         view.layer.masksToBounds = true
         view.isHidden = true
         return view
@@ -144,9 +144,9 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     /// self.view 좌표계에서 containerView 프레임
     var originalFrame: CGRect = .zero
     
-    let tools: [HEConfiguration.EditTool]
+    let tools: [HEImageEditorConfiguration.EditTool]
     
-    let adjustTools: [HEConfiguration.AdjustTool]
+    let adjustTools: [HEImageEditorConfiguration.AdjustTool]
     
     var editImage: UIImage
     
@@ -200,7 +200,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         return bt
     }()
     
-    public var selectedTool: HEConfiguration.EditTool? {
+    public var selectedTool: HEImageEditorConfiguration.EditTool? {
         didSet {
             if selectedTool == nil {
                 bottomToolView?.unselectTool()
@@ -208,9 +208,9 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         }
     }
     
-    private var selectedAdjustTool: HEConfiguration.AdjustTool?
+    private var selectedAdjustTool: HEImageEditorConfiguration.AdjustTool?
     private let drawColors: [UIColor]
-    private var currentDrawColor = HEConfiguration.default().defaultDrawColor
+    private var currentDrawColor = HEImageEditorConfiguration.default().defaultDrawColor
     private var drawPaths: [HEDrawPath]
     private var drawLineWidth: CGFloat = 6
     private var thumbnailFilterImages: [UIImage] = []
@@ -269,7 +269,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     /// 하단 툴뷰 구성자
     private var bottomToolViewBuilder: HEEditImageBottomToolViewBuilder!
     
-    public var initialEditTool: HEConfiguration.EditTool?
+    public var initialEditTool: HEImageEditorConfiguration.EditTool?
     
     deinit {
         cleanToolViewStateTimer()
@@ -283,7 +283,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         image: UIImage,
         editId: String? = nil,
         editState: HEEditState? = nil,
-        initialTool: HEConfiguration.EditTool? = nil,
+        initialTool: HEImageEditorConfiguration.EditTool? = nil,
         animate: Bool = true,
         delegate: HEEditImageViewDelegate? = nil,
         topToolViewBuilder: HEEditImageTopToolViewBuilder? = nil,
@@ -319,19 +319,19 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         editImageWithoutAdjust = originalImage
         currentClipStatus = editState?.clipStatus ?? HEClipStatus(editRect: CGRect(origin: .zero, size: image.size))
         preClipStatus = currentClipStatus
-        drawColors = HEConfiguration.default().drawColors
+        drawColors = HEImageEditorConfiguration.default().drawColors
         currentFilter = editState?.selectFilter ?? .normal
         drawPaths = editState?.drawPaths ?? []
         mosaicDrawPaths = editState?.mosaicPaths ?? []
         currentAdjustStatus = editState?.adjustStatus ?? HEAdjustStatus()
         preAdjustStatus = currentAdjustStatus
         
-        var ts = HEConfiguration.default().tools
-        if ts.contains(.imageSticker), HEConfiguration.default().imageStickerTray == nil {
+        var ts = HEImageEditorConfiguration.default().tools
+        if ts.contains(.imageSticker), HEImageEditorConfiguration.default().imageStickerTray == nil {
             ts.removeAll { $0 == .imageSticker }
         }
         tools = ts
-        adjustTools = HEConfiguration.default().adjustTools
+        adjustTools = HEImageEditorConfiguration.default().adjustTools
         selectedAdjustTool = adjustTools.first
         actionManager = HEEditActionManager(actions: editState?.actions ?? [])
         
@@ -460,7 +460,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                                                 y: bottomToolViewContainer.frame.minY - adjustColViewH,
                                                 width: view.he.width,
                                                 height: adjustColViewH)
-            if HEUIConfiguration.default().adjustSliderType == .vertical {
+            if HEImageEditorUIConfiguration.default().adjustSliderType == .vertical {
                 adjustSlider?.frame = CGRect(x: view.he.width - 60, y: view.he.height / 2 - 100, width: 60, height: 200)
             } else {
                 let sliderHeight: CGFloat = 60
@@ -533,12 +533,12 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         let thumbnailImage = originalImage.he.resize(size) ?? originalImage
         
         DispatchQueue.global().async {
-            self.thumbnailFilterImages = HEConfiguration.default().filters.map { $0.applier?(thumbnailImage) ?? thumbnailImage }
+            self.thumbnailFilterImages = HEImageEditorConfiguration.default().filters.map { $0.applier?(thumbnailImage) ?? thumbnailImage }
             
             DispatchQueue.main.async {
                 self.filterCollectionView?.reloadData()
                 self.filterCollectionView?.performBatchUpdates {} completion: { _ in
-                    if let index = HEConfiguration.default().filters.firstIndex(where: { $0 == self.currentFilter }) {
+                    if let index = HEImageEditorConfiguration.default().filters.firstIndex(where: { $0 == self.currentFilter }) {
                         self.filterCollectionView?.scrollToItem(at: IndexPath(row: index, section: 0), at: .centeredHorizontally, animated: false)
                     }
                 }
@@ -933,11 +933,17 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         imageStickerTray.show(in: view, frame: trayFrame)
         imageStickerContainerIsHidden = false
         selectedTool = .imageSticker
-        editingTopView.show()
+        editingTopView.show(animate: false)
         editingTopView.confirmClickCallback = { [weak self] in
             guard let self else { return }
             self.selectedTool = nil
             self.imageStickerTray?.hide()
+            
+            if EditorConfig.actionDoneEditorWhenImageStickerEditingConfirm {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    self.done()
+                }
+            }
         }
         editingTopView.cancelClickCallback = {[weak self] in
             guard let self else { return }
@@ -956,7 +962,14 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     // TODO: 50 개까지 허용
     public func startTextSticker() {
-        showInputTextVC(font: HEConfiguration.default().textStickerDefaultFont)
+        
+        let stickerViews = stickersContainer.subviews.compactMap({ $0 as? HETextStickerView })
+        if stickerViews.count >= EditorConfig.maxTextStickersCount {
+            delegate?.cannotAttachMoreTextStickers(self)
+            return
+        }
+        
+        showInputTextVC(font: HEImageEditorConfiguration.default().textStickerDefaultFont)
         
         selectedTool = .textSticker
         setDrawViews(hidden: true)
@@ -1021,7 +1034,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         adjustSlider?.isHidden = hidden
     }
     
-    private func changeAdjustTool(_ tool: HEConfiguration.AdjustTool) {
+    private func changeAdjustTool(_ tool: HEImageEditorConfiguration.AdjustTool) {
         selectedAdjustTool = tool
         
         switch tool {
@@ -1075,12 +1088,14 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             return
         }
         
+        let loadingView = HELoadingView()
+        loadingView.show(inCenterOf: view)
+        
         autoreleasepool {
-            let loadingView = HELoadingView()
-            loadingView.show(inCenterOf: view)
+            trace("build image ----- ")
+            resImage = buildImage()
             
-            DispatchQueue.main.async { [self] in
-                resImage = buildImage()
+            DispatchQueue.global().async { [self] in
                 resImage = resImage.he
                     .clipImage(
                         angle: currentClipStatus.angle,
@@ -1101,8 +1116,10 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                     actions: actionManager.actions
                 )
                 
-                loadingView.hide()
-                callback()
+                DispatchQueue.main.async {
+                    loadingView.hide()
+                    callback()
+                }
             }
         }
     }
@@ -1464,7 +1481,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         vc.delegate = self
         
         vc.modalPresentationStyle = .fullScreen
-        showDetailViewController(vc, sender: nil)
+        vc.modalTransitionStyle = .crossDissolve
+        self.present(vc, animated: true)
     }
     
     
@@ -1474,9 +1492,9 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     private func getImageStickerTrayFrame() -> CGRect {
         let trayFrame = CGRect(x: 0,
-                               y: bottomToolViewContainer.frame.minY - HEConfiguration.imageStickerTrayHeight,
+                               y: bottomToolViewContainer.frame.minY - HEImageEditorConfiguration.imageStickerTrayHeight,
                                width: view.bounds.width,
-                               height: HEConfiguration.imageStickerTrayHeight)
+                               height: HEImageEditorConfiguration.imageStickerTrayHeight)
         return trayFrame
     }
     
@@ -1514,6 +1532,12 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     /// 스티커를 뷰로 추가
     private func addImageStickerView(_ sticker: HEImageSticker) {
+        let stickerViews = stickersContainer.subviews.compactMap({ $0 as? HEImageStickerView })
+        if stickerViews.count >= EditorConfig.maxImageStickersCount {
+            delegate?.cannotAttachMoreImageStickers(self)
+            return
+        }
+        
         Task {
             if sticker.id == HEImageSticker.faceAiIcon.id {
                 if loadingView.isShowing {
@@ -1560,13 +1584,13 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 }
                 
                 let results = try await HEFaceDetection().detect(from: editImage, orientation: editImage.imageOrientation)
-                let animeDuration = TimeInterval(min(Double(results.count) * 2, 1.6))
+                let animeDuration = TimeInterval(min(Double(results.count) * 0.2, 1.6))
                 var i: Double = 0
                 let count = Double(results.count)
                 let halfPi = Double.pi / 2
                 for result in results {
                     trace(result)
-                    if let sticker = imageStickerTray.randomSticker(inSection: 0) {
+                    if let sticker = imageStickerTray.randomStickerOnFace(inSection: 0) {
                         let image = await sticker.imageLoader()
                         let scale = mainScrollView.zoomScale
                         // let size = HEImageStickerView.calculateSize(image: image, container: view)
@@ -1893,6 +1917,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         return image
     }
     
+    @MainActor
     private func buildImage() -> UIImage {
         let imageSize = originalImage.size
         
@@ -2050,7 +2075,7 @@ extension HEEditImageViewController: UICollectionViewDataSource, UICollectionVie
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HEFilterImageCell.he.identifier, for: indexPath) as! HEFilterImageCell
             
             let image = thumbnailFilterImages[indexPath.row]
-            let filter = HEConfiguration.default().filters[indexPath.row]
+            let filter = HEImageEditorConfiguration.default().filters[indexPath.row]
             
             cell.nameLabel.text = filter.name
             cell.imageView.image = image
@@ -2087,7 +2112,7 @@ extension HEEditImageViewController: UICollectionViewDataSource, UICollectionVie
             currentDrawColor = drawColors[indexPath.row]
             switchEraserBtnStatus(false, reloadData: false)
         } else if collectionView == filterCollectionView {
-            let filter = HEConfiguration.default().filters[indexPath.row]
+            let filter = EditorConfig.filters[indexPath.row]
             actionManager.storeAction(.filter(oldFilter: currentFilter, newFilter: filter))
             changeFilter(filter)
         } else { // adjust tools
@@ -2387,7 +2412,7 @@ extension HEEditImageViewController: HEEditActionManagerDelegate {
         guard let filter else { return }
         changeFilter(filter)
         
-        let filters = HEConfiguration.default().filters
+        let filters = EditorConfig.filters
         
         guard let filterCollectionView,
               let index = filters.firstIndex(where: { $0.name == filter.name }) else {
@@ -2401,7 +2426,7 @@ extension HEEditImageViewController: HEEditActionManagerDelegate {
     }
     
     private func undoOrRedoAdjust(_ status: HEAdjustStatus) {
-        var adjustTool: HEConfiguration.AdjustTool?
+        var adjustTool: HEImageEditorConfiguration.AdjustTool?
         
         if currentAdjustStatus.brightness != status.brightness {
             adjustTool = .brightness

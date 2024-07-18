@@ -12,7 +12,7 @@ import Foundation
     var key: String {
         var key = "en"
         
-        switch HEUIConfiguration.default().languageType {
+        switch HEImageEditorUIConfiguration.default().languageType {
         case .system:
             key = Locale.preferredLanguages.first ?? "en"
             
@@ -42,6 +42,7 @@ public struct HELocalLanguageKey: Hashable {
     public static let original = HELocalLanguageKey(rawValue: "original")
     public static let rotate = HELocalLanguageKey(rawValue: "rotate")
     
+    public static let completePick = HELocalLanguageKey(rawValue: "complete pick")
     /// Cancel
     public static let cancel = HELocalLanguageKey(rawValue: "cancel")
     
@@ -68,7 +69,7 @@ public struct HELocalLanguageKey: Hashable {
 }
 
 func localLanguageTextValue(_ key: HELocalLanguageKey) -> String {
-    if let value = HEUIConfiguration.default().customLanguageConfig[key] {
+    if let value = HEImageEditorUIConfiguration.default().customLanguageConfig[key] {
         return value
     }
     

@@ -43,6 +43,7 @@ HEImage::
 - id\(id)
 - originURL: \(originURL?.absoluteString ?? "nil")
 - editImageURL: \(editImageURL?.absoluteString ?? "nil")
+- thumbnailURL: \(thumbnailURL?.absoluteString ?? "nil")
 """
     }
 }

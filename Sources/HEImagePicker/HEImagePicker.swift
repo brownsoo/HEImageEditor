@@ -19,6 +19,12 @@ public protocol HEImagePickerDelegate: AnyObject {
     func imagePicker(_ picker: HEImagePicker, captionWithIdentifer identifier: String) -> String?
     
     func imagePicker(_ picker: HEImagePicker, replacingItemWithIdentifer identifier: String) -> HEMediaItem?
+    /// 편집하기 버튼을 선택함
+    /// 
+    /// - Parameters:
+    ///   - picker: HEImagePicker
+    ///   - item: selected item
+    ///   - items: all selected items in ordered
     func imagePicker(_ picker: HEImagePicker, didSelectToEditItem item: HEMediaItem, inItems items: [HEMediaItem])
     /// 카메라를 통해 캡쳐되어 선택됨.
     ///
@@ -28,7 +34,7 @@ public protocol HEImagePickerDelegate: AnyObject {
 
 public extension HEImagePickerDelegate {
     func imagePicker(_ picker: HEImagePicker, captionWithIdentifer identifier: String) -> String? {
-        return picker.editImageStore.getHEImage(forId: identifier) == nil ? nil : "편집 상태"
+        return picker.editImageStore.getHEImage(forId: identifier)?.editImageURL == nil ? nil : "편집 상태"
     }
     func imagePicker(_ picker: HEImagePicker, shouldAddToSelection identifier: String, numSelections: Int) -> Bool {
         return true
@@ -103,7 +109,9 @@ open class HEImagePicker: UINavigationController, HEPickerNavigationController {
     
     public func reload() {
         mainVc.v.previewBox.reload()
-        mainVc.v.albumCollectionView.reloadData()
+        DispatchQueue.main.async {
+            self.mainVc.v.albumCollectionView.reloadData()
+        }
     }
 }
 

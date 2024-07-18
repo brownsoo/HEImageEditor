@@ -54,7 +54,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     
     internal var isProcessing = false // true if video or image is in processing state
     internal var selectedItems = [HELibrarySelection]()
-    internal let assetMediaManager = LibraryMediaManager()
+    internal let assetMediaManager = HELibraryMediaManager()
     internal var isMultipleSelectionEnabled = false
     internal var currentlySelectedIdentifier: String? = nil
     internal let panGestureHelper = HEPanGestureHelper()
@@ -416,18 +416,24 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
             assetMediaManager.fetchResult = PHAsset.fetchAssets(with: options)
         }
         
+        var newSelected = false
         if assetMediaManager.hasResultItems,
            let _ = assetMediaManager.getAsset(at: 0) {
             v.albumCollectionView.reloadData()
-            v.albumCollectionView.selectItem(at: IndexPath(row: 0, section: 0), animated: false, scrollPosition: UICollectionView.ScrollPosition())
-            if !isMultipleSelectionEnabled && PickerConfig.library.preSelectItemOnMultipleSelection {
-                addToSelection(indexPath: IndexPath(row: 0, section: 0))
+            if !isLimitExceeded {
+                newSelected = true
+                v.albumCollectionView.selectItem(at: IndexPath(row: 0, section: 0), animated: false, scrollPosition: UICollectionView.ScrollPosition())
+                if !isMultipleSelectionEnabled && PickerConfig.library.preSelectItemOnMultipleSelection {
+                    addToSelection(indexPath: IndexPath(row: 0, section: 0))
+                }
             }
         } else {
             delegate?.libraryViewHaveNoItems(self)
         }
         
-        v.previewBox.reload()
+        if newSelected {
+            v.previewBox.reload()
+        }
         
         scrollToTop()
     }
@@ -625,6 +631,9 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     public func extractSelectedMedia(photoCallback: @escaping (_ photo: HEMediaPhoto) -> Void,
                               videoCallback: @escaping (_ videoURL: HEMediaVideo) -> Void,
                               multipleItemsCallback: @escaping (_ items: [HEMediaItem]) -> Void) {
+        
+        v.previewBox.currentZoomableView?.stopVideoPlay()
+        
         DispatchQueue.global(qos: .userInitiated).async {
             
             let selectedItems: [(asset: PHAsset?, hei: HEImage?, cropRect: CGRect?)] = self.selectedItems.compactMap {

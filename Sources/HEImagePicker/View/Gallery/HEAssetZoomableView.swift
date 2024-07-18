@@ -60,13 +60,38 @@ final public class HEAssetZoomableView: UIScrollView {
         }
     }
     
+    
+    // Centring the image frame
+    public func centerAssetView() {
+        let assetView = isVideoMode ? videoView : photoImageView
+        let scrollViewBoundsSize = self.bounds.size
+        var assetFrame = assetView.frame
+        let assetSize = assetView.frame.size
+        
+        assetFrame.origin.x = (assetSize.width < scrollViewBoundsSize.width) ?
+            (scrollViewBoundsSize.width - assetSize.width) / 2.0 : 0
+        assetFrame.origin.y = (assetSize.height < scrollViewBoundsSize.height) ?
+            (scrollViewBoundsSize.height - assetSize.height) / 2.0 : 0.0
+        
+        assetView.frame = assetFrame
+    }
+    
+    public func stopVideoPlay() {
+        if currentAssetType == .video {
+            videoView.stop()
+        }
+    }
+    
     public func applyVideo(_ video: PHAsset,
-                           mediaManager: LibraryMediaManager?,
+                           mediaManager: HELibraryMediaManager?,
                            storedCropPosition: HELibrarySelection?,
                            completion: @escaping () -> Void,
                            updateCropInfo: @escaping () -> Void) {
         guard self.currentAssetIdentifier != video.localIdentifier else { completion() ; return }
         currentAssetType = video.mediaType
+        videoView.setPreviewImage(nil)
+        photoImageView.removeFromSuperview()
+        
         mediaManager?.phImageManager?.fetchPreviewFor(video: video) { [weak self] preview in
             guard let self = self else { return }
             guard self.currentAssetIdentifier != video.localIdentifier else { completion() ; return }
@@ -104,7 +129,7 @@ final public class HEAssetZoomableView: UIScrollView {
     }
     
     public func applyImage(_ photo: PHAsset,
-                           mediaManager: LibraryMediaManager?,
+                           mediaManager: HELibraryMediaManager?,
                            storedCropPosition: HELibrarySelection?,
                            completion: @escaping (Bool) -> Void,
                            updateCropInfo: @escaping () -> Void) {
@@ -115,6 +140,8 @@ final public class HEAssetZoomableView: UIScrollView {
         trace()
         currentAssetIdentifier = photo.localIdentifier
         currentAssetType = photo.mediaType
+        photoImageView.image = nil
+        videoView.removeFromSuperview()
         
         mediaManager?.phImageManager?.fetch(photo: photo) { [weak self] image, isLowResIntermediaryImage in
             guard let self = self else { return }
@@ -158,7 +185,9 @@ final public class HEAssetZoomableView: UIScrollView {
         currentAssetIdentifier = hei.id
         currentAssetType = .image
         currentEditImageURL = hei.editImageURL
-        trace(hei)
+        photoImageView.image = nil
+        videoView.removeFromSuperview()
+        
         Task { [weak self] in
             guard let self = self else { return }
             do {
@@ -201,7 +230,7 @@ final public class HEAssetZoomableView: UIScrollView {
             }
         }
     }
-
+    
     public func clearAsset() {
         isVideoMode = false
         videoView.removeFromSuperview()
@@ -301,20 +330,6 @@ fileprivate extension HEAssetZoomableView {
         return squareZoomScale
     }
     
-    // Centring the image frame
-    func centerAssetView() {
-        let assetView = isVideoMode ? videoView : photoImageView
-        let scrollViewBoundsSize = self.bounds.size
-        var assetFrame = assetView.frame
-        let assetSize = assetView.frame.size
-        
-        assetFrame.origin.x = (assetSize.width < scrollViewBoundsSize.width) ?
-            (scrollViewBoundsSize.width - assetSize.width) / 2.0 : 0
-        assetFrame.origin.y = (assetSize.height < scrollViewBoundsSize.height) ?
-            (scrollViewBoundsSize.height - assetSize.height) / 2.0 : 0.0
-        
-        assetView.frame = assetFrame
-    }
 }
 
 // MARK: UIScrollViewDelegate Protocol

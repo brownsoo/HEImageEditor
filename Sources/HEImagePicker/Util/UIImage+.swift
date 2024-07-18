@@ -51,6 +51,7 @@ internal extension UIImage {
     
     // Kudos to Trevor Harmon and his UIImage+Resize category from
     // which this code is heavily inspired.
+    @available(*, unavailable, message: "Use HEWrapper")
     func resetOrientation() -> UIImage {
         // Image has no orientation, so keep the same
         if imageOrientation == .up {

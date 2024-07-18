@@ -22,8 +22,6 @@ public class HEVideoView: UIView {
         guard let player = playerLayer.player else {
             return AVPlayer()
         }
-        
-        playIconView.image = PickerConfig.icons.playImage?.withTintColor(.white, renderingMode: .alwaysOriginal)
         return player
     }
     
@@ -44,11 +42,12 @@ public class HEVideoView: UIView {
         addGestureRecognizer(singleTapGR)
         
         playerView.alpha = 0
-        playIconView.alpha = 0.8
+        playIconView.alpha = 0
         playIconView.contentMode = .center
+        playIconView.image = PickerConfig.icons.playImage?.withTintColor(.white, renderingMode: .alwaysOriginal)
+        
         playerLayer.videoGravity = .resizeAspect
         previewImageView.contentMode = .scaleAspectFit
-        
         addSubview(previewImageView)
         addSubview(playerView)
         addSubview(playIconView)
@@ -150,7 +149,7 @@ extension HEVideoView {
 
 // MARK: - Other API
 extension HEVideoView {
-    public func setPreviewImage(_ image: UIImage) {
+    public func setPreviewImage(_ image: UIImage?) {
         previewImageView.image = image
     }
     

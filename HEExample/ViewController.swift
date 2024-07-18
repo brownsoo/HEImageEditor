@@ -25,7 +25,7 @@ class ViewController: UIViewController {
     var resultImageView: UIImageView!
     var originalImage: UIImage?
     var resultImageEditState: HEEditState?
-    let config = HEConfiguration.default()
+    let config = HEImageEditorConfiguration.default()
     
     private var editCancelBtn: UIButton = {
         let btn = UIButton(type: .custom)
@@ -103,7 +103,7 @@ class ViewController: UIViewController {
             }
         })
         
-        HEConfiguration.default()
+        HEImageEditorConfiguration.default()
             .clipRatios([.origin, .custom, .wh1x1])
             .imageStickerTray(stickerTray)
     }
@@ -128,7 +128,7 @@ class ViewController: UIViewController {
    
     
     func startEditMultipleImages(_ images: [HEEditImage]) {
-        let imageStore = HESimpleEditImageStore()
+        imageStore.clearAll()
         imageStore.addHEImages(images)
         let vc = HEImageEditorViewController(imageStore: imageStore,
                                             stickerDataSource: self)
@@ -315,8 +315,7 @@ extension ViewController: HEImagePickerDelegate {
         imageStore.clearAll()
         imageStore.addHEImages(news)
         
-        let vc = HEImageEditorViewController(imageStore: imageStore,
-                                            stickerDataSource: self)
+        let vc = HEImageEditorViewController(imageStore: imageStore, stickerDataSource: self)
         
         vc.delegate = self
         vc.initialIndex = items.firstIndex(where: { $0.identifier == item.identifier }) ?? 0

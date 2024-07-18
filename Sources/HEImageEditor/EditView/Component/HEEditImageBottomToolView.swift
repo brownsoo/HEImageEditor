@@ -10,10 +10,10 @@ import UIKit
 
 public protocol HEEditToolView: UIView {
     func unselectTool()
-    func selectTool(_ tool: HEConfiguration.EditTool, dispatchingEvent: Bool)
+    func selectTool(_ tool: HEImageEditorConfiguration.EditTool, dispatchingEvent: Bool)
 }
 public extension HEEditToolView {
-    func selectTool(_ tool: HEConfiguration.EditTool) {
+    func selectTool(_ tool: HEImageEditorConfiguration.EditTool) {
         self.selectTool(tool, dispatchingEvent: true)
     }
 }
@@ -25,20 +25,20 @@ open class HEEditImageBottomToolView: UIView, HEEditToolView {
     public static let padding = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
     public static let minimumInterspacing: CGFloat = 20
     
-    public let tools: [HEConfiguration.EditTool]
-    public var toolSelectListener: ((HEConfiguration.EditTool) -> Void)?
-    public private(set) var selectedTool: HEConfiguration.EditTool?
+    public let tools: [HEImageEditorConfiguration.EditTool]
+    public var toolSelectListener: ((HEImageEditorConfiguration.EditTool) -> Void)?
+    public private(set) var selectedTool: HEImageEditorConfiguration.EditTool?
     
     var interitemSpacing: CGFloat = 20
     
-    public init(tools: [HEConfiguration.EditTool]) {
+    public init(tools: [HEImageEditorConfiguration.EditTool]) {
         self.tools = tools
         super.init(frame: .zero)
         setupUI()
     }
     
     public required init?(coder: NSCoder) { // TODO: check coder
-        let tools = coder.decodeObject(forKey: "tools") as? [HEConfiguration.EditTool]
+        let tools = coder.decodeObject(forKey: "tools") as? [HEImageEditorConfiguration.EditTool]
         self.tools = tools ?? []
         super.init(coder: coder)
     }
@@ -48,7 +48,7 @@ open class HEEditImageBottomToolView: UIView, HEEditToolView {
         super.encode(with: coder)
     }
     
-    open func selectTool(_ tool: HEConfiguration.EditTool, dispatchingEvent: Bool) {
+    open func selectTool(_ tool: HEImageEditorConfiguration.EditTool, dispatchingEvent: Bool) {
         selectedTool = tool
         if dispatchingEvent {
             toolSelectListener?(tool)
@@ -174,7 +174,7 @@ extension HEEditImageBottomToolView: UICollectionViewDelegateFlowLayout {
 
 class HEEditToolCell: UICollectionViewCell {
     
-    var toolType: HEConfiguration.EditTool = .draw {
+    var toolType: HEImageEditorConfiguration.EditTool = .draw {
         didSet {
             badgeView.isHidden = true
             var icon: UIImage?

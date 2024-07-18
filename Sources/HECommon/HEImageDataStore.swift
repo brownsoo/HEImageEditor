@@ -44,6 +44,7 @@ public protocol HEImageDataStore {
     func addHEImage(_ hei: HEImage, excepting: ((HEImage) -> Bool)?)
     func addHEImages(_ heis: [HEImage], excepting: ((HEImage) -> Bool)?)
     
+    func removeHEImage(_ id: String)
     func removeHEImage(_ he: HEImage)
     func clearAll()
     
@@ -55,6 +56,8 @@ public protocol HEImageDataStore {
     
     @discardableResult
     func replaceHEImage(at index: Int, with item: HEImage) -> Bool
+    
+    func sorts(byIds ids: [String])
 }
 
 public extension HEImageDataStore {
@@ -74,6 +77,18 @@ public extension String {
     func fromHEImageCacheIdentifier() -> String {
         return self.replacingOccurrences(of: "~", with: "/")
     }
+    
+    var heImageCacheOriginFileName: String {
+        return self.toHEImageCacheIdentifier() + ".png"
+    }
+    
+    var heImageCacheEditFileName: String {
+        return self.toHEImageCacheIdentifier() + ".edit.png"
+    }
+    
+    var heImageCacheThumbFileName: String {
+        return self.toHEImageCacheIdentifier() + ".thumb.png"
+    }
 }
 
 
@@ -87,6 +102,10 @@ public class HESimpleEditImageStore: HEEditImageStore {
     let memCache = NSCache<NSString, UIImage>()
     let thumbCache = NSCache<NSString, UIImage>()
     var images: [HEImage] = []
+
+    public func removeHEImage(_ id: String) {
+        images.removeAll(where: { $0.id == id })
+    }
     
     public func removeHEImage(_ he: HEImage) {
         images.removeAll(where: { $0.id == he.id })
@@ -145,6 +164,18 @@ public class HESimpleEditImageStore: HEEditImageStore {
             return true
         }
         return false
+    }
+    
+    public func sorts(byIds ids: [String]) {
+        var news = self.images
+        news.sort { a, b in
+            if let ai = ids.firstIndex(where: { a.id == $0 }),
+               let bi = ids.firstIndex(where: { b.id == $0 }) {
+                return ai < bi
+            }
+            return false
+        }
+        self.images = news
     }
 }
 
@@ -210,7 +241,7 @@ extension HESimpleEditImageStore {
     }
     
     public func getCachedOriginImageURL(forId id: String) throws -> URL? {
-        let fileName = id.toHEImageCacheIdentifier() + ".png"
+        let fileName = id.heImageCacheOriginFileName
         let fileURL: URL = try fileURL(fileName: fileName)
         if FileManager.default.fileExists(atPath: fileURL.absoluteString) {
             return fileURL
@@ -219,7 +250,7 @@ extension HESimpleEditImageStore {
     }
     
     public func getCachedEditImageURL(forId id: String) throws -> URL? {
-        let fileName = id.toHEImageCacheIdentifier() + ".edit.png"
+        let fileName = id.heImageCacheEditFileName
         let fileURL: URL = try fileURL(fileName: fileName)
         if FileManager.default.fileExists(atPath: fileURL.absoluteString) {
             return fileURL
@@ -228,7 +259,7 @@ extension HESimpleEditImageStore {
     }
     
     public func cacheOriginImage(uiImage: UIImage, forId id: String) -> Task<URL, Error> {
-        let fileName = id.toHEImageCacheIdentifier() + ".png"
+        let fileName = id.heImageCacheOriginFileName
         return Task.detached { [weak self] in
             guard let self, let data = uiImage.pngData() else {
                 throw HEError.generateFileData
@@ -243,7 +274,7 @@ extension HESimpleEditImageStore {
     }
     
     public func cacheOriginImageSync(uiImage: UIImage, forId id: String) throws -> URL {
-        let fileName = id.toHEImageCacheIdentifier() + ".png"
+        let fileName = id.heImageCacheOriginFileName
         guard let data = uiImage.pngData() else {
             throw HEError.generateFileData
         }
@@ -257,7 +288,7 @@ extension HESimpleEditImageStore {
     }
     
     public func cacheEditImage(uiImage: UIImage, forHei hei: HEImage) -> Task<URL, Error> {
-        let fileName = hei.id.toHEImageCacheIdentifier() + ".edit.png"
+        let fileName = hei.id.heImageCacheEditFileName
         return Task.detached { [weak self] in
             guard let self, let data = uiImage.pngData() else {
                 throw HEError.generateFileData
@@ -273,7 +304,7 @@ extension HESimpleEditImageStore {
     }
     
     public func cacheThumbnailImage(uiImage: UIImage, forHei hei: HEImage) -> Task<URL, Error> {
-        let fileName = hei.id.toHEImageCacheIdentifier() + ".thumb.png"
+        let fileName = hei.id.heImageCacheThumbFileName
         return Task.detached { [weak self] in
             let thumbnail = uiImage.he.thumbnail()
             guard let self, let data = thumbnail.pngData() else {
@@ -306,8 +337,8 @@ extension HESimpleEditImageStore {
         hei.setEditImageURL(nil)
         hei.setThumbnailURL(nil)
         
-        let editFileURL = try? fileURL(fileName: hei.id.toHEImageCacheIdentifier() + ".edit.png")
-        let thumbFileURL = try? fileURL(fileName: hei.id.toHEImageCacheIdentifier() + ".thumb.png")
+        let editFileURL = try? fileURL(fileName: hei.id.heImageCacheEditFileName)
+        let thumbFileURL = try? fileURL(fileName: hei.id.heImageCacheThumbFileName)
         Task.detached {
             do {
                 if let editFileURL {

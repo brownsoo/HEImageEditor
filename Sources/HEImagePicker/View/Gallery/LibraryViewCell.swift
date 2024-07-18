@@ -59,11 +59,22 @@ class LibraryViewCell: UICollectionViewCell {
     
     var representedAssetIdentifier: String!
     let imageView = UIImageView()
+    var imageLoader: (() async -> UIImage?)?
     let durationLabel = UILabel()
     let selectionOverlay = UIView()
     let multipleSelectionIndicator = MultipleSelectionIndicator()
     let captionLabel = UILabel()
     var captionLabelFilledHeight: NSLayoutConstraint?
+    private var imageLoadTask: Task<(), Never>?
+    
+    func loadImage() {
+        imageLoadTask?.cancel()
+        imageLoadTask = Task {
+            let image = await imageLoader?()
+            if Task.isCancelled { return }
+            imageView.image = image
+        }
+    }
     
     required init?(coder aDecoder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     

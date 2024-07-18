@@ -54,7 +54,7 @@ public class HEImageSticker: NSObject {
     
     func show(in parent: UIView, frame: CGRect)
     func hide(instantly: Bool)
-    func randomSticker(inSection section: Int) -> HEImageSticker?
+    func randomStickerOnFace(inSection section: Int) -> HEImageSticker?
 }
 
 public extension HEImageStickerTray {

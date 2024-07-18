@@ -81,8 +81,8 @@ public struct HEImagePickerConfiguration {
     public var showsVideoTrimmer = true
     
     /// 카메라 촬영 후 사진 갤러리에 추가할 지 여부
-    /// Defaults to false.
-    public var shouldSaveNewPicturesToAlbum = false
+    /// Defaults to true.
+    public var shouldSaveNewPicturesToAlbum = true
     
     /// Defines the name of the album when saving pictures in the user's photo library.
     /// In general that would be your App name. Defaults to "DefaultYPImagePickerAlbumName"
@@ -126,7 +126,7 @@ public struct HEImagePickerConfiguration {
         public var onlySquare = false
         
         /// Allow to use clop 
-        public var usingClop = true
+        public var usingClop = false
         
         /// Sets the cropping style to square or not. Ignored if `onlySquare` is true. Defaults to true.
         public var isCropSquareByDefault = true
@@ -182,7 +182,7 @@ public struct HEImagePickerConfiguration {
         public var compression: String = AVAssetExportPresetHighestQuality
         
         /// Choose the result video extension if you trim or compress a video. Defaults to mov.
-        public var fileType: AVFileType = .mov
+        public var fileType: AVFileType = .mp4
         
         /// Defines the time limit for recording videos.
         /// Default is 60 seconds.
@@ -203,8 +203,8 @@ public struct HEImagePickerConfiguration {
         public var libraryTimeLimit: TimeInterval = 60.0
         
         /// Defines the minimum time for the video
-        /// Defaults to 3 seconds.
-        public var minimumTimeLimit: TimeInterval = 3.0
+        /// Defaults to 1 seconds.
+        public var minimumTimeLimit: TimeInterval = 1.0
         
         /// max file size for video to select
         ///

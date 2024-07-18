@@ -10,12 +10,12 @@ import UIKit
 import Photos
 
 /// 포토 라이브러리 미디어 파일 관리 
-final public class LibraryMediaManager {
+final public class HELibraryMediaManager {
     
     public var collection: PHAssetCollection?
     public var fetchResult: PHFetchResult<PHAsset>?
     internal var previousPreheatRect: CGRect = .zero
-    internal var phImageManager: PHCachingImageManager?
+    private (set) var phImageManager: PHCachingImageManager?
     internal var exportTimer: Timer?
     internal var currentExportSessions: [AVAssetExportSession] = []
 
@@ -29,6 +29,8 @@ final public class LibraryMediaManager {
             return false
         }
     }
+    
+    public init() {}
     
     public func initialize() {
         phImageManager = PHCachingImageManager()
@@ -162,7 +164,9 @@ final public class LibraryMediaManager {
             // Video Composition
             let videoComposition = AVMutableVideoComposition(propertiesOf: asset)
             videoComposition.instructions = [mainInstructions]
-            videoComposition.renderSize = cropRect.size // needed?
+            if cropRect.width > 0 && cropRect.height > 0 {
+                videoComposition.renderSize = cropRect.size // needed?
+            }
             
             // 5. Configuring export session
             

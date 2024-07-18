@@ -27,6 +27,7 @@
 "_attach" = "Attach";
 "_editPhoto" = "Edit photo";
 "_allPhotos" = "All Photos";
+"_allVideos" = "All Videos";
 "_confirm" = "Confirm";
 "_close" = "Close";
 "_noSupportCameraDevice" = "Camera is not available.";

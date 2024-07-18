@@ -28,7 +28,7 @@ extension PHCachingImageManager {
     
         // Fetch Highiest quality image possible.
         requestImageDataAndOrientation(for: asset, options: options) { data, _, _, _ in
-            if let data = data, let image = UIImage(data: data)?.resetOrientation() {
+            if let data = data, let image = UIImage(data: data)?.he.fixOrientation() {
             
                 // Crop the high quality image manually.
                 let xCrop: CGFloat = cropRect.origin.x * CGFloat(asset.pixelWidth)

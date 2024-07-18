@@ -1,3 +1,4 @@
+"complete pick" = "완료";
 "custom ratio" = "자유롭게";
 "original" = "원본";
 "rotate" = "회전";
@@ -21,8 +22,5 @@
 "camera"="카메라";
 "album"="앨범";
 "close"= "닫기";
-"go_to_setting"="설정으로 이동";
-"perms_accessing_album"="사진 등록을 위해 앨범 접근을 허용해주세요.";
-"perms_limited_album"="사진 앨범에 접근 권한이 없습니다.";
-"perms_accessing_camera"="사진 등록을 위해 카메라 접근을 허용해주세요.";
-"perms_limited_camera"="카메라 접근 권한이 없습니다.";
+"cannot_more_image_stickers" = "스티커를 더 이상 추가할 수 없습니다.";
+"cannot_more_text_stickers" = "텍스트를 더 이상 추가할 수 없습니다.";

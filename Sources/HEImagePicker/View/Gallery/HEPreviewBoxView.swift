@@ -25,13 +25,12 @@ public class HEPreviewBoxView: UIView {
     
     public weak var delegate: HEPreviewBoxViewDelegate?
     public weak var editImageStore: HEEditImageStore?
-    public weak var assetMediaManager: LibraryMediaManager?
+    public weak var assetMediaManager: HELibraryMediaManager?
     
     public let curtain = UIView()
     public let spinnerView = UIView()
     
     public private(set) var editButton: HECapsuleButton?
-    private var collView: UICollectionView!
     public var currentZoomableView: HEAssetZoomableView? {
         if (delegate?.previewBoxViewItems(self).isEmpty ?? true) {
             return nil
@@ -50,6 +49,8 @@ public class HEPreviewBoxView: UIView {
             trace(currentIndex)
         }
     }
+    
+    internal var collView: UICollectionView!
     private let spinner = UIActivityIndicatorView(style: .medium)
     private var isMultipleSelectionEnabled = false
 
@@ -68,6 +69,7 @@ public class HEPreviewBoxView: UIView {
     
     init() {
         super.init(frame: .zero)
+        backgroundColor = .systemBackground
         
         setupCollView()
         
@@ -102,8 +104,7 @@ public class HEPreviewBoxView: UIView {
             button.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .bold)
             button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 4, bottom: 0, right: -4)
             button.contentEdgeInsets = UIEdgeInsets(top: 14, left: 16, bottom: 14, right: 16 + 4)
-            //button.layer.cornerRadius = 22
-            //button.layer.masksToBounds = true
+            
             button.setBackgroundColor(UIColor(white: 51 / 255.0, alpha: 0.4), for: .normal)
             button.setBackgroundColor(UIColor(white: 151 / 255.0, alpha: 0.6), for: .highlighted)
             addSubview(button)
@@ -158,7 +159,11 @@ public class HEPreviewBoxView: UIView {
         guard let button = editButton, button.isHidden else {
             return
         }
-        if isVideoMode {
+        guard let currentZoomableView else {
+            return
+        }
+        
+        if currentZoomableView.isVideoMode {
             button.isHidden = true
             // TODO: editing video
             return
@@ -201,7 +206,6 @@ public class HEPreviewBoxView: UIView {
     
     // MARK: - Multiple selection
 
-    /// Use this to update the multiple selection mode UI state for the YPAssetViewContainer
     public func setMultipleSelectionMode(on: Bool) {
         isMultipleSelectionEnabled = on
         reload()
@@ -261,16 +265,27 @@ extension HEPreviewBoxView {
                 return
             }
             delegate?.previewBoxViewStartedLoadingImage(self)
-            
+            let isNotSquare = collView.collectionViewLayout is CenteredCellFlowLayout
             let completion = { [weak self] (isLowResIntermediaryImage: Bool) in
                 guard let self else { return }
                 if Task.isCancelled { return }
                 cell.updateSquareCropButtonState()
                 cell.zoomableView.fitImage(true, animated: false)
                 self.delegate?.previewBoxViewUpdateCropInfo(self, assetIdentifier: asset.localIdentifier)
+                
                 if !isLowResIntermediaryImage {
                     self.hideLoader()
                     self.delegate?.previewBoxViewFinishedLoadingImage(self)
+                    DispatchQueue.main.async {
+                        if isNotSquare { // 스퀘어가 아니면, 컨텐츠를 가운데로 조정
+                            let centerOffsetX = (cell.zoomableView.contentSize.width - cell.contentView.frame.size.width) / 2
+                            let centerOffsetY = (cell.zoomableView.contentSize.height - cell.contentView.frame.size.height) / 2
+                            let centerPoint = CGPoint(x: centerOffsetX, y: centerOffsetY)
+                            cell.zoomableView.setContentOffset(centerPoint, animated: false)
+        
+                        }
+                        
+                    }
                 }
             }
             
@@ -284,17 +299,17 @@ extension HEPreviewBoxView {
             switch asset.mediaType {
             case .image:
                 cell.zoomableView.applyImage(asset,
-                                                   mediaManager: self.assetMediaManager,
-                                                   storedCropPosition: selection,
-                                                   completion: completion,
-                                                   updateCropInfo: updateCropInfo)
+                                             mediaManager: self.assetMediaManager,
+                                             storedCropPosition: selection,
+                                             completion: completion,
+                                             updateCropInfo: updateCropInfo)
                 
             case .video:
                 cell.zoomableView.applyVideo(asset,
-                                                   mediaManager: self.assetMediaManager,
-                                                   storedCropPosition: selection,
-                                                   completion: { completion(false) },
-                                                   updateCropInfo: updateCropInfo)
+                                             mediaManager: self.assetMediaManager,
+                                             storedCropPosition: selection,
+                                             completion: { completion(false) },
+                                             updateCropInfo: updateCropInfo)
             case .audio, .unknown:
                 ()
             @unknown default:
@@ -302,25 +317,7 @@ extension HEPreviewBoxView {
             }
         }
     }
-}
-
-
-
-
-// MARK: - Gesture recognizer Delegate
-extension HEPreviewBoxView: UIGestureRecognizerDelegate {
-    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith
-        otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-        return true
-    }
     
-    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
-        return !spinnerIsShown && !(touch.view is UIButton)
-    }
-    
-}
-
-extension HEPreviewBoxView: UICollectionViewDelegateFlowLayout, UICollectionViewDataSource {
     
     func items() -> [HELibrarySelection] {
         return self.delegate?.previewBoxViewItems(self) ?? []
@@ -436,6 +433,26 @@ extension HEPreviewBoxView: UICollectionViewDelegateFlowLayout, UICollectionView
     }
     
     
+}
+
+
+
+
+// MARK: - Gesture recognizer Delegate
+extension HEPreviewBoxView: UIGestureRecognizerDelegate {
+    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith
+        otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        return true
+    }
+    
+    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        return !spinnerIsShown && !(touch.view is UIButton)
+    }
+    
+}
+
+extension HEPreviewBoxView: UICollectionViewDelegateFlowLayout, UICollectionViewDataSource {
+    
     public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return items().count
     }
@@ -455,6 +472,7 @@ extension HEPreviewBoxView: UICollectionViewDelegateFlowLayout, UICollectionView
         
         if let item = items.get(at: indexPath.row) {
             let task = Task {
+                trace("미리보기 로드")
                 if let hei = self.editImageStore?.getHEImage(forId: item.assetIdentifier) {
                     await loadPreviewWithHEImage(hei, forCell: cell, selection: item).value
                 } else if let asset = PHAsset.fetchAssets(withLocalIdentifiers: [item.assetIdentifier], options: PHFetchOptions()).firstObject {
@@ -476,6 +494,11 @@ extension HEPreviewBoxView: UICollectionViewDelegateFlowLayout, UICollectionView
             cell.loadTask = task
         }
         return cell
+    }
+    
+    public func collectionView(_ collectionView: UICollectionView, didEndDisplaying cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+        let cell = cell as! HEPreviewCell
+        cell.zoomableView.stopVideoPlay()
     }
     
     public func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
@@ -535,12 +558,15 @@ class HEPreviewCell: UICollectionViewCell {
         zoomableView.accessibilityIdentifier = "assetZoomableView"
         zoomableView.zoomableViewDelegate = self
         zoomableView.makeConstraints { v in
-            v.edgesConstraintToSuperview(edges: .all)
+            v.edgesConstraintToSuperview(edges: .all, priority: .defaultHigh)
         }
         
         // Crop Button
         let button = UIButton()
         button.setImage(PickerConfig.icons.cropIcon, for: .normal)
+        button.backgroundColor = UIColor(white: 51 / 255.0, alpha: 0.2)
+        button.layer.cornerRadius = 21
+        button.layer.masksToBounds = true
         contentView.addSubview(button)
         button.makeConstraints { v in
             v.sizeAnchorConstraintTo(42)
@@ -569,8 +595,7 @@ class HEPreviewCell: UICollectionViewCell {
             squareCropButton?.isHidden = true
             return
         }
-        guard !usingClop else {
-            // If only square enabled, than the squareCropButton is not visible
+        guard usingClop else {
             squareCropButton?.isHidden = true
             return
         }

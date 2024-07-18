@@ -81,6 +81,10 @@ extension HELibraryViewController {
     
     /// Adds cell to selection
     func addToSelection(indexPath: IndexPath) {
+        if isLimitExceeded {
+            return
+        }
+        
         guard let asset = assetMediaManager.getAsset(at: indexPath.row) else {
             print("No asset to add to selection.")
             return
@@ -153,7 +157,7 @@ extension HELibraryViewController: UICollectionViewDelegate {
         }
         
         let identifier: String
-        let phAsset: PHAsset
+        var phAsset: PHAsset?
         var mediaType: PHAssetMediaType
         
         // Original thumbnail from photo album
@@ -161,66 +165,65 @@ extension HELibraryViewController: UICollectionViewDelegate {
             identifier = asset.localIdentifier
             mediaType = asset.mediaType
             phAsset = asset
+            let cellSize = v.cellSize()
+            let phManager = assetMediaManager.phImageManager
+            cell.imageLoader = {
+                let options = PHImageRequestOptions()
+                options.isNetworkAccessAllowed = true
+                options.isSynchronous = true
+                var thumbnail: UIImage?
+                phManager?.requestImage(for: asset,
+                                        targetSize: cellSize,
+                                        contentMode: .aspectFill,
+                                        options: options) { image, _ in
+                    thumbnail = image
+                }
+                return thumbnail
+            }
         } else {
             return cell
         }
+        // First thumbnail from external source
         
-        Task { [weak self] in
-            guard let self else { return }
-            // Replacing thumbnail from external source
-            let backTask = Task<HEMediaItem?, Never>.detached(priority: .userInitiated) {
-                return await self.delegate?.libraryView(self, replacingItemWithIdentifer: identifier)
-            }
-            
-            var thumbnail: UIImage?
-            if let media = await backTask.value {
-                switch media {
-                case .photo(let photo):
-                    mediaType = .image
-                    thumbnail = await photo.extraTask?().thumbnail
-                    
-                case .video(let video):
-                    mediaType = .video
-                    thumbnail = await video.thumbnailTask?()
+        if let heiMedia: HEMediaItem = self.delegate?.libraryView(self, replacingItemWithIdentifer: identifier) {
+            switch heiMedia {
+            case .photo(let photo):
+                mediaType = .image
+                phAsset = photo.asset
+                cell.imageLoader = {
+                    await photo.extraTask?().thumbnail
+                }
+            case .video(let video):
+                mediaType = .video
+                phAsset = video.asset
+                cell.imageLoader = {
+                    await video.thumbnailTask?()
                 }
             }
-            
-            // Load Image
-            if let thumbnail {
-                cell.imageView.image = thumbnail
-            } else {
-                assetMediaManager.phImageManager?.requestImage(for: phAsset,
-                                                               targetSize: v.cellSize(),
-                                                               contentMode: .aspectFill,
-                                                               options: nil) { image, _ in
-                    // The cell may have been recycled when the time this gets called
-                    // set image only if it's still showing the same asset.
-                    if cell.representedAssetIdentifier == phAsset.localIdentifier && image != nil {
-                        cell.imageView.image = image
-                    }
-                }
-            }
-            
-            // Info
-            cell.representedAssetIdentifier = identifier
-            cell.multipleSelectionIndicator.selectionColor = PickerConfig.colors.multipleItemsSelectedCircleColor ?? PickerConfig.colors.tintColor
-            
-            
-            let isVideo = (mediaType == .video)
-            let duration = isVideo ? UIHelper.formattedStrigFrom(phAsset.duration) : ""
-            cell.durationLabel.text = duration
-            cell.durationLabel.isHidden = !isVideo || duration.isEmpty
-            cell.multipleSelectionIndicator.isHidden = !isMultipleSelectionEnabled
-            cell.isSelected = currentlySelectedIdentifier == identifier
-            
-        }
+        } 
+        
+        
+        // Info
+        cell.representedAssetIdentifier = identifier
+        cell.multipleSelectionIndicator.selectionColor = PickerConfig.colors.multipleItemsSelectedCircleColor ?? PickerConfig.colors.tintColor
+        
+        
+        let isVideo = (mediaType == .video)
+        let duration = isVideo && phAsset != nil ? UIHelper.formattedStrigFrom(phAsset!.duration) : ""
+        cell.durationLabel.text = duration
+        cell.durationLabel.isHidden = !isVideo || duration.isEmpty
+        cell.multipleSelectionIndicator.isHidden = !isMultipleSelectionEnabled
+        cell.isSelected = currentlySelectedIdentifier == identifier
+        
         // Set correct selection number
         if let index = selectedItems.firstIndex(where: { $0.assetIdentifier == identifier }) {
             let currentSelection = selectedItems[index]
-            selectedItems[index] = HELibrarySelection(assetIdentifier: currentSelection.assetIdentifier,
-                                                      cropRect: currentSelection.cropRect,
-                                                      scrollViewContentOffset: currentSelection.scrollViewContentOffset,
-                                                      scrollViewZoomScale: currentSelection.scrollViewZoomScale)
+            selectedItems[index] = HELibrarySelection(
+                assetIdentifier: currentSelection.assetIdentifier,
+                cropRect: currentSelection.cropRect,
+                scrollViewContentOffset: currentSelection.scrollViewContentOffset,
+                scrollViewZoomScale: currentSelection.scrollViewZoomScale)
+            
             cell.multipleSelectionIndicator.set(number: index + 1) // start at 1, not 0
         } else {
             cell.multipleSelectionIndicator.set(number: nil)
@@ -241,10 +244,16 @@ extension HELibraryViewController: UICollectionViewDelegate {
         return cell
     }
     
+    public func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+        (cell as? LibraryViewCell)?.loadImage()
+    }
+    
     public func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let previouslySelected = currentlySelectedIdentifier ?? ""
         currentlySelectedIdentifier = (collectionView.cellForItem(at: indexPath) as? LibraryViewCell)?.representedAssetIdentifier
-        panGestureHelper.resetToOriginalState()
+        
+        // 선택하면 화면 재설정 (제외)
+        // panGestureHelper.resetToOriginalState()
         
         // Only scroll cell to top if preview is hidden.
         if !panGestureHelper.isImageShown && PickerConfig.scrollTopIfSelectedWhenPreviewIsHidden {

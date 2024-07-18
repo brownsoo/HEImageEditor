@@ -25,11 +25,20 @@ public protocol HEImageEditor: UIViewController {
 public protocol HEImageEditorDelegate: AnyObject {
     func didFinishEditImages(_ editor: HEImageEditor)
     func confirmingResetEditImage(_ editor: HEImageEditor, hei: HEEditImage, completion: @escaping (Bool) -> Void)
+    
+    func cannotAttachMoreImageStickers(_ editor: HEImageEditor)
+    func cannotAttachMoreTextStickers(_ editor: HEImageEditor)
 }
 
 public extension HEImageEditorDelegate {
     func confirmingResetEditImage(_ editor: HEImageEditor, hei: HEEditImage, completion: @escaping (Bool) -> Void) {
         completion(true)
+    }
+    func cannotAttachMoreImageStickers(_ editor: HEImageEditor) {
+        (self as? UIViewController)?.showAlert(localLanguageTextValue("cannot_more_image_stickers"))
+    }
+    func cannotAttachMoreTextStickers(_ editor: HEImageEditor) {
+        (self as? UIViewController)?.showAlert(localLanguageTextValue("cannot_more_text_stickers"))
     }
 }
 
@@ -41,7 +50,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
     public weak var delegate: HEImageEditorDelegate?
     public weak var stickerDataSource: HEImageStickerTrayViewDataSource? {
         didSet {
-            HEConfiguration.default().imageStickerTray?.dataSource = stickerDataSource
+            HEImageEditorConfiguration.default().imageStickerTray?.dataSource = stickerDataSource
         }
     }
     
@@ -73,7 +82,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
     private lazy var loadingView = HELoadingView()
     
     deinit {
-        HEConfiguration.default().imageStickerTray(nil)
+        HEImageEditorConfiguration.default().imageStickerTray(nil)
         trace()
     }
     
@@ -95,9 +104,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
     
     open override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        if navigationController is HEPickerNavigationController {
-            navigationController?.setNavigationBarHidden(true, animated: false)
-        }
+        navigationController?.setNavigationBarHidden(true, animated: false)
     }
     
     public override func viewDidLayoutSubviews() {
@@ -214,7 +221,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
         
         let confirmButton = UIButton()
         confirmButton.also { it in
-            it.setTitle(localLanguageTextValue(.done), for: .normal)
+            it.setTitle(localLanguageTextValue(.completePick), for: .normal)
             it.setTitleColor(.he.rgba(246, 246, 246), for: .normal)
             it.setTitleColor(.lightGray, for: .disabled)
             it.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .bold)
@@ -234,8 +241,8 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
     /// 메인 하단 툴바
     private func makeBottomToolView() -> (HEEditToolView, CGFloat) {
         setupHEConfiguration()
-        var ts = HEConfiguration.default().tools
-        if ts.contains(.imageSticker), HEConfiguration.default().imageStickerTray == nil {
+        var ts = HEImageEditorConfiguration.default().tools
+        if ts.contains(.imageSticker), HEImageEditorConfiguration.default().imageStickerTray == nil {
             ts.removeAll { $0 == .imageSticker }
         }
         let toolbar = HEEditImageBottomToolView(tools: ts)
@@ -245,7 +252,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
         return (toolbar, 76)
     }
     
-    private func onBottomToolSelected(type: HEConfiguration.EditTool) {
+    private func onBottomToolSelected(type: HEImageEditorConfiguration.EditTool) {
         guard let currentIndex, let he = imageStore.getHEImage(at: currentIndex) else {
             return
         }
@@ -267,13 +274,13 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
     }
     
     private func setupHEConfiguration() {
-        if HEConfiguration.default().tools.contains(.imageSticker) {
-            let stickerTray = HEConfiguration.default().imageStickerTray ?? HEImageStickerTrayView()
+        if HEImageEditorConfiguration.default().tools.contains(.imageSticker) {
+            let stickerTray = HEImageEditorConfiguration.default().imageStickerTray ?? HEImageStickerTrayView()
             stickerTray.dataSource = self.stickerDataSource
-            HEConfiguration.default()
+            HEImageEditorConfiguration.default()
                 .imageStickerTray(stickerTray)
         } else {
-            HEConfiguration.default()
+            HEImageEditorConfiguration.default()
                 .imageStickerTray(nil)
         }
     }
@@ -306,7 +313,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
         }
     }
     
-    private func startEditImage(hei: HEEditImage, tool: HEConfiguration.EditTool?) async {
+    private func startEditImage(hei: HEEditImage, tool: HEImageEditorConfiguration.EditTool?) async {
         let topBuilder = self.makeEditTopBarView()
         do {
             let image: UIImage
@@ -343,6 +350,14 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
 }
 
 extension HEImageEditorViewController: HEEditImageViewDelegate {
+    public func cannotAttachMoreImageStickers(_ editView: HEEditImageView) {
+        delegate?.cannotAttachMoreImageStickers(self)
+    }
+    
+    public func cannotAttachMoreTextStickers(_ editView: HEEditImageView) {
+        delegate?.cannotAttachMoreTextStickers(self)
+    }
+    
     
     public func didFinishEditImage(_ editView: HEEditImageView, resultImage: UIImage, editId: String?, editModel: HEEditState?) {
         

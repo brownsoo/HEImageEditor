@@ -45,6 +45,7 @@ public struct HEPickerWordings {
     public var close = pickerLocalized("_close")
     public var confirm = pickerLocalized("_confirm")
     public var allPhotos = pickerLocalized("_allPhotos")
+    public var allVideos = pickerLocalized("_allVideos")
     public var editPhoto = pickerLocalized("_editPhoto")
     public var attach = pickerLocalized("_attach")
     public var ok = pickerLocalized("_ok")

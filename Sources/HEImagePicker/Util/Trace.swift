@@ -27,7 +27,7 @@ func trace(filename: String = #file, line: Int = #line, funcName: String = #func
     let time = timeFormatter.string(from: Date())
     let file = filename.components(separatedBy: "/").last?.split(separator: ".").first ?? ""
     let leading = "\(tag) \(time) \(th) \(file) (L\(line))::\(funcName)"
-    print("\(leading) nil")
+    print("\(leading)")
     logger.log("\(leading, privacy: .public)")
 }
 

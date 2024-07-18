@@ -104,7 +104,7 @@ class HEAdjustToolCell: UICollectionViewCell {
         return view
     }()
     
-    var adjustTool: HEConfiguration.AdjustTool = .brightness {
+    var adjustTool: HEImageEditorConfiguration.AdjustTool = .brightness {
         didSet {
             var icon: UIImage?
             switch adjustTool {

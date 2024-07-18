@@ -80,9 +80,9 @@ class HEInputTextViewController: UIViewController {
     
     private lazy var topToolBar = HETopConfirmBarView()
     
-    private lazy var textStickerMaximumLines = HEConfiguration.default().textStickerMaximumLines
-    private lazy var textStickerMaximumCharactersPerLine = HEConfiguration.default().textStickerMaximumCharactersPerLine
-    private lazy var textStickerCanLineBreak = HEConfiguration.default().textStickerCanLineBreak
+    private lazy var textStickerMaximumLines = HEImageEditorConfiguration.default().textStickerMaximumLines
+    private lazy var textStickerMaximumCharactersPerLine = HEImageEditorConfiguration.default().textStickerMaximumCharactersPerLine
+    private lazy var textStickerCanLineBreak = HEImageEditorConfiguration.default().textStickerCanLineBreak
     
     private lazy var textView: UITextView = {
         let textView = UITextView()
@@ -144,7 +144,7 @@ class HEInputTextViewController: UIViewController {
         return true
     }
     
-    private var fillStyle: HEConfiguration.TextStickerFillStyle
+    private var fillStyle: HEImageEditorConfiguration.TextStickerFillStyle
     private let stickerId: String?
     
     init(stickerId: String? = nil,
@@ -162,16 +162,16 @@ class HEInputTextViewController: UIViewController {
         if let textColor = textColor {
             currentTextColor = textColor
         } else {
-            let defColor = HEConfiguration.default().textStickerDefaultTextColor
-            if HEConfiguration.default().textStickerTextColors.contains(defColor) {
+            let defColor = HEImageEditorConfiguration.default().textStickerDefaultTextColor
+            if HEImageEditorConfiguration.default().textStickerTextColors.contains(defColor) {
                 currentTextColor = defColor
             } else {
-                currentTextColor = HEConfiguration.default().textStickerTextColors.first ?? .white
+                currentTextColor = HEImageEditorConfiguration.default().textStickerTextColors.first ?? .white
             }
         }
         
-        self.currentFillColor = fillColor ?? HEConfiguration.default().textStickerDefaultFillColor
-        self.fillStyle = HEConfiguration.default().textStickerFillStyle
+        self.currentFillColor = fillColor ?? HEImageEditorConfiguration.default().textStickerDefaultFillColor
+        self.fillStyle = HEImageEditorConfiguration.default().textStickerFillStyle
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -228,6 +228,11 @@ class HEInputTextViewController: UIViewController {
             height: Self.toolViewHeight
         )
         colorCollView.frame = toolView.bounds
+        
+//        bgImageView.alpha = 0
+//        UIView.animate(withDuration: 0.24, delay: 0, options: [.curveEaseOut], animations: {
+//            self.bgImageView.alpha = 1
+//        })
         
     }
     
@@ -294,9 +299,9 @@ class HEInputTextViewController: UIViewController {
     
     private func getColorSource() -> [UIColor] {
         if selectedTool == .textColor {
-            return HEConfiguration.default().textStickerTextColors
+            return HEImageEditorConfiguration.default().textStickerTextColors
         }
-        return HEConfiguration.default().textStickerBackgroundColors
+        return HEImageEditorConfiguration.default().textStickerBackgroundColors
     }
     
     private func updateCollContentInset() {
@@ -335,46 +340,50 @@ class HEInputTextViewController: UIViewController {
     }
     
     @objc func cancelBtnClick() {
+        modalTransitionStyle = .crossDissolve
         dismiss(animated: true, completion: { [weak self] in
             self?.delegate?.inputTextViewControllerDidCancel()
         })
     }
     
     @objc func doneBtnClick() {
+        
+        if textView.text.isEmpty {
+            return
+        }
+        
         textView.tintColor = .clear
         textView.resignFirstResponder()
         
         var image: UIImage?
-        
-        if !textView.text.isEmpty {
-            let rects = calculateTextRectsByChar()
-            let initial = CGRect(x: 10000, y: 10000, width: 0, height: 0)
-            let textRect = rects.reduce(initial) { prev, rect in
-                let x = min(prev.minX, rect.minX)
-                let y = min(prev.minY, rect.minY)
-                return CGRect(x: x,
-                              y: y,
-                              width: max(prev.width, rect.width),
-                              height: prev.height +  rect.height)
-            }
-            for subview in textView.subviews {
-                if NSStringFromClass(subview.classForCoder) == "_UITextContainerView" {
-//                    var frame = subview.frame
-//                    let size = textView.sizeThatFits(frame.size)
-                    image = UIGraphicsImageRenderer.he.renderImage(size: textView.bounds.size) { context in
-                        if currentFillColor != .clear {
-                            textLayer.render(in: context)
-                        }
-                        subview.layer.render(in: context)
+        let rects = calculateTextRectsByChar()
+        let initial = CGRect(x: 10000, y: 10000, width: 0, height: 0)
+        let textRect = rects.reduce(initial) { prev, rect in
+            let x = min(prev.minX, rect.minX)
+            let y = min(prev.minY, rect.minY)
+            return CGRect(x: x,
+                          y: y,
+                          width: max(prev.width, rect.width),
+                          height: prev.height +  rect.height)
+        }
+        for subview in textView.subviews {
+            if NSStringFromClass(subview.classForCoder) == "_UITextContainerView" {
+                //                    var frame = subview.frame
+                //                    let size = textView.sizeThatFits(frame.size)
+                image = UIGraphicsImageRenderer.he.renderImage(size: textView.bounds.size) { context in
+                    if currentFillColor != .clear {
+                        textLayer.render(in: context)
                     }
-                    // FIXME: 위 렌더러에서 한번에 처리하기..
-                    image = image?.he.clipImage(angle: 0, editRect: textRect, isCircle: false)
+                    subview.layer.render(in: context)
                 }
+                // FIXME: 위 렌더러에서 한번에 처리하기..
+                image = image?.he.clipImage(angle: 0, editRect: textRect, isCircle: false)
             }
         }
         
         delegate?.inputTextViewController(self, stickerId: stickerId, didInput: textView.text, textColor: currentTextColor, fillColor: currentFillColor, font: currentFont, image: image)
         
+        modalTransitionStyle = .crossDissolve
         dismiss(animated: true, completion: nil)
     }
     
@@ -616,10 +625,12 @@ extension HEInputTextViewController: UITextViewDelegate {
             let endIndex = text.index(text.startIndex, offsetBy: maxTextCount)
             textView.text = String(text[..<endIndex])
         }
+        
+        topToolBar.confirmButton.isEnabled = !text.isEmpty
     }
     
     func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
-        if !HEConfiguration.default().textStickerCanLineBreak && text == "\n" {
+        if !HEImageEditorConfiguration.default().textStickerCanLineBreak && text == "\n" {
             doneBtnClick()
             return false
         }

@@ -40,7 +40,11 @@ final class HELibraryView: UIView {
 
     internal let albumNameBt: UIButton = {
         let bt = UIButton()
-        bt.setTitle(PickerConfig.wordings.allPhotos, for: .normal)
+        if PickerConfig.library.mediaType == .video {
+            bt.setTitle(PickerConfig.wordings.allVideos, for: .normal)
+        } else {
+            bt.setTitle(PickerConfig.wordings.allPhotos, for: .normal)            
+        }
         bt.setTitleColor(.init(white: 52/255.0, alpha: 1), for: .normal)
         bt.titleLabel?.font = .systemFont(ofSize: 14, weight: .bold)
         bt.semanticContentAttribute = .forceRightToLeft
@@ -109,7 +113,14 @@ final class HELibraryView: UIView {
     // MARK: Crop Rect
 
     func currentCropRect() -> CGRect {
-        guard let cropView = currentZoomableView else { return CGRect(x: 0, y: 0, width: 1, height: 1) }
+        if !PickerConfig.library.usingClop // no clop
+            || previewBox.collView?.collectionViewLayout is CenteredCellFlowLayout
+        {
+            return CGRect(x: 0, y: 0, width: 1, height: 1)
+        }
+        guard let cropView = currentZoomableView else {
+            return CGRect(x: 0, y: 0, width: 1, height: 1)
+        }
         let normalizedX = min(1, cropView.contentOffset.x &/ cropView.contentSize.width)
         let normalizedY = min(1, cropView.contentOffset.y &/ cropView.contentSize.height)
         let normalizedWidth = min(1, cropView.frame.width / cropView.contentSize.width)
@@ -229,47 +240,45 @@ final class HELibraryView: UIView {
         countView = lbWrap
         
         // 카메라 사용 여부에 따라 버튼 추가
-        if PickerConfig.pickerSources.contains(.photoCapture) || PickerConfig.pickerSources.contains(.videoCapture) {
-            if PickerConfig.pickerSources.contains(.videoCapture) {
-                let iconImage = PickerConfig.icons.videoFillIcon?.withTintColor(.white, renderingMode: .alwaysOriginal)
-                let iconView = UIImageView(frame: .init(origin: .zero, size: CGSize(width: 32, height: 32)))
-                iconView.contentMode = .center
-                iconView.backgroundColor = UIColor(white: 136 / 255.0, alpha: 1.0)
-                iconView.layer.cornerRadius = 16
-                iconView.layer.masksToBounds = true
-                iconView.image = iconImage
-                let renderer = UIGraphicsImageRenderer(bounds: .init(origin: .zero, size: CGSize(width: 32, height: 32)))
-                let icon = renderer.image { rendererContext in
-                    iconView.layer.render(in: rendererContext.cgContext)
-                }
-                
-                let bt = UIButton(frame: .init(origin: .zero, size: CGSize(width: 42, height: 42)))
-                bt.contentEdgeInsets = .init(top: 5, left: 5, bottom: 5, right: 5)
-                bt.setImage(icon, for: .normal)
-                rearStack.addArrangedSubview(bt)
-                cameraVideoButton = bt
+        if PickerConfig.pickerSources.contains(.videoCapture)
+            && (PickerConfig.library.mediaType == .photoAndVideo || PickerConfig.library.mediaType == .video) {
+            let iconImage = PickerConfig.icons.videoFillIcon?.withTintColor(.white, renderingMode: .alwaysOriginal)
+            let iconView = UIImageView(frame: .init(origin: .zero, size: CGSize(width: 32, height: 32)))
+            iconView.contentMode = .center
+            iconView.backgroundColor = UIColor(white: 136 / 255.0, alpha: 1.0)
+            iconView.layer.cornerRadius = 16
+            iconView.layer.masksToBounds = true
+            iconView.image = iconImage
+            let renderer = UIGraphicsImageRenderer(bounds: .init(origin: .zero, size: CGSize(width: 32, height: 32)))
+            let icon = renderer.image { rendererContext in
+                iconView.layer.render(in: rendererContext.cgContext)
             }
             
-            if PickerConfig.pickerSources.contains(.photoCapture) {
-                let iconView = UIImageView(frame: .init(origin: .zero, size: CGSize(width: 32, height: 32)))
-                iconView.contentMode = .center
-                iconView.backgroundColor = UIColor(white: 136 / 255.0, alpha: 1.0)
-                iconView.layer.cornerRadius = 16
-                iconView.layer.masksToBounds = true
-                iconView.image = PickerConfig.icons.cameraFillIcon?.resized(to: CGSize(width: 16, height: 16))
-                let renderer = UIGraphicsImageRenderer(bounds: .init(origin: .zero, size: CGSize(width: 32, height: 32)))
-                let icon = renderer.image { rendererContext in
-                    iconView.layer.render(in: rendererContext.cgContext)
-                }
-                
-                let bt = UIButton(frame: .init(origin: .zero, size: CGSize(width: 42, height: 42)))
-                bt.contentEdgeInsets = .init(top: 5, left: 5, bottom: 5, right: 5)
-                bt.setImage(icon, for: .normal)
-                rearStack.addArrangedSubview(bt)
-                cameraPhotoButton = bt
-            }
-            
+            let bt = UIButton(frame: .init(origin: .zero, size: CGSize(width: 42, height: 42)))
+            bt.contentEdgeInsets = .init(top: 5, left: 5, bottom: 5, right: 5)
+            bt.setImage(icon, for: .normal)
+            rearStack.addArrangedSubview(bt)
+            cameraVideoButton = bt
         }
         
+        if PickerConfig.pickerSources.contains(.photoCapture)
+            && (PickerConfig.library.mediaType == .photoAndVideo || PickerConfig.library.mediaType == .photo) {
+            let iconView = UIImageView(frame: .init(origin: .zero, size: CGSize(width: 32, height: 32)))
+            iconView.contentMode = .center
+            iconView.backgroundColor = UIColor(white: 136 / 255.0, alpha: 1.0)
+            iconView.layer.cornerRadius = 16
+            iconView.layer.masksToBounds = true
+            iconView.image = PickerConfig.icons.cameraFillIcon?.resized(to: CGSize(width: 16, height: 16))
+            let renderer = UIGraphicsImageRenderer(bounds: .init(origin: .zero, size: CGSize(width: 32, height: 32)))
+            let icon = renderer.image { rendererContext in
+                iconView.layer.render(in: rendererContext.cgContext)
+            }
+            
+            let bt = UIButton(frame: .init(origin: .zero, size: CGSize(width: 42, height: 42)))
+            bt.contentEdgeInsets = .init(top: 5, left: 5, bottom: 5, right: 5)
+            bt.setImage(icon, for: .normal)
+            rearStack.addArrangedSubview(bt)
+            cameraPhotoButton = bt
+        }
     }
 }

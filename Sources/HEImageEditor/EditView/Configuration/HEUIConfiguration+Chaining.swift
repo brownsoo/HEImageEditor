@@ -5,76 +5,76 @@
 
 import UIKit
 
-public extension HEUIConfiguration {
+public extension HEImageEditorUIConfiguration {
         
     @discardableResult
-    func adjustSliderType(_ type: HEAdjustSliderType) -> HEUIConfiguration {
+    func adjustSliderType(_ type: HEAdjustSliderType) -> HEImageEditorUIConfiguration {
         adjustSliderType = type
         return self
     }
     
     @discardableResult
-    func languageType(_ type: HELanguageType) -> HEUIConfiguration {
+    func languageType(_ type: HELanguageType) -> HEImageEditorUIConfiguration {
         languageType = type
         return self
     }
     
     @discardableResult
-    func customLanguageConfig(_ config: [HELocalLanguageKey: String]) -> HEUIConfiguration {
+    func customLanguageConfig(_ config: [HELocalLanguageKey: String]) -> HEImageEditorUIConfiguration {
         customLanguageConfig = config
         return self
     }
     
     @discardableResult
-    func adjustSliderNormalColor(_ color: UIColor) -> HEUIConfiguration {
+    func adjustSliderNormalColor(_ color: UIColor) -> HEImageEditorUIConfiguration {
         adjustSliderNormalColor = color
         return self
     }
     
     @discardableResult
-    func adjustSliderTintColor(_ color: UIColor) -> HEUIConfiguration {
+    func adjustSliderTintColor(_ color: UIColor) -> HEImageEditorUIConfiguration {
         adjustSliderTintColor = color
         return self
     }
     
     @discardableResult
-    func editDoneBtnBgColor(_ color: UIColor) -> HEUIConfiguration {
+    func editDoneBtnBgColor(_ color: UIColor) -> HEImageEditorUIConfiguration {
         editDoneBtnBgColor = color
         return self
     }
     
     @discardableResult
-    func editDoneBtnTitleColor(_ color: UIColor) -> HEUIConfiguration {
+    func editDoneBtnTitleColor(_ color: UIColor) -> HEImageEditorUIConfiguration {
         editDoneBtnTitleColor = color
         return self
     }
     
     @discardableResult
-    func ashbinNormalBgColor(_ color: UIColor) -> HEUIConfiguration {
+    func ashbinNormalBgColor(_ color: UIColor) -> HEImageEditorUIConfiguration {
         ashbinNormalBgColor = color
         return self
     }
     
     @discardableResult
-    func ashbinTintBgColor(_ color: UIColor) -> HEUIConfiguration {
+    func ashbinTintBgColor(_ color: UIColor) -> HEImageEditorUIConfiguration {
         ashbinTintBgColor = color
         return self
     }
     
     @discardableResult
-    func toolTitleNormalColor(_ color: UIColor) -> HEUIConfiguration {
+    func toolTitleNormalColor(_ color: UIColor) -> HEImageEditorUIConfiguration {
         toolTitleNormalColor = color
         return self
     }
     
     @discardableResult
-    func toolTitleTintColor(_ color: UIColor) -> HEUIConfiguration {
+    func toolTitleTintColor(_ color: UIColor) -> HEImageEditorUIConfiguration {
         toolTitleTintColor = color
         return self
     }
 
     @discardableResult
-    func toolIconHighlightedColor(_ color: UIColor) -> HEUIConfiguration {
+    func toolIconHighlightedColor(_ color: UIColor) -> HEImageEditorUIConfiguration {
         toolIconHighlightedColor = color
         return self
     }
