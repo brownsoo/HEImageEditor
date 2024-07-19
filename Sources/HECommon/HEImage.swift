@@ -37,7 +37,7 @@ open class HEImage: CustomDebugStringConvertible {
         self.thumbnailURL = url
     }
     
-    public var debugDescription: String {
+    open var debugDescription: String {
         """
 HEImage::
 - id\(id)

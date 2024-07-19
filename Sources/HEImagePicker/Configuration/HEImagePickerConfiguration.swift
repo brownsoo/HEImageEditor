@@ -167,6 +167,11 @@ public struct HEImagePickerConfiguration {
     /// Encapsulates video specific settings.
     public struct HEConfigVideo {
         
+        /// 비디오 전체 압축을 할지 여부 (기본 true)
+        ///
+        /// - true: URL 값을 활용하지 말고, asset 을 활용해야 한다.
+        public var disableCompressing: Bool = false
+        
         /** Choose the videoCompression. Defaults to AVAssetExportPresetHighestQuality
          - "AVAssetExportPresetLowQuality"
          - "AVAssetExportPreset640x480"
@@ -185,8 +190,8 @@ public struct HEImagePickerConfiguration {
         public var fileType: AVFileType = .mp4
         
         /// Defines the time limit for recording videos.
-        /// Default is 60 seconds.
-        public var recordingTimeLimit: TimeInterval = 60.0
+        /// Default is 600 seconds.
+        public var recordingTimeLimit: TimeInterval = 60.0 * 10
         
         /// Defines the size limit in bytes for recording videos.
         /// If this property is not nil, then the recording percentage line tracks buy this.
@@ -204,7 +209,7 @@ public struct HEImagePickerConfiguration {
         
         /// Defines the minimum time for the video
         /// Defaults to 1 seconds.
-        public var minimumTimeLimit: TimeInterval = 1.0
+        public var minimumTimeLimit: TimeInterval = 0.1
         
         /// max file size for video to select
         ///

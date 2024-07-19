@@ -30,7 +30,7 @@ public protocol HELibraryViewDelegate: AnyObject {
     func libraryView(_ libraryView: HELibraryViewController, replacingItemWithIdentifer identifier: String) -> HEMediaItem?
 }
 
-
+/// 피커 본 화면 
 public class HELibraryViewController: UIViewController, PermissionCheckable {
     
     override open var prefersStatusBarHidden: Bool {
@@ -567,6 +567,23 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         assetMediaManager.phImageManager?.fetchImage(for: asset, cropRect: cropRect, targetSize: ts, callback: callback)
     }
     
+    private func fetchVideoOriginalURL(for asset: PHAsset,
+                                       callback: @escaping (_ videoURL: URL?) -> Void) {
+        let options: PHVideoRequestOptions = PHVideoRequestOptions()
+        options.version = .current
+        options.deliveryMode = .fastFormat
+        options.isNetworkAccessAllowed = true
+        
+        PHImageManager.default().requestAVAsset(forVideo: asset, options: options, resultHandler: {(asset: AVAsset?, audioMix: AVAudioMix?, info: [AnyHashable : Any]?) -> Void in
+            if let urlAsset = asset as? AVURLAsset {
+                let localVideoUrl: URL = urlAsset.url as URL
+                callback(localVideoUrl)
+            } else {
+                callback(nil)
+            }
+        })
+    }
+    
     private func fetchVideoAndApplySettings(for asset: PHAsset,
                                             withCropRect rect: CGRect? = nil,
                                             callback: @escaping (_ videoURL: URL?) -> Void) {
@@ -595,10 +612,13 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
             }
         }
         
-        if PickerConfig.video.automaticTrimToTrimmerMaxDuration {
+        let trimming = PickerConfig.video.automaticTrimToTrimmerMaxDuration
+        
+        if trimming {
+            let duration = PickerConfig.video.trimmerMaxDuration
             fetchVideoAndCropWithDuration(for: asset,
                                           withCropRect: resultCropRect,
-                                          duration: PickerConfig.video.trimmerMaxDuration,
+                                          duration: duration,
                                           callback: callback)
         } else {
             libraryViewDidProcessingNext()
@@ -629,8 +649,8 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     
     // MARK: 내보내기
     public func extractSelectedMedia(photoCallback: @escaping (_ photo: HEMediaPhoto) -> Void,
-                              videoCallback: @escaping (_ videoURL: HEMediaVideo) -> Void,
-                              multipleItemsCallback: @escaping (_ items: [HEMediaItem]) -> Void) {
+                                     videoCallback: @escaping (_ videoURL: HEMediaVideo) -> Void,
+                                     multipleItemsCallback: @escaping (_ items: [HEMediaItem]) -> Void) {
         
         v.previewBox.currentZoomableView?.stopVideoPlay()
         
@@ -683,42 +703,25 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
                     else if let asset = item.asset {
                         switch asset.mediaType {
                         case .image:
-                            self.fetchImageAndCrop(for: asset, withCropRect: item.cropRect) { [weak self] image, exifMeta in
-                                guard let self else {
+                            self.extractPhotoMedia(asset: asset, cropRect: item.cropRect) {  [weak self] photo in
+                                guard self != nil else {
                                     asyncGroup.leave()
                                     return
                                 }
-                                // cache
-                                let image = image.resizedImageIfNeeded()
-                                Task {
-                                    do {
-                                        let url = try await self.editImageStore.cacheOriginImage(uiImage: image, forId: asset.localIdentifier).value
-                                        self.editImageStore.addHEImage(HEImage(id: asset.localIdentifier, origin: url))
-                                        let thumbnail = image.he.thumbnail()
-                                        let photo = HEMediaPhoto(identifier: asset.localIdentifier,
-                                                                 url: url,
-                                                                 thumbnail: thumbnail,
-                                                                 exifMeta: exifMeta,
-                                                                 asset: asset)
-                                        resultMediaItems.append(HEMediaItem.photo(p: photo))
-                                    } catch {
-                                        woops(error)
-                                    }
-                                    asyncGroup.leave()
+                                if let photo {
+                                    resultMediaItems.append(HEMediaItem.photo(p: photo))
                                 }
+                                asyncGroup.leave()
                             }
                             
                         case .video:
-                            self.fetchVideoAndApplySettings(for: asset,
-                                                            withCropRect: item.cropRect) { videoURL in
-                                if let videoURL = videoURL {
-                                    let videoItem = HEMediaVideo(identifier: asset.localIdentifier,
-                                                                 thumbnail: thumbnailFromVideoPath(videoURL),
-                                                                 videoURL: videoURL,
-                                                                 asset: asset)
-                                    resultMediaItems.append(HEMediaItem.video(v: videoItem))
-                                } else {
-                                    woops("Problems with fetching videoURL.")
+                            self.extractVideoMedia(asset: asset) {[weak self] video in
+                                guard self != nil else {
+                                    asyncGroup.leave()
+                                    return
+                                }
+                                if let video {
+                                    resultMediaItems.append(HEMediaItem.video(v: video))
                                 }
                                 asyncGroup.leave()
                             }
@@ -783,39 +786,21 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
                     case .audio, .unknown:
                         return
                     case .video:
-                        self.fetchVideoAndApplySettings(for: asset, callback: { videoURL in
+                        self.extractVideoMedia(asset: asset) { video in
                             DispatchQueue.main.async { [weak self] in
-                                if let videoURL = videoURL {
-                                    self?.libraryViewFinishedLoading()
-                                    let video = HEMediaVideo(identifier: asset.localIdentifier,
-                                                             thumbnail: thumbnailFromVideoPath(videoURL),
-                                                             videoURL: videoURL,
-                                                             asset: asset)
+                                self?.libraryViewFinishedLoading()
+                                if let video {
                                     videoCallback(video)
-                                } else {
-                                    woops("Problems with fetching videoURL.")
                                 }
                             }
-                        })
+                        }
+                        
                     case .image:
-                        self.fetchImageAndCrop(for: asset) { [self] image, exifMeta in
-                            // cache
-                            let image = image.resizedImageIfNeeded()
-                            Task {
-                                do {
-                                    let url = try await editImageStore.cacheOriginImage(uiImage: image, forId: asset.localIdentifier).value
-                                    self.editImageStore.addHEImage(HEImage(id: asset.localIdentifier, origin: url))
-                                    let photo = HEMediaPhoto(identifier: asset.localIdentifier,
-                                                             url: url,
-                                                             thumbnail: image.he.thumbnail(),
-                                                             exifMeta: exifMeta,
-                                                             asset: asset)
-                                    DispatchQueue.main.async { [weak self] in
-                                        self?.libraryViewFinishedLoading()
-                                        photoCallback(photo)
-                                    }
-                                } catch {
-                                    woops(error)
+                        self.extractPhotoMedia(asset: asset, cropRect: item.cropRect) { photo in
+                            DispatchQueue.main.async { [weak self] in
+                                self?.libraryViewFinishedLoading()
+                                if let photo {
+                                    photoCallback(photo)
                                 }
                             }
                         }
@@ -830,6 +815,96 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
             }
         }
     }
+    
+    private func extractVideoMedia(asset: PHAsset,
+                                   callback: @escaping (HEMediaVideo?) -> Void) {
+        switch asset.mediaType {
+        case .audio, .unknown:
+            return
+        case .video:
+            if PickerConfig.video.disableCompressing {
+                self.fetchVideoOriginalURL(for: asset) { videoURL in
+                    if let videoURL = videoURL {
+                        DispatchQueue.main.async {
+                            let video = HEMediaVideo(identifier: asset.localIdentifier,
+                                                     thumbnail: thumbnailFromVideoPath(videoURL),
+                                                     videoURL: videoURL,
+                                                     asset: asset)
+                            callback(video)
+                        }
+                    } else {
+                        self.assetMediaManager.phImageManager?.fetchPreviewFor(video: asset, callback: { thumb in
+                            let video = HEMediaVideo(
+                                identifier: asset.localIdentifier,
+                                thumbnail: thumb,
+                                videoURL: URL(string: "http://google.com")!,
+                                asset: asset)
+                            callback(video)
+                        })
+                    }
+                }
+                
+            } else {
+                self.fetchVideoAndApplySettings(for: asset, callback: { videoURL in
+                    DispatchQueue.main.async {
+                        if let videoURL = videoURL {
+                            let video = HEMediaVideo(identifier: asset.localIdentifier,
+                                                     thumbnail: thumbnailFromVideoPath(videoURL),
+                                                     videoURL: videoURL,
+                                                     asset: asset)
+                            callback(video)
+                        } else {
+                            woops("Problems with fetching videoURL.")
+                            callback(nil)
+                        }
+                    }
+                })
+            }
+        case .image:
+            callback(nil)
+        @unknown default:
+            woops("unknown default reached. Check code.")
+            callback(nil)
+        }
+    }
+    
+    private func extractPhotoMedia(asset: PHAsset, cropRect: CGRect?,
+                                   callback: @escaping (HEMediaPhoto?) -> Void) {
+        
+        switch asset.mediaType {
+        case .audio, .unknown:
+            return
+        case .video:
+            callback(nil)
+        case .image:
+            self.fetchImageAndCrop(for: asset) { [self] image, exifMeta in
+                // cache
+                let image = image.resizedImageIfNeeded()
+                Task {
+                    do {
+                        let url = try await editImageStore.cacheOriginImage(uiImage: image, forId: asset.localIdentifier).value
+                        self.editImageStore.addHEImage(HEImage(id: asset.localIdentifier, origin: url))
+                        let photo = HEMediaPhoto(identifier: asset.localIdentifier,
+                                                 url: url,
+                                                 thumbnail: image.he.thumbnail(),
+                                                 exifMeta: exifMeta,
+                                                 asset: asset)
+                        DispatchQueue.main.async {
+                            callback(photo)
+                        }
+                    } catch {
+                        woops(error)
+                        callback(nil)
+                    }
+                }
+            }
+        @unknown default:
+            woops("unknown default reached. Check code.")
+            callback(nil)
+        }
+    }
+    
+    
     
     // MARK: - TargetSize
     
@@ -857,7 +932,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     deinit {
         v.previewBox.currentZoomableView?.videoView.deallocate()
         PHPhotoLibrary.shared().unregisterChangeObserver(self)
-        trace("\(type(of: self)) deinited 👌🏻")
+        trace()
     }
 }
 

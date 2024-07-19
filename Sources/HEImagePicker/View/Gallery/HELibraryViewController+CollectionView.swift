@@ -156,15 +156,32 @@ extension HELibraryViewController: UICollectionViewDelegate {
             fatalError("unexpected cell in collection view")
         }
         
-        let identifier: String
-        var phAsset: PHAsset?
+        guard let phAsset: PHAsset = assetMediaManager.getAsset(at: indexPath.row) else {
+            return cell
+        }
+        let identifier: String = phAsset.localIdentifier
         var mediaType: PHAssetMediaType
         
-        // Original thumbnail from photo album
-        if let asset = assetMediaManager.getAsset(at: indexPath.row) {
-            identifier = asset.localIdentifier
-            mediaType = asset.mediaType
-            phAsset = asset
+        // First thumbnail from external source
+        if let heiMedia: HEMediaItem = self.delegate?.libraryView(self, replacingItemWithIdentifer: identifier) {
+            switch heiMedia {
+            case .photo(let p):
+                mediaType = .image
+                p.asset = phAsset
+                cell.imageLoader = {
+                    await p.extraTask?().thumbnail
+                }
+            case .video(let v):
+                mediaType = .video
+                v.asset = phAsset
+                cell.imageLoader = {
+                    await v.thumbnailTask?()
+                }
+            }
+        } else {
+            // Original thumbnail from photo album
+            mediaType = phAsset.mediaType
+            
             let cellSize = v.cellSize()
             let phManager = assetMediaManager.phImageManager
             cell.imageLoader = {
@@ -172,7 +189,7 @@ extension HELibraryViewController: UICollectionViewDelegate {
                 options.isNetworkAccessAllowed = true
                 options.isSynchronous = true
                 var thumbnail: UIImage?
-                phManager?.requestImage(for: asset,
+                phManager?.requestImage(for: phAsset,
                                         targetSize: cellSize,
                                         contentMode: .aspectFill,
                                         options: options) { image, _ in
@@ -180,27 +197,7 @@ extension HELibraryViewController: UICollectionViewDelegate {
                 }
                 return thumbnail
             }
-        } else {
-            return cell
         }
-        // First thumbnail from external source
-        
-        if let heiMedia: HEMediaItem = self.delegate?.libraryView(self, replacingItemWithIdentifer: identifier) {
-            switch heiMedia {
-            case .photo(let photo):
-                mediaType = .image
-                phAsset = photo.asset
-                cell.imageLoader = {
-                    await photo.extraTask?().thumbnail
-                }
-            case .video(let video):
-                mediaType = .video
-                phAsset = video.asset
-                cell.imageLoader = {
-                    await video.thumbnailTask?()
-                }
-            }
-        } 
         
         
         // Info
@@ -209,7 +206,7 @@ extension HELibraryViewController: UICollectionViewDelegate {
         
         
         let isVideo = (mediaType == .video)
-        let duration = isVideo && phAsset != nil ? UIHelper.formattedStrigFrom(phAsset!.duration) : ""
+        let duration = UIHelper.formattedStrigFrom(phAsset.duration)
         cell.durationLabel.text = duration
         cell.durationLabel.isHidden = !isVideo || duration.isEmpty
         cell.multipleSelectionIndicator.isHidden = !isMultipleSelectionEnabled
@@ -269,7 +266,11 @@ extension HELibraryViewController: UICollectionViewDelegate {
                     deselect(indexPath: indexPath)
                 } else {
                     if let index = findIndexInSelectionPool(indexPath: indexPath) {
-                        v.previewBox.select(indexInSelection: index, animated: true)
+                        let prevIndex = selectedItems.firstIndex(where: {
+                            $0.assetIdentifier == previouslySelected
+                        }) ?? index
+                        
+                        v.previewBox.select(indexInSelection: index, animated: abs(index - prevIndex) < 4)
                     }
                 }
             } else if isLimitExceeded == false {

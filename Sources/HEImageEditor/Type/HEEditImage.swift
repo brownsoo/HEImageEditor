@@ -27,6 +27,16 @@ public class HEEditImage: HEImage {
         self.editState = model
     }
     
+    public override var debugDescription: String {
+        """
+HEEditImage::
+- id\(id)
+- originURL: \(originURL?.absoluteString ?? "nil")
+- editImageURL: \(editImageURL?.absoluteString ?? "nil")
+- thumbnailURL: \(thumbnailURL?.absoluteString ?? "nil")
+- editState: \(editState != nil)
+"""
+    }
 }
 
 public extension HEEditImage {

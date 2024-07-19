@@ -908,7 +908,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     
     // MARK: -- 이미지 스티커 시작
-    // TODO: 50 개까지 허용
+    
     public func startImageSticker() {
         guard let imageStickerTray else { return }
         imageStickerTray.hideBlock = { [weak self] instantly in
@@ -940,6 +940,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             self.imageStickerTray?.hide()
             
             if EditorConfig.actionDoneEditorWhenImageStickerEditingConfirm {
+                self.modalTransitionStyle = .crossDissolve
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                     self.done()
                 }
@@ -960,7 +961,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     // MARK: -- startTextSticker
     
-    // TODO: 50 개까지 허용
     public func startTextSticker() {
         
         let stickerViews = stickersContainer.subviews.compactMap({ $0 as? HETextStickerView })

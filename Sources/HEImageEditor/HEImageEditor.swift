@@ -126,7 +126,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
         
         if initialIndex > 0 {
             collView.isPagingEnabled = false
-            collView.scrollToItem(at: IndexPath(row: initialIndex, section: 0), at: .centeredHorizontally, animated: initialIndex < 3)
+            collView.scrollToItem(at: IndexPath(row: initialIndex, section: 0), at: .centeredHorizontally, animated: initialIndex < 2)
             collView.isPagingEnabled = true
         }
     }
