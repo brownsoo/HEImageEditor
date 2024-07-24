@@ -180,6 +180,7 @@ extension ViewController: HEImageEditorDelegate {
 }
 
 extension ViewController: HEEditImageViewDelegate {
+    
     func didFinishEditImage(_ editView: HEEditImageView, resultImage: UIImage, editId: String?, editModel: HEEditState?) {
         self.resultImageView.image = resultImage
         self.resultImageEditState = editModel

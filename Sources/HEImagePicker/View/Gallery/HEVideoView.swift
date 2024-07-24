@@ -44,7 +44,6 @@ public class HEVideoView: UIView {
         playerView.alpha = 0
         playIconView.alpha = 0
         playIconView.contentMode = .center
-        playIconView.image = PickerConfig.icons.playImage?.withTintColor(.white, renderingMode: .alwaysOriginal)
         
         playerLayer.videoGravity = .resizeAspect
         previewImageView.contentMode = .scaleAspectFit
@@ -107,6 +106,7 @@ extension HEVideoView {
         
         playerLayer.player = player
         playerView.alpha = 1
+        showPlayImage(show: true)
         setNeedsLayout()
     }
     
@@ -155,6 +155,7 @@ extension HEVideoView {
     
     /// Shows or hide the play image over the view.
     public func showPlayImage(show: Bool) {
+        self.playIconView.image = PickerConfig.icons.playImage?.withTintColor(.white, renderingMode: .alwaysOriginal)
         UIView.animate(withDuration: 0.1) {
             self.playIconView.alpha = show ? 0.8 : 0
         }

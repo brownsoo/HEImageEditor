@@ -27,6 +27,12 @@ class HETextColorCell: UICollectionViewCell {
         }
     }
     
+    override var isSelected: Bool {
+        didSet {
+            colorView.isHighlighted = isSelected
+        }
+    }
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         contentView.addSubview(colorView)

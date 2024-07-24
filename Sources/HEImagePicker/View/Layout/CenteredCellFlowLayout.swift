@@ -151,7 +151,7 @@ class CenteredCellFlowLayout: UICollectionViewFlowLayout {
     }
     
     public override func layoutAttributesForItem(at indexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
-        return cache[indexPath.item]
+        return cache.get(at: indexPath.item)
     }
     
     //

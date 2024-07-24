@@ -84,24 +84,27 @@ class HEInputTextViewController: UIViewController {
     private lazy var textStickerMaximumCharactersPerLine = HEImageEditorConfiguration.default().textStickerMaximumCharactersPerLine
     private lazy var textStickerCanLineBreak = HEImageEditorConfiguration.default().textStickerCanLineBreak
     
-    private lazy var textView: UITextView = {
-        let textView = UITextView()
-        textView.keyboardAppearance = .dark
-        textView.returnKeyType = textStickerCanLineBreak ? .default : .done
-        textView.delegate = self
-        textView.backgroundColor = .clear
-        textView.textContainer.maximumNumberOfLines = textStickerMaximumLines
-        textView.textAlignment = .center
-        textView.textColor = currentTextColor
-        textView.text = text
-        textView.font = currentFont
-        textView.autocorrectionType = .no
-        textView.autocapitalizationType = .none
-        textView.textContainerInset = UIEdgeInsets(top: 8, left: 10, bottom: 8, right: 10)
-        textView.textContainer.lineFragmentPadding = 0
-        textView.layoutManager.delegate = self
+    private lazy var textView: HETextView = {
+        let tv = HETextView()
+        tv.keyboardAppearance = .dark
+        tv.returnKeyType = textStickerCanLineBreak ? .default : .done
+        tv.delegate = self
+        tv.backgroundColor = .clear
+//        tv.textContainer.maximumNumberOfLines = textStickerMaximumLines
+        tv.textContainer.lineBreakMode = .byClipping
+        tv.textAlignment = .center
+        tv.textColor = currentTextColor
+        tv.text = text
+        tv.font = currentFont
+        tv.autocorrectionType = .no
+        tv.autocapitalizationType = .none
+        tv.textContainerInset = UIEdgeInsets(top: 8, left: 10, bottom: 8, right: 10)
+        tv.textContainer.lineFragmentPadding = 0
+        tv.layoutManager.delegate = self
+        tv.placeholder = localLanguageTextValue("text_input_placeholder")
+        
         ///textView.attributedText = [NSAttributedString.Key.underlineStyle: NSUnderlineStyle.single]
-        return textView
+        return tv
     }()
     
     private lazy var toolView = UIView(frame: CGRect(
@@ -134,7 +137,7 @@ class HEInputTextViewController: UIViewController {
     
     private let textLayerRadius: CGFloat = 1
     
-    private let maxTextCount = 50
+    private let maxTextCount = EditorConfig.maxTextLength
     
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
         deviceIsiPhone() ? .portrait : .all
@@ -191,6 +194,7 @@ class HEInputTextViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        
         textView.becomeFirstResponder()
     }
     
@@ -215,12 +219,6 @@ class HEInputTextViewController: UIViewController {
         let insets = view.safeAreaInsets
         topToolBar.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: 48 + insets.top)
         
-        
-        textView.frame = CGRect(x: 10,
-                                y: topToolBar.frame.maxY + 30,
-                                width: view.frame.width - 20,
-                                height: 200)
-        
         toolView.frame = CGRect(
             x: 0,
             y: 0,
@@ -229,10 +227,12 @@ class HEInputTextViewController: UIViewController {
         )
         colorCollView.frame = toolView.bounds
         
+        adjustTextViewFrame(duration: 0)
 //        bgImageView.alpha = 0
 //        UIView.animate(withDuration: 0.24, delay: 0, options: [.curveEaseOut], animations: {
 //            self.bgImageView.alpha = 1
 //        })
+        
         
     }
     
@@ -264,9 +264,6 @@ class HEInputTextViewController: UIViewController {
         colorCollView.dataSource = self
         
         refreshTextViewUI()
-        
-        
-        // textView.drawDebugOutline()
     }
     
     private func refreshTextViewUI() {
@@ -334,7 +331,7 @@ class HEInputTextViewController: UIViewController {
         }
         if let index {
             DispatchQueue.main.async { [weak self] in
-                self?.colorCollView.scrollToItem(at: IndexPath(row: index, section: 0), at: .centeredHorizontally, animated: true)
+                self?.colorCollView.selectItem(at: IndexPath(row: index, section: 0), animated: false, scrollPosition: .centeredHorizontally)
             }
         }
     }
@@ -356,15 +353,20 @@ class HEInputTextViewController: UIViewController {
         textView.resignFirstResponder()
         
         var image: UIImage?
-        let rects = calculateTextRectsByChar()
-        let initial = CGRect(x: 10000, y: 10000, width: 0, height: 0)
-        let textRect = rects.reduce(initial) { prev, rect in
-            let x = min(prev.minX, rect.minX)
-            let y = min(prev.minY, rect.minY)
-            return CGRect(x: x,
-                          y: y,
-                          width: max(prev.width, rect.width),
-                          height: prev.height +  rect.height)
+        let textRect: CGRect
+        if fillStyle == .area {
+            textRect = textView.frame
+        } else {
+            let rects = calculateTextRectsByChar()
+            let initial = CGRect(x: 10000, y: 10000, width: 0, height: 0)
+            textRect = rects.reduce(initial) { prev, rect in
+                let x = min(prev.minX, rect.minX)
+                let y = min(prev.minY, rect.minY)
+                return CGRect(x: x,
+                              y: y,
+                              width: max(prev.width, rect.width),
+                              height: prev.height +  rect.height)
+            }
         }
         for subview in textView.subviews {
             if NSStringFromClass(subview.classForCoder) == "_UITextContainerView" {
@@ -381,6 +383,7 @@ class HEInputTextViewController: UIViewController {
             }
         }
         
+        trace()
         delegate?.inputTextViewController(self, stickerId: stickerId, didInput: textView.text, textColor: currentTextColor, fillColor: currentFillColor, font: currentFont, image: image)
         
         modalTransitionStyle = .crossDissolve
@@ -405,15 +408,26 @@ class HEInputTextViewController: UIViewController {
     private func adjustTextViewFrame(duration: TimeInterval) {
         let toolFrame = getToolViewFrame(keyboardHeight: self.keyboardHeight)
         let topFrame = topToolBar.frame
-        let availableAea = CGSize(width: view.bounds.width, height: toolFrame.minY - topFrame.maxY)
-        let size = textView.sizeThatFits(availableAea)
-        let textViewFrame = CGRect(origin: CGPoint(x: max(0, (availableAea.width - size.width) / 2),
+        let maxWidth = EditorConfig.textLineLimit == .lineWidth ? EditorConfig.textStickerMaximumWidthPerLine : view.bounds.width
+        let availableAea = CGSize(width: maxWidth,
+                                  height: toolFrame.minY - topFrame.maxY)
+        
+        let placeholderFrame = textView.placeholderFrame()
+        let size: CGSize
+        if textView.text.isEmpty {
+            size = placeholderFrame.size
+        } else {
+            size = textView.sizeThatFits(availableAea)
+        }
+        let textViewFrame = CGRect(origin: CGPoint(x: max(0, (view.bounds.width - size.width) / 2),
                                                    y: max(0, topFrame.maxY + (availableAea.height - size.height) / 2)),
-                                   size: CGSize(width: size.width, height: size.height))
+                                   size: CGSize(width: size.width, 
+                                                height: size.height))
         if textView.frame == textViewFrame {
             return
         }
-        if duration == 0 || abs(textView.frame.minY - textViewFrame.minY) < 5 {
+        
+        if duration == 0 {
             self.toolView.frame = toolFrame
             self.textView.frame = textViewFrame
         } else {
@@ -448,12 +462,14 @@ extension HEInputTextViewController: UICollectionViewDelegate, UICollectionViewD
             
             let c = getColorSource()[indexPath.row]
             cell.color = c
+            cell.isSelected = c == currentFillColor
             return cell
         } else {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HETextColorCell.reuseIdentifier, for: indexPath) as! HETextColorCell
             
             let c = getColorSource()[indexPath.row]
             cell.color = c
+            cell.isSelected = c == currentTextColor
             return cell
         }
     }
@@ -614,19 +630,109 @@ extension HEInputTextViewController {
 
 extension HEInputTextViewController: UITextViewDelegate {
     func textViewDidChange(_ textView: UITextView) {
-        drawTextBackground()
+        self.drawTextBackground()
+        
         let markedTextRange = textView.markedTextRange
         guard markedTextRange == nil || (markedTextRange?.isEmpty ?? true) else {
             return
         }
-        
         let text = textView.text ?? ""
-        if text.count > maxTextCount {
-            let endIndex = text.index(text.startIndex, offsetBy: maxTextCount)
-            textView.text = String(text[..<endIndex])
+        var resolved = text
+        let concreateText = text.filter({ !$0.isNewline })
+        // trace(concreateText)
+        if concreateText.count > maxTextCount { // 총 길이 제한
+            let offset = -(concreateText.count - maxTextCount)
+            let endIndex = text.index(text.endIndex, offsetBy: offset)
+            resolved = String(text[..<endIndex])
         }
         
-        topToolBar.confirmButton.isEnabled = !text.isEmpty
+        var makingLines: [String] = []
+        var selectedRange = textView.selectedRange
+        
+        if EditorConfig.textLineLimit == .charactersCount {
+            var lines = resolved.components(separatedBy: .newlines)
+            var cursor = 0
+            var lineIndex = 0
+            
+            while lineIndex < lines.count {
+                let line = lines[lineIndex]
+                if line.count > textStickerMaximumCharactersPerLine {
+                    var start = line.startIndex
+                    var offset = 0
+                    while start < line.endIndex {
+                        offset = min(offset + textStickerMaximumCharactersPerLine, line.count - offset)
+                        let end = line.index(start, offsetBy: offset)
+                        let comp = line[start..<end]
+                        makingLines.append(String(comp))
+                        
+                        cursor += offset
+                        
+                        trace("\(offset)  cursor - \(cursor) location - \(selectedRange.location)  :: \(comp)")
+                        
+                        if selectedRange.location > cursor { // 줄바꿈에 따른 커서 이동
+                            selectedRange.location += 1
+                        }
+                        
+                        start = end
+                    }
+                    if lineIndex + 1 < lines.count { // 다음 글줄에 붙여서 계산하도록 한다.
+                        let lastFriction = makingLines.popLast() ?? ""
+                        lines[lineIndex + 1] = lastFriction + lines[lineIndex + 1]
+                    }
+                } else {
+                    cursor += line.count
+                    makingLines.append(line)
+                    trace("cursor - \(cursor)")
+                }
+                
+                lineIndex += 1
+            }
+            
+            var newlines: [String] = makingLines
+            if newlines.count > textStickerMaximumLines {
+                trace("넘어서는 라인 제거")
+                newlines = Array(newlines[0..<textStickerMaximumLines])
+            }
+            
+            resolved = newlines.joined(separator: "\n")
+        } else {
+            
+            let numberOfGlyphs = textView.layoutManager.numberOfGlyphs
+            var index = 0, lineCount = 0
+            var lineRange = NSRange(location: NSNotFound, length: 0)
+            var trimmingEnd: Int?
+            while index < numberOfGlyphs {
+                textView.layoutManager.lineFragmentRect(forGlyphAt: index, effectiveRange: &lineRange)
+                index = NSMaxRange(lineRange)
+                lineCount += 1
+                if lineCount > 4 && trimmingEnd == nil {
+                    trimmingEnd = index
+                }
+            }
+            // trace("lineCount=\(lineCount), trimmingEnd=\(trimmingEnd ?? -1)")
+            if let trimmingEnd {
+//                trace("넘어서는 라인 글자 제거")
+                let endIndex = resolved.index(resolved.startIndex, offsetBy: min(trimmingEnd - 1, resolved.count))
+                resolved = String(text[..<endIndex])
+            }
+        }
+        
+        if text != resolved {
+            var newRange = NSRange()
+            newRange.location = min(selectedRange.location, resolved.count)
+            newRange.length = min(selectedRange.length, resolved.count - newRange.location)
+            
+            textView.text = resolved
+            // trace(newRange)
+            textView.selectedRange = newRange
+            self.drawTextBackground()
+        }
+        
+        
+        DispatchQueue.main.async {
+            self.topToolBar.confirmButton.isEnabled = !concreateText.filter{ !$0.isWhitespace }.isEmpty
+        }
+        
     }
     
     func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
@@ -635,23 +741,14 @@ extension HEInputTextViewController: UITextViewDelegate {
             return false
         }
         
-        let composed = (textView.text as NSString).replacingCharacters(in: range, with: text)
-        let lines = composed.components(separatedBy: .newlines)
-        if text == "\n" && lines.count > textStickerMaximumLines {
-            return false
-        }
-        if let lastLineString = lines.last {
-            if lastLineString.count > textStickerMaximumCharactersPerLine {
-                if lines.count + 1 > textStickerMaximumLines {
-                    return false
-                }
-                textView.text = textView.text + "\n" + text
-                DispatchQueue.main.async {
-                    self.drawTextBackground()
-                }
+        if text == "\n" {
+            let exist = (textView.text as NSString)
+            let lines = exist.components(separatedBy: .newlines)
+            if lines.count + 1 > textStickerMaximumLines {
                 return false
             }
         }
+        
         return true
     }
 }

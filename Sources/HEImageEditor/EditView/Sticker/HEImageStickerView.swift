@@ -11,6 +11,10 @@ class HEImageStickerView: HEBaseStickerView {
     
     private var image: UIImage
     
+    override var contentView: UIView {
+        self.imageView
+    }
+    
     private lazy var imageView: UIImageView = {
         let view = UIImageView(image: image)
         view.contentMode = .scaleAspectFit
@@ -96,6 +100,7 @@ class HEImageStickerView: HEBaseStickerView {
     func setImage(_ image: UIImage) {
         self.image = image
         self.imageView.image = image
+//        imageView.drawDebugOutline()
     }
     
     class func constraintViewSize(image: UIImage, container: UIView) -> CGSize {

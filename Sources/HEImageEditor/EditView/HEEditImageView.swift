@@ -23,6 +23,8 @@ public protocol HEEditImageViewDelegate: AnyObject {
 
 public extension HEEditImageViewDelegate {
     func cancelledEditImage(_ editView: HEEditImageView) {}
+    func cannotAttachMoreTextStickers(_ editView: HEEditImageView) {}
+    func cannotAttachMoreImageStickers(_ editView: HEEditImageView) {}
 }
 
 public protocol HEEditImageView: UIViewController {

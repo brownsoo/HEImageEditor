@@ -7,6 +7,7 @@
 
 import Foundation
 import UIKit
+import HECommon
 
 /// 자르기 화면 하단에 놓을 수 있는 작업뷰 예시
 ///

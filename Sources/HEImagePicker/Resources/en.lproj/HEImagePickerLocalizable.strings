@@ -26,6 +26,7 @@
 "_warningItemsLimit" = "The limit is %d photos or videos";
 "_attach" = "Attach";
 "_editPhoto" = "Edit photo";
+"_all" = "All";
 "_allPhotos" = "All Photos";
 "_allVideos" = "All Videos";
 "_confirm" = "Confirm";
@@ -37,3 +38,6 @@
 "_noSelectionToEdit" = "Cannot find a item to edit.";
 "_cannotFindMediaFile" = "Cannot find a media file.";
 "_videoTooHeavy" = "Pick a video less than %@ MB of file size.";
+"_edited" = "Edited";
+"_library_changed_alert" = "Library Photos are changed.";
+"_photos_empty_messge" = "None photos.";

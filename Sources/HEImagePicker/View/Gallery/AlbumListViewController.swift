@@ -51,11 +51,19 @@ final class AlbumListViewController: UIViewController {
     func fetchAlbumsInBackground() {
        spinner.startAnimating()
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            self?.albums = self?.albumsManager.fetchAlbums() ?? []
+            guard let self else {return }
+            var albums: [HEAlbum] = self.albumsManager.fetchAlbums()
+            if albums.isEmpty {
+                albums = [HEAlbum(thumbnail: nil,
+                                  title: PickerConfig.wordings.all,
+                                  numberOfItems: 0,
+                                  collection: nil)]
+            }
+            self.albums = albums
             DispatchQueue.main.async {
-                self?.spinner.stopAnimating()
-                self?.collView.isHidden = false
-                self?.collView.reloadData()
+                self.spinner.stopAnimating()
+                self.collView.isHidden = false
+                self.collView.reloadData()
             }
         }
     }
@@ -66,7 +74,7 @@ final class AlbumListViewController: UIViewController {
     }
     
     func setupUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = .offWhiteOrBlack
         navigationItem.leftBarButtonItem = UIBarButtonItem(image: PickerConfig.icons.backButtonIcon,
                                                            style: .plain,
                                                            target: self,
@@ -147,7 +155,6 @@ extension AlbumListViewController: UICollectionViewDelegate, UICollectionViewDel
     }
 }
 
-
 class AlbumListCell: UICollectionViewCell {
     
     static let reuseIdentitifer = "HE.AlbumListCell"
@@ -165,6 +172,9 @@ class AlbumListCell: UICollectionViewCell {
         contentView.addSubview(countLb)
         
         thumbnailIv.makeConstraints { v in
+            v.backgroundColor = UIColor { (trait: UITraitCollection) -> UIColor in
+                trait.userInterfaceStyle == .dark ? UIColor.secondarySystemGroupedBackground : UIColor(white: 238 / 255.0, alpha: 1)
+            }
             NSLayoutConstraint.activate([
                 v.widthAnchor.constraint(equalTo: contentView.widthAnchor, multiplier: 1),
                 v.heightAnchor.constraint(equalTo: v.widthAnchor, multiplier: 1),
@@ -197,9 +207,13 @@ class AlbumListCell: UICollectionViewCell {
         titleLb.numberOfLines = 1
         titleLb.lineBreakMode = .byTruncatingTail
         titleLb.font = PickerConfig.fonts.albumCellTitleFont
-        titleLb.textColor = UIColor(white: 51.0 / 255.0, alpha: 1)
-        countLb.font = PickerConfig.fonts.albumCellNumberOfItemsFont
-        countLb.textColor = UIColor(white: 187 / 255, alpha: 1)
+        titleLb.textColor = UIColor { (trait: UITraitCollection) -> UIColor in
+            trait.userInterfaceStyle == .dark ? UIColor.label : UIColor(white: 51.0 / 255.0, alpha: 1)
+        }
         
+        countLb.font = PickerConfig.fonts.albumCellNumberOfItemsFont
+        countLb.textColor = UIColor { (trait: UITraitCollection) -> UIColor in
+            trait.userInterfaceStyle == .dark ? UIColor.secondaryLabel : UIColor(white: 187 / 255, alpha: 1)
+        }
     }
 }

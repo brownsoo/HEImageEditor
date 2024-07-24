@@ -65,6 +65,10 @@ public struct HEImagePickerConfiguration {
     /// Use this property to modify the default fonts provided
     public var fonts = HEPickerFonts()
     
+    
+    /// Allow to pick a previewing media without selection
+    public var allowPickWithoutSelection = true
+    
     /// Adds a edit button in preview container
     ///
     /// - if it touch on it, the below delegate is called.
@@ -85,8 +89,7 @@ public struct HEImagePickerConfiguration {
     public var shouldSaveNewPicturesToAlbum = true
     
     /// Defines the name of the album when saving pictures in the user's photo library.
-    /// In general that would be your App name. Defaults to "DefaultYPImagePickerAlbumName"
-    public var albumName = "DefaultHEImagePickerAlbumName"
+    public var albumName = "하이클래스"
     
     /// Defines which source type can be pick.
     /// Default value is `[.libraryPick, .photoCapture, .videoCapture]`
@@ -141,8 +144,9 @@ public struct HEImagePickerConfiguration {
         public var defaultMultipleSelection = false
 
         /// Pre-selects the current item on setting multiple selection
-        public var preSelectItemOnMultipleSelection = true
+        public var preSelectItemOnMultipleSelection = false
 
+        /// 최대 선택가능한 미디어 수
         /// Anything superior than 1 will enable the multiple selection feature.
         public var maxNumberOfItems = 1
         
@@ -161,6 +165,9 @@ public struct HEImagePickerConfiguration {
         
         /// Allow to preselected media items
         public var preselectedItems: [HEMediaItem]?
+        
+        /// 한번 선택으로 미디어를 선택할 지 여부
+        public var addToSelectionBySigleTouch = true
         
     }
 

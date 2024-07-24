@@ -69,6 +69,9 @@ class LibraryViewCell: UICollectionViewCell {
     
     func loadImage() {
         imageLoadTask?.cancel()
+        
+        imageView.image = nil
+        
         imageLoadTask = Task {
             let image = await imageLoader?()
             if Task.isCancelled { return }

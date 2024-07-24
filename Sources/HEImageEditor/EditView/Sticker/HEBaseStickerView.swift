@@ -57,8 +57,6 @@ public class HEBaseStickerView: UIView, UIGestureRecognizerDelegate {
     
     var originTransform: CGAffineTransform = .identity
     
-    var timer: Timer?
-    
     var totalTranslationPoint: CGPoint = .zero
     
     var gesTranslationPoint: CGPoint = .zero
@@ -95,11 +93,11 @@ public class HEBaseStickerView: UIView, UIGestureRecognizerDelegate {
         return self
     }
     
-    weak var delegate: HEStickerViewDelegate?
-    
-    deinit {
-        cleanTimer()
+    var contentView: UIView {
+        return self
     }
+    
+    weak var delegate: HEStickerViewDelegate?
     
     class func initWithState(_ effect: HEStickerEffect) -> HEBaseStickerView? {
         if let state = effect as? HETextStickerEffect {
@@ -139,9 +137,11 @@ public class HEBaseStickerView: UIView, UIGestureRecognizerDelegate {
         self.totalTranslationPoint = totalTranslationPoint
         
         borderView.layer.borderWidth = borderWidth
-        hideBorder()
+        
         if showBorder {
-            startTimer()
+            self.showBorder()
+        } else {
+            self.hideBorder()
         }
         
         addGestureRecognizer(tapGes)
@@ -207,8 +207,8 @@ public class HEBaseStickerView: UIView, UIGestureRecognizerDelegate {
     
     @objc func tapAction(_ ges: UITapGestureRecognizer) {
         guard gesIsEnabled else { return }
+        showBorder()
         delegate?.stickerDidTap(self)
-        startTimer()
     }
     
     @objc func pinchAction(_ ges: UIPinchGestureRecognizer) {
@@ -286,12 +286,10 @@ public class HEBaseStickerView: UIView, UIGestureRecognizerDelegate {
     func setOperation(_ isOn: Bool) {
         if isOn, !onOperation {
             onOperation = true
-            cleanTimer()
-            borderView.layer.borderColor = UIColor.white.cgColor
+            showBorder()
             delegate?.stickerBeginOperation(self)
         } else if !isOn, onOperation {
             onOperation = false
-            startTimer()
             delegate?.stickerEndOperation(self, panGes: panGes)
         }
     }
@@ -318,20 +316,18 @@ public class HEBaseStickerView: UIView, UIGestureRecognizerDelegate {
         delegate?.stickerOnOperation(self, panGes: panGes)
     }
     
-    @objc private func hideBorder() {
+    private(set) var isBordered = false
+    
+    @objc
+    func hideBorder() {
+        isBordered = false
         borderView.layer.borderColor = UIColor.clear.cgColor
     }
     
-    func startTimer() {
-        cleanTimer()
+    @objc
+    func showBorder() {
+        isBordered = true
         borderView.layer.borderColor = UIColor.white.cgColor
-        timer = Timer.scheduledTimer(timeInterval: 2, target: HEWeakProxy(target: self), selector: #selector(hideBorder), userInfo: nil, repeats: false)
-        RunLoop.current.add(timer!, forMode: .common)
-    }
-    
-    private func cleanTimer() {
-        timer?.invalidate()
-        timer = nil
     }
     
     // MARK: UIGestureRecognizerDelegate
@@ -344,12 +340,10 @@ public class HEBaseStickerView: UIView, UIGestureRecognizerDelegate {
 extension HEBaseStickerView: HEStickerViewAdditional {
     func resetState() {
         onOperation = false
-        cleanTimer()
         hideBorder()
     }
     /// 제거 
     func moveToTrashbin() {
-        cleanTimer()
         removeFromSuperview()
         
         UINotificationFeedbackGenerator().notificationOccurred(.warning)

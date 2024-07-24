@@ -10,8 +10,16 @@ import UIKit
 
 class LibraryAttachButton: UIControl {
     
+    private let enabledColor = UIColor(r: 71, g: 120, b: 222)
+    private let disabledColor = UIColor(white: 187 / 255.0, alpha: 1.0)
     private let label = UILabel()
     let countLabel = UILabel()
+    
+    override var isEnabled: Bool {
+        didSet {
+            label.textColor = isEnabled ? enabledColor : disabledColor
+        }
+    }
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -24,7 +32,7 @@ class LibraryAttachButton: UIControl {
         label.textAlignment = .natural
         
         countLabel.font = PickerConfig.fonts.rightBarButtonFont
-        countLabel.textColor = UIColor(r: 71, g: 120, b: 222)
+        countLabel.textColor = enabledColor
         countLabel.setContentHuggingPriority(.required, for: .horizontal)
         countLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
         

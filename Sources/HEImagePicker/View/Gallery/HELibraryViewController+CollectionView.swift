@@ -51,12 +51,22 @@ extension HELibraryViewController {
         v.refreshImageCurtainAlpha()
     }
     
+    internal func getSelectionForJustPreview() -> HELibrarySelection? {
+        guard let asset = self.assetMediaManager.fetchResult?.firstObject else {
+            return nil
+        }
+        return HELibrarySelection(assetIdentifier: asset.localIdentifier, isDefaultPreviewing: true)
+    }
+    
     // MARK: - Library collection view cell managing
     
     /// Removes cell from selection
     func deselect(indexPath: IndexPath) {
         if let positionIndex = findIndexInSelectionPool(indexPath: indexPath) {
             selectedItems.remove(at: positionIndex)
+            if selectedItems.isEmpty {
+                v.previewBox.lastPreviwingSelection = getSelectionForJustPreview()
+            }
             v.previewBox.removed(at: positionIndex)
             // Refresh the numbers
             let selectedIndexPaths = findSelectedIndexPathsInCurrentAlbum()
@@ -69,6 +79,11 @@ extension HELibraryViewController {
                     v.albumCollectionView.selectItem(at: previouslySelectedIndexPath, animated: false, scrollPosition: [])
                 }
                 currentlySelectedIdentifier = last.assetIdentifier
+            } else {
+                currentlySelectedIdentifier = getSelectionForJustPreview()?.assetIdentifier
+                if collectionView(v.albumCollectionView, numberOfItemsInSection: 0) > 0 {
+                    v.albumCollectionView.reloadItems(at: [IndexPath(row: 0, section: 0)])
+                }
             }
             
             if let last = selectedItems.last {
@@ -80,24 +95,33 @@ extension HELibraryViewController {
     }
     
     /// Adds cell to selection
-    func addToSelection(indexPath: IndexPath) {
-        if isLimitExceeded {
-            return
-        }
-        
+    @discardableResult
+    func addToSelection(indexPath: IndexPath) -> Bool {
         guard let asset = assetMediaManager.getAsset(at: indexPath.row) else {
             print("No asset to add to selection.")
-            return
+            return false
         }
-        let shouldBeSelected = delegate?.libraryView(self, shouldAddToSelection: asset.localIdentifier, numSelections: selectedItems.count) ?? true
+        
+        return addToSelection(localIdentifier: asset.localIdentifier)
+    }
+    
+    @discardableResult
+    func addToSelection(localIdentifier: String) -> Bool {
+        if isLimitExceeded {
+            return false
+        }
+        
+        let shouldBeSelected = delegate?.libraryView(self, shouldAddToSelection: localIdentifier, numSelections: selectedItems.count) ?? true
         if !shouldBeSelected {
-            return
+            return false
         }
 
-        let newSelection = HELibrarySelection(assetIdentifier: asset.localIdentifier)
+        let newSelection = HELibrarySelection(assetIdentifier: localIdentifier)
         selectedItems.append(newSelection)
         
         checkLimit()
+        
+        return true
     }
     
     private func isInSelectionPool(indexPath: IndexPath) -> Bool {
@@ -242,7 +266,9 @@ extension HELibraryViewController: UICollectionViewDelegate {
     }
     
     public func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-        (cell as? LibraryViewCell)?.loadImage()
+        guard let cell = cell as? LibraryViewCell else { return }
+        cell.loadImage()
+        cell.isSelected = currentlySelectedIdentifier == cell.representedAssetIdentifier
     }
     
     public func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
@@ -262,20 +288,22 @@ extension HELibraryViewController: UICollectionViewDelegate {
             let cellIsInTheSelectionPool = isInSelectionPool(indexPath: indexPath)
             let cellIsCurrentlySelected = previouslySelected == currentlySelectedIdentifier
             if cellIsInTheSelectionPool {
-                if cellIsCurrentlySelected {
+                if cellIsCurrentlySelected || PickerConfig.library.addToSelectionBySigleTouch {
                     deselect(indexPath: indexPath)
                 } else {
                     if let index = findIndexInSelectionPool(indexPath: indexPath) {
-                        let prevIndex = selectedItems.firstIndex(where: {
-                            $0.assetIdentifier == previouslySelected
-                        }) ?? index
+                        let prevIndex = selectedItems.firstIndex(where: { $0.assetIdentifier == previouslySelected }) ?? index
                         
-                        v.previewBox.select(indexInSelection: index, animated: abs(index - prevIndex) < 4)
+                        v.previewBox.select(indexInSelection: index, animated: abs(index - prevIndex) < 3)
                     }
                 }
             } else if isLimitExceeded == false {
-                addToSelection(indexPath: indexPath)
-                v.previewBox.inserted(at: selectedItems.count - 1)
+                if addToSelection(indexPath: indexPath) {
+                    v.previewBox.inserted(at: selectedItems.count - 1)
+                }
+            } else if isLimitExceeded {
+                // 갯수제한 얼럿 
+                showAlert(String(format: PickerConfig.wordings.warningMaxItemsLimit, arguments:  [PickerConfig.library.maxNumberOfItems]))
             }
             collectionView.reloadItems(at: [indexPath])
             if let previouslySelectedIndexPath = findIndexPathInCurrentAlbum(identifier: previouslySelected) {
@@ -283,8 +311,9 @@ extension HELibraryViewController: UICollectionViewDelegate {
             }
         } else {
             selectedItems.removeAll()
-            addToSelection(indexPath: indexPath)
-            v.previewBox.reload()
+            if addToSelection(indexPath: indexPath) {
+                v.previewBox.reload()
+            }
             // Force deseletion of previously selected cell.
             // In the case where the previous cell was loaded from iCloud, a new image was fetched
             // which triggered photoLibraryDidChange() and reloadItems() which breaks selection.

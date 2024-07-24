@@ -76,11 +76,11 @@ extension UIColor {
     static var offWhiteOrBlack: UIColor {
         if #available(iOS 13, *) {
             return UIColor { (traitCollection: UITraitCollection) -> UIColor in
-                let rgbValue: CGFloat = traitCollection.userInterfaceStyle == .dark ? 0 : 247
+                let rgbValue: CGFloat = traitCollection.userInterfaceStyle == .dark ? 0 : 255
                 return UIColor(r: rgbValue, g: rgbValue, b: rgbValue)
             }
         } else {
-            return UIColor(r: 247, g: 247, b: 247)
+            return UIColor(white: 255, alpha: 1.0)
         }
     }
     

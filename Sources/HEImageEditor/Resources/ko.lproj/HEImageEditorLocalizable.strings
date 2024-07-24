@@ -24,3 +24,4 @@
 "close"= "닫기";
 "cannot_more_image_stickers" = "스티커를 더 이상 추가할 수 없습니다.";
 "cannot_more_text_stickers" = "텍스트를 더 이상 추가할 수 없습니다.";
+"text_input_placeholder" = "텍스트를 입력하세요";

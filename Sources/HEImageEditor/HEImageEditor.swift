@@ -126,7 +126,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
         
         if initialIndex > 0 {
             collView.isPagingEnabled = false
-            collView.scrollToItem(at: IndexPath(row: initialIndex, section: 0), at: .centeredHorizontally, animated: initialIndex < 2)
+            collView.scrollToItem(at: IndexPath(row: initialIndex, section: 0), at: .centeredHorizontally, animated: false)
             collView.isPagingEnabled = true
         }
     }
@@ -309,7 +309,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
             cancelButton.addAction(.init(handler: { [weak editView] _ in editView?.cancel() }), for: .touchUpInside)
             confirmButton.addAction(.init(handler: { [weak editView] _ in editView?.done() }), for: .touchUpInside)
             
-            return (topbar, 44)
+            return (topbar, HETopBarView.contentHeight)
         }
     }
     

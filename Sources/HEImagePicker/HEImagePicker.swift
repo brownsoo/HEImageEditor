@@ -34,7 +34,7 @@ public protocol HEImagePickerDelegate: AnyObject {
 
 public extension HEImagePickerDelegate {
     func imagePicker(_ picker: HEImagePicker, captionWithIdentifer identifier: String) -> String? {
-        return picker.editImageStore.getHEImage(forId: identifier)?.editImageURL == nil ? nil : "편집 상태"
+        return picker.editImageStore.getHEImage(forId: identifier)?.editImageURL == nil ? nil : PickerConfig.wordings.edited
     }
     func imagePicker(_ picker: HEImagePicker, shouldAddToSelection identifier: String, numSelections: Int) -> Bool {
         return true
@@ -65,7 +65,7 @@ open class HEImagePicker: UINavigationController, HEPickerNavigationController {
     open override var preferredStatusBarStyle: UIStatusBarStyle {
         PickerConfig.preferredStatusBarStyle
     }
-    
+    /// 편집 이미지 정보 저장소 
     public var editImageStore: HEEditImageStore {
         set {
             mainVc.editImageStore = newValue

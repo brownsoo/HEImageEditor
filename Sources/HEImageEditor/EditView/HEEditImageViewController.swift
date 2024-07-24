@@ -4,6 +4,7 @@
 //
 
 import UIKit
+import HECommon
 
 public typealias HEEditImageTopToolViewBuilder = (HEEditImageView) -> (toolView: HETopBarView, height: CGFloat)?
 
@@ -493,7 +494,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         
         childVCContainer.frame = CGRect(x: 0, y: 0, width: view.frame.width, height: bottomToolViewContainer.frame.minY)
         
-        editingTopView.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: 48 + insets.top)
+        editingTopView.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: HETopBarView.contentHeight + insets.top)
         
         if !drawPaths.isEmpty {
             drawLine()
@@ -818,7 +819,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             break
         case .clip:
             if let vc = self.currentEditController as? HEClipImageViewController {
-                // TODO: 편집상태 제거 브레이크??
                 vc.doneEdit()
             }
             break
@@ -1532,25 +1532,34 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     /// 스티커를 뷰로 추가
     private func addImageStickerView(_ sticker: HEImageSticker) {
-        let stickerViews = stickersContainer.subviews.compactMap({ $0 as? HEImageStickerView })
-        if stickerViews.count >= EditorConfig.maxImageStickersCount {
+        let stickerViewsCount = stickersContainer.subviews.compactMap({ $0 as? HEImageStickerView }).count
+        if stickerViewsCount >= EditorConfig.maxImageStickersCount {
             delegate?.cannotAttachMoreImageStickers(self)
             return
         }
+        
         
         Task {
             if sticker.id == HEImageSticker.faceAiIcon.id {
                 if loadingView.isShowing {
                     return
                 }
-                addImageStickersOnFaces()
+                let remainCount = EditorConfig.maxImageStickersCount - stickerViewsCount
+                addImageStickersOnFaces(availableCount: remainCount)
                 showAiStickerToastIfNeed(stickerTrayFrame: getImageStickerTrayFrame())
                 return
             }
-            let image: UIImage = await sticker.imageLoader()
+            let image: UIImage
+            if sticker.kind == .mosaic {
+                image = UIImage().he.solid(.blue, width: 1024, height: 1024) // 기본 이미지 스티커 사이즈와 동일하게
+            } else {
+                image = await sticker.imageLoader()
+            }
             let scale = mainScrollView.zoomScale
             let stickerViewSize = HEImageStickerView.constraintViewSize(image: image, container: view)
             let originFrame = getStickerOriginFrame(stickerViewSize)
+            
+            
             
             let imageSticker = HEImageStickerView(kind: sticker.kind,
                                                   image: image,
@@ -1567,7 +1576,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         }
     }
     
-    private func addImageStickersOnFaces() {
+    private func addImageStickersOnFaces(availableCount: Int = .max) {
         guard let imageStickerTray else {
             showAlert("스티커 사용 구성이 되지 않았습니다.")
             return
@@ -1583,13 +1592,14 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                     }
                 }
                 
-                let results = try await HEFaceDetection().detect(from: editImage, orientation: editImage.imageOrientation)
-                let animeDuration = TimeInterval(min(Double(results.count) * 0.2, 1.6))
-                var i: Double = 0
-                let count = Double(results.count)
-                let halfPi = Double.pi / 2
+                var results = try await HEFaceDetection().detect(from: editImage, orientation: editImage.imageOrientation)
+                if results.count > availableCount {
+                    results = Array(results[..<availableCount])
+                    delegate?.cannotAttachMoreImageStickers(self)
+                }
+                
                 for result in results {
-                    trace(result)
+                    
                     if let sticker = imageStickerTray.randomStickerOnFace(inSection: 0) {
                         let image = await sticker.imageLoader()
                         let scale = mainScrollView.zoomScale
@@ -1605,17 +1615,14 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                             gesRotation:  -CGFloat(result.roll ?? 0.0)
                         )
                         
-                        let delay = sin(halfPi * i / count) * animeDuration
-                        attachSticker(imageSticker, delay: delay)
+                        attachSticker(imageSticker, delay: 0)
                         
                         // 액션 저장
                         actionManager.storeAction(.sticker(oldState: nil, newState: imageSticker.state))
-                        
-                        i += 1.0
                     }
                 }
                 
-                try? await Task.sleep(nanoseconds: animeDuration.nanoseconds)
+                try? await Task.sleep(nanoseconds: 0.2.nanoseconds)
                 self.loadingView.hide()
                 
             } catch {
@@ -1662,8 +1669,11 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     private func applyMosaicImageToStickerView(_ stickerView: HEImageStickerView, withRatio ratio: CGFloat? = nil) {
         let presentingRatio = ratio ?? getImagePresentingRatio()
-        var frame = stickerView.frame.insetBy(dx: HEImageStickerView.edgeInset, dy: HEImageStickerView.edgeInset)
-        frame = CGRect(x: frame.minX / presentingRatio, y: frame.minY / presentingRatio, width: frame.width / presentingRatio, height: frame.height / presentingRatio)
+        var frame = stickerView.frame//.insetBy(dx: HEImageStickerView.edgeInset, dy: HEImageStickerView.edgeInset)
+        frame = CGRect(x: frame.minX / presentingRatio,
+                       y: frame.minY / presentingRatio,
+                       width: frame.width / presentingRatio,
+                       height: frame.height / presentingRatio)
         if let image = mosaicImage?.he.clipImage(angle: 0, editRect: frame, isCircle: true) {
             stickerView.setImage(image)
         }
@@ -1707,6 +1717,11 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     private func attachSticker(_ sticker: HEBaseStickerView, delay: TimeInterval = 0) {
         trace("delay=\(delay)")
+        
+        stickersContainer.subviews.forEach { view in
+            (view as? HEStickerViewAdditional)?.resetState()
+        }
+        
         stickersContainer.addSubview(sticker)
         sticker.frame = sticker.originFrame
         configSticker(sticker)
@@ -2145,7 +2160,7 @@ extension HEEditImageViewController: HEInputTextViewControllerDelegate {
             return
         }
         
-        textSticker.startTimer()
+        textSticker.showBorder()
         guard textSticker.text != text || textSticker.textColor != textColor || textSticker.fillColor != fillColor || textSticker.font != font else {
             return
         }
@@ -2156,8 +2171,6 @@ extension HEEditImageViewController: HEInputTextViewControllerDelegate {
         textSticker.font = font
         let newSize = HETextStickerView.calculateSize(image: image)
         textSticker.changeSize(to: newSize)
-        
-        
     }
     
     func inputTextViewControllerDidCancel() {
@@ -2229,8 +2242,11 @@ extension HEEditImageViewController: HEStickerViewDelegate {
             trashbinImgView.isHighlighted = true
             if sticker.alpha == 1 {
                 sticker.layer.removeAllAnimations()
-                UIView.animate(withDuration: 0.25) {
+                sticker.hideBorder()
+                
+                UIView.animate(withDuration: 0.20, delay: 0, options: [.curveEaseOut]) {
                     sticker.alpha = 0.5
+                    sticker.contentView.transform = CGAffineTransform(scaleX: 0.2, y: 0.2)
                 }
             }
         } else {
@@ -2238,8 +2254,12 @@ extension HEEditImageViewController: HEStickerViewDelegate {
             trashbinImgView.isHighlighted = false
             if sticker.alpha != 1 {
                 sticker.layer.removeAllAnimations()
-                UIView.animate(withDuration: 0.25) {
+                
+                UIView.animate(withDuration: 0.20, delay: 0, options: [.curveEaseOut], animations: {
                     sticker.alpha = 1
+                    sticker.contentView.transform = CGAffineTransform.identity
+                }) { comp in
+                    if comp { sticker.showBorder() }
                 }
             }
         }
@@ -2272,6 +2292,7 @@ extension HEEditImageViewController: HEStickerViewDelegate {
             endState = nil
         }
         
+        sticker.contentView.transform = CGAffineTransform.identity
         actionManager.storeAction(.sticker(oldState: preStickerState, newState: endState))
         preStickerState = nil
         

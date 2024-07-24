@@ -22,6 +22,8 @@ extension HELibraryViewController: PHPhotoLibraryChangeObserver {
         }
 
         DispatchQueue.main.async {
+            self.v.showLibraryBeingChangeMessage()
+            
             let collectionView = self.v.albumCollectionView
             self.assetMediaManager.fetchResult = collectionChanges.fetchResultAfterChanges
             if !collectionChanges.hasIncrementalChanges || collectionChanges.hasMoves {
@@ -54,27 +56,60 @@ extension HELibraryViewController: PHPhotoLibraryChangeObserver {
     }
 
     fileprivate func updateAssetSelection() {
-        trace()
-        // If no items selected in assetView, but there are already photos
-        // after photoLibraryDidChange, than select first item in library.
-        // It can be when user add photos from limited permission.
-        if self.assetMediaManager.hasResultItems,
-           selectedItems.isEmpty,
-           let _ = self.assetMediaManager.getAsset(at: 0) {
-            trace("선택된게 없어서 기본 선택")
-            addToSelection(indexPath: IndexPath(row: 0, section: 0))
+        trace("라이브러리 갱신")
+        var items = self.selectedItems
+        if items.count > 0 {
+            DispatchQueue.global().async {
+                let results = PHAsset.fetchAssets(withLocalIdentifiers: items.map { $0.assetIdentifier }, options: PHFetchOptions())
+                items.removeAll { selection in
+                    var found = false
+                    results.enumerateObjects { asset, _, stop in
+                        if asset.localIdentifier == selection.assetIdentifier {
+                            found = true
+                            stop.pointee = true
+                        }
+                    }
+                    return !found
+                }
+                
+                if self.selectedItems.count != items.count {
+                    self.selectedItems = items
+                    trace("라이브러리 갱신 후 없어진 어셋 제거")
+                    DispatchQueue.main.async {
+                        self.v.previewBox.reload()
+                        self.v.albumCollectionView.reloadData()
+                        self.libraryViewFinishedLoading()
+                        
+                    }
+                }
+                
+                DispatchQueue.main.async {
+                    self.v.hideLibraryBeingChangeMessage()
+                }
+            }
+        } else {
             DispatchQueue.main.async {
-                self.v.previewBox.reload()
+                self.v.hideLibraryBeingChangeMessage()
             }
         }
-
-        // If user decided to forbid all photos with limited permission
-        // while using the lib we need to remove asset from assets view.
-        if selectedItems.isEmpty == false,
-           self.assetMediaManager.hasResultItems == false {
-            self.selectedItems.removeAll()
-            self.v.previewBox.reload()
-            self.libraryViewFinishedLoading()
-        }
+        
+//        
+//        if self.assetMediaManager.hasResultItems,
+//           selectedItems.isEmpty,
+//           let _ = self.assetMediaManager.getAsset(at: 0) {
+//            trace("선택된게 없어서 기본 선택")
+//            addToSelection(indexPath: IndexPath(row: 0, section: 0))
+//            DispatchQueue.main.async {
+//                self.v.previewBox.reload()
+//            }
+//        }
+//
+//        // If user decided to forbid all photos with limited permission
+//        // while using the lib we need to remove asset from assets view.
+//        if !selectedItems.isEmpty, !self.assetMediaManager.hasResultItems {
+//            self.selectedItems.removeAll()
+//            self.v.previewBox.reload()
+//            self.libraryViewFinishedLoading()
+//        }
     }
 }

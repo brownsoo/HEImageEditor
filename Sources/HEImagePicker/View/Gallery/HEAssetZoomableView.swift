@@ -29,6 +29,7 @@ final public class HEAssetZoomableView: UIScrollView {
     public fileprivate(set) var currentAssetIdentifier: String?
     public fileprivate(set) var currentAssetType: PHAssetMediaType?
     private var currentEditImageURL: URL?
+    private var currentEditTime: TimeInterval?
     
     // Image view of the asset for convenience. Can be video preview image view or photo image view.
     public var assetImageView: UIImageView {
@@ -123,7 +124,6 @@ final public class HEAssetZoomableView: UIScrollView {
             self.currentAssetIdentifier = video.localIdentifier
             
             self.videoView.loadVideo(playerItem)
-            self.videoView.play()
             self.zoomableViewDelegate?.ypAssetZoomableViewDidLayoutSubviews(self)
         }
     }
@@ -178,13 +178,14 @@ final public class HEAssetZoomableView: UIScrollView {
                            storedCropPosition: HELibrarySelection?,
                            completion: @escaping (Bool) -> Void,
                            updateCropInfo: @escaping () -> Void) {
-        guard (currentAssetIdentifier != hei.id || hei.editImageURL != currentEditImageURL) else {
+        guard (currentAssetIdentifier != hei.id || hei.editImageURL != currentEditImageURL || hei.updatedTime != currentEditTime) else {
             DispatchQueue.main.async { completion(false) }
             return
         }
         currentAssetIdentifier = hei.id
         currentAssetType = .image
         currentEditImageURL = hei.editImageURL
+        currentEditTime = hei.updatedTime
         photoImageView.image = nil
         videoView.removeFromSuperview()
         

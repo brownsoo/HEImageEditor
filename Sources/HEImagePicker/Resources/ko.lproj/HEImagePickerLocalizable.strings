@@ -23,9 +23,10 @@
 "_videoDurationTitle" = "동영상 길이";
 "_videoTooLong" = "%@초 이하인 동영상을 선택해주세요.";
 "_videoTooShort" = "동영상 길이는 최소 %@초 이상이어야 합니다.";
-"_warningItemsLimit" = "사진과 동영상은 최대 %d개 까지 선택할 수 있습니다.";
+"_warningItemsLimit" = "최대 %d개 까지 선택할 수 있습니다.";
 "_attach" = "첨부하기";
 "_editPhoto" = "사진 편집";
+"_all" = "전체";
 "_allPhotos" = "모든 사진";
 "_allVideos" = "모든 영상";
 "_confirm" = "확인";
@@ -37,3 +38,6 @@
 "_noSelectionToEdit" = "편집할 대상을 찾지 못했습니다.";
 "_cannotFindMediaFile" = "미디어 파일을 찾지 못했습니다.";
 "_videoTooHeavy" = "%@MB 이하인 동영상을 선택해주세요.";
+"_edited" = "편집 상태";
+"_library_changed_alert" = "사진 앨범 정보가 업데이트 되었습니다.";
+"_photos_empty_messge" = "사진이 없습니다.";

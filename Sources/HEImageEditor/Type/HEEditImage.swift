@@ -25,6 +25,7 @@ public class HEEditImage: HEImage {
     
     public func setEditState(_ model: HEEditState?) {
         self.editState = model
+        self.updatedTime = Date().timeIntervalSince1970
     }
     
     public override var debugDescription: String {

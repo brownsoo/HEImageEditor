@@ -12,18 +12,21 @@ import UIKit
 ///
 /// - 크롭 위치, 영역
 public struct HELibrarySelection {
-    let assetIdentifier: String
+    public let assetIdentifier: String
     var cropRect: CGRect?
     var scrollViewContentOffset: CGPoint?
     var scrollViewZoomScale: CGFloat?
+    var isJustPreviewing: Bool
     
-    init(assetIdentifier: String,
-         cropRect: CGRect? = nil,
-         scrollViewContentOffset: CGPoint? = nil,
-         scrollViewZoomScale: CGFloat? = nil) {
+    public init(assetIdentifier: String,
+                cropRect: CGRect? = nil,
+                scrollViewContentOffset: CGPoint? = nil,
+                scrollViewZoomScale: CGFloat? = nil,
+                isDefaultPreviewing: Bool = false) {
         self.assetIdentifier = assetIdentifier
         self.cropRect = cropRect
         self.scrollViewContentOffset = scrollViewContentOffset
         self.scrollViewZoomScale = scrollViewZoomScale
+        self.isJustPreviewing = isDefaultPreviewing
     }
 }

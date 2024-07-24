@@ -8,7 +8,7 @@ import UIKit
 class HETextStickerView: HEBaseStickerView {
     static let fontSize: CGFloat = 23
     
-    private static let edgeInset: CGFloat = 10
+    private static let edgeInset: CGFloat = 0
     
     private lazy var imageView: UIImageView = {
         let view = UIImageView(image: image)
@@ -16,6 +16,10 @@ class HETextStickerView: HEBaseStickerView {
         view.clipsToBounds = true
         return view
     }()
+    
+    override var contentView: UIView {
+        self.imageView
+    }
     
     var text: String
     var textColor: UIColor
@@ -115,7 +119,7 @@ class HETextStickerView: HEBaseStickerView {
     override func tapAction(_ ges: UITapGestureRecognizer) {
         guard gesIsEnabled else { return }
         
-        if let timer = timer, timer.isValid {
+        if isBordered {
             delegate?.sticker(self, editText: text)
         } else {
             super.tapAction(ges)

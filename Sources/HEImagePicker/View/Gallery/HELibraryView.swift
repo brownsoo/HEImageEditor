@@ -7,6 +7,7 @@
 
 import UIKit
 import Photos
+import HECommon
 
 /// 메인 뷰
 final class HELibraryView: UIView {
@@ -24,16 +25,33 @@ final class HELibraryView: UIView {
         v.collectionViewLayout = layout
         v.showsHorizontalScrollIndicator = false
         v.alwaysBounceVertical = true
+        
         return v
     }()
-    /// 상단 미리보기 
-    // TODO: 이미지 리스트로 변경
+    
+    internal let albumEmptyView: UIView = {
+        let v = EdgeLineView()
+        v.backgroundColor = .white
+        v.edges = .top
+        let label = UILabel()
+        label.text = PickerConfig.wordings.photoEmptyMessage
+        label.textColor = UIColor(white: 187 / 255.0, alpha: 1.0)
+        label.font = .systemFont(ofSize: 15, weight: .bold)
+        label.textAlignment = .center
+        v.addSubview(label)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.centerYAnchor.constraint(equalTo: v.centerYAnchor).isActive = true
+        label.centerXAnchor.constraint(equalTo: v.centerXAnchor).isActive = true
+        return v
+    }()
+    
+    /// 상단 미리보기
     internal lazy var previewBox: HEPreviewBoxView = {
         let v = HEPreviewBoxView()
         v.accessibilityIdentifier = "previewViewBox"
         return v
     }()
-    // TODO: 변경하기 - 확대는... 편집 모드가 아닌 경우에 처리.
+    
     internal var currentZoomableView: HEAssetZoomableView? {
         return previewBox.currentZoomableView
     }
@@ -54,14 +72,42 @@ final class HELibraryView: UIView {
         return bt
     }()
     
+    internal lazy var libraryBeingUpdateToast: UIView = {
+        let uv = UIView()
+        uv.backgroundColor = .black.withAlphaComponent(0.5)
+        let lb = UILabel()
+        lb.font = .systemFont(ofSize: 12)
+        lb.textColor = .white
+        lb.textAlignment = .center
+        lb.text = PickerConfig.wordings.libraryBeingChange
+        uv.addSubview(lb)
+        lb.translatesAutoresizingMaskIntoConstraints = false
+        lb.leadingAnchorConstraintToSuperview(8)
+        lb.trailingAnchorConstraintToSuperview(-8)
+        lb.topAnchorConstraintToSuperview(4)
+        lb.bottomAnchorConstraintToSuperview(-4)
+        return uv
+    }()
+    
     internal var cameraPhotoButton: UIButton?
     internal var cameraVideoButton: UIButton?
-    internal var countView: UIView?
-    internal var countLabel: UILabel?
+    internal let countView = UIView()
+    internal let countButton: UIButton = {
+        let bt = UIButton(frame: CGRect(origin: .zero, size: CGSize(width: 32, height: 32)))
+        bt.setTitle("0", for: .normal)
+        bt.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .bold)
+        bt.titleLabel?.textAlignment = .center
+        bt.setTitleColor(.white, for: .normal)
+        bt.backgroundColor = UIColor(r: 71, g: 120, b: 222, a: 1)
+        bt.layer.cornerRadius = 16
+        bt.layer.masksToBounds = true
+        return bt
+    }()
+
     
     // MARK: - Private vars
 
-    private let line: UIView = {
+    private let albumHeadlineView: UIView = {
         let v = UIView()
         v.backgroundColor = .white
         return v
@@ -100,6 +146,11 @@ final class HELibraryView: UIView {
     }
 
     // MARK: - Public Methods
+    
+    func setSelectedCount(_ count: Int) {
+        countButton.setTitle(String(count), for: .normal)
+        countView.isHidden = count == 0 || !isMultipleSelectionEnabled
+    }
 
     // MARK: Loader and progress
     
@@ -148,7 +199,16 @@ final class HELibraryView: UIView {
     func setMultipleSelectionMode(on: Bool) {
         isMultipleSelectionEnabled = on
         previewBox.setMultipleSelectionMode(on: on)
-        countLabel?.isHidden = !on
+    }
+    
+    func showLibraryBeingChangeMessage() {
+        addSubview(libraryBeingUpdateToast)
+        libraryBeingUpdateToast.translatesAutoresizingMaskIntoConstraints = false
+        libraryBeingUpdateToast.edgesConstraintToSuperview(edges: [.top, .horizontal])
+    }
+    
+    func hideLibraryBeingChangeMessage() {
+        libraryBeingUpdateToast.removeFromSuperview()
     }
     
     // MARK: - Private Methods
@@ -157,31 +217,39 @@ final class HELibraryView: UIView {
         
         addSubview(collectionContainerView)
         collectionContainerView.addSubview(albumCollectionView)
-        collectionContainerView.addSubview(line)
+        collectionContainerView.addSubview(albumHeadlineView)
+        collectionContainerView.addSubview(albumEmptyView)
         addSubview(previewBox)
         addSubview(progressView)
         
-        previewBox.backgroundColor = .green
-        // assetViewBox.backgroundColor = PickerConfig.colors.assetViewBackgroundColor
         
         collectionContainerView.makeConstraints { v in
             v.edgesConstraintToSuperview(edges: [.horizontal, .bottom])
             v.topAnchorConstraintTo(self.safeAreaLayoutGuide.topAnchor)
         }
         albumCollectionView.makeConstraints { v in
-            v.topAnchorConstraintTo(line.bottomAnchor)
+            v.topAnchorConstraintTo(albumHeadlineView.bottomAnchor)
             v.edgesConstraintToSuperview(edges: .horizontal)
             v.bottomAnchorConstraintToSuperview()
+        }
+        
+        albumEmptyView.isHidden = true
+        albumEmptyView.makeConstraints { v in
+            v.topAnchorConstraintTo(albumHeadlineView.bottomAnchor)
+            v.edgesConstraintToSuperview(edges: .horizontal)
+            v.bottomAnchorConstraintToSuperview()
+            v.setContentHuggingPriority(.fittingSizeLevel, for: .horizontal)
+            v.setContentHuggingPriority(.fittingSizeLevel, for: .vertical)
         }
 
         var topConstraint: NSLayoutConstraint?
         previewBox.makeConstraints { v in
             topConstraint = v.topAnchorConstraintToSuperview()
-            v.bottomAnchorConstraintTo(line.topAnchor)
+            v.bottomAnchorConstraintTo(albumHeadlineView.topAnchor)
             v.edgesConstraintToSuperview(edges: .horizontal)
             v.heightAnchor.constraint(equalTo: self.widthAnchor, multiplier: 1).isActive = true
         }
-        line.makeConstraints { v in
+        albumHeadlineView.makeConstraints { v in
             v.heightAnchorConstraintTo(56)
             v.edgesConstraintToSuperview(edges: .horizontal)
         }
@@ -191,10 +259,10 @@ final class HELibraryView: UIView {
         progressView.makeConstraints { v in
             v.heightAnchorConstraintTo(5)
             v.edgesConstraintToSuperview(edges: .horizontal)
-            v.bottomAnchorConstraintTo(line.topAnchor)
+            v.bottomAnchorConstraintTo(albumHeadlineView.topAnchor)
         }
         
-        line.addSubview(albumNameBt)
+        albumHeadlineView.addSubview(albumNameBt)
         albumNameBt.makeConstraints { v in
             v.leadingAnchorConstraintToSuperview()
             v.centerYAnchorConstraintToSuperview()
@@ -206,43 +274,30 @@ final class HELibraryView: UIView {
         rearStack.spacing = 0
         rearStack.setContentHuggingPriority(.required, for: .horizontal)
         rearStack.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        line.addSubview(rearStack)
+        albumHeadlineView.addSubview(rearStack)
         rearStack.makeConstraints { v in
             v.trailingAnchorConstraintToSuperview(-7)
             v.topAnchorConstraintToSuperview()
             v.bottomAnchorConstraintToSuperview()
         }
         
-        
         // 카운트 추가
-        let lb = UILabel(frame: CGRect(origin: .zero, size: CGSize(width: 32, height: 32)))
-        lb.adjustsFontSizeToFitWidth = true
-        lb.font = UIFont.systemFont(ofSize: 13, weight: .bold)
-        lb.backgroundColor = UIColor(r: 71, g: 120, b: 222, a: 1)
-        lb.text = "0"
-        lb.textColor = .white
-        lb.translatesAutoresizingMaskIntoConstraints = false
-        lb.widthAnchor.constraint(equalToConstant: 32).isActive = true
-        lb.heightAnchor.constraint(equalToConstant: 32).isActive = true
-        lb.layer.cornerRadius = 16
-        lb.layer.masksToBounds = true
-        lb.textAlignment = .center
-        countLabel = lb
-        let lbWrap = UIView()
-        lbWrap.translatesAutoresizingMaskIntoConstraints = false
-        lbWrap.widthAnchor.constraint(equalToConstant: 42).isActive = true
-        lbWrap.heightAnchor.constraint(equalToConstant: 42).isActive = true
-        lbWrap.isHidden = !(PickerConfig.library.defaultMultipleSelection || isMultipleSelectionEnabled)
-        lbWrap.addSubview(lb)
-        lb.centerXAnchorConstraintToSuperview()
-        lb.centerYAnchorConstraintToSuperview()
-        rearStack.addArrangedSubview(lbWrap)
-        countView = lbWrap
+        countView.addSubview(countButton)
+        rearStack.addArrangedSubview(countView)
+        countView.makeConstraints { v in
+            v.sizeAnchorConstraintTo(42)
+            v.isHidden = !(PickerConfig.library.defaultMultipleSelection || isMultipleSelectionEnabled)
+        }
+        countButton.makeConstraints { bt in
+            bt.sizeAnchorConstraintTo(32)
+            bt.centerXAnchorConstraintToSuperview()
+            bt.centerYAnchorConstraintToSuperview()
+        }
         
         // 카메라 사용 여부에 따라 버튼 추가
         if PickerConfig.pickerSources.contains(.videoCapture)
             && (PickerConfig.library.mediaType == .photoAndVideo || PickerConfig.library.mediaType == .video) {
-            let iconImage = PickerConfig.icons.videoFillIcon?.withTintColor(.white, renderingMode: .alwaysOriginal)
+            let iconImage = PickerConfig.icons.videoFillIcon?.withTintColor(.white, renderingMode: .alwaysOriginal).resized(to: CGSize(width: 16, height: 16))
             let iconView = UIImageView(frame: .init(origin: .zero, size: CGSize(width: 32, height: 32)))
             iconView.contentMode = .center
             iconView.backgroundColor = UIColor(white: 136 / 255.0, alpha: 1.0)

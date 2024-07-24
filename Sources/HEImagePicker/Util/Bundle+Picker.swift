@@ -43,12 +43,18 @@ public struct HEPickerIcons {
     public var cropIcon = UIImage(systemName: "crop")?.withTintColor(.white, renderingMode: .alwaysOriginal)
     
     public var captureVideoOnImage: UIImage? = imageFromBundle("yp_iconVideoCaptureRecording")
+    
     public var playImage: UIImage? = UIImage(systemName: "play.fill", withConfiguration: UIImage.SymbolConfiguration(pointSize: 26, weight: .regular, scale: .large))
+    
     public var removeImage: UIImage? = UIImage(systemName: "x.circle")
     // 16x16
-    public var cameraFillIcon = imageFromBundle("icCameraFill") ?? UIImage(systemName: "camera.fill", withConfiguration: UIImage.SymbolConfiguration(pointSize: 16, weight: .regular, scale: .default))
+    public var cameraFillIcon: UIImage? = imageFromBundle("icCameraFill") ?? UIImage(systemName: "camera.fill", withConfiguration: UIImage.SymbolConfiguration(pointSize: 16, weight: .regular, scale: .default))
+
     // 16x16
     public var videoFillIcon: UIImage? = UIImage(systemName: "video.fill", withConfiguration: UIImage.SymbolConfiguration(pointSize: 16, weight: .regular, scale: .default))
+    
+    // 56x56
+    public var emptyPhotoIcon: UIImage? = imageFromBundle("icImageFill") ?? UIImage(systemName: "photo", withConfiguration: UIImage.SymbolConfiguration(pointSize: 56, weight: .regular, scale: .default))?.withTintColor(.init(white: 204/255.0, alpha: 1.0), renderingMode: .alwaysOriginal)
 }
 
 

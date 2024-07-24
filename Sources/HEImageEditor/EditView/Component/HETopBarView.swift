@@ -10,7 +10,8 @@ import UIKit
 
 open class HETopBarView: UIView {
     
-    private var guideBottom: NSLayoutConstraint!
+    static var contentHeight: CGFloat = 48
+    
     private lazy var centerContainer = UIStackView()
     private lazy var trailingContainer = UIStackView()
     private lazy var leadingContainer = UIStackView()
@@ -25,28 +26,23 @@ open class HETopBarView: UIView {
         super.init(coder: coder)
     }
     
-    public func show(animate: Bool = true) {
+    public func show(animate: Bool = false) {
         shouldShow = true
         if animate {
             self.isHidden = false
             UIView.animate(withDuration: 0.2, delay: 0.1, options: [.curveEaseOut, .beginFromCurrentState], animations: {
                 self.alpha = 1
             })
-            UIView.animate(withDuration: 0.2, delay: 0.2, options: [.curveEaseOut, .beginFromCurrentState], animations: {
-                self.guideBottom?.constant = 0
-            })
         } else {
             self.isHidden = false
-            self.transform = .identity
             self.alpha = 1
         }
     }
     
-    public func hide(animate: Bool = true) {
+    public func hide(animate: Bool = false) {
         shouldShow = false
         if animate {
             UIView.animate(withDuration: 0.2, delay: 0, options: [.curveLinear, .beginFromCurrentState], animations: {
-                self.guideBottom?.constant = -12
                 self.alpha = 0
             }) { _ in
                 if !self.shouldShow {
@@ -56,7 +52,6 @@ open class HETopBarView: UIView {
         } else {
             self.alpha = 0
             self.isHidden = true
-            self.guideBottom?.constant = -12
             self.layoutIfNeeded()
         }
     }
@@ -82,12 +77,12 @@ open class HETopBarView: UIView {
         
         let guide = UILayoutGuide()
         self.addLayoutGuide(guide)
-        guideBottom = guide.bottomAnchor.constraint(equalTo: self.bottomAnchor)
+        
         NSLayoutConstraint.activate([
             guide.leftAnchor.constraint(equalTo: self.leftAnchor),
             guide.rightAnchor.constraint(equalTo: self.rightAnchor),
-            guide.heightAnchor.constraint(equalToConstant: 44),
-            guideBottom
+            guide.heightAnchor.constraint(equalToConstant: Self.contentHeight),
+            guide.bottomAnchor.constraint(equalTo: self.bottomAnchor)
         ])
         
         centerContainer.also { it in

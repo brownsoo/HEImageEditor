@@ -87,7 +87,6 @@
 		17D691D72C183A80007443EC /* HEImageStickerTrayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D691D62C183A80007443EC /* HEImageStickerTrayView.swift */; };
 		17D691DA2C184616007443EC /* Also.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D691D92C184616007443EC /* Also.swift */; };
 		17D691DC2C198C68007443EC /* HEFaceDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D691DB2C198C68007443EC /* HEFaceDetection.swift */; };
-		17D691DE2C1AA941007443EC /* HELoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D691DD2C1AA941007443EC /* HELoadingView.swift */; };
 		17D691E02C1AE51D007443EC /* HETopConfirmBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D691DF2C1AE51D007443EC /* HETopConfirmBarView.swift */; };
 		17D691E82C1BD35E007443EC /* HETopBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D691E72C1BD35E007443EC /* HETopBarView.swift */; };
 		17D691EA2C1BDF41007443EC /* HEPassThroughView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D691E92C1BDF41007443EC /* HEPassThroughView.swift */; };
@@ -96,6 +95,11 @@
 		17D692232C24380A007443EC /* HEAdjustStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D692222C24380A007443EC /* HEAdjustStatus.swift */; };
 		17D692252C24382F007443EC /* HEImageClipRatio.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D692242C24382F007443EC /* HEImageClipRatio.swift */; };
 		17D9B7252C394CBF003874D4 /* HEImagePickerLocalizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 17D9B7232C394CBF003874D4 /* HEImagePickerLocalizable.strings */; };
+		17DF34C82C4E0A04002EE282 /* HELibraryViewController+extractSelectedMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17DF34C72C4E0A04002EE282 /* HELibraryViewController+extractSelectedMedia.swift */; };
+		17DF34D22C4E46B0002EE282 /* HELoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17DF34D12C4E46B0002EE282 /* HELoadingView.swift */; };
+		17DF34D42C4E4DFB002EE282 /* HETextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17DF34D32C4E4DFB002EE282 /* HETextView.swift */; };
+		17DF34D82C50DB27002EE282 /* HEEnlargeButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17DF34D72C50DB27002EE282 /* HEEnlargeButton.swift */; };
+		17DF34DA2C50EAB7002EE282 /* EdgeLineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17DF34D92C50EAB7002EE282 /* EdgeLineView.swift */; };
 		17E2D87B2C290272005F5E0B /* HEImageSticker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E2D87A2C290272005F5E0B /* HEImageSticker.swift */; };
 		17E74D582C44E4FE00302946 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E74D572C44E4FE00302946 /* AppDelegate.swift */; };
 		17E74D5A2C44E4FE00302946 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E74D592C44E4FE00302946 /* SceneDelegate.swift */; };
@@ -157,7 +161,6 @@
 		FDC9B2442990D66300963047 /* HEBaseStickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDC9B2432990D66300963047 /* HEBaseStickerView.swift */; };
 		FDE1A559282E580900178B0F /* HEImageEditorUIConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE1A558282E580900178B0F /* HEImageEditorUIConfiguration.swift */; };
 		FDE1A55B282E58E700178B0F /* HEUIConfiguration+Chaining.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE1A55A282E58E700178B0F /* HEUIConfiguration+Chaining.swift */; };
-		FDE1A561282E61B500178B0F /* HEEnlargeButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE1A560282E61B500178B0F /* HEEnlargeButton.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -287,7 +290,6 @@
 		17D691D62C183A80007443EC /* HEImageStickerTrayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEImageStickerTrayView.swift; sourceTree = "<group>"; };
 		17D691D92C184616007443EC /* Also.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Also.swift; sourceTree = "<group>"; };
 		17D691DB2C198C68007443EC /* HEFaceDetection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEFaceDetection.swift; sourceTree = "<group>"; };
-		17D691DD2C1AA941007443EC /* HELoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HELoadingView.swift; sourceTree = "<group>"; };
 		17D691DF2C1AE51D007443EC /* HETopConfirmBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HETopConfirmBarView.swift; sourceTree = "<group>"; };
 		17D691E72C1BD35E007443EC /* HETopBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HETopBarView.swift; sourceTree = "<group>"; };
 		17D691E92C1BDF41007443EC /* HEPassThroughView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEPassThroughView.swift; sourceTree = "<group>"; };
@@ -300,6 +302,11 @@
 		17D692262C253644007443EC /* HEError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEError.swift; sourceTree = "<group>"; };
 		17D9B7242C394CBF003874D4 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/HEImagePickerLocalizable.strings; sourceTree = "<group>"; };
 		17D9B7262C394CC9003874D4 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/HEImagePickerLocalizable.strings; sourceTree = "<group>"; };
+		17DF34C72C4E0A04002EE282 /* HELibraryViewController+extractSelectedMedia.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HELibraryViewController+extractSelectedMedia.swift"; sourceTree = "<group>"; };
+		17DF34D12C4E46B0002EE282 /* HELoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HELoadingView.swift; sourceTree = "<group>"; };
+		17DF34D32C4E4DFB002EE282 /* HETextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HETextView.swift; sourceTree = "<group>"; };
+		17DF34D72C50DB27002EE282 /* HEEnlargeButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEEnlargeButton.swift; sourceTree = "<group>"; };
+		17DF34D92C50EAB7002EE282 /* EdgeLineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EdgeLineView.swift; sourceTree = "<group>"; };
 		17E2D87A2C290272005F5E0B /* HEImageSticker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEImageSticker.swift; sourceTree = "<group>"; };
 		17E2D87C2C290986005F5E0B /* HEImageUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEImageUtil.swift; sourceTree = "<group>"; };
 		17E74D552C44E4FE00302946 /* HEExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HEExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -396,7 +403,6 @@
 		FDE1A558282E580900178B0F /* HEImageEditorUIConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEImageEditorUIConfiguration.swift; sourceTree = "<group>"; };
 		FDE1A55A282E58E700178B0F /* HEUIConfiguration+Chaining.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HEUIConfiguration+Chaining.swift"; sourceTree = "<group>"; };
 		FDE1A55C282E595C00178B0F /* UIColor+Wrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIColor+Wrapper.swift"; sourceTree = "<group>"; };
-		FDE1A560282E61B500178B0F /* HEEnlargeButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HEEnlargeButton.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -562,6 +568,7 @@
 				173DE6892C33F4C4002BD7C6 /* Permission */,
 				173DE6702C33C9A1002BD7C6 /* Gallery */,
 				173DE66A2C33BEBD002BD7C6 /* HEAlbumsManager.swift */,
+				17DF34D92C50EAB7002EE282 /* EdgeLineView.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -574,6 +581,7 @@
 				173DE6732C33CA06002BD7C6 /* HELibraryView.swift */,
 				173DE66E2C33C918002BD7C6 /* HELibraryViewController.swift */,
 				173DE6902C33F8EA002BD7C6 /* HELibraryViewController+CollectionView.swift */,
+				17DF34C72C4E0A04002EE282 /* HELibraryViewController+extractSelectedMedia.swift */,
 				173DE69A2C3417E7002BD7C6 /* HELibraryViewController+PHLibraryObserver.swift */,
 				173DE68E2C33F6B2002BD7C6 /* HEPanGestureHelper.swift */,
 				173DE6872C33E78D002BD7C6 /* HEPreviewBoxView.swift */,
@@ -666,7 +674,9 @@
 		17B2DD062C3BBFB500662FC4 /* Component */ = {
 			isa = PBXGroup;
 			children = (
+				17DF34D12C4E46B0002EE282 /* HELoadingView.swift */,
 				17B2DD072C3BBFC000662FC4 /* HECapsuleButton.swift */,
+				17DF34D72C50DB27002EE282 /* HEEnlargeButton.swift */,
 			);
 			path = Component;
 			sourceTree = "<group>";
@@ -708,9 +718,7 @@
 				FD8EFA53277206D30067ADF1 /* HEEditToolCells.swift */,
 				FD8EFA512772026D0067ADF1 /* HEAdjustSlider.swift */,
 				17D691E92C1BDF41007443EC /* HEPassThroughView.swift */,
-				FDE1A560282E61B500178B0F /* HEEnlargeButton.swift */,
 				17D691972C12EC32007443EC /* HEClipBottomView.swift */,
-				17D691DD2C1AA941007443EC /* HELoadingView.swift */,
 				17D691DF2C1AE51D007443EC /* HETopConfirmBarView.swift */,
 				17D691E72C1BD35E007443EC /* HETopBarView.swift */,
 			);
@@ -736,6 +744,7 @@
 				E40208E6256B9F9C0077F5DC /* HETextStickerView.swift */,
 				17D691D62C183A80007443EC /* HEImageStickerTrayView.swift */,
 				E40208E8256B9F9C0077F5DC /* HEInputTextViewController.swift */,
+				17DF34D32C4E4DFB002EE282 /* HETextView.swift */,
 			);
 			path = Sticker;
 			sourceTree = "<group>";
@@ -1093,6 +1102,7 @@
 				1744BA422C330B7800F5395B /* HEMediaItem.swift in Sources */,
 				173DE6722C33C9BC002BD7C6 /* HELibraryMediaManager.swift in Sources */,
 				173DE6552C33B8AD002BD7C6 /* Bundle+Picker.swift in Sources */,
+				17DF34C82C4E0A04002EE282 /* HELibraryViewController+extractSelectedMedia.swift in Sources */,
 				173DE6742C33CA06002BD7C6 /* HELibraryView.swift in Sources */,
 				17B2DD0A2C3BC62400662FC4 /* LibraryAttachButton.swift in Sources */,
 				173DE6762C33CA6B002BD7C6 /* HEAssetZoomableView.swift in Sources */,
@@ -1100,6 +1110,7 @@
 				173DE6842C33D1F7002BD7C6 /* URL+.swift in Sources */,
 				173DE6882C33E78D002BD7C6 /* HEPreviewBoxView.swift in Sources */,
 				173DE66B2C33BEBD002BD7C6 /* HEAlbumsManager.swift in Sources */,
+				17DF34DA2C50EAB7002EE282 /* EdgeLineView.swift in Sources */,
 				1744BA482C330C4A00F5395B /* HEPickerError.swift in Sources */,
 				173DE6952C340049002BD7C6 /* UIHelper.swift in Sources */,
 				173DE6992C3412CC002BD7C6 /* UIImage+.swift in Sources */,
@@ -1115,6 +1126,7 @@
 				17B2DCF82C3BA0C600662FC4 /* HEImage.swift in Sources */,
 				17B2DCE52C3B968300662FC4 /* CGFloat+Wrapper.swift in Sources */,
 				17B2DCF62C3B9E0B00662FC4 /* UIApplication+Wrapper.swift in Sources */,
+				17DF34D22C4E46B0002EE282 /* HELoadingView.swift in Sources */,
 				17B2DCE82C3B969900662FC4 /* UIImage+Wrapper.swift in Sources */,
 				17B2DCE72C3B969200662FC4 /* String+Wrapper.swift in Sources */,
 				17B2DCEB2C3B96AA00662FC4 /* UIGraphicsImageRenderer+Wrapper.swift in Sources */,
@@ -1125,6 +1137,7 @@
 				17B2DCFB2C3BA3C600662FC4 /* HEError.swift in Sources */,
 				17B2DCE42C3B967200662FC4 /* HEWrapper.swift in Sources */,
 				17B2DCE92C3B969D00662FC4 /* UIColor+Wrapper.swift in Sources */,
+				17DF34D82C50DB27002EE282 /* HEEnlargeButton.swift in Sources */,
 				17B2DD052C3BABA700662FC4 /* Data+Wrapper.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1156,13 +1169,11 @@
 				17D691982C12EC32007443EC /* HEClipBottomView.swift in Sources */,
 				FD8EFA54277206D30067ADF1 /* HEEditToolCells.swift in Sources */,
 				17D691E82C1BD35E007443EC /* HETopBarView.swift in Sources */,
-				17D691DE2C1AA941007443EC /* HELoadingView.swift in Sources */,
 				E40208FF256BA0080077F5DC /* Bundle+Editor.swift in Sources */,
 				E40208F0256B9F9C0077F5DC /* HEClipImageViewController.swift in Sources */,
 				FDE1A559282E580900178B0F /* HEImageEditorUIConfiguration.swift in Sources */,
 				17D6920D2C22B587007443EC /* HETextStickerColorCells.swift in Sources */,
 				17D691DA2C184616007443EC /* Also.swift in Sources */,
-				FDE1A561282E61B500178B0F /* HEEnlargeButton.swift in Sources */,
 				174095612C19FC1C00A4B18D /* Foundation+.swift in Sources */,
 				FDE1A55B282E58E700178B0F /* HEUIConfiguration+Chaining.swift in Sources */,
 				17D692232C24380A007443EC /* HEAdjustStatus.swift in Sources */,
@@ -1180,6 +1191,7 @@
 				E40208EB256B9F9C0077F5DC /* HEEditImageViewController.swift in Sources */,
 				E402090E256BA1F40077F5DC /* HELanguageDefine.swift in Sources */,
 				FDC144962BABE0B4004C2BCD /* HEWeakProxy.m in Sources */,
+				17DF34D42C4E4DFB002EE282 /* HETextView.swift in Sources */,
 				FDC9B2442990D66300963047 /* HEBaseStickerView.swift in Sources */,
 				17B2DCF32C3B991800662FC4 /* Cell+.swift in Sources */,
 				17E2D87B2C290272005F5E0B /* HEImageSticker.swift in Sources */,

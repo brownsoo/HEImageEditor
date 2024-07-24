@@ -35,6 +35,9 @@ public struct HEPickerWordings {
         public var tooLongMessage = pickerLocalized("_videoTooLong")
     }
     
+    public var photoEmptyMessage = pickerLocalized("_photos_empty_messge")
+    public var libraryBeingChange = pickerLocalized("_library_changed_alert")
+    public var edited = pickerLocalized("_edited")
     public var videoFileTooHeavy = pickerLocalized("_videoTooHeavy")
     public var cannotFindMediaFile = pickerLocalized("_cannotFindMediaFile")
     public var noSelectionToEdit = pickerLocalized("_noSelectionToEdit")
@@ -44,6 +47,7 @@ public struct HEPickerWordings {
     public var noSupportCameraDevice = pickerLocalized("_noSupportCameraDevice")
     public var close = pickerLocalized("_close")
     public var confirm = pickerLocalized("_confirm")
+    public var all = pickerLocalized("_all")
     public var allPhotos = pickerLocalized("_allPhotos")
     public var allVideos = pickerLocalized("_allVideos")
     public var editPhoto = pickerLocalized("_editPhoto")
