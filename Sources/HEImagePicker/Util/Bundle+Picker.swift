@@ -44,7 +44,7 @@ public struct HEPickerIcons {
     
     public var captureVideoOnImage: UIImage? = imageFromBundle("yp_iconVideoCaptureRecording")
     
-    public var playImage: UIImage? = UIImage(systemName: "play.fill", withConfiguration: UIImage.SymbolConfiguration(pointSize: 26, weight: .regular, scale: .large))
+    public var playImage: UIImage? = imageFromBundle("icPlayCircleLine52") ?? UIImage(systemName: "play.fill", withConfiguration: UIImage.SymbolConfiguration(pointSize: 52, weight: .regular, scale: .large))
     
     public var removeImage: UIImage? = UIImage(systemName: "x.circle")
     // 16x16

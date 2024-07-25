@@ -185,6 +185,9 @@ final class HELibraryView: UIView {
         let imageCurtainAlpha = abs(previewBoxConstraintTop?.constant ?? 0)
         / (previewBox.frame.height - previewBoxMinimalVisibleHeight)
         previewBox.curtain.alpha = imageCurtainAlpha
+        if imageCurtainAlpha > 0 {
+            previewBox.bringSubviewToFront(previewBox.curtain)
+        }
     }
 
     func cellSize() -> CGSize {

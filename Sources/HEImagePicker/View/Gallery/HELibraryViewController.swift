@@ -50,7 +50,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     internal var shouldHideStatusBar = false
     internal var initialStatusBarHidden = false
     internal var v = HELibraryView(frame: .zero)
-    internal let attachButton = LibraryAttachButton()
+    internal let attachButton = HELibraryAttachButton()
     
     internal var isProcessing = false // true if video or image is in processing state
     internal var selectedItems = [HELibrarySelection]()

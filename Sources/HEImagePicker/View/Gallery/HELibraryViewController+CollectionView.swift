@@ -16,7 +16,7 @@ extension HELibraryViewController {
     func setupCollectionView() {
         v.albumCollectionView.dataSource = self
         v.albumCollectionView.delegate = self
-        v.albumCollectionView.register(LibraryViewCell.self, forCellWithReuseIdentifier: LibraryViewCell.reuseIdentifier)
+        v.albumCollectionView.register(HELibraryViewCell.self, forCellWithReuseIdentifier: HELibraryViewCell.reuseIdentifier)
         
         // Long press on cell to enable multiple selection
         let longPressGR = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(longPressGR:)))
@@ -40,7 +40,7 @@ extension HELibraryViewController {
     }
     
     private func startMultipleSelection(at indexPath: IndexPath) {
-        currentlySelectedIdentifier = (v.albumCollectionView.cellForItem(at: indexPath) as? LibraryViewCell)?.representedAssetIdentifier
+        currentlySelectedIdentifier = (v.albumCollectionView.cellForItem(at: indexPath) as? HELibraryViewCell)?.representedAssetIdentifier
         toggleMultipleSelection()
 
         // Bring preview down and keep selected cell visible.
@@ -176,7 +176,7 @@ extension HELibraryViewController: UICollectionViewDataSource {
 extension HELibraryViewController: UICollectionViewDelegate {
     
     public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: LibraryViewCell.reuseIdentifier, for: indexPath) as? LibraryViewCell else {
+        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HELibraryViewCell.reuseIdentifier, for: indexPath) as? HELibraryViewCell else {
             fatalError("unexpected cell in collection view")
         }
         
@@ -266,14 +266,14 @@ extension HELibraryViewController: UICollectionViewDelegate {
     }
     
     public func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-        guard let cell = cell as? LibraryViewCell else { return }
+        guard let cell = cell as? HELibraryViewCell else { return }
         cell.loadImage()
         cell.isSelected = currentlySelectedIdentifier == cell.representedAssetIdentifier
     }
     
     public func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let previouslySelected = currentlySelectedIdentifier ?? ""
-        currentlySelectedIdentifier = (collectionView.cellForItem(at: indexPath) as? LibraryViewCell)?.representedAssetIdentifier
+        currentlySelectedIdentifier = (collectionView.cellForItem(at: indexPath) as? HELibraryViewCell)?.representedAssetIdentifier
         
         // 선택하면 화면 재설정 (제외)
         // panGestureHelper.resetToOriginalState()
@@ -319,7 +319,7 @@ extension HELibraryViewController: UICollectionViewDelegate {
             // which triggered photoLibraryDidChange() and reloadItems() which breaks selection.
             //
             if let previouslySelectedIndexPath = findIndexPathInCurrentAlbum(identifier: previouslySelected),
-               let previousCell = collectionView.cellForItem(at: previouslySelectedIndexPath) as? LibraryViewCell {
+               let previousCell = collectionView.cellForItem(at: previouslySelectedIndexPath) as? HELibraryViewCell {
                 previousCell.isSelected = false
             }
         }

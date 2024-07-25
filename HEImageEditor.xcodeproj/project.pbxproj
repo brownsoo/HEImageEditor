@@ -35,7 +35,7 @@
 		173DE68D2C33F59F002BD7C6 /* PermissionDeniedPopup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE68C2C33F59F002BD7C6 /* PermissionDeniedPopup.swift */; };
 		173DE68F2C33F6B2002BD7C6 /* HEPanGestureHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE68E2C33F6B2002BD7C6 /* HEPanGestureHelper.swift */; };
 		173DE6912C33F8EA002BD7C6 /* HELibraryViewController+CollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE6902C33F8EA002BD7C6 /* HELibraryViewController+CollectionView.swift */; };
-		173DE6932C33F954002BD7C6 /* LibraryViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE6922C33F954002BD7C6 /* LibraryViewCell.swift */; };
+		173DE6932C33F954002BD7C6 /* HELibraryViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE6922C33F954002BD7C6 /* HELibraryViewCell.swift */; };
 		173DE6952C340049002BD7C6 /* UIHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE6942C340049002BD7C6 /* UIHelper.swift */; };
 		173DE6972C34128E002BD7C6 /* PHCachingImageManager+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE6962C34128E002BD7C6 /* PHCachingImageManager+.swift */; };
 		173DE6992C3412CC002BD7C6 /* UIImage+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE6982C3412CC002BD7C6 /* UIImage+.swift */; };
@@ -72,7 +72,7 @@
 		17B2DCFF2C3BA50A00662FC4 /* HECommon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 17B2DCE12C3B83FF00662FC4 /* HECommon.framework */; };
 		17B2DD052C3BABA700662FC4 /* Data+Wrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B2DD042C3BABA700662FC4 /* Data+Wrapper.swift */; };
 		17B2DD082C3BBFC000662FC4 /* HECapsuleButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B2DD072C3BBFC000662FC4 /* HECapsuleButton.swift */; };
-		17B2DD0A2C3BC62400662FC4 /* LibraryAttachButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B2DD092C3BC62400662FC4 /* LibraryAttachButton.swift */; };
+		17B2DD0A2C3BC62400662FC4 /* HELibraryAttachButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B2DD092C3BC62400662FC4 /* HELibraryAttachButton.swift */; };
 		17B2DD0E2C3CC99100662FC4 /* CenteredCellFlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B2DD0D2C3CC99100662FC4 /* CenteredCellFlowLayout.swift */; };
 		17B2DD102C3CCEC800662FC4 /* FullCellFlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B2DD0F2C3CCEC800662FC4 /* FullCellFlowLayout.swift */; };
 		17B2DD122C3E0D6900662FC4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 17B2DD112C3E0D6900662FC4 /* Assets.xcassets */; };
@@ -249,7 +249,7 @@
 		173DE68C2C33F59F002BD7C6 /* PermissionDeniedPopup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionDeniedPopup.swift; sourceTree = "<group>"; };
 		173DE68E2C33F6B2002BD7C6 /* HEPanGestureHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEPanGestureHelper.swift; sourceTree = "<group>"; };
 		173DE6902C33F8EA002BD7C6 /* HELibraryViewController+CollectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HELibraryViewController+CollectionView.swift"; sourceTree = "<group>"; };
-		173DE6922C33F954002BD7C6 /* LibraryViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryViewCell.swift; sourceTree = "<group>"; };
+		173DE6922C33F954002BD7C6 /* HELibraryViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HELibraryViewCell.swift; sourceTree = "<group>"; };
 		173DE6942C340049002BD7C6 /* UIHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIHelper.swift; sourceTree = "<group>"; };
 		173DE6962C34128E002BD7C6 /* PHCachingImageManager+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PHCachingImageManager+.swift"; sourceTree = "<group>"; };
 		173DE6982C3412CC002BD7C6 /* UIImage+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImage+.swift"; sourceTree = "<group>"; };
@@ -275,7 +275,7 @@
 		17B2DCFD2C3BA46F00662FC4 /* Trace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Trace.swift; sourceTree = "<group>"; };
 		17B2DD042C3BABA700662FC4 /* Data+Wrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Data+Wrapper.swift"; sourceTree = "<group>"; };
 		17B2DD072C3BBFC000662FC4 /* HECapsuleButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HECapsuleButton.swift; sourceTree = "<group>"; };
-		17B2DD092C3BC62400662FC4 /* LibraryAttachButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryAttachButton.swift; sourceTree = "<group>"; };
+		17B2DD092C3BC62400662FC4 /* HELibraryAttachButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HELibraryAttachButton.swift; sourceTree = "<group>"; };
 		17B2DD0D2C3CC99100662FC4 /* CenteredCellFlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CenteredCellFlowLayout.swift; sourceTree = "<group>"; };
 		17B2DD0F2C3CCEC800662FC4 /* FullCellFlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullCellFlowLayout.swift; sourceTree = "<group>"; };
 		17B2DD112C3E0D6900662FC4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -586,9 +586,9 @@
 				173DE68E2C33F6B2002BD7C6 /* HEPanGestureHelper.swift */,
 				173DE6872C33E78D002BD7C6 /* HEPreviewBoxView.swift */,
 				173DE6772C33CAAC002BD7C6 /* HEVideoView.swift */,
-				17B2DD092C3BC62400662FC4 /* LibraryAttachButton.swift */,
+				17B2DD092C3BC62400662FC4 /* HELibraryAttachButton.swift */,
 				173DE6712C33C9BC002BD7C6 /* HELibraryMediaManager.swift */,
-				173DE6922C33F954002BD7C6 /* LibraryViewCell.swift */,
+				173DE6922C33F954002BD7C6 /* HELibraryViewCell.swift */,
 			);
 			path = Gallery;
 			sourceTree = "<group>";
@@ -1095,7 +1095,7 @@
 				17B2DD0E2C3CC99100662FC4 /* CenteredCellFlowLayout.swift in Sources */,
 				17B2DD102C3CCEC800662FC4 /* FullCellFlowLayout.swift in Sources */,
 				173DE67A2C33CB92002BD7C6 /* AutoLayout+.swift in Sources */,
-				173DE6932C33F954002BD7C6 /* LibraryViewCell.swift in Sources */,
+				173DE6932C33F954002BD7C6 /* HELibraryViewCell.swift in Sources */,
 				173DE68F2C33F6B2002BD7C6 /* HEPanGestureHelper.swift in Sources */,
 				173DE69B2C3417E7002BD7C6 /* HELibraryViewController+PHLibraryObserver.swift in Sources */,
 				173DE68B2C33F4E6002BD7C6 /* PermissionCheckable.swift in Sources */,
@@ -1104,7 +1104,7 @@
 				173DE6552C33B8AD002BD7C6 /* Bundle+Picker.swift in Sources */,
 				17DF34C82C4E0A04002EE282 /* HELibraryViewController+extractSelectedMedia.swift in Sources */,
 				173DE6742C33CA06002BD7C6 /* HELibraryView.swift in Sources */,
-				17B2DD0A2C3BC62400662FC4 /* LibraryAttachButton.swift in Sources */,
+				17B2DD0A2C3BC62400662FC4 /* HELibraryAttachButton.swift in Sources */,
 				173DE6762C33CA6B002BD7C6 /* HEAssetZoomableView.swift in Sources */,
 				173DE6822C33CF3B002BD7C6 /* AVFoundation+.swift in Sources */,
 				173DE6842C33D1F7002BD7C6 /* URL+.swift in Sources */,

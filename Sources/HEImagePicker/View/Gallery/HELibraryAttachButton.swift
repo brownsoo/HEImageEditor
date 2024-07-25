@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 
-class LibraryAttachButton: UIControl {
+class HELibraryAttachButton: UIControl {
     
     private let enabledColor = UIColor(r: 71, g: 120, b: 222)
     private let disabledColor = UIColor(white: 187 / 255.0, alpha: 1.0)

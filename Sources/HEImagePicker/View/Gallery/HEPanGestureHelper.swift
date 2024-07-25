@@ -21,9 +21,10 @@ class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
     private var dragDirection = DragDirection.up
     private var imaginaryCollectionViewOffsetStartPosY: CGFloat = 0.0
     private var cropBottomY: CGFloat  = 0.0
-//    private var dragStartPos: CGPoint = .zero
+
     private var dragDiff: CGFloat = 0
     private var _isImageShown = true
+    private var collDiff: CGFloat = 0
     
     // The height constraint of the view with main selected image
     var topHeight: CGFloat {
@@ -71,9 +72,7 @@ class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
                        animations: {
                         self.libView.refreshImageCurtainAlpha()
                         self.libView.layoutIfNeeded()
-        }
-            ,
-                       completion: nil)
+        }, completion: nil)
     }
     
     public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith
@@ -113,26 +112,30 @@ class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
             let dragStartPos = sender.location(in: view)
             cropBottomY = libView.previewBox.frame.origin.y + boxHeight
             dragDiff = dragStartPos.y - cropBottomY
+            collDiff = max(0, dragStartPos.y - libView.albumCollectionView.frame.minY) // 컬랙션 뷰에서 시작한 경우, 튕김 방지용
             // Move
             if dragDirection == .stop {
                 dragDirection = (topHeight == assetViewContainerOriginalConstraintTop)
                     ? .up
                     : .down
             }
-//            trace("began- \(dragDirection)")
+            trace("began - - \(dragStartPos.y)  - dragDiff: \(dragDiff)  collDiff: \(collDiff)")
             // Scroll event of CollectionView is preferred.
-            if (dragDirection == .up && dragStartPos.y < cropBottomY) || // 어셋박스 영역이거나
+            if (dragDirection == .up && dragStartPos.y < cropBottomY) || // 미리보기 박스 영역이거나
                 (dragDirection == .down && dragStartPos.y > cropBottomY + collBarHeight) { // 콜랙션 리스트 영역이거나
-//                trace("began- stop")
+                trace("began- stop")
                 dragDirection = .stop
             }
         case .changed:
+           // trace("changed - - \(dragDirection)")
             switch dragDirection {
             case .up:
                 if currentPos.y < cropBottomY + collBarHeight {
                     topHeight = min(assetViewContainerOriginalConstraintTop,
                                     max(libView.previewBoxMinimalVisibleHeight - boxHeight,
-                                        currentPos.y - boxHeight - dragDiff))
+                                        currentPos.y - boxHeight - dragDiff + collDiff))
+                    
+                    libView.albumCollectionView.panGestureRecognizer.isEnabled = false
                         
                 }
             case .down:
@@ -153,6 +156,7 @@ class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
             }
             
         default:
+            libView.albumCollectionView.panGestureRecognizer.isEnabled = true
             imaginaryCollectionViewOffsetStartPosY = 0.0
             dragDiff = 0
             if sender.state == UIGestureRecognizer.State.ended && dragDirection == .stop {
@@ -161,8 +165,7 @@ class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
             
             if overYLimitToStartMovingUp && isImageShown == false {
                 // The largest movement
-                topHeight =
-                    libView.previewBoxMinimalVisibleHeight - boxHeight
+                topHeight = libView.previewBoxMinimalVisibleHeight - boxHeight
                 animateView()
                 dragDirection = .down
             } else {

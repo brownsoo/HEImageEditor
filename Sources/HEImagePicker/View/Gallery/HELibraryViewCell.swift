@@ -8,7 +8,7 @@
 
 import UIKit
 
-class MultipleSelectionIndicator: UIView {
+class HEMultipleSelectionIndicator: UIView {
     
     let circle = UIView()
     let label = UILabel()
@@ -53,7 +53,7 @@ class MultipleSelectionIndicator: UIView {
     }
 }
 
-class LibraryViewCell: UICollectionViewCell {
+class HELibraryViewCell: UICollectionViewCell {
     
     static let reuseIdentifier = "HE.LibraryViewCell"
     
@@ -62,7 +62,7 @@ class LibraryViewCell: UICollectionViewCell {
     var imageLoader: (() async -> UIImage?)?
     let durationLabel = UILabel()
     let selectionOverlay = UIView()
-    let multipleSelectionIndicator = MultipleSelectionIndicator()
+    let multipleSelectionIndicator = HEMultipleSelectionIndicator()
     let captionLabel = UILabel()
     var captionLabelFilledHeight: NSLayoutConstraint?
     private var imageLoadTask: Task<(), Never>?

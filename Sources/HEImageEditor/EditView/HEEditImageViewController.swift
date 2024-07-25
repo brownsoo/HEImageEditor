@@ -1551,7 +1551,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             }
             let image: UIImage
             if sticker.kind == .mosaic {
-                image = UIImage().he.solid(.blue, width: 1024, height: 1024) // 기본 이미지 스티커 사이즈와 동일하게
+                image = UIImage().he.solid(.blue, width: 1024, height: 1024) // 기본 이미지 스티커 사이즈와 동일하게 
             } else {
                 image = await sticker.imageLoader()
             }

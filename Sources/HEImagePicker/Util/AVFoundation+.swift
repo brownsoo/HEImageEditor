@@ -9,6 +9,28 @@ import AVFoundation
 import MobileCoreServices
 import UIKit
 
+extension CMTime {
+    var displayTime: String? {
+        guard let sec = seconds?.rounded() else { return nil }
+
+        let formatter = DateComponentsFormatter()
+        formatter.unitsStyle = .positional
+        formatter.zeroFormattingBehavior = .pad
+        if sec < 60 * 60 {
+            formatter.allowedUnits = [.minute, .second]
+        } else {
+            formatter.allowedUnits = [.hour, .minute, .second]
+        }
+        return formatter.string(from: sec) ?? nil
+    }
+
+    var seconds: Double? {
+        let time = CMTimeGetSeconds(self)
+        guard time.isNaN == false else { return nil }
+        return time
+    }
+}
+
 internal func thumbnailFromVideoPath(_ path: URL) -> UIImage {
     let asset = AVURLAsset(url: path, options: nil)
     let gen = AVAssetImageGenerator(asset: asset)

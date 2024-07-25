@@ -99,7 +99,7 @@ public class HEPreviewBoxView: UIView {
 
         spinner.startAnimating()
         spinnerView.backgroundColor = UIColor.ypLabel.withAlphaComponent(0.3)
-        curtain.backgroundColor = UIColor.ypLabel.withAlphaComponent(0.7)
+        curtain.backgroundColor = UIColor.black.withAlphaComponent(0.72)
         curtain.alpha = 0
 
         if PickerConfig.useEditPhoto {
@@ -113,7 +113,7 @@ public class HEPreviewBoxView: UIView {
             
             button.setBackgroundColor(UIColor(white: 51 / 255.0, alpha: 0.4), for: .normal)
             button.setBackgroundColor(UIColor(white: 151 / 255.0, alpha: 0.6), for: .highlighted)
-            addSubview(button)
+            insertSubview(button, belowSubview: curtain)
             button.makeConstraints { v in
                 v.bottomAnchorConstraintToSuperview(-24)
                 v.centerXAnchorConstraintToSuperview()
@@ -168,12 +168,14 @@ public class HEPreviewBoxView: UIView {
         guard let currentZoomableView else {
             return
         }
-        trace()
+        // trace()
         if currentZoomableView.isVideoMode {
             button.isHidden = true
             // TODO: editing video
             return
         }
+        bringSubviewToFront(button)
+        
         button.isHidden = false
         button.alpha = 0
         button.sizeToFit()
@@ -187,7 +189,7 @@ public class HEPreviewBoxView: UIView {
     
     @objc
     func hideEditButton() {
-        trace()
+        // trace()
         NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(hideEditButton), object: nil)
         guard let button = editButton, !button.isHidden else {
             return
@@ -670,7 +672,7 @@ class HEPreviewCell: UICollectionViewCell {
 
 // MARK: - ZoomableViewDelegate
 extension HEPreviewCell: AssetZoomableViewDelegate {
-    public func ypAssetZoomableViewDidLayoutSubviews(_ zoomableView: HEAssetZoomableView) {
+    public func assetZoomableViewDidLayoutSubviews(_ zoomableView: HEAssetZoomableView) {
         // let newFrame = zoomableView.assetImageView.convert(zoomableView.assetImageView.bounds, to: self)
         // Update play imageView position - bringing the playImageView from the videoView to assetViewContainer,
         // but the controll for appearing it still in videoView.
@@ -681,9 +683,9 @@ extension HEPreviewCell: AssetZoomableViewDelegate {
         }
     }
     
-    public func ypAssetZoomableViewScrollViewDidZoom() {
+    public func assetZoomableViewScrollViewDidZoom() {
     }
     
-    public func ypAssetZoomableViewScrollViewDidEndZooming() {
+    public func assetZoomableViewScrollViewDidEndZooming() {
     }
 }

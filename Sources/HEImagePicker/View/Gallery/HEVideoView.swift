@@ -12,8 +12,10 @@ import AVFoundation
 /// A video view that contains video layer, supports play, pause and other actions.
 /// Supports xib initialization.
 public class HEVideoView: UIView {
-    public let playIconView = UIImageView(image: nil)
-    
+    internal let playIconView = UIView()
+    internal let playIconPausedCover = UIView()
+    internal let iconImageView = UIImageView(image: nil)
+    internal let durationLabel = UILabel()
     internal let playerView = UIView()
     internal let playerLayer = AVPlayerLayer()
     internal var previewImageView = UIImageView()
@@ -44,12 +46,37 @@ public class HEVideoView: UIView {
         playerView.alpha = 0
         playIconView.alpha = 0
         playIconView.contentMode = .center
-        
+        playIconView.isUserInteractionEnabled = false
+        playIconPausedCover.backgroundColor = .black.withAlphaComponent(0.2)
+        playIconPausedCover.alpha = 0
         playerLayer.videoGravity = .resizeAspect
         previewImageView.contentMode = .scaleAspectFit
+        
         addSubview(previewImageView)
         addSubview(playerView)
+        addSubview(playIconPausedCover)
         addSubview(playIconView)
+        
+        iconImageView.contentMode = .scaleAspectFit
+        playIconView.addSubview(iconImageView)
+        durationLabel.font = UIFont.systemFont(ofSize: 14, weight: .bold)
+        durationLabel.textAlignment = .center
+        durationLabel.textColor = .white
+        playIconView.addSubview(durationLabel)
+        
+        iconImageView.makeConstraints { v in
+            v.topAnchorConstraintToSuperview()
+            v.leftAnchor.constraint(greaterThanOrEqualTo: playIconView.leftAnchor).isActive = true
+            v.rightAnchor.constraint(lessThanOrEqualTo: playIconView.rightAnchor).isActive = true
+            v.widthAnchorConstraintTo(52)
+            v.heightAnchorConstraintTo(52)
+        }
+        
+        durationLabel.makeConstraints { v in
+            v.topAnchorConstraintTo(iconImageView.bottomAnchor, constant: 6)
+            v.bottomAnchorConstraintToSuperview()
+            v.edgesConstraintToSuperview(edges: .horizontal, priority: .defaultHigh)
+        }
         
         previewImageView.makeConstraints { v in
             v.edgesConstraintToSuperview(edges: .all)
@@ -57,15 +84,13 @@ public class HEVideoView: UIView {
         playerView.makeConstraints { v in
             v.edgesConstraintToSuperview(edges: .all)
         }
+        playIconPausedCover.makeConstraints { v in
+            v.edgesConstraintTo(playerView.safeAreaLayoutGuide, edges: .all)
+        }
+        
         playIconView.makeConstraints { v in
             v.centerXAnchorConstraintToSuperview()
             v.centerYAnchorConstraintToSuperview()
-            if let size = PickerConfig.icons.playImage?.size {
-                v.backgroundColor = .black.withAlphaComponent(0.3)
-                v.sizeAnchorConstraintTo(size.width * 2)
-                v.layer.cornerRadius = size.width
-                v.layer.masksToBounds = true
-            }
         }
         
         playerView.layer.addSublayer(playerLayer)
@@ -134,7 +159,6 @@ extension HEVideoView {
     }
     
     public func stop() {
-        trace()
         player.pause()
         player.seek(to: CMTime.zero)
         showPlayImage(show: true)
@@ -142,8 +166,9 @@ extension HEVideoView {
     }
     
     public func deallocate() {
+        removeReachEndObserver()
         playerLayer.player = nil
-        playIconView.image = nil
+        iconImageView.image = nil
     }
 }
 
@@ -155,23 +180,28 @@ extension HEVideoView {
     
     /// Shows or hide the play image over the view.
     public func showPlayImage(show: Bool) {
-        self.playIconView.image = PickerConfig.icons.playImage?.withTintColor(.white, renderingMode: .alwaysOriginal)
+        if iconImageView.image == nil {
+            iconImageView.image = PickerConfig.icons.playImage?.withTintColor(.white, renderingMode: .alwaysOriginal)
+        }
         UIView.animate(withDuration: 0.1) {
             self.playIconView.alpha = show ? 0.8 : 0
+        }
+        UIView.animate(withDuration: 0.2) {
+            self.playIconPausedCover.alpha = show ? 1.0 : 0
         }
     }
     
     public func addReachEndObserver() {
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(playerItemDidReachEnd(_:)),
-                                               name: .AVPlayerItemDidPlayToEndTime,
+                                               name: AVPlayerItem.didPlayToEndTimeNotification,
                                                object: player.currentItem)
     }
     
     /// Removes the observer for AVPlayerItemDidPlayToEndTime. Could be needed to implement own observer
     public func removeReachEndObserver() {
         NotificationCenter.default.removeObserver(self,
-                                                  name: .AVPlayerItemDidPlayToEndTime,
+                                                  name: AVPlayerItem.didPlayToEndTimeNotification,
                                                   object: player.currentItem)
     }
 }

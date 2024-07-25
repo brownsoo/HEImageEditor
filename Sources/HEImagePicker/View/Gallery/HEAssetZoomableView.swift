@@ -12,9 +12,9 @@ import Photos
 import HECommon
 
 public protocol AssetZoomableViewDelegate: AnyObject {
-    func ypAssetZoomableViewDidLayoutSubviews(_ zoomableView: HEAssetZoomableView)
-    func ypAssetZoomableViewScrollViewDidZoom()
-    func ypAssetZoomableViewScrollViewDidEndZooming()
+    func assetZoomableViewDidLayoutSubviews(_ zoomableView: HEAssetZoomableView)
+    func assetZoomableViewScrollViewDidZoom()
+    func assetZoomableViewScrollViewDidEndZooming()
 }
 
 final public class HEAssetZoomableView: UIScrollView {
@@ -122,9 +122,9 @@ final public class HEAssetZoomableView: UIScrollView {
             guard let self = self else { return }
             guard self.currentAssetIdentifier != video.localIdentifier else { completion() ; return }
             self.currentAssetIdentifier = video.localIdentifier
-            
+            self.videoView.durationLabel.text = playerItem.duration.displayTime
             self.videoView.loadVideo(playerItem)
-            self.zoomableViewDelegate?.ypAssetZoomableViewDidLayoutSubviews(self)
+            self.zoomableViewDelegate?.assetZoomableViewDidLayoutSubviews(self)
         }
     }
     
@@ -262,7 +262,7 @@ final public class HEAssetZoomableView: UIScrollView {
 
     public override func layoutSubviews() {
         super.layoutSubviews()
-        zoomableViewDelegate?.ypAssetZoomableViewDidLayoutSubviews(self)
+        zoomableViewDelegate?.assetZoomableViewDidLayoutSubviews(self)
     }
 }
 
@@ -340,7 +340,7 @@ extension HEAssetZoomableView: UIScrollViewDelegate {
     }
     
     public func scrollViewDidZoom(_ scrollView: UIScrollView) {
-        zoomableViewDelegate?.ypAssetZoomableViewScrollViewDidZoom()
+        zoomableViewDelegate?.assetZoomableViewScrollViewDidZoom()
         
         centerAssetView()
     }
@@ -353,7 +353,7 @@ extension HEAssetZoomableView: UIScrollViewDelegate {
             self.fitImage(true, animated: true)
         }
         
-        zoomableViewDelegate?.ypAssetZoomableViewScrollViewDidEndZooming()
+        zoomableViewDelegate?.assetZoomableViewScrollViewDidEndZooming()
         cropAreaDidChange()
     }
     
