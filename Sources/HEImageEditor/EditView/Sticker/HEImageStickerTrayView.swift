@@ -20,7 +20,7 @@ public protocol HEImageStickerTrayViewDataSource {
 
 public class HEImageStickerTrayView: UIView, HEImageStickerTray {
     
-    static let baseViewH: CGFloat = HEImageEditorConfiguration.imageStickerTrayHeight
+    static let baseViewH: CGFloat = EditorConfig.imageStickerTrayHeight
     
     public var selectImageStickerBlock: ((HEImageSticker) -> Void)?
     public var hideBlock: ((Bool) -> Void)?
@@ -34,6 +34,10 @@ public class HEImageStickerTrayView: UIView, HEImageStickerTray {
     private var collectionView: UICollectionView!
     private var trayBottomConstraint: NSLayoutConstraint!
     private var trayHeightConstraint: NSLayoutConstraint!
+    
+    deinit {
+        trace()
+    }
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -185,18 +189,19 @@ extension HEImageStickerTrayView: UICollectionViewDataSource, UICollectionViewDe
     public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ImageStickerCell.reuseIdentifier, for: indexPath) as! ImageStickerCell
         
-        
-        return cell
-    }
-    
-    public func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-        guard let cell = cell as? ImageStickerCell else {
-            return
-        }
         let sticker = self.dataSource?.imageStickerTrayView(self, stickerForItemAt: indexPath)
-        Task {
-            cell.imageView.image = await sticker?.imageLoader()
+        
+        if let cached = sticker?.cachedImage {
+            cell.imageView.image = cached
+        } else {
+            cell.imageView.image = nil
+            Task(priority: .userInitiated) {
+                let image = await sticker?.imageLoader()
+                cell.imageView.image = image
+                sticker?.cachedImage = image
+            }
         }
+        return cell
     }
     
     public func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {

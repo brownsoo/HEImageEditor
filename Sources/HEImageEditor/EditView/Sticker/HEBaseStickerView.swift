@@ -44,7 +44,13 @@ public class HEBaseStickerView: UIView, UIGestureRecognizerDelegate {
     
     let kind: HEImageSticker.Kind
     
-    var borderWidth = 1 / UIScreen.main.scale
+    var borderWidth = 1 / UIScreen.main.scale {
+        willSet {
+            DispatchQueue.main.async {
+                self.borderView.layer.borderWidth = newValue
+            }
+        }
+    }
     
     var firstLayout = true
     
@@ -136,7 +142,7 @@ public class HEBaseStickerView: UIView, UIGestureRecognizerDelegate {
         self.gesRotation = gesRotation
         self.totalTranslationPoint = totalTranslationPoint
         
-        borderView.layer.borderWidth = borderWidth
+        self.borderWidth = 1 / gesScale / originScale
         
         if showBorder {
             self.showBorder()
@@ -313,6 +319,8 @@ public class HEBaseStickerView: UIView, UIGestureRecognizerDelegate {
         transform = transform.rotated(by: gesRotation)
         self.transform = transform
         
+        self.borderWidth = 1 / gesScale / originScale
+        
         delegate?.stickerOnOperation(self, panGes: panGes)
     }
     
@@ -327,6 +335,7 @@ public class HEBaseStickerView: UIView, UIGestureRecognizerDelegate {
     @objc
     func showBorder() {
         isBordered = true
+        borderWidth = 1 / gesScale / originScale
         borderView.layer.borderColor = UIColor.white.cgColor
     }
     

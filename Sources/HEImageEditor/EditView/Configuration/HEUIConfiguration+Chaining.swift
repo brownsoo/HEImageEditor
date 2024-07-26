@@ -14,18 +14,6 @@ public extension HEImageEditorUIConfiguration {
     }
     
     @discardableResult
-    func languageType(_ type: HELanguageType) -> HEImageEditorUIConfiguration {
-        languageType = type
-        return self
-    }
-    
-    @discardableResult
-    func customLanguageConfig(_ config: [HELocalLanguageKey: String]) -> HEImageEditorUIConfiguration {
-        customLanguageConfig = config
-        return self
-    }
-    
-    @discardableResult
     func adjustSliderNormalColor(_ color: UIColor) -> HEImageEditorUIConfiguration {
         adjustSliderNormalColor = color
         return self

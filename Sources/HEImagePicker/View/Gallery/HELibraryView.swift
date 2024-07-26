@@ -9,7 +9,7 @@ import UIKit
 import Photos
 import HECommon
 
-/// 메인 뷰
+/// HELibraryViewController 의 뷰
 final class HELibraryView: UIView {
 
     // MARK: - Public vars

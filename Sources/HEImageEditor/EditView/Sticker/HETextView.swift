@@ -26,6 +26,11 @@ class HETextView: UITextView {
         if let cachedPlaceHolderFrame {
             return cachedPlaceHolderFrame
         }
+        
+        if placeholderLabel == nil {
+            makePlaceholderLabel()
+        }
+        
         guard let label = placeholderLabel else {
             let pr =  CGRect(x: 0,
                              y: 0,
@@ -37,7 +42,7 @@ class HETextView: UITextView {
         
         label.sizeToFit()
         let rect = label.bounds
-        trace("cachedPlaceHolderFrame ====== > \(rect)")
+        // trace("cachedPlaceHolderFrame ====== > \(rect)")
         let pr = CGRect(x: 0,
                         y: 0,
                         width: rect.size.width + self.textContainerInset.width,
@@ -52,27 +57,31 @@ class HETextView: UITextView {
         NotificationCenter.default.removeObserver(self, name: UITextView.textDidChangeNotification, object: nil)
     }
     
+    private func makePlaceholderLabel() {
+        guard placeholderLabel == nil else { return }
+        cachedAlignment = self.textAlignment
+        
+        let label = UILabel()
+        label.font = self.font
+        label.textAlignment = self.textAlignment
+        label.textColor = UIColor(white: 204 / 255.0, alpha: 1)
+        label.text = placeholder
+        self.addSubview(label)
+        self.placeholderLabel = label
+        
+        label.frame = placeholderFrame()
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(textChanged), name: UITextView.textDidChangeNotification, object: nil)
+        
+        firstLayoutPlaceholder()
+    }
+    
     override func layoutSubviews() {
         super.layoutSubviews()
         
         if let placeholder {
             if placeholderLabel ==  nil {
-                cachedAlignment = self.textAlignment
-                
-                let label = UILabel()
-                label.font = self.font
-                label.textAlignment = self.textAlignment
-                label.textColor = UIColor(white: 204 / 255.0, alpha: 1)
-                label.text = placeholder
-                self.addSubview(label)
-                self.placeholderLabel = label
-                
-                label.sizeToFit()
-                label.frame = placeholderFrame()
-                
-                NotificationCenter.default.addObserver(self, selector: #selector(textChanged), name: UITextView.textDidChangeNotification, object: nil)
-                
-                firstLayoutPlaceholder()
+                makePlaceholderLabel()
             }
         }
         
@@ -111,7 +120,7 @@ class HETextView: UITextView {
         
         let isEmpty = self.text.isEmpty
         let alignment = isEmpty ? placeholderAlignment : cachedAlignment
-        trace()
+        
         self.textAlignment = alignment
         UIView.animate(withDuration: 0.1) {
             if isEmpty {

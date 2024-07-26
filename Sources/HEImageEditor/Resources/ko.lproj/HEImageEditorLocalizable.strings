@@ -1,5 +1,6 @@
 "complete pick" = "완료";
 "custom ratio" = "자유롭게";
+"circle ratio" = "동그랗게";
 "original" = "원본";
 "rotate" = "회전";
 "cancel" = "취소";
@@ -25,3 +26,4 @@
 "cannot_more_image_stickers" = "스티커를 더 이상 추가할 수 없습니다.";
 "cannot_more_text_stickers" = "텍스트를 더 이상 추가할 수 없습니다.";
 "text_input_placeholder" = "텍스트를 입력하세요";
+"alert_clipping_without_state" = "자르기, 회전 적용 시 이전에 적용한 스티커와 텍스트는 수정 불가합니다. 진행하시겠습니까?";

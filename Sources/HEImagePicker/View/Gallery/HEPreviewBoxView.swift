@@ -16,11 +16,12 @@ public protocol HEPreviewBoxViewDelegate: AnyObject {
     func previewBoxViewItems(_ box: HEPreviewBoxView) -> [HELibrarySelection]
     func previewBoxViewStartedLoadingImage(_ box: HEPreviewBoxView)
     func previewBoxViewFinishedLoadingImage(_ box: HEPreviewBoxView)
-    func previewBoxViewUpdateCropInfo(_ box: HEPreviewBoxView, assetIdentifier: String)
-    func previewBoxViewEditButtonTouched(_ box: HEPreviewBoxView, selection: HELibrarySelection)
+    func previewBoxView(_ box: HEPreviewBoxView, updateCropInfoOfAssetIdentifier assetIdentifier: String)
+    func previewBoxView(_ box: HEPreviewBoxView, editButtonTouchedInSelection selection: HELibrarySelection)
+    func previewBoxView(_ box: HEPreviewBoxView, changedCurrentIndex currentIndex: Int)
 }
 
-/// The container for asset (video or image). 
+/// The container for asset (video or image).
 /// It containts the collections of HEAssetZoomableView.
 public class HEPreviewBoxView: UIView {
     
@@ -45,7 +46,13 @@ public class HEPreviewBoxView: UIView {
     public var usingClop = PickerConfig.library.usingClop
     public var isShown = true
     public var spinnerIsShown = false
-    private var currentIndex: Int = 0
+    private var currentIndex: Int = 0 {
+        willSet {
+            if newValue != currentIndex {
+                delegate?.previewBoxView(self, changedCurrentIndex: newValue)
+            }
+        }
+    }
     
     private(set) internal var collView: UICollectionView!
     private let spinner = UIActivityIndicatorView(style: .medium)
@@ -133,9 +140,9 @@ public class HEPreviewBoxView: UIView {
     func editPhotoButtonTapped() {
         let items = items()
         if let item = items.get(at: currentIndex) {
-            delegate?.previewBoxViewEditButtonTouched(self, selection: item)
+            delegate?.previewBoxView(self, editButtonTouchedInSelection: item)
         } else if let first = lastPreviwingSelection {
-            delegate?.previewBoxViewEditButtonTouched(self, selection: first)
+            delegate?.previewBoxView(self, editButtonTouchedInSelection: first)
         }
     }
 
@@ -174,7 +181,10 @@ public class HEPreviewBoxView: UIView {
             // TODO: editing video
             return
         }
-        bringSubviewToFront(button)
+        
+        if curtain.alpha < 1 {
+            bringSubviewToFront(button)
+        }
         
         button.isHidden = false
         button.alpha = 0
@@ -202,19 +212,25 @@ public class HEPreviewBoxView: UIView {
         })
     }
     
-    private func checkEditButtonShowing() {
+    @discardableResult
+    private func updateCurrentIndex() -> Int {
         let point = self.convert(collView.center, to: collView)
         if let indexPath = collView.indexPathForItem(at: point) {
             currentIndex = indexPath.row
-            if let cell = collView.cellForItem(at: indexPath) as? HEPreviewCell {
-                self.perform(#selector(self.showEditButtonIfNeed), with: cell.zoomableView.currentAssetType == .video, afterDelay: 0.2)
-            } 
-            else if let item = items().get(at: indexPath.row),
-                        let asset = PHAsset.fetchAssets(withLocalIdentifiers: [item.assetIdentifier], options: nil).firstObject {
-                self.perform(#selector(self.showEditButtonIfNeed), with: asset.mediaType == .video, afterDelay: 0.2)
-            }
         } else {
             currentIndex = 0
+        }
+        return currentIndex
+    }
+    
+    private func updateEditButtonShowing(index: Int) {
+        let indexPath = IndexPath(row: index, section: 0)
+        if let cell = collView.cellForItem(at: indexPath) as? HEPreviewCell {
+            self.perform(#selector(self.showEditButtonIfNeed), with: cell.zoomableView.currentAssetType == .video, afterDelay: 0.2)
+        }
+        else if let item = items().get(at: indexPath.row),
+                    let asset = PHAsset.fetchAssets(withLocalIdentifiers: [item.assetIdentifier], options: nil).firstObject {
+            self.perform(#selector(self.showEditButtonIfNeed), with: asset.mediaType == .video, afterDelay: 0.2)
         }
     }
     
@@ -244,7 +260,7 @@ extension HEPreviewBoxView {
                 if Task.isCancelled { return }
                 cell.updateSquareCropButtonState()
                 cell.zoomableView.fitImage(true, animated: true)
-                self.delegate?.previewBoxViewUpdateCropInfo(self, assetIdentifier: hei.id)
+                self.delegate?.previewBoxView(self, updateCropInfoOfAssetIdentifier: hei.id)
                 if !isLowResIntermediaryImage {
                     self.hideLoader()
                     self.delegate?.previewBoxViewFinishedLoadingImage(self)
@@ -254,7 +270,7 @@ extension HEPreviewBoxView {
             let updateCropInfo = { [weak self] in
                 guard let self else { return }
                 if Task.isCancelled { return }
-                self.delegate?.previewBoxViewUpdateCropInfo(self, assetIdentifier: hei.id)
+                self.delegate?.previewBoxView(self, updateCropInfoOfAssetIdentifier: hei.id)
             }
             
             if let editImageStore {
@@ -287,7 +303,7 @@ extension HEPreviewBoxView {
                 if Task.isCancelled { return }
                 cell.updateSquareCropButtonState()
                 cell.zoomableView.fitImage(true, animated: false)
-                self.delegate?.previewBoxViewUpdateCropInfo(self, assetIdentifier: asset.localIdentifier)
+                self.delegate?.previewBoxView(self, updateCropInfoOfAssetIdentifier: asset.localIdentifier)
                 
                 if !isLowResIntermediaryImage {
                     self.hideLoader()
@@ -308,7 +324,7 @@ extension HEPreviewBoxView {
             let updateCropInfo = { [weak self] in
                 guard let self else { return }
                 if Task.isCancelled { return }
-                self.delegate?.previewBoxViewUpdateCropInfo(self, assetIdentifier: asset.localIdentifier)
+                self.delegate?.previewBoxView(self, updateCropInfoOfAssetIdentifier: asset.localIdentifier)
             }
             
             // MARK: add a func(updateCropInfo) after crop multiple
@@ -395,8 +411,9 @@ extension HEPreviewBoxView {
         }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-            self?.checkEditButtonShowing()
-            
+            if let i = self?.updateCurrentIndex() {
+                self?.updateEditButtonShowing(index: i)
+            }
         }
     }
     
@@ -430,7 +447,7 @@ extension HEPreviewBoxView {
         if index <= items.count && !isDefaultPreviewing() { // dataSource 가 먼저 값이 변경되어 <= 비교
             collView.deleteItems(at: [IndexPath(row: index, section: 0)])
             if index - 1 >= 0 && items.count > 0 {
-                collView.scrollToItem(at: IndexPath(row: index - 1, section: 0), at: .centeredHorizontally, animated: true)
+                collView.scrollToItem(at: IndexPath(row: index - 1, section: 0), at: .centeredHorizontally, animated: abs(currentIndex - index) < 2)
             }
             DispatchQueue.main.async {
                 self.changePreviewLayoutIfNeed()
@@ -447,7 +464,7 @@ extension HEPreviewBoxView {
         if index < items.count && !isDefaultPreviewing() {
             let indexPath = IndexPath(row: index, section: 0)
             collView.insertItems(at: [indexPath])
-            collView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
+            collView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: abs(currentIndex - index) < 2)
             DispatchQueue.main.async {
                 self.changePreviewLayoutIfNeed()
             }
@@ -542,7 +559,7 @@ extension HEPreviewBoxView: UICollectionViewDelegateFlowLayout, UICollectionView
                 cell.zoomableView.cropAreaDidChange = { [weak self] in
                     guard let self else { return }
                     if Task.isCancelled { return }
-                    self.delegate?.previewBoxViewUpdateCropInfo(self, assetIdentifier: item.assetIdentifier)
+                    self.delegate?.previewBoxView(self, updateCropInfoOfAssetIdentifier: item.assetIdentifier)
                 }
             }
             cell.loadTask?.cancel()
@@ -567,11 +584,13 @@ extension HEPreviewBoxView: UICollectionViewDelegateFlowLayout, UICollectionView
     }
     
     public func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
-        checkEditButtonShowing()
+        let i = self.updateCurrentIndex()
+        self.updateEditButtonShowing(index: i)
     }
     
     public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-        checkEditButtonShowing()
+        let i = self.updateCurrentIndex()
+        self.updateEditButtonShowing(index: i)
     }
 }
 

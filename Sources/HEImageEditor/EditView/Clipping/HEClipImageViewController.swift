@@ -31,6 +31,7 @@ extension HEClipImageViewController {
     }
 }
 
+/// 자르기, 회전을 담당하는 뷰 컨트롤러
 public class HEClipImageViewController: UIViewController, HEClipImageView {
     
     private var animateDismiss = true
@@ -109,7 +110,7 @@ public class HEClipImageViewController: UIViewController, HEClipImageView {
     var dismissAnimateImage: UIImage?
     
     // Angle, edit rect,
-    var clipDoneBlock: ((_ angle: CGFloat, _ editRect: CGRect, _ selectRatio: HEImageClipRatio) -> Void)?
+    var clipDoneBlock: ((_ angle: CGFloat, _ editRect: CGRect, _ selectRatio: HEImageClipRatio) -> CGRect)?
     
     var cancelClipBlock: (() -> Void)?
     
@@ -149,7 +150,8 @@ public class HEClipImageViewController: UIViewController, HEClipImageView {
             selectedRatio = ratio
         } else {
             firstEnter = true
-            selectedRatio = HEImageEditorConfiguration.default().clipRatios.first ?? .custom
+            selectedRatio = HEImageEditorConfiguration.default().clipRatios.contains(.custom) ? .custom
+                : (HEImageEditorConfiguration.default().clipRatios.first ?? .custom)
         }
         
         self.toolView = HEClipActionToolView(clipRatios: HEImageEditorConfiguration.default().clipRatios,
@@ -174,16 +176,18 @@ public class HEClipImageViewController: UIViewController, HEClipImageView {
         super.viewDidLoad()
         
         setupUI()
-        Task.detached {
-            await self.generateThumbnailImage()
-        }
+        
+        // 썸네일 생성
+//        Task.detached {
+//            await self.generateThumbnailImage()
+//        }
     }
     
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
         viewDidAppearCount += 1
-        if presentingViewController is HEEditImageViewController {
+        if isDismissTransitional() {
             transitioningDelegate = self
         }
         
@@ -192,24 +196,29 @@ public class HEClipImageViewController: UIViewController, HEClipImageView {
         }
         
         if let frame = presentAnimateFrame, let image = presentAnimateImage {
+            
+            scrollView.alpha = 0
+            gridView.alpha = 0
+            bottomView?.alpha = 0
+            
             let animateImageView = UIImageView(image: image)
             animateImageView.contentMode = .scaleAspectFill
             animateImageView.clipsToBounds = true
             animateImageView.frame = frame
-            view.addSubview(animateImageView)
+            view.insertSubview(animateImageView, belowSubview: toolView)
             
             cancelClipAnimateFrame = clipBoxFrame
             UIView.animate(withDuration: 0.25, animations: {
                 animateImageView.frame = self.clipBoxFrame
                 self.bottomView?.alpha = 1
             }) { _ in
-                UIView.animate(withDuration: 0.1, animations: {
+                UIView.animate(withDuration: 0.15, animations: {
                     self.scrollView.alpha = 1
                     self.gridView.alpha = 1
                 }) { _ in
                     animateImageView.removeFromSuperview()
                 }
-                self.topView.show()
+                self.topView.show(animate: true)
                 self.toolView.show()
             }
         } else {
@@ -240,7 +249,10 @@ public class HEClipImageViewController: UIViewController, HEClipImageView {
         topView.hide(animate: false)
         
         toolView.frame = CGRect(x: 0, y: toolViewTop, width: view.bounds.width, height: HEClipActionToolView.viewHeight)
-        toolView.selectRatio(self.selectedRatio, animated: false)
+        DispatchQueue.main.async {
+            self.toolView.selectRatio(self.selectedRatio, animated: false)
+            
+        }
         
         scrollView.frame = view.bounds
         dimView.frame = view.bounds
@@ -264,6 +276,7 @@ public class HEClipImageViewController: UIViewController, HEClipImageView {
         scrollView.showsHorizontalScrollIndicator = false
         scrollView.contentInsetAdjustmentBehavior = .never
         scrollView.delegate = self
+        scrollView.alpha = 0
         view.addSubview(scrollView)
         
         containerView = UIView()
@@ -280,6 +293,7 @@ public class HEClipImageViewController: UIViewController, HEClipImageView {
         view.addSubview(dimView)
         
         gridView = HEClipGridView()
+        gridView.alpha = 0
         gridView.isUserInteractionEnabled = false
         gridView.isCircle = selectedRatio.isCircle
         view.addSubview(gridView)
@@ -303,10 +317,6 @@ public class HEClipImageViewController: UIViewController, HEClipImageView {
         gridPanGes.delegate = self
         view.addGestureRecognizer(gridPanGes)
         scrollView.panGestureRecognizer.require(toFail: gridPanGes)
-        
-        scrollView.alpha = 0
-        gridView.alpha = 0
-        bottomView?.alpha = 0
     }
     
     func generateThumbnailImage() {
@@ -446,29 +456,26 @@ public class HEClipImageViewController: UIViewController, HEClipImageView {
         let scale = max(frame.height / editImage.size.height, frame.width / editImage.size.width)
         scrollView.minimumZoomScale = scale
         
-//        var size = self.scrollView.contentSize
-//        size.width = floor(size.width)
-//        size.height = floor(size.height)
-//        self.scrollView.contentSize = size
-        
         scrollView.zoomScale = scrollView.zoomScale
     }
     
-    private func mimicAnimateDismiss(completion: @escaping (() -> Void)) {
-        guard let presentAnimateFrame else {
+    private func mimicAnimateDismiss(targetFrame: CGRect?, completion: @escaping (() -> Void)) {
+        guard let targetFrame else {
             completion()
             return
         }
+        
         let imageView = UIImageView(frame: dismissAnimateFromRect)
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
         imageView.image = dismissAnimateImage
         view.addSubview(imageView)
+        
         self.imageView.isHidden = true
         self.gridView.isHidden = true
         
         UIView.animate(withDuration: 0.3, animations: {
-            imageView.frame = presentAnimateFrame
+            imageView.frame = targetFrame
         }) { _ in
             imageView.removeFromSuperview()
             self.imageView.isHidden = false
@@ -482,26 +489,30 @@ public class HEClipImageViewController: UIViewController, HEClipImageView {
         dismissAnimateImage = presentAnimateImage
         cancelClipBlock?()
         topView.hide()
-        if self.presentingViewController is HEEditImageViewController {
+        if isDismissTransitional() {
             dismiss(animated: animateDismiss, completion: dismissCallback)
         } else {
-            mimicAnimateDismiss { [weak self] in
+            mimicAnimateDismiss(targetFrame: presentAnimateFrame) { [weak self] in
                 self?.dismissCallback?()
             }
         }
     }
     
+    private func isDismissTransitional() -> Bool {
+        return presentingViewController is HEEditImageViewController
+    }
     
     public func doneEdit() {
         let image = clipImage()
         dismissAnimateFromRect = clipBoxFrame
         dismissAnimateImage = image.clipImage
-        clipDoneBlock?(angle, image.editRect, selectedRatio)
+        let targetRect = clipDoneBlock?(angle, image.editRect, selectedRatio) ?? presentAnimateFrame
+        
         topView.hide()
-        if self.presentingViewController is HEEditImageViewController {
+        if isDismissTransitional() {
             dismiss(animated: animateDismiss, completion: dismissCallback)
         } else {
-            mimicAnimateDismiss { [weak self] in
+            mimicAnimateDismiss(targetFrame: targetRect) { [weak self] in
                 self?.dismissCallback?()
             }
         }

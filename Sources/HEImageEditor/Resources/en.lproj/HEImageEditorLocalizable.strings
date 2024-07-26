@@ -1,5 +1,6 @@
 "complete pick" = "Done";
 "custom ratio" = "Custom";
+"circle ratio" = "Circle";
 "original" = "Original";
 "rotate" = "Rotate";
 "cancel" = "Cancel";
@@ -25,3 +26,4 @@
 "cannot_more_image_stickers" = "Cannot more image stickers.";
 "cannot_more_text_stickers" = "Cannot more text stickers.";
 "text_input_placeholder" = "Type your thought.";
+"alert_clipping_without_state" = "When cropping and rotating, previously applied stickers and text cannot be modified. Do you want to proceed?";

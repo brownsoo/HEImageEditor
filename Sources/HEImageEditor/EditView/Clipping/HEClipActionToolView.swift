@@ -13,6 +13,7 @@ protocol HEClipToolViewDelegate: AnyObject {
     func clipRotateSelected(sender: HEClipActionToolView)
 }
 
+/// 자르기, 회전 하단 메뉴
 class HEClipActionToolView: UIView {
     enum ClipActionSection: Int {
         case rotate
@@ -28,6 +29,7 @@ class HEClipActionToolView: UIView {
     private var clipActionColContentViewWidth: CGFloat
     private var selectedRatio: HEImageClipRatio
     private var clipActionColView: UICollectionView!
+    private let highlightColor: UIColor = .he.rgba(71, 120, 222)
     
     required init(clipRatios: [HEImageClipRatio], originImageSize: CGSize, selectedRatio: HEImageClipRatio?) {
         actionItems = [:]
@@ -82,7 +84,7 @@ class HEClipActionToolView: UIView {
     
     func selectRatio(_ ratio: HEImageClipRatio, animated: Bool) {
         if actionItems.count > 1, let index = actionItems[.crop]?.firstIndex(where: { $0 == ratio }) {
-            clipActionColView.scrollToItem(at: IndexPath(row: index, section: ClipActionSection.crop.rawValue), at: .centeredHorizontally, animated: animated)
+            clipActionColView.selectItem(at: IndexPath(row: index, section: ClipActionSection.crop.rawValue), animated: animated, scrollPosition: .centeredHorizontally)
         }
         self.selectedRatio = ratio
     }
@@ -144,15 +146,16 @@ extension HEClipActionToolView: UICollectionViewDataSource, UICollectionViewDele
         case .rotate, .crop:
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: ClipActionCell.he.identifier, for: indexPath) as! ClipActionCell
             if section == .rotate {
-                cell.configureCell(title: localLanguageTextValue(.rotate),
+                cell.configureCell(title: EditorConfig.wordings.rotate,
                                    image: UIImage.he.getImage("icEditRotate"),
                                    ratio: .origin)
-                cell.imageView.highlightedImage = UIImage.he.getImage("icEditRotate")?.withTintColor(.he.rgba(71, 120, 222))
             } else {
                 let ratio = ratios[indexPath.row]
-                cell.configureCell(title: localLanguageTextValue(HELocalLanguageKey(rawValue: ratio.title)),
+                cell.configureCell(title: localLanguageTextValue(ratio.title),
                                    image: UIImage.he.getImage(ratio.iconName),
                                    ratio: ratio)
+                cell.imageView.highlightedImage = UIImage.he.getImage(ratio.iconName)?.withTintColor(highlightColor)
+                cell.titleLabel.highlightedTextColor = highlightColor
             }
             return cell
         case .separator:
@@ -164,20 +167,18 @@ extension HEClipActionToolView: UICollectionViewDataSource, UICollectionViewDele
     
     func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
         guard let section = ClipActionSection(rawValue: indexPath.section) else { return false }
-        return section != .separator
+        if section == .rotate { // 회전
+            self.delegate?.clipRotateSelected(sender: self)
+        }
+        return section == .crop
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         guard let section = ClipActionSection(rawValue: indexPath.section) else { return }
-        if section == .separator {
+        if section != .crop {
             return
         }
-        let cell = collectionView.cellForItem(at: indexPath) as? ClipActionCell
-        if section == .rotate {
-            self.delegate?.clipRotateSelected(sender: self)
-            cell?.imageView.isHighlighted = true
-            return
-        }
+        // 자르기
         let ratios = actionItems[section] ?? []
         let ratio = ratios[indexPath.row]
         guard ratio != selectedRatio else {
@@ -186,14 +187,6 @@ extension HEClipActionToolView: UICollectionViewDataSource, UICollectionViewDele
         selectedRatio = ratio
         clipActionColView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
         self.delegate?.clipRatioSelected(sender: self, ratio: ratio)
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
-        guard let section = ClipActionSection(rawValue: indexPath.section) else { return }
-        let cell = collectionView.cellForItem(at: indexPath) as? ClipActionCell
-        if section == .rotate {
-            cell?.imageView.isHighlighted = false
-        }
     }
     
     func collectionView(_ collectionView: UICollectionView, didHighlightItemAt indexPath: IndexPath) {
@@ -270,7 +263,7 @@ final class ClipActionCell: UICollectionViewCell {
         imageView.contentMode = .scaleAspectFill
         
         titleLabel = UILabel()
-        titleLabel.font = UIFont.systemFont(ofSize: 12)
+        titleLabel.font = UIFont.systemFont(ofSize: 11, weight: .bold)
         titleLabel.textColor = UIColor(white: 204 / 255.0, alpha: 1.0)
         titleLabel.textAlignment = .center
         
@@ -289,9 +282,7 @@ final class ClipActionCell: UICollectionViewCell {
             titleLabel.heightAnchor.constraint(equalToConstant: 12).withPriority(.defaultLow),
             sv.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             sv.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-//            sv.topAnchor.constraint(greaterThanOrEqualTo: contentView.topAnchor, constant: 4),
             sv.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8).withPriority(.defaultHigh),
-//            sv.centerYAnchor.constraint(equalTo: contentView.centerYAnchor).withPriority(.defaultHigh),
         ])
         
     }

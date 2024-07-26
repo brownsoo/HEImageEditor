@@ -23,6 +23,8 @@ public class HEEditState: NSObject {
     public let stickers: [HEStickerEffect]
     
     public let actions: [HEEditAction]
+    /// 편집 정보들을 합쳐 이미지를 재생성했는 지 체크 
+    public var fattened: Bool
     
     public init(
         drawPaths: [HEDrawPath] = [],
@@ -31,7 +33,8 @@ public class HEEditState: NSObject {
         adjustStatus: HEAdjustStatus = HEAdjustStatus(),
         selectFilter: HEFilter? = nil,
         stickers: [HEStickerEffect] = [],
-        actions: [HEEditAction] = []
+        actions: [HEEditAction] = [],
+        fattened: Bool = false
     ) {
         self.drawPaths = drawPaths
         self.mosaicPaths = mosaicPaths
@@ -40,6 +43,7 @@ public class HEEditState: NSObject {
         self.selectFilter = selectFilter
         self.stickers = stickers
         self.actions = actions
+        self.fattened = fattened
         super.init()
     }
 }

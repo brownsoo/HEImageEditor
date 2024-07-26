@@ -6,10 +6,13 @@
 import UIKit
 import HECommon
 
+/// 에디터 상단 툴바를 구성
 public typealias HEEditImageTopToolViewBuilder = (HEEditImageView) -> (toolView: HETopBarView, height: CGFloat)?
 
+/// 에디터 하단 툴바를 구성
 public typealias HEEditImageBottomToolViewBuilder = (HEEditImageView) -> (toolView: HEEditToolView, height: CGFloat)?
 
+/// 이미지 편집 컨트롤러 
 open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     static let maxDrawLineImageWidth: CGFloat = 600
@@ -139,7 +142,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     var animateDismiss = true
     
-    var originalImage: UIImage
+    private var originalImage: UIImage
     
     // The frame after first layout, used in dismiss animation.
     /// self.view 좌표계에서 containerView 프레임
@@ -234,6 +237,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     private lazy var deleteDrawPaths: [HEDrawPath] = []
     private var defaultDrawPathWidth: CGFloat = 0
     private var impactFeedback: UIImpactFeedbackGenerator?
+    private var currentlyImageFattened = false
     
     private lazy var drawPanGes: UIPanGestureRecognizer = {
         let pan = UIPanGestureRecognizer(target: self, action: #selector(panGestureAction(_:)))
@@ -347,29 +351,38 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             // 기본 툴바
             let toolbar = HEEditImageBottomToolView(tools: ts)
             toolbar.toolSelectListener = { [weak editView] toolType in
-//                guard let editView, editView.selectedTool != toolType else { return }
                 guard let editView else { return }
+                var changeDelay: TimeInterval = 0
+                let sameSelection = self.selectedTool == toolType
                 if editView.isImageEditing {
                     editView.stopCurrentEditing()
-                    return
+                    changeDelay = 0.3
+                    
+                    if sameSelection { // 같은 선택은 종료만.
+                        return
+                    }
                 }
-                switch toolType {
-                case .draw:
-                    editView.startDrawing()
-                case .clip:
-                    editView.startClipping()
-                case .imageSticker:
-                    editView.startImageSticker()
-                case .textSticker:
-                    editView.startTextSticker()
-                case .mosaicDraw:
-                    editView.startMosaicDrawing()
-                case .filter:
-                    editView.startFiltering()
-                case .adjust:
-                    editView.startAdjusting()
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + changeDelay) {
+                    switch toolType {
+                    case .draw:
+                        editView.startDrawing()
+                    case .clip:
+                        editView.startClipping()
+                    case .imageSticker:
+                        editView.startImageSticker()
+                    case .textSticker:
+                        editView.startTextSticker()
+                    case .mosaicDraw:
+                        editView.startMosaicDrawing()
+                    case .filter:
+                        editView.startFiltering()
+                    case .adjust:
+                        editView.startAdjusting()
+                    }
                 }
             }
+            
             return (toolbar, 76)
         }
         
@@ -404,22 +417,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     override open func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        trace()
-        // 드로잉 툴에 관한 처리
-        guard tools.contains(.draw) else { return }
-        
-        var size = drawingImageView.frame.size
-        if shouldSwapSize {
-            swap(&size.width, &size.height)
-        }
-        
-        var toImageScale = HEEditImageViewController.maxDrawLineImageWidth / size.width
-        if editImage.size.width / editImage.size.height > 1 {
-            toImageScale = HEEditImageViewController.maxDrawLineImageWidth / size.height
-        }
-        
-        let width = drawLineWidth / mainScrollView.zoomScale * toImageScale
-        defaultDrawPathWidth = width
+        setupFreeDrawing()
         
     }
     
@@ -520,6 +518,25 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     override open func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
         shouldLayout = true
+    }
+    
+    // 드로잉 툴에 관한 처리
+    private func setupFreeDrawing() {
+        guard tools.contains(.draw) else { return }
+        
+        var size = drawingImageView.frame.size
+        if shouldSwapSize {
+            swap(&size.width, &size.height)
+        }
+        
+        var toImageScale = HEEditImageViewController.maxDrawLineImageWidth / size.width
+        if editImage.size.width / editImage.size.height > 1 {
+            toImageScale = HEEditImageViewController.maxDrawLineImageWidth / size.height
+        }
+        
+        let width = drawLineWidth / mainScrollView.zoomScale * toImageScale
+        defaultDrawPathWidth = width
+        
     }
     
     private func generateFilterImages() {
@@ -850,7 +867,20 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     // MARK: 자르기 시작
     
     public func startClipping() {
-        self.preClipStatus = self.currentClipStatus
+        let allowClipWithoutKeepingState = EditorConfig.allowClipWithoutKeepingState
+        
+        if allowClipWithoutKeepingState && self.hasEdit() {
+            showAlert(text: EditorConfig.wordings.alert.clippingWithoutState, confirmAction: { [weak self] _ in
+                self?.startClippingFlow(allowClipWithoutKeepingState: true)
+            }, cancelAction: { _ in
+                // blocked
+            })
+        } else {
+            startClippingFlow(allowClipWithoutKeepingState: false)
+        }
+    }
+    
+    private func startClippingFlow(allowClipWithoutKeepingState: Bool) {
         
         var currentEditImage = editImage
         autoreleasepool {
@@ -869,10 +899,13 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 editRect: currentClipStatus.editRect,
                 isCircle: currentClipStatus.ratio?.isCircle ?? false
             )
+        let cachedFrame = self.originalFrame
         vc.clipDoneBlock = { [weak self] angle, editRect, selectRatio in
-            guard let self else { return }
+            guard let self else { return cachedFrame }
             self.clipImage(status: HEClipStatus(editRect: editRect, angle: angle, ratio: selectRatio))
             self.actionManager.storeAction(.clip(oldStatus: self.preClipStatus, newStatus: self.currentClipStatus))
+            
+            return self.originalFrame
         }
         
         vc.cancelClipBlock = { [weak self] in
@@ -891,6 +924,28 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         setDrawViews(hidden: true)
         setFilterViews(hidden: true)
         setAdjustViews(hidden: true)
+        
+        
+        if allowClipWithoutKeepingState { // 변경 상태 정리
+            currentlyImageFattened = true
+            currentClipStatus = HEClipStatus(editRect: CGRect(origin: .zero, size: currentEditImage.size))
+            preClipStatus = currentClipStatus
+            actionManager = HEEditActionManager()
+            
+            currentAdjustStatus = HEAdjustStatus()
+            preAdjustStatus = HEAdjustStatus()
+            
+            self.editImage = currentEditImage
+            self.originalImage = currentEditImage
+            
+            drawingImageView.image = nil
+            mosaicDrawPaths = []
+            filterImages = [:]
+            
+            let stickers = stickersContainer.subviews
+            stickers.forEach({ $0.removeFromSuperview() })
+        }
+        
     }
     
     public func startDrawing() {
@@ -1047,6 +1102,22 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         }
     }
     
+    private func hasEdit() -> Bool {
+        let stickerStates = stickersContainer.subviews.compactMap({ ($0 as? HEBaseStickerView)?.state })
+        
+        if drawPaths.isEmpty,
+           currentClipStatus.editRect.size == imageSize,
+           currentClipStatus.angle == 0,
+           mosaicDrawPaths.isEmpty,
+           stickerStates.isEmpty,
+           currentFilter.applier == nil,
+           currentAdjustStatus.allValueIsZero,
+           currentlyImageFattened == false {
+            return false
+        }
+        return true
+    }
+    
     @objc
     public func cancel() {
         dismiss(animated: animateDismiss) {
@@ -1056,22 +1127,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     @objc
     public func done() {
-        var stickerStates: [HEStickerEffect] = []
-        for view in stickersContainer.subviews {
-            guard let view = view as? HEBaseStickerView else { continue }
-            stickerStates.append(view.state)
-        }
-        
-        var hasEdit = true
-        if drawPaths.isEmpty,
-           currentClipStatus.editRect.size == imageSize,
-           currentClipStatus.angle == 0,
-           mosaicDrawPaths.isEmpty,
-           stickerStates.isEmpty,
-           currentFilter.applier == nil,
-           currentAdjustStatus.allValueIsZero {
-            hasEdit = false
-        }
+        let hasEdit = self.hasEdit()
         
         let editId = self.editId
         var resImage = originalImage
@@ -1091,11 +1147,14 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         let loadingView = HELoadingView()
         loadingView.show(inCenterOf: view)
         
+        let stickerStates = stickersContainer.subviews.compactMap({ ($0 as? HEBaseStickerView)?.state })
+        
         autoreleasepool {
             trace("build image ----- ")
-            resImage = buildImage()
+            resImage = buildImage() // 원본에 합치고
             
             DispatchQueue.global().async { [self] in
+                // 자르고 돌리고,
                 resImage = resImage.he
                     .clipImage(
                         angle: currentClipStatus.angle,
@@ -1105,7 +1164,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 if let oriDataSize = originalImage.jpegData(compressionQuality: 1)?.count {
                     resImage = resImage.he.compress(to: oriDataSize)
                 }
-                
+                // 편집상태 모아서
                 editModel = HEEditState(
                     drawPaths: drawPaths,
                     mosaicPaths: mosaicDrawPaths,
@@ -1113,9 +1172,10 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                     adjustStatus: currentAdjustStatus,
                     selectFilter: currentFilter,
                     stickers: stickerStates,
-                    actions: actionManager.actions
+                    actions: actionManager.actions,
+                    fattened: currentlyImageFattened
                 )
-                
+                // 내보내~
                 DispatchQueue.main.async {
                     loadingView.hide()
                     callback()
@@ -1470,11 +1530,19 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             r.origin.y *= scale
             r.size.width *= scale
             r.size.height *= scale
-            
+            var exist: HETextStickerView?
+            if let stickerId {
+                exist = stickersContainer.subviews.compactMap({ $0 as? HETextStickerView }).first(where: {
+                    $0.id == stickerId
+                })
+            }
+            exist?.isHidden = true
             let isCircle = currentClipStatus.ratio?.isCircle ?? false
             bgImage = buildImage()
                 .he.clipImage(angle: currentClipStatus.angle, editRect: currentClipStatus.editRect, isCircle: isCircle)?
                 .he.clipImage(angle: 0, editRect: r, isCircle: isCircle)
+            
+            exist?.isHidden = false
         }
         
         let vc = HEInputTextViewController(stickerId: stickerId, image: bgImage, text: text, font: font, textColor: textColor, fillColor: fillColor)
@@ -1492,9 +1560,9 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     private func getImageStickerTrayFrame() -> CGRect {
         let trayFrame = CGRect(x: 0,
-                               y: bottomToolViewContainer.frame.minY - HEImageEditorConfiguration.imageStickerTrayHeight,
+                               y: bottomToolViewContainer.frame.minY - EditorConfig.imageStickerTrayHeight,
                                width: view.bounds.width,
-                               height: HEImageEditorConfiguration.imageStickerTrayHeight)
+                               height: EditorConfig.imageStickerTrayHeight)
         return trayFrame
     }
     
@@ -1578,7 +1646,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     private func addImageStickersOnFaces(availableCount: Int = .max) {
         guard let imageStickerTray else {
-            showAlert("스티커 사용 구성이 되지 않았습니다.")
+            showAlert(text: "스티커 사용 구성이 되지 않았습니다.")
             return
         }
         // 로딩 표시
@@ -1642,8 +1710,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         let rh = stickerFrame.height * rr * scale
         let rx = stickerFrame.origin.x * rr + (stickerFrame.width * rr - rw) / 2
         let ry = stickerFrame.origin.y * rr + (stickerFrame.height * rr - rh) / 2
-        let originFrame = CGRect(x: rx, y: ry, width: rw, height: rh)
-        return originFrame
+        
+        return CGRect(x: rx, y: ry, width: rw, height: rh)
     }
     
     
@@ -1663,8 +1731,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     private func clearMosaicImageFromStickerView(_ stickerView: HEImageStickerView) {
         let scale = (view.window?.windowScene?.screen.scale ?? 1.0)
-        let startSide: CGFloat = 150 / scale // 150 pixel
-        stickerView.setImage(UIImage().he.solid(.clear, width: startSide, height: startSide).he.circle())
+        let def = UIImage().he.solid(.clear, width: 1024, height: 1024)
+        stickerView.setImage(def)
     }
     
     private func applyMosaicImageToStickerView(_ stickerView: HEImageStickerView, withRatio ratio: CGFloat? = nil) {
@@ -1730,10 +1798,10 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             let transform = sticker.originTransform.scaledBy(x: 1.4, y: 1.4)
             sticker.transform = transform
             sticker.alpha = 0
-            UIView.animate(withDuration: 0.6, delay: delay, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.4) {
+            UIView.animate(withDuration: 0.6, delay: delay, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.4, animations: {
                 sticker.alpha = 1
                 sticker.transform = sticker.originTransform
-            }
+            })
         }
     }
     
@@ -1974,6 +2042,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     ///
     /// - HEClipImageDismissAnimatedTransition 에서도 호출
     func finishEditingDismissAnimate() {
+        trace()
         mainScrollView.alpha = 1
         mainScrollView.isHidden = false
         adjustSlider?.alpha = 0
@@ -2236,6 +2305,7 @@ extension HEEditImageViewController: HEStickerViewDelegate {
     }
     
     func stickerOnOperation(_ sticker: HEBaseStickerView, panGes: UIPanGestureRecognizer) {
+        
         let point = panGes.location(in: view)
         if trashbinView.frame.contains(point) {
             trashbinView.backgroundColor = .he.trashbinTintBgColor
@@ -2267,6 +2337,11 @@ extension HEEditImageViewController: HEStickerViewDelegate {
         if sticker.kind == .mosaic { // 모자이크 영역 이동
             let inset = HEImageStickerView.edgeInset
             mosaicImageLayerMaskLayer.path = CGPath(ellipseIn: sticker.frame.insetBy(dx: inset, dy: inset), transform: nil)
+        }
+        
+        let intersection = imageView.frame.intersection(sticker.frame)
+        if intersection.width <= 0 && intersection.height <= 0 {
+            sticker.moveToTrashbin()
         }
     }
     

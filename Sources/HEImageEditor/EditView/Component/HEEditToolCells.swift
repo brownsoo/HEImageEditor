@@ -110,13 +110,13 @@ class HEAdjustToolCell: UICollectionViewCell {
             switch adjustTool {
             case .brightness:
                 icon = UIImage(systemName: "circle.circle")
-                nameLabel.text = localLanguageTextValue(.brightness)
+                nameLabel.text = EditorConfig.wordings.brightness
             case .contrast:
                 icon = UIImage(systemName: "circle.slash")
-                nameLabel.text = localLanguageTextValue(.contrast)
+                nameLabel.text = EditorConfig.wordings.contrast
             case .saturation:
                 icon = UIImage(systemName: "drop.circle")
-                nameLabel.text = localLanguageTextValue(.saturation)
+                nameLabel.text = EditorConfig.wordings.saturation
             }
             
             imageView.image = icon?.withTintColor(.white, renderingMode: .alwaysOriginal)

@@ -66,20 +66,7 @@ class ViewController: UIViewController {
         setupUI()
         configImageEditor()
         
-        PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
-            switch status {
-                
-            case .limited:
-                print("limited authorization granted")
-                
-            case .authorized:
-                print("authorization granted")
-                
-            default:
-                print("Unimplemented")
-                
-            }
-        }
+        
     }
     
     
@@ -252,6 +239,23 @@ extension ViewController: PHPickerViewControllerDelegate {
             }
         }
     }
+    
+    private func askAuthorization(granted: @escaping () -> Void) {
+        PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
+            switch status {
+                
+            case .limited:
+                print("limited authorization granted")
+                
+            case .authorized:
+                print("authorization granted")
+                granted()
+            default:
+                print("Unimplemented")
+                
+            }
+        }
+    }
 }
 
 extension ViewController: HEImagePickerDelegate {
@@ -330,30 +334,34 @@ extension ViewController {
     // MARK: Start HEImageEditor with picking a image
     
     @objc func pickImage() {
-        let picker = UIImagePickerController()
-        picker.delegate = self
-        picker.sourceType = .photoLibrary
-        picker.mediaTypes = ["public.image"]
-        showDetailViewController(picker, sender: nil)
+        askAuthorization { [weak self] in
+            let picker = UIImagePickerController()
+            picker.delegate = self
+            picker.sourceType = .photoLibrary
+            picker.mediaTypes = ["public.image"]
+            self?.showDetailViewController(picker, sender: nil)
+        }
     }
     
     // MARK: Start HEImageEditor with picking multiple images
     
     @objc func pickMutipleImages() {
-        var configuration = PHPickerConfiguration(photoLibrary: .shared())
-        configuration.filter = PHPickerFilter.any(of: [.images, .livePhotos])
-        configuration.selectionLimit = 100
-        configuration.preferredAssetRepresentationMode = .current
-        if #available(iOS 17.0, *) {
-            configuration.mode = .default
+        askAuthorization { [weak self] in
+            var configuration = PHPickerConfiguration(photoLibrary: .shared())
+            configuration.filter = PHPickerFilter.any(of: [.images, .livePhotos])
+            configuration.selectionLimit = 100
+            configuration.preferredAssetRepresentationMode = .current
+            if #available(iOS 17.0, *) {
+                configuration.mode = .default
+            }
+            if #available(iOS 15.0, *) {
+                configuration.selection = .ordered
+            }
+            let picker = PHPickerViewController(configuration: configuration)
+            picker.delegate = self
+            
+            self?.showDetailViewController(picker, sender: nil)
         }
-        if #available(iOS 15.0, *) {
-            configuration.selection = .ordered
-        }
-        let picker = PHPickerViewController(configuration: configuration)
-        picker.delegate = self
-        
-        showDetailViewController(picker, sender: nil)
     }
     
     // MARK: Start HEImagePicker with HEImageEditor

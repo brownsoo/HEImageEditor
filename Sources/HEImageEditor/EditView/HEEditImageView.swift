@@ -28,7 +28,7 @@ public extension HEEditImageViewDelegate {
 }
 
 public protocol HEEditImageView: UIViewController {
-    
+    /// 선택된 편집 툴
     var selectedTool: HEImageEditorConfiguration.EditTool? { get }
     /// 편집 중
     ///
@@ -41,8 +41,6 @@ public protocol HEEditImageView: UIViewController {
     ///
     /// - delegate 실행: didFinishEditImage(resultImage: , editId: , editModel: )
     func done()
-    
-    
     /// 자르기, 회전 시작
     func startClipping()
     /// 이미지 스티커 시작

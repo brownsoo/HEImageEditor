@@ -90,7 +90,6 @@ class HEInputTextViewController: UIViewController {
         tv.returnKeyType = textStickerCanLineBreak ? .default : .done
         tv.delegate = self
         tv.backgroundColor = .clear
-//        tv.textContainer.maximumNumberOfLines = textStickerMaximumLines
         tv.textContainer.lineBreakMode = .byClipping
         tv.textAlignment = .center
         tv.textColor = currentTextColor
@@ -101,9 +100,8 @@ class HEInputTextViewController: UIViewController {
         tv.textContainerInset = UIEdgeInsets(top: 8, left: 10, bottom: 8, right: 10)
         tv.textContainer.lineFragmentPadding = 0
         tv.layoutManager.delegate = self
-        tv.placeholder = localLanguageTextValue("text_input_placeholder")
+        tv.placeholder = EditorConfig.wordings.textInputPlaceholder
         
-        ///textView.attributedText = [NSAttributedString.Key.underlineStyle: NSUnderlineStyle.single]
         return tv
     }()
     
@@ -195,7 +193,10 @@ class HEInputTextViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        textView.becomeFirstResponder()
+        DispatchQueue.main.async {
+            self.textView.becomeFirstResponder()
+        }
+        
     }
     
     override func viewDidLayoutSubviews() {
@@ -226,13 +227,6 @@ class HEInputTextViewController: UIViewController {
             height: Self.toolViewHeight
         )
         colorCollView.frame = toolView.bounds
-        
-        adjustTextViewFrame(duration: 0)
-//        bgImageView.alpha = 0
-//        UIView.animate(withDuration: 0.24, delay: 0, options: [.curveEaseOut], animations: {
-//            self.bgImageView.alpha = 1
-//        })
-        
         
     }
     
@@ -408,11 +402,12 @@ class HEInputTextViewController: UIViewController {
     private func adjustTextViewFrame(duration: TimeInterval) {
         let toolFrame = getToolViewFrame(keyboardHeight: self.keyboardHeight)
         let topFrame = topToolBar.frame
-        let maxWidth = EditorConfig.textLineLimit == .lineWidth ? EditorConfig.textStickerMaximumWidthPerLine : view.bounds.width
+        let maxWidth = EditorConfig.textInputLimit == .lineWidth ? EditorConfig.textStickerMaximumWidthPerLine : view.bounds.width
         let availableAea = CGSize(width: maxWidth,
                                   height: toolFrame.minY - topFrame.maxY)
         
         let placeholderFrame = textView.placeholderFrame()
+        trace(placeholderFrame)
         let size: CGSize
         if textView.text.isEmpty {
             size = placeholderFrame.size
@@ -649,7 +644,7 @@ extension HEInputTextViewController: UITextViewDelegate {
         var makingLines: [String] = []
         var selectedRange = textView.selectedRange
         
-        if EditorConfig.textLineLimit == .charactersCount {
+        if EditorConfig.textInputLimit == .charactersCount {
             var lines = resolved.components(separatedBy: .newlines)
             var cursor = 0
             var lineIndex = 0

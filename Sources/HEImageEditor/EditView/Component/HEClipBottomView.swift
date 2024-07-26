@@ -58,7 +58,7 @@ final public class HEClipBottomView: UIView {
         cancelBtn.enlargeInset = 20
         cancelBtn.addTarget(self, action: #selector(cancelBtnClick), for: .touchUpInside)
         
-        revertBtn.setTitle(localLanguageTextValue(.revert), for: .normal)
+        revertBtn.setTitle(EditorConfig.wordings.revert, for: .normal)
         revertBtn.enlargeInset = 20
         revertBtn.titleLabel?.font = .systemFont(ofSize: 17)
         revertBtn.addTarget(self, action: #selector(revertBtnClick), for: .touchUpInside)

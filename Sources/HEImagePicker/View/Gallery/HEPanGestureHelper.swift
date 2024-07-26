@@ -14,6 +14,7 @@ enum DragDirection {
     case down
 }
 
+/// 앨범 사진 CollectionView, PreviewBox 줄이기 위한 제스쳐 관리 
 class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
     
     var libView: HELibraryView!
@@ -119,11 +120,12 @@ class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
                     ? .up
                     : .down
             }
-            trace("began - - \(dragStartPos.y)  - dragDiff: \(dragDiff)  collDiff: \(collDiff)")
+            // trace("began - - \(dragStartPos.y)  - dragDiff: \(dragDiff)  collDiff: \(collDiff)")
+            
             // Scroll event of CollectionView is preferred.
             if (dragDirection == .up && dragStartPos.y < cropBottomY) || // 미리보기 박스 영역이거나
                 (dragDirection == .down && dragStartPos.y > cropBottomY + collBarHeight) { // 콜랙션 리스트 영역이거나
-                trace("began- stop")
+                // trace("began- stop")
                 dragDirection = .stop
             }
         case .changed:

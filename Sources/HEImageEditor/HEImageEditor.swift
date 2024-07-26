@@ -35,10 +35,10 @@ public extension HEImageEditorDelegate {
         completion(true)
     }
     func cannotAttachMoreImageStickers(_ editor: HEImageEditor) {
-        (self as? UIViewController)?.showAlert(localLanguageTextValue("cannot_more_image_stickers"))
+        (self as? UIViewController)?.showAlert(text: EditorConfig.wordings.alert.cannotMoreImageStickers)
     }
     func cannotAttachMoreTextStickers(_ editor: HEImageEditor) {
-        (self as? UIViewController)?.showAlert(localLanguageTextValue("cannot_more_text_stickers"))
+        (self as? UIViewController)?.showAlert(text: EditorConfig.wordings.alert.cannotMoreTextStickers)
     }
 }
 
@@ -53,9 +53,9 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
             HEImageEditorConfiguration.default().imageStickerTray?.dataSource = stickerDataSource
         }
     }
-    
+    /// 편집 정보를 제공
     public var imageStore: HECommon.HEEditImageStore
-    
+    /// 편집을 시작할 때, 이전 편집 데이터를 유지할 지 여부
     public var continuouslyMode: Bool = true
     
     public private(set) var editingImage: HEEditImage?
@@ -124,7 +124,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
                                       height: bottomToolViewHeight + insets.bottom)
         
         
-        if initialIndex > 0 {
+        if initialIndex > 0 && initialIndex < imageStore.all().count {
             collView.isPagingEnabled = false
             collView.scrollToItem(at: IndexPath(row: initialIndex, section: 0), at: .centeredHorizontally, animated: false)
             collView.isPagingEnabled = true
@@ -221,7 +221,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
         
         let confirmButton = UIButton()
         confirmButton.also { it in
-            it.setTitle(localLanguageTextValue(.completePick), for: .normal)
+            it.setTitle(EditorConfig.wordings.completePick, for: .normal)
             it.setTitleColor(.he.rgba(246, 246, 246), for: .normal)
             it.setTitleColor(.lightGray, for: .disabled)
             it.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .bold)
@@ -256,7 +256,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
         guard let currentIndex, let he = imageStore.getHEImage(at: currentIndex) else {
             return
         }
-        // 편집 데이터가 없는 경우, 모델 치환
+        // 편집 데이터가 없는 경우, 모델 변환
         let hei: HEEditImage
         if (he as? HEEditImage) == nil {
             hei = he.toEditImage()!
@@ -318,7 +318,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
         do {
             let image: UIImage
             var editState: HEEditState? = hei.editState
-            if continuouslyMode {
+            if continuouslyMode && !(editState?.fattened ?? false)  {
                 image = try await self.imageStore.originImage(forHei: hei).value
             } else {
                 image = try await self.imageStore.editImage(forHei: hei).value

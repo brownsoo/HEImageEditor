@@ -34,6 +34,7 @@ public class HEImageSticker: NSObject {
     public let id: String
     public let kind: Kind
     public var imageLoader: (() async -> UIImage)
+    public var cachedImage: UIImage?
     
     public init(id: String, kind: Kind = .default, imageLoader: @escaping () async -> UIImage) {
         self.id = id

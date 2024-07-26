@@ -84,26 +84,22 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(false, animated: true)
         pausePlayer()
-        initialize()
-        updateUI()
+        
+        doAfterLibraryPermissionCheck { [weak self] in
+            guard let self else { return }
+            
+            initialize()
+            updateUI()
+            
+            DispatchQueue.main.async {
+                self.correctInitialUI()
+            }
+        }
     }
     
     public override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        
-        
-        // Forces assetZoomableView to have a contentSize.
-        // otherwise 0 in first selection triggering the bug : "invalid image size 0x0"
-        // Also fits the first element to the square if the onlySquareFromLibrary = true
-        if !PickerConfig.library.onlySquare && v.previewBox.currentZoomableView?.contentSize == CGSize(width: 0, height: 0) {
-            v.previewBox.currentZoomableView?.setZoomScale(1, animated: false)
-        }
-        
-        // Activate multiple selection when using `minNumberOfItems`
-        if PickerConfig.library.minNumberOfItems > 1 {
-            multipleSelectionButtonTapped()
-        }
     }
     
     public override func viewWillDisappear(_ animated: Bool) {
@@ -114,7 +110,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         PHPhotoLibrary.shared().unregisterChangeObserver(self)
     }
     
-    func initialize() {
+    private func initialize() {
         guard isInitialized == false else {
             return
         }
@@ -206,7 +202,20 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
             v.albumEmptyView.isHidden = false
             navigationItem.rightBarButtonItem?.isEnabled = false
         }
+    }
+    
+    private func correctInitialUI() {
+        // Forces assetZoomableView to have a contentSize.
+        // otherwise 0 in first selection triggering the bug : "invalid image size 0x0"
+        // Also fits the first element to the square if the onlySquareFromLibrary = true
+        if !PickerConfig.library.onlySquare && v.previewBox.currentZoomableView?.contentSize == CGSize(width: 0, height: 0) {
+            v.previewBox.currentZoomableView?.setZoomScale(1, animated: false)
+        }
         
+        // Activate multiple selection when using `minNumberOfItems`
+        if PickerConfig.library.minNumberOfItems > 1 {
+            multipleSelectionButtonTapped()
+        }
     }
     
     @objc
@@ -234,11 +243,14 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     @objc
     private func imageCaptureTapped() {
         if UIImagePickerController.isSourceTypeAvailable(.camera) {
-            let picker = UIImagePickerController()
-            picker.delegate = self
-            picker.sourceType = .camera
-            picker.mediaTypes = [UTType.image.identifier]
-            showDetailViewController(picker, sender: nil)
+            doAfterCameraPermissionCheck { [weak self] in
+                guard let self else { return }
+                let picker = UIImagePickerController()
+                picker.delegate = self
+                picker.sourceType = .camera
+                picker.mediaTypes = [UTType.image.identifier]
+                showDetailViewController(picker, sender: nil)
+            }
         } else {
             showAlert(PickerConfig.wordings.noSupportCameraDevice, confirmAction: nil)
         }
@@ -247,11 +259,14 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     @objc
     private func videoCaptureTapped() {
         if UIImagePickerController.isSourceTypeAvailable(.camera) {
-            let picker = UIImagePickerController()
-            picker.delegate = self
-            picker.sourceType = .camera
-            picker.mediaTypes = [UTType.movie.identifier]
-            showDetailViewController(picker, sender: nil)
+            doAfterCameraPermissionCheck { [weak self] in
+                guard let self else { return }
+                let picker = UIImagePickerController()
+                picker.delegate = self
+                picker.sourceType = .camera
+                picker.mediaTypes = [UTType.movie.identifier]
+                showDetailViewController(picker, sender: nil)
+            }
         } else {
             showAlert(PickerConfig.wordings.noSupportCameraDevice, confirmAction: nil)
         }
@@ -566,10 +581,6 @@ extension HELibraryViewController: HEPreviewBoxViewDelegate {
         return nil
     }
     
-    public func previewBoxViewUpdateCropInfo(_ box: HEPreviewBoxView, assetIdentifier: String) {
-        updateCropInfo(assetIdentifier: assetIdentifier)
-    }
-    
     public func previewBoxViewItems(_ box: HEPreviewBoxView) -> [HELibrarySelection] {
         return selectedItems
     }
@@ -582,7 +593,11 @@ extension HELibraryViewController: HEPreviewBoxViewDelegate {
         libraryViewFinishedLoading()
     }
     
-    public func previewBoxViewEditButtonTouched(_ box: HEPreviewBoxView, selection: HELibrarySelection) {
+    public func previewBoxView(_ box: HEPreviewBoxView, updateCropInfoOfAssetIdentifier assetIdentifier: String) {
+        updateCropInfo(assetIdentifier: assetIdentifier)
+    }
+    
+    public func previewBoxView(_ box: HEPreviewBoxView, editButtonTouchedInSelection selection: HELibrarySelection) {
         
         if selection.isJustPreviewing {
             addToSelection(localIdentifier: selection.assetIdentifier)
@@ -596,13 +611,37 @@ extension HELibraryViewController: HEPreviewBoxViewDelegate {
             }
         }, videoCallback: { [weak self] video in
             if let self {
-                self.delegate?.libraryView(self, didSelectItems: [HEMediaItem.video(v: video)], wantsEditSelection: selection)
+                self.delegate?.libraryView(self, didSelectItems: [HEMediaItem.video(v: video)], wantsEditSelection: nil)
             }
         }, multipleItemsCallback: { [weak self] items in
             if let self {
                 self.delegate?.libraryView(self, didSelectItems: items, wantsEditSelection: selection)
             }
         })
+    }
+    
+    public func previewBoxView(_ box: HEPreviewBoxView, changedCurrentIndex currentIndex: Int) {
+        guard let selection = self.selectedItems.get(at: currentIndex),
+              (currentlySelectedIdentifier ?? "") != selection.assetIdentifier,
+              let fetchResult = assetMediaManager.fetchResult else {
+            return
+        }
+            
+        var foundIndex = -1
+        fetchResult.enumerateObjects { asset, index, stop in
+            if asset.localIdentifier == selection.assetIdentifier {
+                foundIndex = index
+                stop.pointee = true
+            }
+        }
+        
+        if foundIndex > -1 {
+            currentlySelectedIdentifier = selection.assetIdentifier
+            v.albumCollectionView.visibleCells.compactMap({ $0 as? HELibraryViewCell }).forEach { cell in
+                cell.isSelected = cell.representedAssetIdentifier == selection.assetIdentifier
+            }
+        }
+        
     }
 }
 

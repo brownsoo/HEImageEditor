@@ -46,23 +46,12 @@ extension Bundle {
 }
 
 extension Bundle {
+    
     static var HEImageEditorBundle: Bundle? {
         return local
     }
     
-    // TODO: 언어 변경 
-    class func resetLanguage() {
-        bundle = nil
-    }
-    
     class func heLocalizedString(_ key: String) -> String {
-//        if bundle == nil {
-//            guard let path = Bundle.HEImageEditorBundle?.path(forResource: HEUIConfiguration.default().languageType.key, ofType: "lproj") else {
-//                return ""
-//            }
-//            bundle = Bundle(path: path)
-//        }
-        
         return NSLocalizedString(key,
                                  tableName: "HEImageEditorLocalizable",
                                  bundle: Bundle.local,

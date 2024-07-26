@@ -87,17 +87,19 @@ extension HEWrapper where Base: UIImage {
 }
 
 extension UIViewController {
-    @discardableResult
-    func showAlert(_ text: String, confirmAction: ((UIAlertAction) -> Void)? = nil) -> UIAlertController {
-        return self.showAlert(title: nil, text: text, confirmAction: confirmAction)
-    }
     
     @discardableResult
-    func showAlert(title: String? = nil, text: String, confirmAction: ((UIAlertAction) -> Void)? = nil) -> UIAlertController {
+    func showAlert(title: String? = nil, text: String,
+                   confirmAction: ((UIAlertAction) -> Void)? = nil,
+                   cancelAction: ((UIAlertAction) -> Void)? = nil) -> UIAlertController {
         let alert = UIAlertController(title: title, message: text, preferredStyle: .alert)
+        let okayAction = UIAlertAction(title: EditorConfig.wordings.confirm, style: .default, handler: confirmAction)
+        alert.addAction(okayAction)
+        if let cancelAction {
+            alert.addAction(UIAlertAction(title: EditorConfig.wordings.cancel, style: .cancel, handler: cancelAction))
+        }
+        
         DispatchQueue.main.async {
-            let okayAction = UIAlertAction(title: Bundle.heLocalizedString("confirm"), style: .default, handler: confirmAction)
-            alert.addAction(okayAction)
             self.present(alert, animated: true, completion: nil)
         }
         return alert

@@ -19,38 +19,6 @@ public class HEImageEditorUIConfiguration: NSObject {
     /// Adjust Slider Type
     @objc public var adjustSliderType: HEAdjustSliderType = .vertical
     
-    // MARK: Language properties
-    
-    /// Language for framework.
-    @objc public var languageType: HELanguageType = .system {
-        didSet {
-            Bundle.resetLanguage()
-        }
-    }
-    
-    /// Developers can customize languages.
-    /// - example: If you needs to replace
-    /// key: .hudProcessing, value: "loading, waiting please" language,
-    /// The dictionary that needs to be passed in is [.hudProcessing: "text to be replaced"].
-    /// - warning: Please pay attention to the placeholders contained in languages when changing, such as %ld, %@.
-    public var customLanguageConfig: [HELocalLanguageKey: String] = [:]
-    
-    /// Developers can customize languages (This property is only for objc).
-    /// - example: If you needs to replace
-    /// key: @"loading", value: @"loading, waiting please" language,
-    /// The dictionary that needs to be passed in is @[@"hudProcessing": @"text to be replaced"].
-    /// - warning: Please pay attention to the placeholders contained in languages when changing, such as %ld, %@.
-    @objc public var customLanguageConfig_objc: [String: String] = [:] {
-        didSet {
-            var swiftParams: [HELocalLanguageKey: String] = [:]
-            customLanguageConfig_objc.forEach { key, value in
-                swiftParams[HELocalLanguageKey(rawValue: key)] = value
-            }
-            customLanguageConfig = swiftParams
-        }
-    }
-    
-    
     // MARK: Color properties
     
     /// The normal color of adjust slider.

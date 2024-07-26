@@ -275,9 +275,6 @@ extension HELibraryViewController: UICollectionViewDelegate {
         let previouslySelected = currentlySelectedIdentifier ?? ""
         currentlySelectedIdentifier = (collectionView.cellForItem(at: indexPath) as? HELibraryViewCell)?.representedAssetIdentifier
         
-        // 선택하면 화면 재설정 (제외)
-        // panGestureHelper.resetToOriginalState()
-        
         // Only scroll cell to top if preview is hidden.
         if !panGestureHelper.isImageShown && PickerConfig.scrollTopIfSelectedWhenPreviewIsHidden {
             collectionView.scrollToItem(at: indexPath, at: .top, animated: true)

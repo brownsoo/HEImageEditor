@@ -32,9 +32,12 @@ extension HEImageClipRatio {
 public extension HEImageClipRatio {
     @objc static let all: [HEImageClipRatio] = [.custom, .circle, .wh1x1, .wh3x4, .wh4x3, .wh2x3, .wh3x2, .wh9x16, .wh16x9]
     
-    @objc static let origin = HEImageClipRatio(title: "original", whRatio: -1, iconName: "icEditThumOriginal") // whRatio: HEClipActionToolView 에서 조정됨.
-    @objc static let custom = HEImageClipRatio(title: "custom ratio", whRatio: 0, iconName: "icEditThumFree")
-    @objc static let circle = HEImageClipRatio(title: "circle", whRatio: 1, iconName: "icEditThumSquare", isCircle: true)
+    @objc static let origin = HEImageClipRatio(title: "original",
+                                               whRatio: -1, iconName: "icEditThumOriginal") // whRatio: HEClipActionToolView 에서 조정됨.
+    @objc static let custom = HEImageClipRatio(title: "custom ratio", 
+                                               whRatio: 0, iconName: "icEditThumFree")
+    @objc static let circle = HEImageClipRatio(title: "circle ratio", 
+                                               whRatio: 1, iconName: "icEditThumSquare", isCircle: true)
     
     @objc static let wh1x1 = HEImageClipRatio(title: "1 : 1", whRatio: 1, iconName: "icEditThumSquare")
     @objc static let wh3x4 = HEImageClipRatio(title: "3 : 4", whRatio: 3.0 / 4.0, iconName: "icEditThumSquare")
