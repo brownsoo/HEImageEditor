@@ -789,6 +789,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         imageView.transform = transform
         drawingImageView.transform = transform
         stickersContainer.transform = transform
+        mosaicStickerActiveContainer.transform = transform
     }
     
     public var isImageEditing: Bool {
