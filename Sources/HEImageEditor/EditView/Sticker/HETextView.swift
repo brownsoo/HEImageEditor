@@ -79,7 +79,7 @@ class HETextView: UITextView {
     override func layoutSubviews() {
         super.layoutSubviews()
         
-        if let placeholder {
+        if placeholder != nil {
             if placeholderLabel ==  nil {
                 makePlaceholderLabel()
             }

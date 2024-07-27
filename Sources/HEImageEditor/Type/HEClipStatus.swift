@@ -10,6 +10,7 @@ import Foundation
 public struct HEClipStatus {
     /// 이미지 내 영역
     var editRect: CGRect
+    /// in degree 360
     var angle: CGFloat = 0
     var ratio: HEImageClipRatio?
     
