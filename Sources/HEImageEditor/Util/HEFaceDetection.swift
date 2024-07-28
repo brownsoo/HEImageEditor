@@ -54,7 +54,7 @@ public actor HEFaceDetection {
         let coordTransform = CGAffineTransform(scaleX: baseFrame.width, y: baseFrame.height)
         // Vision-to-UIKit coordinate transform. Vision is always relative to the lower-left corner.
         let finalTransform = coordTransform.scaledBy(x: 1, y: -1).translatedBy(x: 0, y: -1)
-//        VNNormalizedRectForImageRectUsingRegionOfInterest(T##imageRect: CGRect##CGRect, T##imageWidth: Int##Int, T##imageHeight: Int##Int, T##roi: CGRect##CGRect)
+
         return observations.map { face in
             let frame = face.boundingBox.applying(finalTransform)
             // FIXME: yaw, pitch, roll 의 2D 보정

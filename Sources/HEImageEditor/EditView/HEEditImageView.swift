@@ -15,6 +15,7 @@ public protocol HEEditorActionListener: Equatable {
 
 public protocol HEEditImageViewDelegate: AnyObject {
     func didFinishEditImage(_ editView: HEEditImageView, resultImage: UIImage, editId: String?, editModel: HEEditState?) -> Void
+    func didClipWithoutKeepingState(_ editView: HEEditImageView, resultImage: UIImage, editId: String?) -> Void
     func cancelledEditImage(_ editView: HEEditImageView)
     func cannotAttachMoreImageStickers(_ editView: HEEditImageView)
     func cannotAttachMoreTextStickers(_ editView: HEEditImageView)

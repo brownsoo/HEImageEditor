@@ -12,14 +12,8 @@ import HECommon
 
 public protocol HEImageEditor: UIViewController {
     var imageStore: HECommon.HEEditImageStore { get set }
-    /// 연속 편집 모드 여부
-    ///
-    /// - true: (기본값) 편집을 종료해도 이전 편집 상태를 유지한다.
-    /// - false: 편집을 종료하면, 편집 상태를 없애고 합쳐진 이미지로 변경한다.
-    var continuouslyMode: Bool { get set }
     var editingImage: HEEditImage? { get }
     var currentIndex: Int? { get }
-
 }
 
 public protocol HEImageEditorDelegate: AnyObject {
@@ -55,8 +49,6 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
     }
     /// 편집 정보를 제공
     public var imageStore: HECommon.HEEditImageStore
-    /// 편집을 시작할 때, 이전 편집 데이터를 유지할 지 여부
-    public var continuouslyMode: Bool = true
     
     public private(set) var editingImage: HEEditImage?
     public private(set) var currentIndex: Int?
@@ -317,20 +309,14 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
         let topBuilder = self.makeEditTopBarView()
         do {
             let image: UIImage
-            var editState: HEEditState? = hei.editState
-            if continuouslyMode && !(editState?.fattened ?? false)  {
-                image = try await self.imageStore.originImage(forHei: hei).value
+            let editState: HEEditState? = hei.editState
+            debugPrint(hei)
+            
+            if editState?.fattened == true  {
+                woops("!!")
+                image = try await self.imageStore.fattenImage(forHei: hei).value
             } else {
                 image = try await self.imageStore.editImage(forHei: hei).value
-                editState = HEEditState(
-                    drawPaths: editState?.drawPaths ?? [],
-                    mosaicPaths: editState?.mosaicPaths ?? [],
-                    clipStatus: nil,
-                    adjustStatus: editState?.adjustStatus ?? HEAdjustStatus(),
-                    selectFilter: editState?.selectFilter,
-                    stickers: editState?.stickers ?? [],
-                    actions: []
-                )
             }
             
             setupHEConfiguration()
@@ -350,6 +336,56 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
 }
 
 extension HEImageEditorViewController: HEEditImageViewDelegate {
+   
+    public func didFinishEditImage(_ editView: HEEditImageView, resultImage: UIImage, editId: String?, editModel: HEEditState?) {
+        
+        bottomToolView?.unselectTool()
+        editingImage = nil
+        // 편집 데이터 교체
+        guard let editId, let hei = imageStore.getHEImage(forId: editId) as? HEEditImage else {
+            woops("!!!")
+            return
+        }
+        loadingView.show(inCenterOf: self.view)
+        Task {
+            hei.setEditState(editModel)
+            do {
+                let _ = try await imageStore.cacheEditImage(uiImage: resultImage, forHei: hei).value
+                let _ = try await imageStore.cacheThumbnailImage(uiImage: resultImage, forHei: hei).value
+            } catch {
+                woops(error)
+            }
+            
+            debugPrint(hei)
+            
+            loadingView.hide()
+            if let currentIndex, currentIndex < imageStore.numberOfImages() {
+                collView.reloadItems(at: [IndexPath(row: currentIndex, section: 0)])
+            }
+        }
+    }
+    
+    public func didClipWithoutKeepingState(_ editView: any HEEditImageView, resultImage: UIImage, editId: String?) {
+        guard let editId, let hei = imageStore.getHEImage(forId: editId) as? HEEditImage else {
+            return
+        }
+        loadingView.show(inCenterOf: self.view)
+        Task {
+            do {
+                let _ = try await imageStore.cacheFattenImage(uiImage: resultImage, forHei: hei).value
+            } catch {
+                woops(error)
+            }
+            debugPrint(hei)
+            loadingView.hide()
+        }
+    }
+    
+    public func cancelledEditImage(_ editView: HEEditImageView) {
+        bottomToolView?.unselectTool()
+        editingImage = nil
+    }
+    
     public func cannotAttachMoreImageStickers(_ editView: HEEditImageView) {
         delegate?.cannotAttachMoreImageStickers(self)
     }
@@ -359,37 +395,6 @@ extension HEImageEditorViewController: HEEditImageViewDelegate {
     }
     
     
-    public func didFinishEditImage(_ editView: HEEditImageView, resultImage: UIImage, editId: String?, editModel: HEEditState?) {
-        
-        bottomToolView?.unselectTool()
-        editingImage = nil
-        // 편집 데이터 교체
-        guard let editId, let hei = imageStore.getHEImage(forId: editId) as? HEEditImage else {
-            return
-        }
-        loadingView.show(inCenterOf: self.view)
-        Task {
-            hei.setEditState(editModel)
-            do {
-                let fileUrl = try await imageStore.cacheEditImage(uiImage: resultImage, forHei: hei).value
-                trace(fileUrl)
-                let thumbUrl = try await imageStore.cacheThumbnailImage(uiImage: resultImage, forHei: hei).value
-                trace(thumbUrl)
-            } catch {
-                woops(error)
-            }
-            
-            loadingView.hide()
-            if let currentIndex, currentIndex < imageStore.numberOfImages() {
-                collView.reloadItems(at: [IndexPath(row: currentIndex, section: 0)])
-            }
-        }
-    }
-    
-    public func cancelledEditImage(_ editView: HEEditImageView) {
-        bottomToolView?.unselectTool()
-        editingImage = nil
-    }
 }
 
 

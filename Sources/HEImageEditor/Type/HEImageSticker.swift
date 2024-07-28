@@ -17,6 +17,10 @@ public class HEImageSticker: NSObject {
         case `default`
     }
     
+    /// 기본 이미지 스티커 사이즈와 동일하게 만들기 위해
+    /// 편집 화면에 붙는 스티커 이미지 크기를 조절한다.
+    public static let defaultImageRawSize = CGSize(width: 1024, height: 1024)
+    
     public static var faceAiIcon: HEImageSticker = {
         HEImageSticker(id: UUID().uuidString, kind: .faceAI) {
             UIImage.he.getImage("editStickerFaceAi") ?? UIImage(systemName: "faceid")!

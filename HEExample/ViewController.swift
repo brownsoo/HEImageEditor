@@ -168,6 +168,10 @@ extension ViewController: HEImageEditorDelegate {
 
 extension ViewController: HEEditImageViewDelegate {
     
+    func didClipWithoutKeepingState(_ editView: any HEEditImageView, resultImage: UIImage, editId: String?) {
+        //
+    }
+    
     func didFinishEditImage(_ editView: HEEditImageView, resultImage: UIImage, editId: String?, editModel: HEEditState?) {
         self.resultImageView.image = resultImage
         self.resultImageEditState = editModel
@@ -304,6 +308,7 @@ extension ViewController: HEImagePickerDelegate {
             case .photo(let photo):
                 if let exist = exists.first(where: { $0.id == photo.identifier}),
                    let hei = HEEditImage.fromHEImage(exist) {
+                    debugPrint(hei)
                     news.append(hei)
                 } else {
                     news.append(HEEditImage(id: photo.identifier,

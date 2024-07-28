@@ -16,22 +16,31 @@ public protocol HEImageCache: AnyObject {
     func cacheOriginImageSync(uiImage: UIImage, forId id: String) throws -> URL
     /// 편집 이미지 캐시
     func cacheEditImage(uiImage: UIImage, forHei hei: HEImage) -> Task<URL, Error>
+    /// 크롭된 중간 이미지 캐시
+    func cacheFattenImage(uiImage: UIImage, forHei hei: HEImage) -> Task<URL, Error>
     /// 썸네일 이미지 캐시
     func cacheThumbnailImage(uiImage: UIImage, forHei hei: HEImage) -> Task<URL, Error>
     
     /// 원본 이미지
     func originImage(forHei hei: HEImage) -> Task<UIImage, Error>
+    /// 원본 이미지
     func originImageSync(forHei hei: HEImage) throws -> UIImage?
-    /// 편집 이미지
+    /// 중간 이미지 or 원본 이미지
+    func fattenImage(forHei hei: HEImage) -> Task<UIImage, Error>
+    /// 편집 이미지 or 원본 이미지
     func editImage(forHei hei: HEImage) -> Task<UIImage, Error>
+    /// 편집 이미지 or 원본 이미지
     func editImageSync(forHei hei: HEImage) throws -> UIImage?
     /// 썸네일 이미지
     func thumbnailImage(forHei hei: HEImage) -> Task<UIImage, Error>
+    /// 썸네일 이미지
     func thumbnailImageSync(forHei hei: HEImage) throws -> UIImage?
     
     
     /// 캐시된 URL 값만 확인
     func getCachedOriginImageURL(forId id: String) throws -> URL?
+    /// 캐시된 URL 값만 확인
+    func getCachedFattenImageURL(forId id: String) throws -> URL?
     /// 캐시된 URL 값만 확인
     func getCachedEditImageURL(forId id: String) throws -> URL?
     
@@ -84,6 +93,10 @@ public extension String {
     
     var heImageCacheEditFileName: String {
         return self.toHEImageCacheIdentifier() + ".edit.png"
+    }
+    
+    var heImageCacheFattenFileName: String {
+        return self.toHEImageCacheIdentifier() + ".fatten.png"
     }
     
     var heImageCacheThumbFileName: String {
@@ -193,12 +206,23 @@ extension HESimpleEditImageStore {
         }
     }
     
+    public func fattenImage(forHei hei: HEImage) -> Task<UIImage, Error> {
+        Task {
+            if let fattenImageURL = hei.fattenImageURL {
+                return try await getImage(forURL: fattenImageURL).value
+            }
+            else {
+                return try await originImage(forHei: hei).value
+            }
+        }
+    }
     
     public func editImage(forHei hei: HEImage) -> Task<UIImage, Error> {
         Task {
             if let editImageURL = hei.editImageURL {
                 return try await getImage(forURL: editImageURL).value
-            } else {
+            }
+            else {
                 return try await originImage(forHei: hei).value
             }
         }
@@ -249,6 +273,15 @@ extension HESimpleEditImageStore {
         return nil
     }
     
+    public func getCachedFattenImageURL(forId id: String) throws -> URL? {
+        let fileName = id.heImageCacheFattenFileName
+        let fileURL: URL = try fileURL(fileName: fileName)
+        if FileManager.default.fileExists(atPath: fileURL.absoluteString) {
+            return fileURL
+        }
+        return nil
+    }
+    
     public func getCachedEditImageURL(forId id: String) throws -> URL? {
         let fileName = id.heImageCacheEditFileName
         let fileURL: URL = try fileURL(fileName: fileName)
@@ -285,6 +318,22 @@ extension HESimpleEditImageStore {
         }
         trace(fileURL)
         return fileURL
+    }
+    
+    public func cacheFattenImage(uiImage: UIImage, forHei hei: HEImage) -> Task<URL, any Error> {
+        let fileName = hei.id.heImageCacheFattenFileName
+        return Task.detached { [weak self] in
+            guard let self, let data = uiImage.pngData() else {
+                throw HEError.generateFileData
+            }
+            let fileURL: URL = try await fileURL(fileName: fileName)
+            FileManager.default.createFile(atPath: fileURL.path, contents: data)
+            
+            await memCacheImage(uiImage, forUrl: fileURL)
+            hei.setFattenImageURL(fileURL)
+            
+            return fileURL
+        }
     }
     
     public func cacheEditImage(uiImage: UIImage, forHei hei: HEImage) -> Task<URL, Error> {
@@ -329,36 +378,34 @@ extension HESimpleEditImageStore {
         
         if let editImageURL = hei.editImageURL {
             clearMemCachedImage(forUrl: editImageURL)
+            removeFile(editImageURL)
+        }
+        if let fattenImageURL = hei.fattenImageURL {
+            clearMemCachedImage(forUrl: fattenImageURL)
+            removeFile(fattenImageURL)
         }
         if let thumbnailURL = hei.thumbnailURL {
             clearMemCachedImage(forUrl: thumbnailURL)
+            removeFile(thumbnailURL)
         }
         
+        hei.setFattenImageURL(nil)
         hei.setEditImageURL(nil)
         hei.setThumbnailURL(nil)
-        
-        let editFileURL = try? fileURL(fileName: hei.id.heImageCacheEditFileName)
-        let thumbFileURL = try? fileURL(fileName: hei.id.heImageCacheThumbFileName)
+    }
+}
+
+extension HESimpleEditImageStore {
+    
+    func removeFile(_ fileURL: URL) {
         Task.detached {
             do {
-                if let editFileURL {
-                    try FileManager.default.removeItem(at: editFileURL)
-                }
-            } catch {
-                woops(error)
-            }
-            do {
-                if let thumbFileURL {
-                    try FileManager.default.removeItem(at: thumbFileURL)
-                }
+                try FileManager.default.removeItem(at: fileURL)
             } catch {
                 woops(error)
             }
         }
     }
-}
-
-extension HESimpleEditImageStore {
     
     func memCacheImage(_ image: UIImage, forUrl url: URL) {
         memCache.setObject(image, forKey: NSString(string: url.absoluteString))

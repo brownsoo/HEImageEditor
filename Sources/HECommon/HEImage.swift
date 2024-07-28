@@ -16,6 +16,7 @@ open class HEImage: CustomDebugStringConvertible {
     
     public var updatedTime: TimeInterval
     public internal(set) var editImageURL: URL?
+    public internal(set) var fattenImageURL: URL?
     public internal(set) var thumbnailURL: URL?
     
     public init(id: String = UUID().uuidString, origin: URL) {
@@ -37,6 +38,11 @@ open class HEImage: CustomDebugStringConvertible {
         self.updatedTime = Date().timeIntervalSince1970
     }
     
+    public func setFattenImageURL(_ url: URL?) {
+        self.fattenImageURL = url
+        self.updatedTime = Date().timeIntervalSince1970
+    }
+    
     public func setThumbnailURL(_ url: URL?) {
         self.thumbnailURL = url
         self.updatedTime = Date().timeIntervalSince1970
@@ -48,6 +54,7 @@ HEImage::
 - id\(id)
 - originURL: \(originURL?.absoluteString ?? "nil")
 - editImageURL: \(editImageURL?.absoluteString ?? "nil")
+- fattenImageURL: \(fattenImageURL?.absoluteString ?? "nil")
 - thumbnailURL: \(thumbnailURL?.absoluteString ?? "nil")
 """
     }

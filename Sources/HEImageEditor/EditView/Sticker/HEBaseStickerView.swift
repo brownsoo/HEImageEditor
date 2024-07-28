@@ -351,11 +351,17 @@ extension HEBaseStickerView: HEStickerViewAdditional {
         onOperation = false
         hideBorder()
     }
-    /// 제거 
+    
     func moveToTrashbin() {
+        moveToTrashbin(withHaptic: true)
+    }
+    
+    /// 제거
+    func moveToTrashbin(withHaptic haptic: Bool) {
         removeFromSuperview()
-        
-        UINotificationFeedbackGenerator().notificationOccurred(.warning)
+        if haptic {
+            UINotificationFeedbackGenerator().notificationOccurred(.warning)            
+        }
     }
     
     func addScale(_ scale: CGFloat) {

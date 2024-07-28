@@ -132,13 +132,13 @@ public extension HEWrapper where Base: UIImage {
         return r
     }
     
-    func rotate(degree: CGFloat) -> UIImage? {
+    func rotate(radians: CGFloat) -> UIImage? {
         guard let cgImage = base.cgImage else {
             return nil
         }
         
         let rotatedViewBox = UIView(frame: CGRect(x: 0, y: 0, width: width, height: height))
-        let t = CGAffineTransform(rotationAngle: degree)
+        let t = CGAffineTransform(rotationAngle: radians)
         rotatedViewBox.transform = t
         let rotatedSize = rotatedViewBox.frame.size
 
@@ -147,7 +147,7 @@ public extension HEWrapper where Base: UIImage {
 
         bitmap?.translateBy(x: rotatedSize.width / 2, y: rotatedSize.height / 2)
 
-        bitmap?.rotate(by: degree)
+        bitmap?.rotate(by: radians)
 
         bitmap?.scaleBy(x: 1.0, y: -1.0)
         bitmap?.draw(cgImage, in: CGRect(x: -width / 2, y: -height / 2, width: width, height: height))
@@ -192,6 +192,7 @@ public extension HEWrapper where Base: UIImage {
     }
     
     func resize(newWidth: CGFloat) -> UIImage {
+        guard newWidth != base.size.width else { return base }
         let scale = newWidth / base.size.width
         let newHeight = base.size.height * scale
         let newSize = CGSize(width: newWidth, height: newHeight)
@@ -204,6 +205,7 @@ public extension HEWrapper where Base: UIImage {
     }
 
     func resize(newHeight: CGFloat) -> UIImage {
+        guard newHeight != base.size.height else { return base }
         let scale = newHeight / base.size.height
         let newWidth = base.size.width * scale
         let newSize = CGSize(width: newWidth, height: newHeight)
@@ -313,6 +315,7 @@ public extension HEWrapper where Base: UIImage {
     func clipImage(angle: CGFloat, editRect: CGRect, isCircle: Bool) -> UIImage? {
         let a = ((Int(angle) % 360) - 360) % 360
         var newImage: UIImage = base
+        trace(a)
         if a == -90 {
             newImage = rotate(orientation: .left)
         } else if a == -180 {

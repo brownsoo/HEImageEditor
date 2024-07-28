@@ -34,8 +34,10 @@ HEEditImage::
 - id\(id)
 - originURL: \(originURL?.absoluteString ?? "nil")
 - editImageURL: \(editImageURL?.absoluteString ?? "nil")
+- fattenImageURL: \(fattenImageURL?.absoluteString ?? "nil")
 - thumbnailURL: \(thumbnailURL?.absoluteString ?? "nil")
-- editState: \(editState != nil)
+- editState.fattened: \(editState?.fattened ?? false)
+- editState.clipStatus.angle: \(editState?.clipStatus?.angle ?? 0)
 """
     }
 }

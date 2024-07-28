@@ -318,7 +318,9 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 scale: 1
             ) ?? image
         }
-        
+        if let editState {
+            debugPrint(editState)
+        }
         originalImage = image.he.fixOrientation()
         editImage = originalImage
         editImageWithoutAdjust = originalImage
@@ -330,6 +332,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         mosaicDrawPaths = editState?.mosaicPaths ?? []
         currentAdjustStatus = editState?.adjustStatus ?? HEAdjustStatus()
         preAdjustStatus = currentAdjustStatus
+        currentlyImageFattened = editState?.fattened ?? false
         
         var ts = HEImageEditorConfiguration.default().tools
         if ts.contains(.imageSticker), HEImageEditorConfiguration.default().imageStickerTray == nil {
@@ -343,6 +346,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         initialStickers = editState?.stickers.compactMap {
             HEBaseStickerView.initWithState($0)
         } ?? []
+        
+        
         
         super.init(nibName: nil, bundle: nil)
         
@@ -875,17 +880,23 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 self?.startClippingFlow(allowClipWithoutKeepingState: true)
             }, cancelAction: { _ in
                 // blocked
+                self.selectedTool = nil
             })
         } else {
-            startClippingFlow(allowClipWithoutKeepingState: false)
+            startClippingFlow(allowClipWithoutKeepingState: allowClipWithoutKeepingState)
         }
     }
     
     private func startClippingFlow(allowClipWithoutKeepingState: Bool) {
         
+        
         var currentEditImage = editImage
         autoreleasepool {
             currentEditImage = buildImage()
+        }
+        
+        if allowClipWithoutKeepingState { // 변경 상태 정리
+            clearClipState(fattenImage: currentEditImage)
         }
         
         let vc = HEClipImageViewController(image: currentEditImage, 
@@ -904,7 +915,13 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         vc.clipDoneBlock = { [weak self] angle, editRect, selectRatio in
             guard let self else { return cachedFrame }
             self.clipImage(status: HEClipStatus(editRect: editRect, angle: angle, ratio: selectRatio))
-            self.actionManager.storeAction(.clip(oldStatus: self.preClipStatus, newStatus: self.currentClipStatus))
+            
+            if !allowClipWithoutKeepingState { // 변경 상태 정리
+//                clearClipState()
+                //currentClipStatus.angle = 0
+            } else {
+                self.actionManager.storeAction(.clip(oldStatus: self.preClipStatus, newStatus: self.currentClipStatus))
+            }
             
             return self.originalFrame
         }
@@ -927,25 +944,36 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         setAdjustViews(hidden: true)
         
         
-        if allowClipWithoutKeepingState { // 변경 상태 정리
-            currentlyImageFattened = true
-            currentClipStatus = HEClipStatus(editRect: CGRect(origin: .zero, size: currentEditImage.size))
-            preClipStatus = currentClipStatus
-            actionManager = HEEditActionManager()
-            
-            currentAdjustStatus = HEAdjustStatus()
-            preAdjustStatus = HEAdjustStatus()
-            
-            self.editImage = currentEditImage
-            self.originalImage = currentEditImage
-            
-            drawingImageView.image = nil
-            mosaicDrawPaths = []
-            filterImages = [:]
-            
-            let stickers = stickersContainer.subviews
-            stickers.forEach({ $0.removeFromSuperview() })
+    }
+    
+    private func clearClipState(fattenImage: UIImage) {
+        if !hasEdit() {
+            return
         }
+        currentlyImageFattened = true
+        
+        self.originalImage = fattenImage
+        self.editImage = fattenImage
+        self.editImageWithoutAdjust = fattenImage
+        
+        actionManager = HEEditActionManager()
+        
+        currentAdjustStatus = HEAdjustStatus()
+        preAdjustStatus = HEAdjustStatus()
+        
+        let stickers = stickersContainer.subviews
+        stickers.forEach({ $0.removeFromSuperview() })
+        initialStickers = []
+        
+        self.generateNewMosaicImageLayer()
+        
+        drawingImageView.image = nil
+        mosaicDrawPaths = []
+        filterImages = [:]
+        
+        resetContainerViewFrame()
+        
+        delegate?.didClipWithoutKeepingState(self, resultImage: fattenImage, editId: self.editId)
         
     }
     
@@ -1176,6 +1204,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                     actions: actionManager.actions,
                     fattened: currentlyImageFattened
                 )
+                debugPrint(editModel!)
                 // 내보내~
                 DispatchQueue.main.async {
                     loadingView.hide()
@@ -1620,9 +1649,11 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             }
             let image: UIImage
             if sticker.kind == .mosaic {
-                image = UIImage().he.solid(.blue, width: 1024, height: 1024) // 기본 이미지 스티커 사이즈와 동일하게 
+                image = UIImage().he.solid(.clear,
+                                           width: HEImageSticker.defaultImageRawSize.width,
+                                           height: HEImageSticker.defaultImageRawSize.height)
             } else {
-                image = await sticker.imageLoader()
+                image = (await sticker.imageLoader()).he.resize(newWidth: HEImageSticker.defaultImageRawSize.width)
             }
             let scale = mainScrollView.zoomScale
             let stickerViewSize = HEImageStickerView.constraintViewSize(image: image, container: view)
@@ -1657,7 +1688,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             do {
                 for sticker in stickersContainer.subviews.reversed() {
                     if let stickerView = (sticker as? HEImageStickerView), stickerView.kind == .faceAI {
-                        removeSticker(id: stickerView.id)
+                        removeSticker(id: stickerView.id, withHaptic: false)
                     }
                 }
                 
@@ -1670,10 +1701,11 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 for result in results {
                     
                     if let sticker = imageStickerTray.randomStickerOnFace(inSection: 0) {
-                        let image = await sticker.imageLoader()
+                        let image = (await sticker.imageLoader()).he.resize(newWidth: HEImageSticker.defaultImageRawSize.width)
                         let scale = mainScrollView.zoomScale
                         // let size = HEImageStickerView.calculateSize(image: image, container: view)
                         let originFrame = getStickerOriginFrame(stickerFrame: result.frame)
+                        
                         let imageSticker = HEImageStickerView(
                             id: sticker.id,
                             kind: .faceAI,
@@ -1695,8 +1727,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 self.loadingView.hide()
                 
             } catch {
-                trace("Vision Error ----")
-                trace(error)
+                woops("Vision Error ----")
+                woops(error)
             }
         }
     }
@@ -1731,19 +1763,45 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     }
     
     private func clearMosaicImageFromStickerView(_ stickerView: HEImageStickerView) {
-        let scale = (view.window?.windowScene?.screen.scale ?? 1.0)
-        let def = UIImage().he.solid(.clear, width: 1024, height: 1024)
+        let def = UIImage().he.solid(.clear,
+                                     width: HEImageSticker.defaultImageRawSize.width,
+                                     height: HEImageSticker.defaultImageRawSize.height)
         stickerView.setImage(def)
     }
     
-    private func applyMosaicImageToStickerView(_ stickerView: HEImageStickerView, withRatio ratio: CGFloat? = nil) {
-        let presentingRatio = ratio ?? getImagePresentingRatio()
-        var frame = stickerView.frame//.insetBy(dx: HEImageStickerView.edgeInset, dy: HEImageStickerView.edgeInset)
-        frame = CGRect(x: frame.minX / presentingRatio,
-                       y: frame.minY / presentingRatio,
+    private func applyMosaicImageToStickerView(_ stickerView: HEImageStickerView) {
+        let presentingRatio = getImagePresentingRatio()
+        var frame = stickerView.frame.insetBy(dx: HEImageStickerView.edgeInset, dy: HEImageStickerView.edgeInset)
+        frame = CGRect(x: (frame.minX / presentingRatio),
+                       y: (frame.minY / presentingRatio),
                        width: frame.width / presentingRatio,
                        height: frame.height / presentingRatio)
-        if let image = mosaicImage?.he.clipImage(angle: 0, editRect: frame, isCircle: true) {
+        debugPrint("변형된 이미지 좌표계의 위치", frame.origin)
+        
+        let radian = currentClipStatus.angle.he.toPi
+        var newFrame = CGRect(x: frame.minX * cos(radian) + frame.minY * sin(radian) * -1,
+                              y: frame.minX * sin(radian) + frame.minY * cos(radian),
+                              width: frame.width,
+                              height: frame.height)
+        
+        debugPrint("이미지 뱡향으로 회전 위치", newFrame.origin)
+        
+        let a = ((Int(currentClipStatus.angle) % 360) - 360) % 360
+        if a == -90 {
+            newFrame.origin = CGPoint(x: newFrame.minY * -1, y: newFrame.minX)
+        } else if a == -180 {
+            newFrame.origin = CGPoint(x: newFrame.minX * -1, y: newFrame.minY * -1)
+        } else if a == -270 {
+            newFrame.origin = CGPoint(x: newFrame.minY, y: newFrame.minX * -1)
+        }
+        
+        debugPrint("a = \(a)", "반전된 위치 조정", newFrame.origin)
+        
+        let degree = currentClipStatus.angle
+        if let image = mosaicImage?
+            .he.clipImage(angle: 0, editRect: newFrame, isCircle: true)?
+            .he.rotate(radians: degree.he.toPi)
+        {
             stickerView.setImage(image)
         }
     }
@@ -1806,14 +1864,15 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         }
     }
     
-    private func removeSticker(id: String?) {
+    private func removeSticker(id: String?, withHaptic haptic: Bool = true) {
         guard let id else { return }
         for sticker in stickersContainer.subviews.reversed() {
             guard let stickerID = (sticker as? HEBaseStickerView)?.id,
                   stickerID == id else {
                 continue
             }
-            (sticker as? HEBaseStickerView)?.moveToTrashbin()
+            
+            (sticker as? HEBaseStickerView)?.moveToTrashbin(withHaptic: haptic)
             break
         }
     }
