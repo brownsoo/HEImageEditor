@@ -875,7 +875,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     public func startClipping() {
         let allowClipWithoutKeepingState = EditorConfig.allowClipWithoutKeepingState
         
-        if allowClipWithoutKeepingState && self.hasEdit() {
+        if allowClipWithoutKeepingState && self.hasEditEffect() {
             showAlert(text: EditorConfig.wordings.alert.clippingWithoutState, confirmAction: { [weak self] _ in
                 self?.startClippingFlow(allowClipWithoutKeepingState: true)
             }, cancelAction: { _ in
@@ -1142,6 +1142,19 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
            currentFilter.applier == nil,
            currentAdjustStatus.allValueIsZero,
            currentlyImageFattened == false {
+            return false
+        }
+        return true
+    }
+    
+    private func hasEditEffect() -> Bool {
+        let stickerStates = stickersContainer.subviews.compactMap({ ($0 as? HEBaseStickerView)?.state })
+        
+        if drawPaths.isEmpty,
+           mosaicDrawPaths.isEmpty,
+           stickerStates.isEmpty,
+           currentFilter.applier == nil,
+           currentAdjustStatus.allValueIsZero {
             return false
         }
         return true
@@ -1703,8 +1716,11 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                     if let sticker = imageStickerTray.randomStickerOnFace(inSection: 0) {
                         let image = (await sticker.imageLoader()).he.resize(newWidth: HEImageSticker.defaultImageRawSize.width)
                         let scale = mainScrollView.zoomScale
-                        // let size = HEImageStickerView.calculateSize(image: image, container: view)
-                        let originFrame = getStickerOriginFrame(stickerFrame: result.frame)
+                        
+                        let originFrame = getStickerOriginFrame(stickerFrame: result.frame.insetBy(
+                            dx: -HEImageStickerView.edgeInset * UIScreen.main.scale,
+                            dy: -HEImageStickerView.edgeInset * UIScreen.main.scale)
+                        )
                         
                         let imageSticker = HEImageStickerView(
                             id: sticker.id,
@@ -1739,8 +1755,9 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     private func getStickerOriginFrame(stickerFrame: CGRect) -> CGRect {
         let scale = mainScrollView.zoomScale
         let rr = imageView.frame.width / editImage.size.width
-        let rw = stickerFrame.width * rr * scale
-        let rh = stickerFrame.height * rr * scale
+        let minSide = 20 * UIScreen.main.scale // limit minimum size
+        let rw = max(minSide, stickerFrame.width * rr * scale)
+        let rh = max(minSide, stickerFrame.height * rr * scale)
         let rx = stickerFrame.origin.x * rr + (stickerFrame.width * rr - rw) / 2
         let ry = stickerFrame.origin.y * rr + (stickerFrame.height * rr - rh) / 2
         
@@ -1769,6 +1786,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         stickerView.setImage(def)
     }
     
+    // FIXME: 어질어질.. 단순하게 계산할 수 있을까.
     private func applyMosaicImageToStickerView(_ stickerView: HEImageStickerView) {
         let presentingRatio = getImagePresentingRatio()
         var frame = stickerView.frame.insetBy(dx: HEImageStickerView.edgeInset, dy: HEImageStickerView.edgeInset)
