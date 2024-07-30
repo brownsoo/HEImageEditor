@@ -30,6 +30,8 @@ open class HEEditImageBottomToolView: UIView, HEEditToolView {
     public private(set) var selectedTool: HEImageEditorConfiguration.EditTool?
     
     var interitemSpacing: CGFloat = 20
+    var throttlingChangeTool = false 
+    private var touchThrottling: TimeInterval = 0
     
     public init(tools: [HEImageEditorConfiguration.EditTool]) {
         self.tools = tools
@@ -54,7 +56,7 @@ open class HEEditImageBottomToolView: UIView, HEEditToolView {
             toolSelectListener?(tool)
         }
         if let row = tools.firstIndex(where: { $0 == tool }) {
-            collView.selectItem(at: IndexPath(row: row, section: 0), animated: true, scrollPosition: .centeredHorizontally)
+            collView.selectItem(at: IndexPath(row: row, section: 0), animated: dispatchingEvent, scrollPosition: .centeredHorizontally)
         } else {
             collView.reloadData()
         }
@@ -77,6 +79,7 @@ open class HEEditImageBottomToolView: UIView, HEEditToolView {
         let coll = UICollectionView(frame: .zero, collectionViewLayout: layout)
         coll.backgroundColor = .clear
         coll.showsHorizontalScrollIndicator = false
+        
         HEEditToolCell.he.register(coll)
         return coll
     }()
@@ -138,9 +141,15 @@ extension HEEditImageBottomToolView: UICollectionViewDelegate, UICollectionViewD
         
         let toolType = tools[indexPath.row]
         cell.toolType = toolType
-        cell.iconView.isHighlighted = toolType == selectedTool
-        cell.titleLabel.isHighlighted = toolType == selectedTool
         return cell
+    }
+    
+    public func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+        let cell = cell as! HEEditToolCell
+        let toolType = tools[indexPath.row]
+        let isSelected = toolType == selectedTool
+        cell.iconView.isHighlighted = isSelected
+        cell.titleLabel.isHighlighted = isSelected
     }
     
     public func collectionView(_ collectionView: UICollectionView, didHighlightItemAt indexPath: IndexPath) {
@@ -153,7 +162,18 @@ extension HEEditImageBottomToolView: UICollectionViewDelegate, UICollectionViewD
     
     public func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let toolType = tools[indexPath.row]
+        self.selectedTool = toolType
         self.toolSelectListener?(toolType)
+    }
+    
+    public func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
+        let now = Date().timeIntervalSinceReferenceDate
+        if now - touchThrottling < 0.5 {
+            return false
+        }
+        touchThrottling = now
+        
+        return !throttlingChangeTool
     }
 }
 

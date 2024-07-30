@@ -58,6 +58,9 @@ public extension HEImagePickerDelegate {
     func imagePicker(_ picker: HEImagePicker, didCaptureItem item: HEMediaItem) {}
 }
 
+/// 이미지 피커
+///
+/// - 동영상도 됨.
 open class HEImagePicker: UINavigationController, HEPickerNavigationController {
     
     public weak var pickerDelegate: HEImagePickerDelegate?

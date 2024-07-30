@@ -52,6 +52,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     ///
     /// - 여기에 이미지, 스티커 등 뷰가 포함
     /// - frame이 화면 중앙, clipStatus.editSize 를 따름
+    /// - 클립된 눈에 보이는 영역
     open lazy var containerView: UIView = {
         let view = UIView()
         view.clipsToBounds = true
@@ -204,7 +205,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         return bt
     }()
     
-    public var selectedTool: HEImageEditorConfiguration.EditTool? {
+    public internal(set) var selectedTool: HEImageEditorConfiguration.EditTool? {
         didSet {
             if selectedTool == nil {
                 bottomToolView?.unselectTool()
@@ -355,17 +356,30 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         self.bottomToolViewBuilder = bottomToolViewBuilder ?? { editView in
             // 기본 툴바
             let toolbar = HEEditImageBottomToolView(tools: ts)
-            toolbar.toolSelectListener = { [weak editView] toolType in
-                guard let editView else { return }
-                var changeDelay: TimeInterval = 0
+            toolbar.toolSelectListener = { [weak editView, weak self] toolType in
+                guard let editView, let self else { return }
+                
+                if toolbar.throttlingChangeTool == true {
+                    woops("")
+                    return
+                }
+                toolbar.throttlingChangeTool = true
+                
                 let sameSelection = self.selectedTool == toolType
-                if editView.isImageEditing {
-                    editView.stopCurrentEditing()
-                    changeDelay = 0.3
-                    
-                    if sameSelection { // 같은 선택은 종료만.
-                        return
+                if sameSelection {
+                    self.stopCurrentEditing()
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        toolbar.throttlingChangeTool = false
                     }
+                    return
+                }
+                
+                var changeDelay: TimeInterval = 0.0
+                if editView.isImageEditing {
+                    changeDelay = 0.3
+                    self.loadingView.show(inCenterOf: self.view)
+                    self.stopJustCurrentEditing()
+                    toolbar.selectTool(toolType, dispatchingEvent: false)
                 }
                 
                 DispatchQueue.main.asyncAfter(deadline: .now() + changeDelay) {
@@ -385,6 +399,10 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                     case .adjust:
                         editView.startAdjusting()
                     }
+                    
+                    toolbar.throttlingChangeTool = false
+                    
+                    self.loadingView.hide()
                 }
             }
             
@@ -487,7 +505,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
          
         trashbinView.frame = CGRect(
             x: (view.he.width - trashbinSize.width) / 2,
-            y: currentClipStatus.editRect.maxY - trashbinSize.height + 18,
+            y: containerView.frame.maxY - trashbinSize.height + 18,
             width: trashbinSize.width,
             height: trashbinSize.height
         )
@@ -835,6 +853,11 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     }
     
     public func stopCurrentEditing() {
+        self.stopJustCurrentEditing()
+        self.selectedTool = nil
+    }
+    
+    private func stopJustCurrentEditing() {
         
         switch self.selectedTool {
         case .draw:
@@ -865,9 +888,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         case .none:
             break
         }
-        
-        self.selectedTool = nil
-        
     }
     
     // MARK: 자르기 시작
@@ -881,6 +901,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             }, cancelAction: { _ in
                 // blocked
                 self.selectedTool = nil
+                self.topBarView?.show()
             })
         } else {
             startClippingFlow(allowClipWithoutKeepingState: allowClipWithoutKeepingState)
@@ -914,12 +935,10 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         let cachedFrame = self.originalFrame
         vc.clipDoneBlock = { [weak self] angle, editRect, selectRatio in
             guard let self else { return cachedFrame }
+            self.selectedTool = nil
             self.clipImage(status: HEClipStatus(editRect: editRect, angle: angle, ratio: selectRatio))
             
-            if !allowClipWithoutKeepingState { // 변경 상태 정리
-//                clearClipState()
-                //currentClipStatus.angle = 0
-            } else {
+            if !allowClipWithoutKeepingState {
                 self.actionManager.storeAction(.clip(oldStatus: self.preClipStatus, newStatus: self.currentClipStatus))
             }
             
@@ -927,23 +946,24 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         }
         
         vc.cancelClipBlock = { [weak self] in
+            self?.selectedTool = nil
             self?.resetContainerViewFrame()
         }
         vc.dismissCallback = { [weak self] in
             self?.removeEditController()
             self?.finishEditingDismissAnimate()
-            self?.selectedTool = nil
         }
         
         self.addToEditController(vc)
-        self.startAnimateInEditController()
         
         selectedTool = .clip
+        
+        topBarView?.hide()
+        mainScrollView.isHidden = true
+        
         setDrawViews(hidden: true)
         setFilterViews(hidden: true)
         setAdjustViews(hidden: true)
-        
-        
     }
     
     private func clearClipState(fattenImage: UIImage) {
@@ -1013,8 +1033,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             self?.addImageStickerView(image)
         }
         
-        let trayFrame = getImageStickerTrayFrame()
-        imageStickerTray.show(in: view, frame: trayFrame)
         imageStickerContainerIsHidden = false
         selectedTool = .imageSticker
         editingTopView.show(animate: false)
@@ -1036,7 +1054,10 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             self.imageStickerTray?.hide()
         }
         
+        let trayFrame = getImageStickerTrayFrame()
+        imageStickerTray.show(in: view, frame: trayFrame)
         
+        self.topBarView?.hide()
         setToolView(show: false)
         setDrawViews(hidden: true)
         setFilterViews(hidden: true)
@@ -1162,7 +1183,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     @objc
     public func cancel() {
-        dismiss(animated: animateDismiss) {
+        dismiss(animated: false) {
             self.delegate?.cancelledEditImage(self)
         }
     }
@@ -1175,14 +1196,15 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         var resImage = originalImage
         var editModel: HEEditState?
         
-        func callback() {
-            dismiss(animated: animateDismiss) {
-                self.delegate?.didFinishEditImage(self, resultImage: resImage, editId: editId, editModel: editModel)
+        func callback(delay: TimeInterval) {
+            self.delegate?.didFinishEditImage(self, resultImage: resImage, editId: editId, editModel: editModel)
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                self.dismiss(animated: false)
             }
         }
         
         guard hasEdit else {
-            callback()
+            callback(delay: 0)
             return
         }
         
@@ -1192,7 +1214,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         let stickerStates = stickersContainer.subviews.compactMap({ ($0 as? HEBaseStickerView)?.state })
         
         autoreleasepool {
-            trace("build image ----- ")
+            trace("build image ----- > ----- > ----- > ----- >")
+            
             resImage = buildImage() // 원본에 합치고
             
             DispatchQueue.global().async { [self] in
@@ -1221,7 +1244,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 // 내보내~
                 DispatchQueue.main.async {
                     loadingView.hide()
-                    callback()
+                    callback(delay: 0.5)
                 }
             }
         }
@@ -1535,7 +1558,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             cleanToolViewStateTimer()
         }
         topBarView?.layer.removeAllAnimations()
-        //bottomTabBarView.layer.removeAllAnimations()
         adjustSlider?.layer.removeAllAnimations()
         if flag {
             self.topBarView?.show()
@@ -1573,27 +1595,24 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             r.origin.y *= scale
             r.size.width *= scale
             r.size.height *= scale
-            var exist: HETextStickerView?
-            if let stickerId {
-                exist = stickersContainer.subviews.compactMap({ $0 as? HETextStickerView }).first(where: {
-                    $0.id == stickerId
-                })
+            // 재수정에서 다른 스티커 제거
+            if stickerId != nil {
+                stickersContainer.subviews.forEach { $0.isHidden = true }
             }
-            exist?.isHidden = true
+            
             let isCircle = currentClipStatus.ratio?.isCircle ?? false
             bgImage = buildImage()
                 .he.clipImage(angle: currentClipStatus.angle, editRect: currentClipStatus.editRect, isCircle: isCircle)?
                 .he.clipImage(angle: 0, editRect: r, isCircle: isCircle)
             
-            exist?.isHidden = false
+            stickersContainer.subviews.forEach { $0.isHidden = false }
         }
         
         let vc = HEInputTextViewController(stickerId: stickerId, image: bgImage, text: text, font: font, textColor: textColor, fillColor: fillColor)
         vc.delegate = self
         
         vc.modalPresentationStyle = .fullScreen
-        vc.modalTransitionStyle = .crossDissolve
-        self.present(vc, animated: true)
+        self.present(vc, animated: false)
     }
     
     
@@ -1717,10 +1736,25 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                         let image = (await sticker.imageLoader()).he.resize(newWidth: HEImageSticker.defaultImageRawSize.width)
                         let scale = mainScrollView.zoomScale
                         
-                        let originFrame = getStickerOriginFrame(stickerFrame: result.frame.insetBy(
-                            dx: -HEImageStickerView.edgeInset * UIScreen.main.scale,
-                            dy: -HEImageStickerView.edgeInset * UIScreen.main.scale)
+                        let inFrame = getAiStickerOriginFrame(stickerFrameInImage: result.frame.insetBy(
+                            dx: -HEImageStickerView.edgeInset * 2 * UIScreen.main.scale,
+                            dy: -HEImageStickerView.edgeInset * 2 * UIScreen.main.scale)
                         )
+                        
+                        let radian = currentClipStatus.rotation
+                        var newFrame = CGRect(x: inFrame.minX * cos(radian) + inFrame.minY * sin(radian) * -1,
+                                              y: inFrame.minX * sin(radian) + inFrame.minY * cos(radian),
+                                              width: inFrame.width,
+                                              height: inFrame.height)
+                        
+                        let a = ((Int(currentClipStatus.angle) % 360) - 360) % 360
+                        if a == -90 {
+                            newFrame.origin = CGPoint(x: newFrame.minY * -1, y: newFrame.minX)
+                        } else if a == -180 {
+                            newFrame.origin = CGPoint(x: newFrame.minX * -1, y: newFrame.minY * -1)
+                        } else if a == -270 {
+                            newFrame.origin = CGPoint(x: newFrame.minY, y: newFrame.minX * -1)
+                        }
                         
                         let imageSticker = HEImageStickerView(
                             id: sticker.id,
@@ -1728,8 +1762,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                             image: image,
                             originScale: 1 / scale,
                             originAngle: -currentClipStatus.angle,
-                            originFrame: originFrame,
-                            gesRotation:  -CGFloat(result.roll ?? 0.0)
+                            originFrame: newFrame,
+                            gesRotation: -CGFloat(result.roll ?? 0.0) + currentClipStatus.rotation
                         )
                         
                         attachSticker(imageSticker, delay: 0)
@@ -1752,9 +1786,11 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     /// 스티커의 스티커 컨테이너 내 영역을 구함
     ///
     /// - stickersContainer.frame 은 imageView.frame (clipStatus.editRect)과 동일
-    private func getStickerOriginFrame(stickerFrame: CGRect) -> CGRect {
+    private func getAiStickerOriginFrame(stickerFrameInImage stickerFrame: CGRect) -> CGRect {
         let scale = mainScrollView.zoomScale
-        let rr = imageView.frame.width / editImage.size.width
+        // 정방향 이미지뷰 크기로 계산
+        let rightFrame = imageView.frame.he.rotate(rightAngle: Int(currentClipStatus.angle) * -1)
+        let rr = rightFrame.width / editImage.size.width
         let minSide = 20 * UIScreen.main.scale // limit minimum size
         let rw = max(minSide, stickerFrame.width * rr * scale)
         let rh = max(minSide, stickerFrame.height * rr * scale)
@@ -1779,30 +1815,23 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         return originFrame
     }
     
-    private func clearMosaicImageFromStickerView(_ stickerView: HEImageStickerView) {
-        let def = UIImage().he.solid(.clear,
-                                     width: HEImageSticker.defaultImageRawSize.width,
-                                     height: HEImageSticker.defaultImageRawSize.height)
-        stickerView.setImage(def)
-    }
-    
     // FIXME: 어질어질.. 단순하게 계산할 수 있을까.
     private func applyMosaicImageToStickerView(_ stickerView: HEImageStickerView) {
         let presentingRatio = getImagePresentingRatio()
-        var frame = stickerView.frame.insetBy(dx: HEImageStickerView.edgeInset, dy: HEImageStickerView.edgeInset)
-        frame = CGRect(x: (frame.minX / presentingRatio),
-                       y: (frame.minY / presentingRatio),
-                       width: frame.width / presentingRatio,
-                       height: frame.height / presentingRatio)
-        debugPrint("변형된 이미지 좌표계의 위치", frame.origin)
+        var inFrame = stickerView.frame.insetBy(dx: HEImageStickerView.edgeInset, dy: HEImageStickerView.edgeInset)
+        inFrame = CGRect(x: (inFrame.minX / presentingRatio),
+                       y: (inFrame.minY / presentingRatio),
+                       width: inFrame.width / presentingRatio,
+                       height: inFrame.height / presentingRatio)
+        //debugPrint("변형된 이미지 좌표계의 위치", frame.origin)
         
-        let radian = currentClipStatus.angle.he.toPi
-        var newFrame = CGRect(x: frame.minX * cos(radian) + frame.minY * sin(radian) * -1,
-                              y: frame.minX * sin(radian) + frame.minY * cos(radian),
-                              width: frame.width,
-                              height: frame.height)
+        let radian = currentClipStatus.rotation
+        var newFrame = CGRect(x: inFrame.minX * cos(radian) + inFrame.minY * sin(radian) * -1,
+                              y: inFrame.minX * sin(radian) + inFrame.minY * cos(radian),
+                              width: inFrame.width,
+                              height: inFrame.height)
         
-        debugPrint("이미지 뱡향으로 회전 위치", newFrame.origin)
+        //debugPrint("이미지 뱡향으로 회전 위치", newFrame.origin)
         
         let a = ((Int(currentClipStatus.angle) % 360) - 360) % 360
         if a == -90 {
@@ -1813,12 +1842,11 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             newFrame.origin = CGPoint(x: newFrame.minY, y: newFrame.minX * -1)
         }
         
-        debugPrint("a = \(a)", "반전된 위치 조정", newFrame.origin)
+        //debugPrint("a = \(a)", "반전된 위치 조정", newFrame.origin)
         
-        let degree = currentClipStatus.angle
         if let image = mosaicImage?
             .he.clipImage(angle: 0, editRect: newFrame, isCircle: true)?
-            .he.rotate(radians: degree.he.toPi)
+            .he.rotate(radians: radian)
         {
             stickerView.setImage(image)
         }
@@ -1875,7 +1903,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             let transform = sticker.originTransform.scaledBy(x: 1.4, y: 1.4)
             sticker.transform = transform
             sticker.alpha = 0
-            UIView.animate(withDuration: 0.6, delay: delay, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.4, animations: {
+            UIView.animate(withDuration: 0.5, delay: delay, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.4, animations: {
                 sticker.alpha = 1
                 sticker.transform = sticker.originTransform
             })
@@ -2105,27 +2133,17 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         return UIImage(cgImage: cgi, scale: editImage.scale, orientation: .up)
     }
     
-    private func startAnimateInEditController() {
-        self.topBarView?.hide()
-        UIView.animate(withDuration: 0.2, animations: {
-            self.adjustSlider?.alpha = 0
-        }) { _ in
-            self.mainScrollView.isHidden = true
-            self.adjustSlider?.isHidden = true
-            
-        }
-    }
-    
     /// 편집 container 작업이 끝나면,
     ///
     /// - HEClipImageDismissAnimatedTransition 에서도 호출
     func finishEditingDismissAnimate() {
-        trace()
         mainScrollView.alpha = 1
         mainScrollView.isHidden = false
         adjustSlider?.alpha = 0
         adjustSlider?.isHidden = false
-        topBarView?.show()
+        if selectedTool == nil {
+            topBarView?.show()            
+        }
         UIView.animate(withDuration: 0.2, animations: {
             self.adjustSlider?.alpha = 1
         })
@@ -2322,7 +2340,7 @@ extension HEEditImageViewController: HEInputTextViewControllerDelegate {
     
     func inputTextViewControllerDidCancel() {
         selectedTool = nil
-        
+        setToolView(show: true)
     }
     
 }
@@ -2341,7 +2359,7 @@ extension HEEditImageViewController: HEStickerViewDelegate {
         trashbinView.alpha = 0
         var frame = trashbinView.frame
         let visibleMaxY = min(
-            bottomToolViewContainer.frame.minY - 20,
+            containerView.frame.maxY - 20,
             bottomToolViewContainer.frame.minY - 86
         )
         frame.origin.y = visibleMaxY - trashbinSize.height + 18
@@ -2356,8 +2374,6 @@ extension HEEditImageViewController: HEStickerViewDelegate {
         if imageStickerTray?.superview != nil {
             imageStickerTray?.hide()            
         }
-        // 숨김
-        setToolView(show: false)
         
         stickersContainer.subviews.forEach { view in
             if view !== sticker {
@@ -2367,60 +2383,63 @@ extension HEEditImageViewController: HEStickerViewDelegate {
         }
         
         if sticker.kind == .mosaic {
-            if let stickerView = sticker as? HEImageStickerView {
-                clearMosaicImageFromStickerView(stickerView)
-                mosaicImageLayerMaskLayer.fillColor = UIColor.black.cgColor
-                mosaicImageLayerMaskLayer.strokeColor = nil
-                mosaicImageLayerMaskLayer.lineWidth = 0
-                mosaicImageLayerMaskLayer.path = CGPath(ellipseIn: sticker.frame.insetBy(dx: HEImageStickerView.edgeInset, dy: HEImageStickerView.edgeInset), transform: nil)
-                
-                mosaicStickerActiveContainer.isHidden = false
-                mosaicStickerActiveContainer.layer.addSublayer(mosaicImageLayer)
-                mosaicStickerActiveContainer.layer.addSublayer(mosaicImageLayerMaskLayer)
-                mosaicImageLayer.mask = mosaicImageLayerMaskLayer
-            }
+            mosaicImageLayerMaskLayer.fillColor = UIColor.black.cgColor
+            mosaicImageLayerMaskLayer.strokeColor = nil
+            mosaicImageLayerMaskLayer.lineWidth = 0
+            mosaicImageLayerMaskLayer.path = CGPath(ellipseIn: sticker.frame.insetBy(dx: HEImageStickerView.edgeInset, dy: HEImageStickerView.edgeInset), transform: nil)
+            
+            mosaicStickerActiveContainer.isHidden = false
+            mosaicStickerActiveContainer.layer.addSublayer(mosaicImageLayer)
+            mosaicStickerActiveContainer.layer.addSublayer(mosaicImageLayerMaskLayer)
+            mosaicImageLayer.mask = mosaicImageLayerMaskLayer
         }
     }
     
     func stickerOnOperation(_ sticker: HEBaseStickerView, panGes: UIPanGestureRecognizer) {
-        
-        let point = panGes.location(in: view)
-        if trashbinView.frame.contains(point) {
-            trashbinView.backgroundColor = .he.trashbinTintBgColor
-            trashbinImgView.isHighlighted = true
-            if sticker.alpha == 1 {
-                sticker.layer.removeAllAnimations()
-                sticker.hideBorder()
-                
-                UIView.animate(withDuration: 0.20, delay: 0, options: [.curveEaseOut]) {
-                    sticker.alpha = 0.5
-                    sticker.contentView.transform = CGAffineTransform(scaleX: 0.2, y: 0.2)
-                }
-            }
-        } else {
-            trashbinView.backgroundColor = .he.trashbinNormalBgColor
-            trashbinImgView.isHighlighted = false
-            if sticker.alpha != 1 {
-                sticker.layer.removeAllAnimations()
-                
-                UIView.animate(withDuration: 0.20, delay: 0, options: [.curveEaseOut], animations: {
-                    sticker.alpha = 1
-                    sticker.contentView.transform = CGAffineTransform.identity
-                }) { comp in
-                    if comp { sticker.showBorder() }
-                }
-            }
-        }
-        
         if sticker.kind == .mosaic { // 모자이크 영역 이동
             let inset = HEImageStickerView.edgeInset
-            mosaicImageLayerMaskLayer.path = CGPath(ellipseIn: sticker.frame.insetBy(dx: inset, dy: inset), transform: nil)
+            mosaicImageLayerMaskLayer.path = CGPath(ellipseIn: sticker.frame.insetBy(dx: inset, dy: inset),
+                                                    transform: nil)
         }
         
-        let intersection = imageView.frame.intersection(sticker.frame)
+        // 스티커 영역 계산 (이미지 정방향으로)
+        let stickerProjection = sticker.frame.he.rotate(rightAngle: Int(currentClipStatus.angle))
+        
+        let containerProjection = containerView.bounds.he.rotate(rightAngle: Int(currentClipStatus.angle))
+        let intersection = stickerProjection.intersection(containerProjection)
+        // debugPrint(stickerProjection, containerProjection, intersection.size)
         if intersection.width <= 0 && intersection.height <= 0 {
             sticker.moveToTrashbin()
+        } else {
+            let point = panGes.location(in: view)
+            if trashbinView.frame.contains(point) {
+                trashbinView.backgroundColor = .he.trashbinTintBgColor
+                trashbinImgView.isHighlighted = true
+                if sticker.alpha == 1 {
+                    sticker.layer.removeAllAnimations()
+                    sticker.hideBorder()
+                    
+                    UIView.animate(withDuration: 0.20, delay: 0, options: [.curveEaseOut]) {
+                        sticker.alpha = 0.5
+                        sticker.contentView.transform = CGAffineTransform(scaleX: 0.2, y: 0.2)
+                    }
+                }
+            } else {
+                trashbinView.backgroundColor = .he.trashbinNormalBgColor
+                trashbinImgView.isHighlighted = false
+                if sticker.alpha != 1 {
+                    sticker.layer.removeAllAnimations()
+                    
+                    UIView.animate(withDuration: 0.20, delay: 0, options: [.curveEaseOut], animations: {
+                        sticker.alpha = 1
+                        sticker.contentView.transform = CGAffineTransform.identity
+                    }) { comp in
+                        if comp { sticker.showBorder() }
+                    }
+                }
+            }
         }
+        
     }
     
     func stickerEndOperation(_ sticker: HEBaseStickerView, panGes: UIPanGestureRecognizer) {

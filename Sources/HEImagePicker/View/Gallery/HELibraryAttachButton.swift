@@ -10,8 +10,13 @@ import UIKit
 
 class HELibraryAttachButton: UIControl {
     
-    private let enabledColor = UIColor(r: 71, g: 120, b: 222)
-    private let disabledColor = UIColor(white: 187 / 255.0, alpha: 1.0)
+    private let enabledColor = UIColor { trait in
+        return trait.userInterfaceStyle == .dark ? UIColor.label : UIColor.black
+    }
+    private let disabledColor = UIColor { trait in
+        return trait.userInterfaceStyle == .dark ? UIColor.label.withAlphaComponent(0.6)
+            : UIColor(white: 187 / 255.0, alpha: 1.0)
+    }
     private let label = UILabel()
     let countLabel = UILabel()
     
@@ -32,7 +37,7 @@ class HELibraryAttachButton: UIControl {
         label.textAlignment = .natural
         
         countLabel.font = PickerConfig.fonts.rightBarButtonFont
-        countLabel.textColor = enabledColor
+        countLabel.textColor = UIColor(r: 71, g: 120, b: 222)
         countLabel.setContentHuggingPriority(.required, for: .horizontal)
         countLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
         

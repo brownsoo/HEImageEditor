@@ -30,7 +30,7 @@ public protocol HELibraryViewDelegate: AnyObject {
     func libraryView(_ libraryView: HELibraryViewController, replacingItemWithIdentifer identifier: String) -> HEMediaItem?
 }
 
-/// 피커 본 화면 
+/// 피커 첫 화면
 public class HELibraryViewController: UIViewController, PermissionCheckable {
     
     override open var prefersStatusBarHidden: Bool {
@@ -189,18 +189,21 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         attachButton.countLabel.text = selectedItems.count > 0 ? String("\(selectedItems.count)") : nil
         
         v.setSelectedCount(selectedItems.count)
-        if isProcessing {
+        
+        let resultsEmpty = assetMediaManager.fetchResult?.count == 0
+        
+        if isProcessing && !resultsEmpty {
             navigationItem.rightBarButtonItem = UIHelper.defaultLoader
         } else {
             navigationItem.rightBarButtonItem = UIBarButtonItem(customView: attachButton)
         }
         
-        if let results = assetMediaManager.fetchResult, results.count > 0 {
-            v.albumEmptyView.isHidden = true
-            navigationItem.rightBarButtonItem?.isEnabled = true
-        } else {
+        if resultsEmpty {
             v.albumEmptyView.isHidden = false
             navigationItem.rightBarButtonItem?.isEnabled = false
+        } else {
+            v.albumEmptyView.isHidden = true
+            navigationItem.rightBarButtonItem?.isEnabled = true
         }
     }
     
@@ -471,9 +474,11 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         }
         
         if newSelected || !self.assetMediaManager.hasResultItems {
-            DispatchQueue.main.async {
-                self.v.previewBox.reload()
+            DispatchQueue.main.async { [weak self] in
+                self?.v.previewBox.reload()
             }
+        } else {
+            updateUI()
         }
         
         scrollToTop()
@@ -539,18 +544,17 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         }
         
         // Fill new values
-        var selectedAsset = selectedItems[selectedAssetIndex]
-        selectedAsset.scrollViewContentOffset = v.previewBox.currentZoomableView?.contentOffset
-        selectedAsset.scrollViewZoomScale = v.previewBox.currentZoomableView?.zoomScale
-        selectedAsset.cropRect = v.currentCropRect()
+        var selection = selectedItems[selectedAssetIndex]
+        selection.scrollViewContentOffset = v.previewBox.currentZoomableView?.contentOffset
+        selection.scrollViewZoomScale = v.previewBox.currentZoomableView?.zoomScale
+        selection.cropRect = v.currentCropRect()
         
         // Replace
         selectedItems.remove(at: selectedAssetIndex)
-        selectedItems.insert(selectedAsset, at: selectedAssetIndex)
+        selectedItems.insert(selection, at: selectedAssetIndex)
         
         trace()
         
-        //v.previewBox.reload(at: selectedAssetIndex)
     }
     
     // MARK: - Player
@@ -638,7 +642,7 @@ extension HELibraryViewController: HEPreviewBoxViewDelegate {
         if foundIndex > -1 {
             currentlySelectedIdentifier = selection.assetIdentifier
             v.albumCollectionView.visibleCells.compactMap({ $0 as? HELibraryViewCell }).forEach { cell in
-                cell.isSelected = cell.representedAssetIdentifier == selection.assetIdentifier
+                cell.isSelected = cell.bindingAssetIdentifier == selection.assetIdentifier
             }
         }
         

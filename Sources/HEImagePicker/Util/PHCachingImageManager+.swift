@@ -9,6 +9,12 @@ import UIKit
 import Photos
 import HECommon
 
+extension PHAsset {
+    var markDate: Date? {
+        modificationDate ?? creationDate
+    }
+}
+
 extension PHCachingImageManager {
     
     private func photoImageRequestOptions() -> PHImageRequestOptions {

@@ -48,3 +48,4 @@ extension HECompatibleValue {
 extension String: HECompatibleValue { }
 extension CGFloat: HECompatibleValue { }
 extension Data: HECompatibleValue { }
+extension CGRect: HECompatibleValue { }

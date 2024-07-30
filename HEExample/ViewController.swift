@@ -59,7 +59,6 @@ class ViewController: UIViewController {
         return btn
     }()
     
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -167,10 +166,10 @@ extension ViewController: HEImageEditorDelegate {
 }
 
 extension ViewController: HEEditImageViewDelegate {
-    
-    func didClipWithoutKeepingState(_ editView: any HEEditImageView, resultImage: UIImage, editId: String?) {
+    func didClipWithoutKeepingState(_ editView: HEEditImageView, resultImage: UIImage, editId: String?) {
         //
     }
+    
     
     func didFinishEditImage(_ editView: HEEditImageView, resultImage: UIImage, editId: String?, editModel: HEEditState?) {
         self.resultImageView.image = resultImage
@@ -253,7 +252,9 @@ extension ViewController: PHPickerViewControllerDelegate {
                 
             case .authorized:
                 print("authorization granted")
-                granted()
+                DispatchQueue.main.async {
+                    granted()                    
+                }
             default:
                 print("Unimplemented")
                 
@@ -285,9 +286,14 @@ extension ViewController: HEImagePickerDelegate {
     func imagePicker(_ picker: HEImagePicker, didSelectItems items: [HEMediaItem]) {
         print(items)
         picker.dismiss(animated: true) {
-            let vc = UIAlertController(title: nil, message: "\(items.count)개가 선택됨.", preferredStyle: .alert)
-            vc.addAction(.init(title: "confirm", style: .default, handler: nil))
-            self.present(vc, animated: true)
+            if let photo = items.singlePhoto,
+               let hei = picker.editImageStore.getHEImage(forId: photo.identifier),
+                let editURL = hei.editImageURL {
+                
+                if let data = try? Data(contentsOf: editURL) {
+                    self.resultImageView.image = UIImage(data: data)
+                }
+            }
         }
     }
     
@@ -308,7 +314,6 @@ extension ViewController: HEImagePickerDelegate {
             case .photo(let photo):
                 if let exist = exists.first(where: { $0.id == photo.identifier}),
                    let hei = HEEditImage.fromHEImage(exist) {
-                    debugPrint(hei)
                     news.append(hei)
                 } else {
                     news.append(HEEditImage(id: photo.identifier,
@@ -516,12 +521,14 @@ extension ViewController: UIImagePickerControllerDelegate, UINavigationControlle
 extension ViewController {
     func setupUI() {
         title = "Main"
-        view.backgroundColor = .white
+        view.backgroundColor = .systemBackground
+        
+        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: DrakLightSwitch())
         
         func createLabel(_ title: String) -> UILabel {
             let label = UILabel()
             label.font = UIFont.systemFont(ofSize: 14)
-            label.textColor = .black
+            label.textColor = .label
             label.text = title
             return label
         }
@@ -529,6 +536,7 @@ extension ViewController {
         let spacing: CGFloat = 20
         // Container
         editImageToolView = UIView()
+        editImageToolView.backgroundColor = .systemGroupedBackground
         view.addSubview(editImageToolView)
         editImageToolView.snp.makeConstraints { make in
             make.top.equalTo(self.view.snp.topMargin).offset(5)

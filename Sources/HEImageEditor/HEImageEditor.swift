@@ -282,6 +282,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
     private func makeEditTopBarView() -> HEEditImageTopToolViewBuilder {
         return { editView in
             let topbar = HETopBarView()
+            topbar.backgroundColor = .black
             let cancelButton = UIButton()
             cancelButton.also { it in
                 let icon = UIImage.he.getImage("icArrowRight") ?? UIImage(systemName: "chevron.left", withConfiguration: UIImage.SymbolConfiguration(pointSize: 24, weight: .regular, scale: .default))
@@ -312,8 +313,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
             let editState: HEEditState? = hei.editState
             debugPrint(hei)
             
-            if editState?.fattened == true  {
-                woops("!!")
+            if hei.editImageURL != nil && (editState?.fattened == true || hei.fattenImageURL != nil) {
                 image = try await self.imageStore.fattenImage(forHei: hei).value
             } else {
                 image = try await self.imageStore.editImage(forHei: hei).value
@@ -352,6 +352,10 @@ extension HEImageEditorViewController: HEEditImageViewDelegate {
             do {
                 let _ = try await imageStore.cacheEditImage(uiImage: resultImage, forHei: hei).value
                 let _ = try await imageStore.cacheThumbnailImage(uiImage: resultImage, forHei: hei).value
+                if hei.fattenImageURL == nil { // 편집으로 진입시, 중간 편집본으로 진행하도록 하기 위해 원본으로 지정 
+                    let originImage = try await imageStore.originImage(forHei: hei).value
+                    let _ = try await imageStore.cacheFattenImage(uiImage: originImage, forHei: hei).value
+                }
             } catch {
                 woops(error)
             }

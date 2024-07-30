@@ -56,6 +56,7 @@ HEImage::
 - editImageURL: \(editImageURL?.absoluteString ?? "nil")
 - fattenImageURL: \(fattenImageURL?.absoluteString ?? "nil")
 - thumbnailURL: \(thumbnailURL?.absoluteString ?? "nil")
+- updatedTime: \(updatedTime)
 """
     }
 }

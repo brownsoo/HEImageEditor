@@ -162,7 +162,7 @@ public class HEImageEditorConfiguration: NSObject {
     @objc public var textStickerCanLineBreak = true
     @objc public var textStickerMaximumLines = 4
     @objc public var textStickerMaximumCharactersPerLine = 15
-    @objc public var textStickerMaximumWidthPerLine: CGFloat = 234
+    @objc public var textStickerMaximumWidthPerLine: CGFloat = 334
     
     /// 텍스트 스티커 배경 넣기 스타일
     @objc public var textStickerFillStyle: TextStickerFillStyle = TextStickerFillStyle.area

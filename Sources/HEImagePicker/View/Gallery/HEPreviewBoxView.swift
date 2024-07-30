@@ -120,7 +120,7 @@ public class HEPreviewBoxView: UIView {
             
             button.setBackgroundColor(UIColor(white: 51 / 255.0, alpha: 0.4), for: .normal)
             button.setBackgroundColor(UIColor(white: 151 / 255.0, alpha: 0.6), for: .highlighted)
-            insertSubview(button, belowSubview: curtain)
+            insertSubview(button, aboveSubview: curtain)
             button.makeConstraints { v in
                 v.bottomAnchorConstraintToSuperview(-24)
                 v.centerXAnchorConstraintToSuperview()
@@ -180,10 +180,6 @@ public class HEPreviewBoxView: UIView {
             button.isHidden = true
             // TODO: editing video
             return
-        }
-        
-        if curtain.alpha < 1 {
-            bringSubviewToFront(button)
         }
         
         button.isHidden = false
@@ -247,7 +243,10 @@ public class HEPreviewBoxView: UIView {
 extension HEPreviewBoxView {
     
     private func loadPreviewWithHEImage(_ hei: HEImage?, forCell cell: HEPreviewCell, selection: HELibrarySelection) -> Task<(), Never> {
-        Task {
+        
+        let isSquare = collView.collectionViewLayout is FullCellFlowLayout
+        
+        return Task {
             guard let hei = hei else {
                 print("No hei to change.")
                 return
@@ -259,11 +258,25 @@ extension HEPreviewBoxView {
                 guard let self else { return }
                 if Task.isCancelled { return }
                 cell.updateSquareCropButtonState()
-                cell.zoomableView.fitImage(true, animated: true)
+                cell.zoomableView.fitImage(!isSquare || PickerConfig.priviewScaleFit, animated: false)
+                if PickerConfig.allowZoomablePreview {
+                    cell.isZoomable = isSquare
+                } else {
+                    cell.isZoomable = false
+                }
                 self.delegate?.previewBoxView(self, updateCropInfoOfAssetIdentifier: hei.id)
+                
                 if !isLowResIntermediaryImage {
                     self.hideLoader()
                     self.delegate?.previewBoxViewFinishedLoadingImage(self)
+                    DispatchQueue.main.async {
+                        if !isSquare { // 스퀘어가 아니면, 컨텐츠를 가운데로 조정
+                            let centerOffsetX = (cell.zoomableView.contentSize.width - cell.contentView.frame.size.width) / 2
+                            let centerOffsetY = (cell.zoomableView.contentSize.height - cell.contentView.frame.size.height) / 2
+                            let centerPoint = CGPoint(x: centerOffsetX, y: centerOffsetY)
+                            cell.zoomableView.setContentOffset(centerPoint, animated: false)
+                        }
+                    }
                 }
             }
             
@@ -288,35 +301,34 @@ extension HEPreviewBoxView {
         }
     }
     
-    private func loadPreview(_ asset: PHAsset?, forCell cell: HEPreviewCell, selection: HELibrarySelection) -> Task<(), Never> {
+    private func loadPreview(_ asset: PHAsset, forCell cell: HEPreviewCell, selection: HELibrarySelection) -> Task<(), Never> {
         
-        let isNotSquare = collView.collectionViewLayout is CenteredCellFlowLayout
+        let isSquare = collView.collectionViewLayout is FullCellFlowLayout
         
         return Task {
-            guard let asset = asset else {
-                print("No asset to change.")
-                return
-            }
             delegate?.previewBoxViewStartedLoadingImage(self)
             let completion = { [weak self] (isLowResIntermediaryImage: Bool) in
                 guard let self else { return }
                 if Task.isCancelled { return }
                 cell.updateSquareCropButtonState()
-                cell.zoomableView.fitImage(true, animated: false)
+                cell.zoomableView.fitImage(!isSquare || PickerConfig.priviewScaleFit, animated: false)
+                if PickerConfig.allowZoomablePreview {
+                    cell.isZoomable = isSquare
+                } else {
+                    cell.isZoomable = false
+                }
                 self.delegate?.previewBoxView(self, updateCropInfoOfAssetIdentifier: asset.localIdentifier)
                 
                 if !isLowResIntermediaryImage {
                     self.hideLoader()
                     self.delegate?.previewBoxViewFinishedLoadingImage(self)
                     DispatchQueue.main.async {
-                        if isNotSquare { // 스퀘어가 아니면, 컨텐츠를 가운데로 조정
+                        if !isSquare { // 스퀘어가 아니면, 컨텐츠를 가운데로 조정
                             let centerOffsetX = (cell.zoomableView.contentSize.width - cell.contentView.frame.size.width) / 2
                             let centerOffsetY = (cell.zoomableView.contentSize.height - cell.contentView.frame.size.height) / 2
                             let centerPoint = CGPoint(x: centerOffsetX, y: centerOffsetY)
                             cell.zoomableView.setContentOffset(centerPoint, animated: false)
-        
                         }
-                        
                     }
                 }
             }
@@ -328,24 +340,26 @@ extension HEPreviewBoxView {
             }
             
             // MARK: add a func(updateCropInfo) after crop multiple
-            switch asset.mediaType {
-            case .image:
-                cell.zoomableView.applyImage(asset,
-                                             mediaManager: self.assetMediaManager,
-                                             storedCropPosition: selection,
-                                             completion: completion,
-                                             updateCropInfo: updateCropInfo)
-                
-            case .video:
-                cell.zoomableView.applyVideo(asset,
-                                             mediaManager: self.assetMediaManager,
-                                             storedCropPosition: selection,
-                                             completion: { completion(false) },
-                                             updateCropInfo: updateCropInfo)
-            case .audio, .unknown:
-                ()
-            @unknown default:
-                woops("Bug. Unknown default.")
+            Task.detached {
+                switch asset.mediaType {
+                case .image:
+                    await cell.zoomableView.applyImage(asset,
+                                                 mediaManager: self.assetMediaManager,
+                                                 storedCropPosition: selection,
+                                                 completion: completion,
+                                                 updateCropInfo: updateCropInfo)
+                    
+                case .video:
+                    await cell.zoomableView.applyVideo(asset,
+                                                 mediaManager: self.assetMediaManager,
+                                                 storedCropPosition: selection,
+                                                 completion: { completion(false) },
+                                                 updateCropInfo: updateCropInfo)
+                case .audio, .unknown:
+                    ()
+                @unknown default:
+                    woops("Bug. Unknown default.")
+                }
             }
         }
     }
@@ -404,6 +418,7 @@ extension HEPreviewBoxView {
             emptyImageView.isHidden = false
             emptyImageView.center = CGPoint(x: self.bounds.width / 2, y: self.bounds.height / 2)
             addSubview(emptyImageView)
+            hideLoader()
         } else {
             collView.backgroundColor = .white
             emptyImageView.isHidden = false
@@ -511,7 +526,6 @@ extension HEPreviewBoxView: UICollectionViewDelegateFlowLayout, UICollectionView
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HEPreviewCell.reuseIdentifier, for: indexPath) as! HEPreviewCell
         
         let items = self.items()
-        cell.isZoomable = items.count < 2
         cell.usingClop = self.usingClop
         if items.count < 2 {
             cell.contentView.layer.cornerRadius = 0
@@ -530,25 +544,39 @@ extension HEPreviewBoxView: UICollectionViewDelegateFlowLayout, UICollectionView
         if let item = self.items().get(at: indexPath.row) {
             lastPreviwingSelection = item
             
+            var phAsset: PHAsset?
+            var heiImage: HEImage?
             if cell.bindingIdentifier == item.assetIdentifier {
                 if let hei = self.editImageStore?.getHEImage(forId: item.assetIdentifier) {
+                    heiImage = hei
                     if hei.updatedTime == cell.bindingTime {
+                        debugPrint("방어")
+                        return
+                    }
+                } else if let asset = PHAsset.fetchAssets(withLocalIdentifiers: [item.assetIdentifier], options: PHFetchOptions()).firstObject {
+                    phAsset = asset
+                    let dateTime = asset.markDate?.timeIntervalSince1970
+                    if dateTime == cell.bindingTime {
+                        debugPrint("방어")
                         return
                     }
                 } else {
                     return
                 }
             }
-            cell.bindingIdentifier = item.assetIdentifier
             
-            let task = Task {
-                trace("미리보기 로드")
-                if let hei = self.editImageStore?.getHEImage(forId: item.assetIdentifier) {
-                    cell.bindingTime = hei.updatedTime
-                    await loadPreviewWithHEImage(hei, forCell: cell, selection: item).value
-                } else if let asset = PHAsset.fetchAssets(withLocalIdentifiers: [item.assetIdentifier], options: PHFetchOptions()).firstObject {
-                    cell.bindingTime = asset.creationDate?.timeIntervalSince1970 ?? Date().timeIntervalSince1970
-                    await loadPreview(asset, forCell: cell, selection: item).value
+            cell.bindingIdentifier = item.assetIdentifier
+            let isSquare = collView.collectionViewLayout is FullCellFlowLayout
+            cell.isZoomable = isSquare
+            
+            let task = Task(priority: .userInitiated) {
+                
+                if let heiImage = heiImage ?? self.editImageStore?.getHEImage(forId: item.assetIdentifier) {
+                    cell.bindingTime = heiImage.updatedTime
+                    await loadPreviewWithHEImage(heiImage, forCell: cell, selection: item).value
+                } else if let phAsset = phAsset ?? PHAsset.fetchAssets(withLocalIdentifiers: [item.assetIdentifier], options: PHFetchOptions()).firstObject {
+                    cell.bindingTime = phAsset.markDate?.timeIntervalSince1970
+                    await loadPreview(phAsset, forCell: cell, selection: item).value
                 } else {
                     woops("뭐지?")
                 }
@@ -606,12 +634,9 @@ class HEPreviewCell: UICollectionViewCell {
     var squareCropButton: UIButton?
     
     var isZoomable: Bool = true {
-        didSet {
-            if isZoomable {
-                zoomableView.isScrollEnabled = true
-            } else {
-                zoomableView.isScrollEnabled = false
-            }
+        willSet {
+            zoomableView.panGestureRecognizer.isEnabled = newValue
+            zoomableView.pinchGestureRecognizer?.isEnabled = newValue
         }
     }
     

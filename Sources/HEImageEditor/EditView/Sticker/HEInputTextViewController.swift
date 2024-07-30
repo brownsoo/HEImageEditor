@@ -11,7 +11,7 @@ protocol HEInputTextViewControllerDelegate: AnyObject {
     func inputTextViewControllerDidCancel()
 }
 
-class HEInputTextViewController: UIViewController {
+public class HEInputTextViewController: UIViewController {
     
     weak var delegate: HEInputTextViewControllerDelegate?
     
@@ -53,8 +53,7 @@ class HEInputTextViewController: UIViewController {
     
     private lazy var coverView: UIView = {
         let view = UIView()
-        view.backgroundColor = .black
-        view.alpha = 0.5
+        view.backgroundColor = .black.withAlphaComponent(0.5)
         return view
     }()
     
@@ -137,11 +136,11 @@ class HEInputTextViewController: UIViewController {
     
     private let maxTextCount = EditorConfig.maxTextLength
     
-    override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+    public override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
         deviceIsiPhone() ? .portrait : .all
     }
     
-    override var prefersStatusBarHidden: Bool {
+    public override var prefersStatusBarHidden: Bool {
         return true
     }
     
@@ -181,25 +180,23 @@ class HEInputTextViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func viewDidLoad() {
+    public override func viewDidLoad() {
         super.viewDidLoad()
 
         setupUI()
-        
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(_:)), name: UIApplication.keyboardWillShowNotification, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(_:)), name: UIApplication.keyboardWillHideNotification, object: nil)
+        addKeyboardObserver()
     }
     
-    override func viewWillAppear(_ animated: Bool) {
+    public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
-        DispatchQueue.main.async {
-            self.textView.becomeFirstResponder()
+        self.textView.becomeFirstResponder()
+        UIView.animate(withDuration: 0.18) {
+            self.topToolBar.alpha = 1
+            self.coverView.alpha = 1
         }
-        
     }
     
-    override func viewDidLayoutSubviews() {
+    public override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         
         guard shouldLayout else { return }
@@ -218,11 +215,11 @@ class HEInputTextViewController: UIViewController {
         coverView.frame = bgImageView.bounds
         
         let insets = view.safeAreaInsets
-        topToolBar.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: 48 + insets.top)
+        topToolBar.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: HETopConfirmBarView.contentHeight + insets.top)
         
         toolView.frame = CGRect(
             x: 0,
-            y: 0,
+            y: view.bounds.height,
             width: view.bounds.width,
             height: Self.toolViewHeight
         )
@@ -230,9 +227,19 @@ class HEInputTextViewController: UIViewController {
         
     }
     
-    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+    public override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
         shouldLayout = true
+    }
+    
+    private func addKeyboardObserver() {
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(_:)), name: UIApplication.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(_:)), name: UIApplication.keyboardWillHideNotification, object: nil)
+    }
+    
+    private func removeKeyboardObserver() {
+        NotificationCenter.default.removeObserver(self, name: UIApplication.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: UIApplication.keyboardWillHideNotification, object: nil)
     }
     
     private func setupUI() {
@@ -240,12 +247,15 @@ class HEInputTextViewController: UIViewController {
         
         view.addSubview(bgImageView)
         bgImageView.addSubview(coverView)
+        coverView.alpha = 0
         
         view.addSubview(topToolBar)
         topToolBar.addCenterView(textColorBtn)
         topToolBar.addCenterView(textBackgroundBtn)
         topToolBar.cancelClickCallback = { [weak self] in self?.cancelBtnClick() }
         topToolBar.confirmClickCallback = { [weak self] in self?.doneBtnClick() }
+        topToolBar.alpha = 0
+        
         textColorBtn.addTarget(self, action: #selector(textColorBtnClick), for: .touchUpInside)
         textBackgroundBtn.addTarget(self, action: #selector(textBackgroundBtnClick), for: .touchUpInside)
         
@@ -323,6 +333,7 @@ class HEInputTextViewController: UIViewController {
         } else if selectedTool == .textBackground {
             index = getColorSource().firstIndex(where: { $0 == currentFillColor })
         }
+        
         if let index {
             DispatchQueue.main.async { [weak self] in
                 self?.colorCollView.selectItem(at: IndexPath(row: index, section: 0), animated: false, scrollPosition: .centeredHorizontally)
@@ -330,11 +341,28 @@ class HEInputTextViewController: UIViewController {
         }
     }
     
+    private func animateDismiss(delay: TimeInterval = 0, complete: @escaping () -> Void) {
+
+        UIView.animate(withDuration: 0.18, animations: { self.coverView.alpha = 0})
+
+        if textView.isFirstResponder {
+            textView.resignFirstResponder()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.20 + delay) {
+                complete()
+            }
+        } else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                complete()
+            }
+        }
+    }
+    
     @objc func cancelBtnClick() {
-        modalTransitionStyle = .crossDissolve
-        dismiss(animated: true, completion: { [weak self] in
-            self?.delegate?.inputTextViewControllerDidCancel()
-        })
+        animateDismiss {  [weak self] in
+            self?.dismiss(animated: false, completion: {
+                self?.delegate?.inputTextViewControllerDidCancel()
+            })
+        }
     }
     
     @objc func doneBtnClick() {
@@ -377,11 +405,13 @@ class HEInputTextViewController: UIViewController {
             }
         }
         
-        trace()
-        delegate?.inputTextViewController(self, stickerId: stickerId, didInput: textView.text, textColor: currentTextColor, fillColor: currentFillColor, font: currentFont, image: image)
-        
-        modalTransitionStyle = .crossDissolve
-        dismiss(animated: true, completion: nil)
+        animateDismiss(delay: 0.18) {  [weak self] in
+            self?.dismiss(animated: false) {
+                guard let self else { return }
+                self.delegate?.inputTextViewController(self, stickerId: self.stickerId, didInput: self.textView.text, textColor: self.currentTextColor, fillColor: self.currentFillColor, font: self.currentFont, image: image)
+                
+            }
+        }
     }
     
     @objc private func keyboardWillShow(_ notify: Notification) {
@@ -391,12 +421,20 @@ class HEInputTextViewController: UIViewController {
         
         let duration: TimeInterval = notify.userInfo?[UIApplication.keyboardAnimationDurationUserInfoKey] as? TimeInterval ?? 0.25
         adjustTextViewFrame(duration: max(duration, 0.25))
+        
+        if selectedTool == nil {
+            selectedTool = .textColor
+        }
+        showToolsView()
+        
     }
     
     @objc private func keyboardWillHide(_ notify: Notification) {
         let duration: TimeInterval = notify.userInfo?[UIApplication.keyboardAnimationDurationUserInfoKey] as? TimeInterval ?? 0.25
         self.keyboardHeight = 0
         adjustTextViewFrame(duration: max(duration, 0.25))
+        selectedTool = nil
+        hideToolsView()
     }
     
     private func adjustTextViewFrame(duration: TimeInterval) {
@@ -407,13 +445,14 @@ class HEInputTextViewController: UIViewController {
                                   height: toolFrame.minY - topFrame.maxY)
         
         let placeholderFrame = textView.placeholderFrame()
-        trace(placeholderFrame)
+        // trace(placeholderFrame)
         let size: CGSize
         if textView.text.isEmpty {
             size = placeholderFrame.size
         } else {
             size = textView.sizeThatFits(availableAea)
         }
+        
         let textViewFrame = CGRect(origin: CGPoint(x: max(0, (view.bounds.width - size.width) / 2),
                                                    y: max(0, topFrame.maxY + (availableAea.height - size.height) / 2)),
                                    size: CGSize(width: size.width, 
@@ -444,14 +483,14 @@ class HEInputTextViewController: UIViewController {
 }
 
 extension HEInputTextViewController: UICollectionViewDelegate, UICollectionViewDataSource {
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+    public func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if toolView.isHidden {
             return 0
         }
         return getColorSource().count
     }
     
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+    public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if selectedTool == .textBackground {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: HETextFillColorCell.reuseIdentifier, for: indexPath) as! HETextFillColorCell
             
@@ -469,7 +508,15 @@ extension HEInputTextViewController: UICollectionViewDelegate, UICollectionViewD
         }
     }
     
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+    public func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+        if let cell = cell as? HETextFillColorCell {
+            cell.isSelected = cell.color == currentFillColor
+        } else if let cell = cell as? HETextColorCell {
+            cell.isSelected = cell.color == currentTextColor
+        }
+    }
+    
+    public func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let color = getColorSource()[indexPath.row]
         if selectedTool == .textColor {
             currentTextColor = color
@@ -488,7 +535,13 @@ extension HEInputTextViewController {
         
         adjustTextViewFrame(duration: 0)
         
-        guard !textView.text.isEmpty, currentFillColor != .clear else {
+        let inputText = textView.text ?? ""
+        guard !inputText.isEmpty else {
+            textView.placeholderLabel?.backgroundColor = currentFillColor
+            return
+        }
+        
+        guard currentFillColor != .clear else {
             textLayer.removeFromSuperlayer()
             return
         }
@@ -624,7 +677,7 @@ extension HEInputTextViewController {
 
 
 extension HEInputTextViewController: UITextViewDelegate {
-    func textViewDidChange(_ textView: UITextView) {
+    public func textViewDidChange(_ textView: UITextView) {
         self.drawTextBackground()
         
         let markedTextRange = textView.markedTextRange
@@ -730,7 +783,7 @@ extension HEInputTextViewController: UITextViewDelegate {
         
     }
     
-    func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
+    public func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
         if !HEImageEditorConfiguration.default().textStickerCanLineBreak && text == "\n" {
             doneBtnClick()
             return false
@@ -749,7 +802,7 @@ extension HEInputTextViewController: UITextViewDelegate {
 }
 
 extension HEInputTextViewController: NSLayoutManagerDelegate {
-    func layoutManager(_ layoutManager: NSLayoutManager, didCompleteLayoutFor textContainer: NSTextContainer?, atEnd layoutFinishedFlag: Bool) {
+    public func layoutManager(_ layoutManager: NSLayoutManager, didCompleteLayoutFor textContainer: NSTextContainer?, atEnd layoutFinishedFlag: Bool) {
         guard layoutFinishedFlag else {
             return
         }

@@ -97,6 +97,7 @@ open class HETopBarView: UIView {
                 it.leadingAnchor.constraint(greaterThanOrEqualTo: leadingContainer.trailingAnchor),
                 it.trailingAnchor.constraint(lessThanOrEqualTo: trailingContainer.leadingAnchor),
                 it.widthAnchor.constraint(equalToConstant: 0).withPriority(.fittingSizeLevel),
+                it.heightAnchor.constraint(equalToConstant: 0).withPriority(.fittingSizeLevel),
             ])
         }
         

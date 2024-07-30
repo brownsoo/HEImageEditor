@@ -18,8 +18,8 @@ class HETextView: UITextView {
     }
     
     var placeholderAlignment: NSTextAlignment = .natural
+    var placeholderLabel: UILabel?
     private var cachedAlignment: NSTextAlignment = .center
-    private var placeholderLabel: UILabel?
     private var cachedPlaceHolderFrame: CGRect?
     
     func placeholderFrame() -> CGRect {

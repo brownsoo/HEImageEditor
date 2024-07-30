@@ -137,7 +137,6 @@ final public class HEAssetZoomableView: UIScrollView {
             DispatchQueue.main.async { completion(false) }
             return
         }
-        trace()
         currentAssetIdentifier = photo.localIdentifier
         currentAssetType = photo.mediaType
         photoImageView.image = nil
@@ -168,7 +167,6 @@ final public class HEAssetZoomableView: UIScrollView {
             }
             
             self.squaredZoomScale = self.calculateSquaredZoomScale()
-            
             completion(isLowResIntermediaryImage)
         }
     }
@@ -307,7 +305,7 @@ fileprivate extension HEAssetZoomableView {
         centerAssetView()
         
         // Setting new scale
-        minimumZoomScale = zoomScale
+        self.minimumZoomScale = zoomScale
         self.zoomScale = zoomScale
     }
     

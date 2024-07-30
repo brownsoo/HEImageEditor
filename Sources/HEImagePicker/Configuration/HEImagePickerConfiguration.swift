@@ -65,6 +65,16 @@ public struct HEImagePickerConfiguration {
     /// Use this property to modify the default fonts provided
     public var fonts = HEPickerFonts()
     
+    /// 미리보기 화면에서 줌 허용 여부
+    ///
+    /// defaults to true
+    public var allowZoomablePreview = true
+    
+    /// 미리보기 영역에 이미지를 맞출지 여부
+    ///
+    /// - true(defaults) : 미리보기 영역을 채움
+    /// - false : 이미지가 전부 보이도록 맞춤
+    public var priviewScaleFit: Bool = true
     
     /// Allow to pick a previewing media without selection
     public var allowPickWithoutSelection = true
@@ -85,6 +95,7 @@ public struct HEImagePickerConfiguration {
     public var showsVideoTrimmer = true
     
     /// 카메라 촬영 후 사진 갤러리에 추가할 지 여부
+    ///
     /// Defaults to true.
     public var shouldSaveNewPicturesToAlbum = true
     

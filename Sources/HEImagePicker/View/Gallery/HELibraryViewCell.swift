@@ -5,8 +5,8 @@
 //  Created by 브라운수 on 7/2/24.
 //
 
-
 import UIKit
+import Photos
 
 class HEMultipleSelectionIndicator: UIView {
     
@@ -57,7 +57,9 @@ class HELibraryViewCell: UICollectionViewCell {
     
     static let reuseIdentifier = "HE.LibraryViewCell"
     
-    var representedAssetIdentifier: String!
+    var bindingAssetIdentifier: String!
+    var bindingMediaType: PHAssetMediaType = .image
+    
     let imageView = UIImageView()
     var imageLoader: (() async -> UIImage?)?
     let durationLabel = UILabel()
@@ -71,9 +73,11 @@ class HELibraryViewCell: UICollectionViewCell {
         imageLoadTask?.cancel()
         
         imageView.image = nil
-        
         imageLoadTask = Task {
-            let image = await imageLoader?()
+            guard let imageLoader = self.imageLoader else { return }
+            let image = await Task.detached {
+                return await imageLoader()
+            }.value
             if Task.isCancelled { return }
             imageView.image = image
         }
@@ -140,7 +144,7 @@ class HELibraryViewCell: UICollectionViewCell {
     }
     
     private func refreshSelection() {
-        let showOverlay = isSelected || isHighlighted
+        let showOverlay = isSelected 
         selectionOverlay.alpha = showOverlay ? 0.6 : 0
     }
 

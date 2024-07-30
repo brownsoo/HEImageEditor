@@ -48,6 +48,12 @@ public protocol HEImageCache: AnyObject {
     func clearCached(forHei hei: HEImage, includeOrigin: Bool) async
 }
 
+public extension HEImageCache {
+    func clearCached(forHei hei: HEImage) async {
+        await clearCached(forHei: hei, includeOrigin: false)
+    }
+}
+
 @MainActor
 public protocol HEImageDataStore {
     func addHEImage(_ hei: HEImage, excepting: ((HEImage) -> Bool)?)
@@ -92,15 +98,15 @@ public extension String {
     }
     
     var heImageCacheEditFileName: String {
-        return self.toHEImageCacheIdentifier() + ".edit.png"
+        return self.toHEImageCacheIdentifier() + "+edit.png"
     }
     
     var heImageCacheFattenFileName: String {
-        return self.toHEImageCacheIdentifier() + ".fatten.png"
+        return self.toHEImageCacheIdentifier() + "+fatten.png"
     }
     
     var heImageCacheThumbFileName: String {
-        return self.toHEImageCacheIdentifier() + ".thumb.png"
+        return self.toHEImageCacheIdentifier() + "+thumb.png"
     }
 }
 
@@ -401,6 +407,7 @@ extension HESimpleEditImageStore {
         Task.detached {
             do {
                 try FileManager.default.removeItem(at: fileURL)
+                trace("removeFile - \(fileURL.absoluteString)")
             } catch {
                 woops(error)
             }
