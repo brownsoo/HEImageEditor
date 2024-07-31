@@ -72,6 +72,9 @@ public protocol HEImageDataStore {
     @discardableResult
     func replaceHEImage(at index: Int, with item: HEImage) -> Bool
     
+    @discardableResult
+    func replaceHEImage(_ exist: HEImage, with item: HEImage) -> Bool
+    
     func sorts(byIds ids: [String])
 }
 
@@ -175,6 +178,13 @@ public class HESimpleEditImageStore: HEEditImageStore {
     
     public func getHEImage(forId id: String) -> HEImage? {
         images.first(where: { $0.id == id })
+    }
+    
+    public func replaceHEImage(_ exist: HEImage, with item: HEImage) -> Bool {
+        if let index = images.firstIndex(where: { $0.id == exist.id }) {
+            return replaceHEImage(at: index, with: item)
+        }
+        return false
     }
     
     public func replaceHEImage(at index: Int, with item: HEImage) -> Bool {

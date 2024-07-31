@@ -1817,12 +1817,12 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     // FIXME: 어질어질.. 단순하게 계산할 수 있을까.
     private func applyMosaicImageToStickerView(_ stickerView: HEImageStickerView) {
-        let presentingRatio = getImagePresentingRatio()
+        let rr = getImagePresentingRatio()
         var inFrame = stickerView.frame.insetBy(dx: HEImageStickerView.edgeInset, dy: HEImageStickerView.edgeInset)
-        inFrame = CGRect(x: (inFrame.minX / presentingRatio),
-                       y: (inFrame.minY / presentingRatio),
-                       width: inFrame.width / presentingRatio,
-                       height: inFrame.height / presentingRatio)
+        inFrame = CGRect(x: (inFrame.minX / rr),
+                         y: (inFrame.minY / rr),
+                         width: inFrame.width / rr,
+                         height: inFrame.height / rr)
         //debugPrint("변형된 이미지 좌표계의 위치", frame.origin)
         
         let radian = currentClipStatus.rotation
@@ -2403,11 +2403,35 @@ extension HEEditImageViewController: HEStickerViewDelegate {
         }
         
         // 스티커 영역 계산 (이미지 정방향으로)
-        let stickerProjection = sticker.frame.he.rotate(rightAngle: Int(currentClipStatus.angle))
         
-        let containerProjection = containerView.bounds.he.rotate(rightAngle: Int(currentClipStatus.angle))
-        let intersection = stickerProjection.intersection(containerProjection)
-        // debugPrint(stickerProjection, containerProjection, intersection.size)
+        let rr = getImagePresentingRatio()
+        let editRect = currentClipStatus.editRect//.he.rotate(rightAngle: Int(currentClipStatus.angle)) // 눈에 보이는 영역을 회전 영역으로
+        let stickerRightFrame = stickersContainer.convert(sticker.frame, to: containerView)
+        
+        let inFrame = CGRect(x: stickerRightFrame.minX - editRect.minX * rr,
+                             y: stickerRightFrame.minY - editRect.minY * rr,
+                             width: sticker.frame.width,
+                             height: sticker.frame.height)
+//        let radian = currentClipStatus.rotation
+//        var newFrame = CGRect(x: inFrame.minX * cos(radian) + inFrame.minY * sin(radian) * -1,
+//                              y: inFrame.minX * sin(radian) + inFrame.minY * cos(radian),
+//                              width: inFrame.width,
+//                              height: inFrame.height)
+//        let a = ((Int(currentClipStatus.angle) % 360) - 360) % 360
+//        if a == -90 {
+//            newFrame.origin = CGPoint(x: newFrame.minY * -1, y: newFrame.minX)
+//        } else if a == -180 {
+//            newFrame.origin = CGPoint(x: newFrame.minX * -1, y: newFrame.minY * -1)
+//        } else if a == -270 {
+//            newFrame.origin = CGPoint(x: newFrame.minY, y: newFrame.minX * -1)
+//        }
+        
+//        let stickerProjection = sticker.frame.he.rotate(rightAngle: -Int(currentClipStatus.angle))
+        let containerProjection = containerView.bounds.he.rotate(rightAngle: -Int(currentClipStatus.angle))
+        let intersection = stickerRightFrame.intersection(containerProjection)
+        
+        debugPrint(inFrame, containerProjection, intersection.size)
+        
         if intersection.width <= 0 && intersection.height <= 0 {
             sticker.moveToTrashbin()
         } else {

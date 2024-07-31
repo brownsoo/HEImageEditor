@@ -33,6 +33,15 @@ open class HEImage: CustomDebugStringConvertible {
         self.updatedTime = Date().timeIntervalSince1970
     }
     
+    init(id: String,
+         origin: URL?,
+         originImage: UIImage?) {
+        self.id = id
+        self.originURL = origin
+        self.originImage = originImage
+        self.updatedTime = Date().timeIntervalSince1970
+    }
+    
     public func setEditImageURL(_ url: URL?) {
         self.editImageURL = url
         self.updatedTime = Date().timeIntervalSince1970
@@ -46,6 +55,18 @@ open class HEImage: CustomDebugStringConvertible {
     public func setThumbnailURL(_ url: URL?) {
         self.thumbnailURL = url
         self.updatedTime = Date().timeIntervalSince1970
+    }
+    
+    public func clone(withNewId newId: String) -> HEImage {
+        let hei = HEImage(id: newId,
+                          origin: self.originURL,
+                          originImage: self.originImage
+        )
+        hei.editImageURL = self.editImageURL
+        hei.fattenImageURL = self.fattenImageURL
+        hei.thumbnailURL = self.thumbnailURL
+        hei.updatedTime = self.updatedTime
+        return hei
     }
     
     open var debugDescription: String {
