@@ -2406,31 +2406,17 @@ extension HEEditImageViewController: HEStickerViewDelegate {
         
         let rr = getImagePresentingRatio()
         let editRect = currentClipStatus.editRect//.he.rotate(rightAngle: Int(currentClipStatus.angle)) // 눈에 보이는 영역을 회전 영역으로
+        
+        // 정방향 보이는 영역 내 위치
         let stickerRightFrame = stickersContainer.convert(sticker.frame, to: containerView)
+        // 보이는 편집된 영역
+        let inFrame = CGRect(x: 0,
+                             y: 0,
+                             width: editRect.width * rr,
+                             height: editRect.height * rr)
         
-        let inFrame = CGRect(x: stickerRightFrame.minX - editRect.minX * rr,
-                             y: stickerRightFrame.minY - editRect.minY * rr,
-                             width: sticker.frame.width,
-                             height: sticker.frame.height)
-//        let radian = currentClipStatus.rotation
-//        var newFrame = CGRect(x: inFrame.minX * cos(radian) + inFrame.minY * sin(radian) * -1,
-//                              y: inFrame.minX * sin(radian) + inFrame.minY * cos(radian),
-//                              width: inFrame.width,
-//                              height: inFrame.height)
-//        let a = ((Int(currentClipStatus.angle) % 360) - 360) % 360
-//        if a == -90 {
-//            newFrame.origin = CGPoint(x: newFrame.minY * -1, y: newFrame.minX)
-//        } else if a == -180 {
-//            newFrame.origin = CGPoint(x: newFrame.minX * -1, y: newFrame.minY * -1)
-//        } else if a == -270 {
-//            newFrame.origin = CGPoint(x: newFrame.minY, y: newFrame.minX * -1)
-//        }
-        
-//        let stickerProjection = sticker.frame.he.rotate(rightAngle: -Int(currentClipStatus.angle))
-        let containerProjection = containerView.bounds.he.rotate(rightAngle: -Int(currentClipStatus.angle))
-        let intersection = stickerRightFrame.intersection(containerProjection)
-        
-        debugPrint(inFrame, containerProjection, intersection.size)
+        let intersection = stickerRightFrame.intersection(inFrame)
+        debugPrint(inFrame, stickerRightFrame, intersection, separator: "       ")
         
         if intersection.width <= 0 && intersection.height <= 0 {
             sticker.moveToTrashbin()
