@@ -420,19 +420,22 @@ public class HEInputTextViewController: UIViewController {
         self.keyboardHeight = keyboardH
         
         let duration: TimeInterval = notify.userInfo?[UIApplication.keyboardAnimationDurationUserInfoKey] as? TimeInterval ?? 0.25
-        adjustTextViewFrame(duration: max(duration, 0.25))
+        adjustTextViewFrame(duration: max(duration, 0.18))
         
         if selectedTool == nil {
             selectedTool = .textColor
         }
-        showToolsView()
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
+            self.showToolsView()
+        }
         
     }
     
     @objc private func keyboardWillHide(_ notify: Notification) {
         let duration: TimeInterval = notify.userInfo?[UIApplication.keyboardAnimationDurationUserInfoKey] as? TimeInterval ?? 0.25
         self.keyboardHeight = 0
-        adjustTextViewFrame(duration: max(duration, 0.25))
+        adjustTextViewFrame(duration: max(duration, 0.18))
         selectedTool = nil
         hideToolsView()
     }

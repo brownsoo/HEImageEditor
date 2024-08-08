@@ -7,15 +7,10 @@ let package = Package(
     defaultLocalization: "en",
     platforms: [.iOS(.v14)],
     products: [
-        .library(
-            name: "HEImageEditor",
-            targets: ["HEImageEditor"]),
-        .library(
-            name: "HEImagePicker",
-            targets: ["HEImagePicker"]),
-        .library(
-            name: "HECommon",
-            targets: ["HECommon"]),
+        .library(name: "HEImagePackage", targets: ["HECommon", "HEImageEditor", "HEImagePicker"]),
+        .library(name: "HEImageEditor", targets: ["HEImageEditor"]),
+        .library(name: "HEImagePicker", targets: ["HEImagePicker"]),
+        .library(name: "HECommon", targets: ["HECommon"]),
     ],
     dependencies: [
         .package(url: "https://github.com/onevcat/Kingfisher.git", .upToNextMajor(from: "7.12.0")),
@@ -25,7 +20,7 @@ let package = Package(
             name: "HECommon",
             dependencies: [
                 .product(name: "Kingfisher", package: "Kingfisher"),
-            ],
+            ]
         ),
         .target(
             name: "HEImageEditor",

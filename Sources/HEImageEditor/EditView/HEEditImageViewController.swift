@@ -34,9 +34,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     public var filterColViewH: CGFloat = 90
     
     public var adjustColViewH: CGFloat = 76
-    
+    /// 휴지통 사이즈
     public var trashbinSize = CGSize(width: 56, height: 56)
-    
     
     /// 메인 컨테이터 뷰
     open lazy var mainScrollView: UIScrollView = {
@@ -51,8 +50,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     /// 메인 스크롤뷰의 컨텐츠 뷰
     ///
     /// - 여기에 이미지, 스티커 등 뷰가 포함
-    /// - frame이 화면 중앙, clipStatus.editSize 를 따름
-    /// - 클립된 눈에 보이는 영역
+    /// - frame이 화면 중앙, clipStatus.editSize 에 맞게 남은 이미지 영역을 표시
     open lazy var containerView: UIView = {
         let view = UIView()
         view.clipsToBounds = true
@@ -1615,9 +1613,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         self.present(vc, animated: false)
     }
     
-    
-    // TODO: 스티커 갯수 제한, 제스쳐 100 개 문제
-    
     // MARK: 스티커를 뷰로 추가 --
     
     private func getImageStickerTrayFrame() -> CGRect {
@@ -1687,12 +1682,10 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             } else {
                 image = (await sticker.imageLoader()).he.resize(newWidth: HEImageSticker.defaultImageRawSize.width)
             }
+            
             let scale = mainScrollView.zoomScale
             let stickerViewSize = HEImageStickerView.constraintViewSize(image: image, container: view)
             let originFrame = getStickerOriginFrame(stickerViewSize)
-            
-            
-            
             let imageSticker = HEImageStickerView(kind: sticker.kind,
                                                   image: image,
                                                   originScale: 1 / scale,
@@ -1702,6 +1695,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             if sticker.kind == .mosaic {
                 applyMosaicImageToStickerView(imageSticker)
             }
+            
             view.layoutIfNeeded()
             
             actionManager.storeAction(.sticker(oldState: nil, newState: imageSticker.state))
@@ -1816,9 +1810,11 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     }
     
     // FIXME: 어질어질.. 단순하게 계산할 수 있을까.
-    private func applyMosaicImageToStickerView(_ stickerView: HEImageStickerView) {
+    private func applyMosaicImageToStickerView(_ sticker: HEImageStickerView) {
         let rr = getImagePresentingRatio()
-        var inFrame = stickerView.frame.insetBy(dx: HEImageStickerView.edgeInset, dy: HEImageStickerView.edgeInset)
+        let stickerScale: CGFloat = sticker.gesScale
+        var inFrame = sticker.frame.insetBy(dx: HEImageStickerView.edgeInset * stickerScale,
+                                                dy: HEImageStickerView.edgeInset * stickerScale)
         inFrame = CGRect(x: (inFrame.minX / rr),
                          y: (inFrame.minY / rr),
                          width: inFrame.width / rr,
@@ -1848,7 +1844,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             .he.clipImage(angle: 0, editRect: newFrame, isCircle: true)?
             .he.rotate(radians: radian)
         {
-            stickerView.setImage(image)
+            sticker.setImage(image)
         }
     }
     
@@ -1899,7 +1895,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         sticker.frame = sticker.originFrame
         configSticker(sticker)
         
-        if sticker.kind != .mosaic {
+        if sticker.kind != .mosaic && sticker is HEImageStickerView {
             let transform = sticker.originTransform.scaledBy(x: 1.4, y: 1.4)
             sticker.transform = transform
             sticker.alpha = 0
@@ -1923,7 +1919,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         }
     }
     
-    // TODO: 탭으로 선택한 스티커만 제스쳐 처리
+    // FIXME: 너무 많은 제스쳐 등록으로 동작이 이상할 수 있음 (시스템 경고 100개 이상)
     private func configSticker(_ sticker: HEBaseStickerView) {
         sticker.delegate = self
         mainScrollView.pinchGestureRecognizer?.require(toFail: sticker.pinchGes)
@@ -2306,7 +2302,7 @@ extension HEEditImageViewController: UICollectionViewDataSource, UICollectionVie
     }
 }
 
-// MARK: HEInputTextViewControllerDelegate
+// MARK: 텍스트 입력 처리 - HEInputTextViewControllerDelegate
 
 extension HEEditImageViewController: HEInputTextViewControllerDelegate {
     func inputTextViewController(_ controller: HEInputTextViewController, stickerId: String?, didInput text: String, textColor: UIColor, fillColor: UIColor, font: UIFont, image: UIImage?) {
@@ -2346,7 +2342,7 @@ extension HEEditImageViewController: HEInputTextViewControllerDelegate {
 }
 
 
-// MARK: 스티커 조작: HEStickerViewDelegate --
+// MARK: 스티커 조작 - HEStickerViewDelegate --
 
 extension HEEditImageViewController: HEStickerViewDelegate {
     
@@ -2396,57 +2392,86 @@ extension HEEditImageViewController: HEStickerViewDelegate {
     }
     
     func stickerOnOperation(_ sticker: HEBaseStickerView, panGes: UIPanGestureRecognizer) {
-        if sticker.kind == .mosaic { // 모자이크 영역 이동
-            let inset = HEImageStickerView.edgeInset
-            mosaicImageLayerMaskLayer.path = CGPath(ellipseIn: sticker.frame.insetBy(dx: inset, dy: inset),
-                                                    transform: nil)
-        }
-        
         // 스티커 영역 계산 (이미지 정방향으로)
-        
         let rr = getImagePresentingRatio()
-        let editRect = currentClipStatus.editRect//.he.rotate(rightAngle: Int(currentClipStatus.angle)) // 눈에 보이는 영역을 회전 영역으로
-        
-        // 정방향 보이는 영역 내 위치
-        let stickerRightFrame = stickersContainer.convert(sticker.frame, to: containerView)
-        // 보이는 편집된 영역
+        let editRect = currentClipStatus.editRect // 눈에 보이는 이미지 영역
         let inFrame = CGRect(x: 0,
                              y: 0,
                              width: editRect.width * rr,
                              height: editRect.height * rr)
         
+        // 정방향 보이는 영역 내 위치
+        let stickerRightFrame = stickersContainer.convert(sticker.frame, to: containerView)
         let intersection = stickerRightFrame.intersection(inFrame)
-        debugPrint(inFrame, stickerRightFrame, intersection, separator: "       ")
+        //debugPrint(inFrame, stickerRightFrame, intersection, separator: "       ")
+        var trashed = false
         
         if intersection.width <= 0 && intersection.height <= 0 {
             sticker.moveToTrashbin()
+            trashed = true
         } else {
             let point = panGes.location(in: view)
             if trashbinView.frame.contains(point) {
-                trashbinView.backgroundColor = .he.trashbinTintBgColor
-                trashbinImgView.isHighlighted = true
+                trashed = true
                 if sticker.alpha == 1 {
+                    trashbinView.backgroundColor = .he.trashbinTintBgColor
+                    trashbinImgView.isHighlighted = true
                     sticker.layer.removeAllAnimations()
                     sticker.hideBorder()
                     
-                    UIView.animate(withDuration: 0.20, delay: 0, options: [.curveEaseOut]) {
-                        sticker.alpha = 0.5
-                        sticker.contentView.transform = CGAffineTransform(scaleX: 0.2, y: 0.2)
+                    let stickerCenter = containerView.convert(stickerRightFrame, to: view).center
+                    let moving = trashbinView.center.minus(stickerCenter)
+                    let zoomScale = 1 / mainScrollView.zoomScale / sticker.gesScale
+                    
+                    if sticker.kind == .mosaic { // 모자이크 이미지를 스티커에 반영
+                        mosaicStickerActiveContainer.isHidden = true
+                        if let stickerView = sticker as? HEImageStickerView {
+                            applyMosaicImageToStickerView(stickerView)
+                        }
+                    }
+                    
+                    UIView.animate(withDuration: 0.14, delay: 0, options: [.curveEaseOut]) {
+                        sticker.alpha = 0.2
+                        sticker.contentView.transform = CGAffineTransform(translationX: moving.x * zoomScale, y: moving.y * zoomScale).scaledBy(x: 0.1, y: 0.1)
                     }
                 }
             } else {
-                trashbinView.backgroundColor = .he.trashbinNormalBgColor
-                trashbinImgView.isHighlighted = false
                 if sticker.alpha != 1 {
+                    trashbinView.backgroundColor = .he.trashbinNormalBgColor
+                    trashbinImgView.isHighlighted = false
                     sticker.layer.removeAllAnimations()
                     
-                    UIView.animate(withDuration: 0.20, delay: 0, options: [.curveEaseOut], animations: {
+                    if sticker.kind == .mosaic { // 모자이크는 애니 X
                         sticker.alpha = 1
                         sticker.contentView.transform = CGAffineTransform.identity
-                    }) { comp in
-                        if comp { sticker.showBorder() }
+                        sticker.showBorder()
+                        self.mosaicStickerActiveContainer.isHidden = false
+                        trashed = false
+                    } else {
+                        UIView.animate(withDuration: 0.14, delay: 0, options: [.curveEaseOut], animations: {
+                            sticker.alpha = 1
+                            sticker.contentView.transform = CGAffineTransform.identity
+                        }) { comp in
+                            if comp {
+                                sticker.showBorder()
+                                self.mosaicStickerActiveContainer.isHidden = false
+                                trashed = false
+                            }
+                        }
+                        
                     }
                 }
+            }
+        }
+        
+        
+        if !trashed {
+            if sticker.kind == .mosaic { // 모자이크 영역 이동
+                let stickerScale: CGFloat = sticker.gesScale
+                let inFrame = sticker.frame.insetBy(dx: HEImageStickerView.edgeInset * stickerScale,
+                                                    dy: HEImageStickerView.edgeInset * stickerScale)
+                mosaicImageLayerMaskLayer.path = CGPath(ellipseIn: inFrame,
+                                                        transform: nil)
             }
         }
         

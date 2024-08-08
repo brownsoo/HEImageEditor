@@ -23,3 +23,21 @@ extension TimeInterval {
 
 // Combine Cancellable
 extension Task : Cancellable {}
+
+extension CGPoint {
+    func minus(_ dest: CGPoint) -> CGPoint {
+        CGPoint(x: self.x - dest.x,
+                y: self.y - dest.y)
+    }
+    
+    func plus(_ dest: CGPoint) -> CGPoint {
+        CGPoint(x: self.x + dest.x,
+                y: self.y + dest.y)
+    }
+}
+
+extension CGRect {
+    var center: CGPoint {
+        CGPoint(x: self.midX, y: self.midY)
+    }
+}

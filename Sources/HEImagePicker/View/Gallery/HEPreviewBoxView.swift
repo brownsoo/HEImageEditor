@@ -461,9 +461,6 @@ extension HEPreviewBoxView {
         let items = items()
         if index <= items.count && !isDefaultPreviewing() { // dataSource 가 먼저 값이 변경되어 <= 비교
             collView.deleteItems(at: [IndexPath(row: index, section: 0)])
-            if index - 1 >= 0 && items.count > 0 {
-                collView.scrollToItem(at: IndexPath(row: index - 1, section: 0), at: .centeredHorizontally, animated: abs(currentIndex - index) < 2)
-            }
             DispatchQueue.main.async {
                 self.changePreviewLayoutIfNeed()
             }

@@ -97,8 +97,8 @@ class HEImageStickerView: HEBaseStickerView {
         imageView.frame = bounds.insetBy(dx: Self.edgeInset, dy: Self.edgeInset)
     }
     
-    func setImage(_ image: UIImage) {
-        self.image = image
+    func setImage(_ image: UIImage?) {
+        self.image = image ?? UIImage()
         self.imageView.image = image
 //        imageView.drawDebugOutline()
     }

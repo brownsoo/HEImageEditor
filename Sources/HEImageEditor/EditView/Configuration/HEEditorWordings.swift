@@ -3,6 +3,8 @@
 //  HEImageEditor
 //
 
+import Foundation
+
 public struct HEEditorWordings {
     
     public var customRatio = localLanguageTextValue("custom ratio")

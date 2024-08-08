@@ -135,22 +135,18 @@ class HELibraryViewCell: UICollectionViewCell {
         setAccessibilityInfo()
     }
 
-    override var isSelected: Bool {
-        didSet { refreshSelection() }
-    }
-    
-    override var isHighlighted: Bool {
+    var isOverlaySelection: Bool = false {
         didSet { refreshSelection() }
     }
     
     private func refreshSelection() {
-        let showOverlay = isSelected 
+        let showOverlay = isOverlaySelection
         selectionOverlay.alpha = showOverlay ? 0.6 : 0
     }
 
     private func setAccessibilityInfo() {
         isAccessibilityElement = true
         self.accessibilityIdentifier = "HE.LibraryViewCell"
-        self.accessibilityLabel = "Library Image"
+        self.accessibilityLabel = "Library Media thumbnail image"
     }
 }

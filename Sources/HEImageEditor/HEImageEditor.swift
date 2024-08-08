@@ -55,6 +55,10 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
     
     public var initialIndex: Int = 0
     
+    open override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+        .portrait
+    }
+    
     private lazy var indexLabel: UILabel = {
        let lb = UILabel()
         lb.text = "0/0"
@@ -480,7 +484,7 @@ extension HEImageEditorViewController: UICollectionViewDataSource, UICollectionV
         let total = imageStore.numberOfImages()
         indexLabel.text = "\(ord) / \(total)"
         currentIndex = indexPath.row
-        trace()
+//        trace()
         
         if let cell = cell as? HEImageViewPageCell, let hei = imageStore.getHEImage(at: indexPath.row) {
             cell.loadImage(task: imageStore.editImage(forHei: hei))
@@ -501,7 +505,7 @@ extension HEImageEditorViewController: UICollectionViewDataSource, UICollectionV
         let total = imageStore.numberOfImages()
         indexLabel.text = "\(ord) / \(total)"
         currentIndex = index
-        trace()
+//        trace()
         
         if let hei = imageStore.getHEImage(at: index) {
             showResetToastIfNeed(isEdited: hei.editImageURL != nil)
@@ -548,8 +552,7 @@ class HEImageViewPageCell: UICollectionViewCell {
     }
     
     func loadImage(task: Task<UIImage, Error>) {
-        
-        trace()
+//        trace()
         imageView.image = nil
         imageLoadTask?.cancel()
         imageLoadTask = Task { [weak self] in

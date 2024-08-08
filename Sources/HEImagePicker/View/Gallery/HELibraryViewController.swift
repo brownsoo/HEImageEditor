@@ -535,25 +535,26 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     // MARK: - Stored Crop Position
     
     internal func updateCropInfo(assetIdentifier: String) {
-        guard let selectedAssetIndex = selectedItems.firstIndex(where: { $0.assetIdentifier == assetIdentifier }) else {
-            return
-        }
-        
-        if selectedItems[selectedAssetIndex].scrollViewContentOffset != nil {
-            return
-        }
-        
-        // Fill new values
-        var selection = selectedItems[selectedAssetIndex]
-        selection.scrollViewContentOffset = v.previewBox.currentZoomableView?.contentOffset
-        selection.scrollViewZoomScale = v.previewBox.currentZoomableView?.zoomScale
-        selection.cropRect = v.currentCropRect()
-        
-        // Replace
-        selectedItems.remove(at: selectedAssetIndex)
-        selectedItems.insert(selection, at: selectedAssetIndex)
-        
-        trace()
+        // 개별 크롭, 스케일링 저장 제외 - 미사용
+//        guard let selectedAssetIndex = selectedItems.firstIndex(where: { $0.assetIdentifier == assetIdentifier }) else {
+//            return
+//        }
+//        
+//        if selectedItems[selectedAssetIndex].scrollViewContentOffset != nil {
+//            return
+//        }
+//        
+//        // Fill new values
+//        var selection = selectedItems[selectedAssetIndex]
+//        selection.scrollViewContentOffset = v.previewBox.currentZoomableView?.contentOffset
+//        selection.scrollViewZoomScale = v.previewBox.currentZoomableView?.zoomScale
+//        selection.cropRect = v.currentCropRect()
+//        
+//        // Replace
+//        selectedItems.remove(at: selectedAssetIndex)
+//        selectedItems.insert(selection, at: selectedAssetIndex)
+//        
+//        trace()
         
     }
     
@@ -640,9 +641,14 @@ extension HELibraryViewController: HEPreviewBoxViewDelegate {
         }
         
         if foundIndex > -1 {
-            currentlySelectedIdentifier = selection.assetIdentifier
+            let prev = currentlySelectedIdentifier
+            let currentlySelected = selection.assetIdentifier
+            self.currentlySelectedIdentifier = currentlySelected
+            
             v.albumCollectionView.visibleCells.compactMap({ $0 as? HELibraryViewCell }).forEach { cell in
-                cell.isSelected = cell.bindingAssetIdentifier == selection.assetIdentifier
+                if cell.bindingAssetIdentifier == prev || cell.bindingAssetIdentifier == currentlySelected {
+                    updateLibraryCellUI(cell, currentlySelected: currentlySelected)                    
+                }
             }
         }
         

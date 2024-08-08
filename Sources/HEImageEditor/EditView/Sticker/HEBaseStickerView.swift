@@ -254,7 +254,7 @@ public class HEBaseStickerView: UIView, UIGestureRecognizerDelegate {
             setOperation(true)
         } else if ges.state == .changed {
             updateTransform()
-        } else if ges.state == .ended || ges.state == .cancelled {
+        } else if ges.state == .ended || ges.state == .cancelled || ges.state == .failed {
             if gesTranslationPoint == .zero {
                 setOperation(false)
             }
@@ -271,7 +271,7 @@ public class HEBaseStickerView: UIView, UIGestureRecognizerDelegate {
             setOperation(true)
         } else if ges.state == .changed {
             updateTransform()
-        } else if ges.state == .ended || ges.state == .cancelled || self.onOperation {
+        } else if ges.state == .ended || ges.state == .cancelled || ges.state == .failed || self.onOperation {
             totalTranslationPoint.x += point.x
             totalTranslationPoint.y += point.y
             setOperation(false)

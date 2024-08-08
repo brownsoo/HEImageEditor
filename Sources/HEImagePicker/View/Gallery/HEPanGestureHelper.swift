@@ -46,8 +46,6 @@ class HEPanGestureHelper: NSObject, UIGestureRecognizerDelegate {
             if newValue != isImageShown {
                 self._isImageShown = newValue
                 libView.previewBox.isShown = newValue
-                // Update imageCropContainer
-                libView.previewBox.reload()
             }
         }
     }

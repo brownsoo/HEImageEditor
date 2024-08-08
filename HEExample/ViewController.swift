@@ -286,12 +286,18 @@ extension ViewController: HEImagePickerDelegate {
     func imagePicker(_ picker: HEImagePicker, didSelectItems items: [HEMediaItem]) {
         print(items)
         picker.dismiss(animated: true) {
-            if let photo = items.singlePhoto,
-               let hei = picker.editImageStore.getHEImage(forId: photo.identifier),
-                let editURL = hei.editImageURL {
-                
-                if let data = try? Data(contentsOf: editURL) {
-                    self.resultImageView.image = UIImage(data: data)
+            Task {
+                if let photo = items.singlePhoto {
+                    if let hei = picker.editImageStore.getHEImage(forId: photo.identifier),
+                       let editURL = hei.editImageURL {
+                        debugPrint(hei)
+                        if let data = try? Data(contentsOf: editURL) {
+                            self.resultImageView.image = UIImage(data: data)
+                        }
+                    } else if let asset = photo.asset, asset.playbackStyle == .imageAnimated {
+                        debugPrint("GIF 원본이다!!", photo)
+                        
+                    }
                 }
             }
         }
@@ -379,10 +385,10 @@ extension ViewController {
     @objc func pickWithHEPicker() {
         
         var config = HEImagePickerConfiguration()
-        config.pickerSources = [.libraryPick, .photoCapture, .videoCapture]
+        config.pickerSources = [.libraryPick, .photoCapture]
         config.shouldSaveNewPicturesToAlbum = true
         config.targetImageSize = .cappedTo(size: 1500)
-        config.library.mediaType = .photoAndVideo
+        config.library.mediaType = .photo
         config.library.defaultMultipleSelection = true
         config.library.maxNumberOfItems = 100
         
