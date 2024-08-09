@@ -13,6 +13,7 @@ import Photos
 var PickerConfig: HEImagePickerConfiguration {
     HEImagePickerConfiguration.shared
 }
+
 /// 앨범 조회 미디어 타입
 public enum HELibraryMediaType {
     case photo
@@ -98,6 +99,11 @@ public struct HEImagePickerConfiguration {
     ///
     /// Defaults to true.
     public var shouldSaveNewPicturesToAlbum = true
+    
+    /// library.mediaType 과 상관없이 첫번째 선택한 타입만 선택할 수 있도록 제한 여부
+    ///
+    /// defaults to false
+    public var shouldSelectSingleType = false
     
     /// Defines the name of the album when saving pictures in the user's photo library.
     public var albumName = "하이클래스"
@@ -216,7 +222,7 @@ public struct HEImagePickerConfiguration {
         /// In bytes. 100000000 is 100 MB.
         /// AVCaptureMovieFileOutput.maxRecordedFileSize.
         public var recordingSizeLimit: Int64?
-
+        
         /// Minimum free space when recording videos.
         /// AVCaptureMovieFileOutput.minFreeDiskSpaceLimit.
         public var minFreeDiskSpaceLimit: Int64 = 1024 * 1024
@@ -228,6 +234,11 @@ public struct HEImagePickerConfiguration {
         /// Defines the minimum time for the video
         /// Defaults to 1 seconds.
         public var minimumTimeLimit: TimeInterval = 0.1
+        
+        /// 비디오 선택시 시간 제한 여부
+        ///
+        /// Defaults to false
+        public var limitVideoTimeLImit = false
         
         /// max file size for video to select
         ///

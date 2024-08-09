@@ -27,6 +27,10 @@ extension HELibraryViewController {
         return HELibrarySelection(assetIdentifier: asset.localIdentifier, isDefaultPreviewing: true)
     }
     
+    func getVisibleCells() -> [HELibraryViewCell] {
+        v.albumCollectionView.visibleCells.compactMap({ $0 as? HELibraryViewCell })
+    }
+    
     // MARK: - Library collection view cell managing
     
     /// Removes cell from selection
@@ -49,7 +53,7 @@ extension HELibraryViewController {
             currentlySelectedIdentifier = getSelectionForJustPreview()?.assetIdentifier
         }
         let currentlySelected = currentlySelectedIdentifier
-        v.albumCollectionView.visibleCells.compactMap({ $0 as? HELibraryViewCell }).forEach { cell in
+        getVisibleCells().forEach { cell in
             updateLibraryCellUI(cell, currentlySelected: currentlySelected)
         }
         
@@ -136,6 +140,21 @@ extension HELibraryViewController {
     /// Checks if there can be selected more items. If no - present warning.
     func checkLimit() {
         updateUI()
+        
+        if PickerConfig.shouldSelectSingleType {
+            let prev = shouldSelectingMediaType
+            DispatchQueue.main.async {
+                var changes: PHAssetMediaType? = nil
+                if let identifier = self.selectedItems.filter({ !$0.isJustPreviewing }).first?.assetIdentifier,
+                   let phAsset = PHAsset.fetchAssets(withLocalIdentifiers: [identifier], options: nil).firstObject {
+                    changes = phAsset.mediaType
+                }
+                if prev != changes {
+                    self.shouldSelectingMediaType = changes
+                    self.v.albumCollectionView.reloadData()
+                }
+            }
+        }
     }
 }
 
@@ -207,8 +226,6 @@ extension HELibraryViewController: UICollectionViewDelegate {
             cell.durationLabel.isHidden = true
         }
         
-        // updateLibraryCellUI(cell)
-        
         return cell
     }
     
@@ -222,6 +239,11 @@ extension HELibraryViewController: UICollectionViewDelegate {
         }
         
         cell.isOverlaySelection = cell.bindingAssetIdentifier == currentlySelected
+        if let type = self.shouldSelectingMediaType {
+            cell.isSelectable = cell.bindingMediaType == type
+        } else {
+            cell.isSelectable = true
+        }
         
         // Set correct selection number
         if let index = selectedItems.firstIndex(where: { $0.assetIdentifier == cell.bindingAssetIdentifier }) {
@@ -254,13 +276,19 @@ extension HELibraryViewController: UICollectionViewDelegate {
     public func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
         guard let cell = cell as? HELibraryViewCell else { return }
         cell.loadImage()
-        //cell.isOverlaySelection = currentlySelectedIdentifier == cell.bindingAssetIdentifier
+        
         updateLibraryCellUI(cell, currentlySelected: self.currentlySelectedIdentifier)
     }
     
     public func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         guard let cell = collectionView.cellForItem(at: indexPath) as? HELibraryViewCell else { return }
-        let previouslySelected = currentlySelectedIdentifier ?? ""
+        
+        if !cell.isSelectable {
+            self.shouldSelectingMediaTypeBlockedCallback?(self.shouldSelectingMediaType)
+            return
+        }
+        
+        let previouslySelected = currentlySelectedIdentifier
         let currentlySelected = cell.bindingAssetIdentifier
         self.currentlySelectedIdentifier = currentlySelected
         
@@ -287,16 +315,20 @@ extension HELibraryViewController: UICollectionViewDelegate {
             } else if isLimitExceeded == false {
                 if addToSelection(indexPath: indexPath) {
                     v.previewBox.inserted(at: selectedItems.count - 1)
+                } else {
+                    self.currentlySelectedIdentifier = previouslySelected
                 }
             } else if isLimitExceeded {
-                // 갯수제한 얼럿 
-                showAlert(String(format: PickerConfig.wordings.warningMaxItemsLimit, arguments:  [PickerConfig.library.maxNumberOfItems]))
+                self.currentlySelectedIdentifier = previouslySelected
+                // 갯수제한 얼럿
+                self.limitExceededCallback?(cell.bindingMediaType)
             }
             
+            let resolvedSelected = self.currentlySelectedIdentifier
             DispatchQueue.main.async {
-                collectionView.visibleCells.compactMap({ $0 as? HELibraryViewCell }).forEach { cell in
+                self.getVisibleCells().forEach { cell in
                     if cell.bindingAssetIdentifier == previouslySelected || cell.bindingAssetIdentifier == currentlySelected {
-                        self.updateLibraryCellUI(cell, currentlySelected: currentlySelected)
+                        self.updateLibraryCellUI(cell, currentlySelected: resolvedSelected)
                     }
                 }
             }
@@ -306,13 +338,14 @@ extension HELibraryViewController: UICollectionViewDelegate {
             if addToSelection(indexPath: indexPath) {
                 v.previewBox.reload()
             }
-            // Force deseletion of previously selected cell.
-            // In the case where the previous cell was loaded from iCloud, a new image was fetched
-            // which triggered photoLibraryDidChange() and reloadItems() which breaks selection.
-            //
-            if let previouslySelectedIndexPath = findIndexPathInCurrentAlbum(identifier: previouslySelected),
-               let previousCell = collectionView.cellForItem(at: previouslySelectedIndexPath) as? HELibraryViewCell {
-                previousCell.isOverlaySelection = false
+            
+            let resolvedSelected = self.currentlySelectedIdentifier
+            DispatchQueue.main.async {
+                self.getVisibleCells().forEach { cell in
+                    if cell.bindingAssetIdentifier == previouslySelected || cell.bindingAssetIdentifier == currentlySelected {
+                        self.updateLibraryCellUI(cell, currentlySelected: resolvedSelected)
+                    }
+                }
             }
         }
     }

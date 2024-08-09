@@ -7,6 +7,7 @@
 
 import Foundation
 import UIKit
+import Photos
 
 open class HEImage: CustomDebugStringConvertible {
     
@@ -18,28 +19,33 @@ open class HEImage: CustomDebugStringConvertible {
     public internal(set) var editImageURL: URL?
     public internal(set) var fattenImageURL: URL?
     public internal(set) var thumbnailURL: URL?
+    public internal(set) var phAsset: PHAsset?
     
-    public init(id: String = UUID().uuidString, origin: URL) {
+    public init(id: String = UUID().uuidString, origin: URL, phAsset: PHAsset? = nil) {
         self.id = id
         self.originURL = origin
         self.originImage = nil
         self.updatedTime = Date().timeIntervalSince1970
+        self.phAsset = phAsset
     }
     
-    public init(id: String = UUID().uuidString, image: UIImage) {
+    public init(id: String = UUID().uuidString, image: UIImage, phAsset: PHAsset? = nil) {
         self.id = id
         self.originURL = nil
         self.originImage = image
         self.updatedTime = Date().timeIntervalSince1970
+        self.phAsset = phAsset
     }
     
     init(id: String,
          origin: URL?,
-         originImage: UIImage?) {
+         originImage: UIImage?,
+         phAsset: PHAsset?) {
         self.id = id
         self.originURL = origin
         self.originImage = originImage
         self.updatedTime = Date().timeIntervalSince1970
+        self.phAsset = phAsset
     }
     
     public func setEditImageURL(_ url: URL?) {
@@ -57,10 +63,15 @@ open class HEImage: CustomDebugStringConvertible {
         self.updatedTime = Date().timeIntervalSince1970
     }
     
+    public func setPHAsset(_ asset: PHAsset?) {
+        self.phAsset = asset
+    }
+    
     public func clone(withNewId newId: String) -> HEImage {
         let hei = HEImage(id: newId,
                           origin: self.originURL,
-                          originImage: self.originImage
+                          originImage: self.originImage,
+                          phAsset: self.phAsset
         )
         hei.editImageURL = self.editImageURL
         hei.fattenImageURL = self.fattenImageURL
@@ -72,12 +83,13 @@ open class HEImage: CustomDebugStringConvertible {
     open var debugDescription: String {
         """
 HEImage::
-- id\(id)
-- originURL: \(originURL?.absoluteString ?? "nil")
-- editImageURL: \(editImageURL?.absoluteString ?? "nil")
-- fattenImageURL: \(fattenImageURL?.absoluteString ?? "nil")
-- thumbnailURL: \(thumbnailURL?.absoluteString ?? "nil")
-- updatedTime: \(updatedTime)
+    - \(id)
+    - originURL: \(originURL?.absoluteString ?? "nil")
+    - editImageURL: \(editImageURL?.absoluteString ?? "nil")
+    - fattenImageURL: \(fattenImageURL?.absoluteString ?? "nil")
+    - thumbnailURL: \(thumbnailURL?.absoluteString ?? "nil")
+    - updatedTime: \(updatedTime)
+    - phAsset: \(self.phAsset?.localIdentifier ?? "nil")
 """
     }
 }

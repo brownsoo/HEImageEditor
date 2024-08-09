@@ -67,4 +67,6 @@ public struct HEPickerWordings {
     public var filter = pickerLocalized("_filter")
     public var crop = pickerLocalized("_crop")
     public var warningMaxItemsLimit = pickerLocalized("_warningItemsLimit")
+    public var onlyVideoSelectable = pickerLocalized("_only_video_selectable")
+    public var onlyImageSelectable = pickerLocalized("_only_image_selectable")
 }

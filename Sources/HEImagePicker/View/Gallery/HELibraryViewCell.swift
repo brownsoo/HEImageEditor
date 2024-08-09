@@ -139,8 +139,12 @@ class HELibraryViewCell: UICollectionViewCell {
         didSet { refreshSelection() }
     }
     
+    var isSelectable: Bool = true {
+        didSet { refreshSelection() }
+    }
+    
     private func refreshSelection() {
-        let showOverlay = isOverlaySelection
+        let showOverlay = isOverlaySelection || !isSelectable
         selectionOverlay.alpha = showOverlay ? 0.6 : 0
     }
 

@@ -86,7 +86,9 @@ public extension HEImage {
         
         return HEMediaPhoto(identifier: hei.id,
                             url: originURL,
-                            extraTask: extraTask)
+                            extraTask: extraTask,
+                            asset: self.phAsset
+        )
     }
 }
 

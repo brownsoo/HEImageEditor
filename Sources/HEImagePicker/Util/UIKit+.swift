@@ -7,6 +7,7 @@
 
 import UIKit
 import Photos
+import HECommon
 
 extension UIBarButtonItem {
     func setFont(font: UIFont?, forState state: UIControl.State) {
@@ -67,7 +68,16 @@ extension UIViewController {
         DispatchQueue.main.async {
             let okayAction = UIAlertAction(title: PickerConfig.wordings.confirm, style: .default, handler: confirmAction)
             alert.addAction(okayAction)
-            self.present(alert, animated: true, completion: nil)
+            var vc = self
+            while true {
+                if let v = vc.presentedViewController, !(v is UIAlertController) {
+                    vc = v
+                } else {
+                    break
+                }
+            }
+            
+            vc.present(alert, animated: true, completion: nil)
         }
         return alert
     }

@@ -41,3 +41,5 @@
 "_edited" = "Edited";
 "_library_changed_alert" = "Library Photos are changed.";
 "_photos_empty_messge" = "None photos.";
+"_only_video_selectable" = "Only video type can selectable.";
+"_only_image_selectable" = "Only image type can selectable.";

@@ -8,6 +8,7 @@
 import Foundation
 import UIKit
 import HECommon
+import Photos
 
 @MainActor
 public protocol HEImagePickerDelegate: AnyObject {
@@ -30,6 +31,10 @@ public protocol HEImagePickerDelegate: AnyObject {
     ///
     /// - PickerConfig.shouldSaveNewPicturesToAlbum 가 false 일 때, 호출된다.
     func imagePicker(_ picker: HEImagePicker, didCaptureItem item: HEMediaItem)
+    /// 해당 타임을 선택할 수 없음
+    func imagePicker(_ picker: HEImagePicker, cannotSelectItemType type: PHAssetMediaType?)
+    /// 선택 가능한 수를 초과함
+    func imagePicker(_ picker: HEImagePicker, limitExceededOnSelectItemType type: PHAssetMediaType)
 }
 
 public extension HEImagePickerDelegate {
@@ -56,6 +61,18 @@ public extension HEImagePickerDelegate {
     }
     func imagePicker(_ picker: HEImagePicker, didSelectToEditItem item: HEMediaItem, inItems items: [HEMediaItem]) {}
     func imagePicker(_ picker: HEImagePicker, didCaptureItem item: HEMediaItem) {}
+    
+    func imagePicker(_ picker: HEImagePicker, cannotSelectItemType type: PHAssetMediaType?) {
+        if type == .image {
+            (self as? UIViewController)?.showAlert(PickerConfig.wordings.onlyImageSelectable, confirmAction: nil)
+        } else {
+            (self as? UIViewController)?.showAlert(PickerConfig.wordings.onlyVideoSelectable, confirmAction: nil)
+        }
+    }
+    
+    func imagePicker(_ picker: HEImagePicker, limitExceededOnSelectItemType type: PHAssetMediaType) {
+        (self as? UIViewController)?.showAlert(String(format: PickerConfig.wordings.warningMaxItemsLimit, arguments:  [PickerConfig.library.maxNumberOfItems]))
+    }
 }
 
 /// 이미지 피커
@@ -108,6 +125,16 @@ open class HEImagePicker: UINavigationController, HEPickerNavigationController {
         navigationBar.tintColor = .ypLabel
         view.backgroundColor = .ypSystemBackground
         mainVc.delegate = self
+        mainVc.shouldSelectingMediaTypeBlockedCallback = { [weak self] type in
+            if let self {
+                self.pickerDelegate?.imagePicker(self, cannotSelectItemType: type)
+            }
+        }
+        mainVc.limitExceededCallback = { [weak self] type in
+            if let self {
+                self.pickerDelegate?.imagePicker(self, limitExceededOnSelectItemType: type)
+            }
+        }
     }
     
     public func reload() {

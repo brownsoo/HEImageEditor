@@ -24,7 +24,7 @@ extension HELibraryViewController {
         if PickerConfig.allowPickWithoutSelection,
            let identifier = self.v.previewBox.currentZoomableView?.currentAssetIdentifier {
             if let hei = self.editImageStore.getHEImage(forId: identifier) {
-                previewSelection = [(nil, hei, nil)]
+                previewSelection = [(hei.phAsset, hei, nil)]
             } else if let asset = self.assetMediaManager.fetchAsset(assetIdentifier: identifier) {
                 previewSelection = [(asset, nil, nil)]
             } else {
@@ -36,7 +36,7 @@ extension HELibraryViewController {
             
             var selectedItems: [(asset: PHAsset?, hei: HEImage?, cropRect: CGRect?)] = self.selectedItems.compactMap {
                 if let hei = self.editImageStore.getHEImage(forId: $0.assetIdentifier) {
-                    return (nil, hei, $0.cropRect)
+                    return (hei.phAsset, hei, $0.cropRect)
                 }
                 if let asset = PHAsset.fetchAssets(withLocalIdentifiers: [$0.assetIdentifier], options: PHFetchOptions()).firstObject {
                     return (asset, nil, $0.cropRect)

@@ -51,6 +51,13 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     internal var initialStatusBarHidden = false
     internal var v = HELibraryView(frame: .zero)
     internal let attachButton = HELibraryAttachButton()
+    internal var shouldSelectingMediaType: PHAssetMediaType? = nil {
+        didSet {
+            trace(shouldSelectingMediaType)
+        }
+    }
+    internal var shouldSelectingMediaTypeBlockedCallback: ((PHAssetMediaType?) -> Void)?
+    internal var limitExceededCallback: ((PHAssetMediaType) -> Void)?
     
     internal var isProcessing = false // true if video or image is in processing state
     internal var selectedItems = [HELibrarySelection]()
@@ -129,8 +136,8 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
         
         v.countButton.addTarget(self, action: #selector(countButtonTapped), for: .touchUpInside)
         v.albumNameBt.addTarget(self, action: #selector(albumListTapped), for: .touchUpInside)
-        v.cameraPhotoButton?.addTarget(self, action: #selector(imageCaptureTapped), for: .touchUpInside)
-        v.cameraVideoButton?.addTarget(self, action: #selector(videoCaptureTapped), for: .touchUpInside)
+        v.cameraPhotoButton?.addTarget(self, action: #selector(cameraCaptureTapped), for: .touchUpInside)
+
         navigationItem.leftBarButtonItem = UIBarButtonItem(image: PickerConfig.icons.backButtonIcon,
                                                            style: .plain,
                                                            target: self,
@@ -224,6 +231,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     @objc
     private func countButtonTapped() {
         selectedItems.removeAll()
+        shouldSelectingMediaType = nil
         v.albumCollectionView.reloadData()
         v.previewBox.reload()
     }
@@ -244,30 +252,22 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     }
     
     @objc
-    private func imageCaptureTapped() {
-        if UIImagePickerController.isSourceTypeAvailable(.camera) {
-            doAfterCameraPermissionCheck { [weak self] in
-                guard let self else { return }
-                let picker = UIImagePickerController()
-                picker.delegate = self
-                picker.sourceType = .camera
-                picker.mediaTypes = [UTType.image.identifier]
-                showDetailViewController(picker, sender: nil)
-            }
-        } else {
-            showAlert(PickerConfig.wordings.noSupportCameraDevice, confirmAction: nil)
+    private func cameraCaptureTapped() {
+        var mediaTypes: [String] = []
+        if PickerConfig.pickerSources.contains(.photoCapture) {
+            mediaTypes.append(UTType.image.identifier)
         }
-    }
-    
-    @objc
-    private func videoCaptureTapped() {
+        if PickerConfig.pickerSources.contains(.videoCapture) {
+            mediaTypes.append(UTType.movie.identifier)
+        }
+        
         if UIImagePickerController.isSourceTypeAvailable(.camera) {
             doAfterCameraPermissionCheck { [weak self] in
                 guard let self else { return }
                 let picker = UIImagePickerController()
                 picker.delegate = self
                 picker.sourceType = .camera
-                picker.mediaTypes = [UTType.movie.identifier]
+                picker.mediaTypes = mediaTypes
                 showDetailViewController(picker, sender: nil)
             }
         } else {
@@ -518,6 +518,10 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
             return true
         }
         
+        guard PickerConfig.video.limitVideoTimeLImit else {
+            return true
+        }
+        
         let tooLong = floor(asset.duration) > PickerConfig.video.libraryTimeLimit
         let tooShort = floor(asset.duration) < PickerConfig.video.minimumTimeLimit
         
@@ -721,7 +725,7 @@ extension HELibraryViewController: UIImagePickerControllerDelegate, UINavigation
             if let url {
                 didVideoCaptured(videoURL: url)
             } else {
-                let alert = UIHelper.cannotFindMediaAlert(v.cameraVideoButton ?? v.previewBox)
+                let alert = UIHelper.cannotFindMediaAlert(v.previewBox)
                 self.present(alert, animated: true)
             }
         } else if mediaType == UTType.image.identifier {

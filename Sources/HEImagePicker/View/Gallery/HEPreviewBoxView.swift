@@ -547,14 +547,14 @@ extension HEPreviewBoxView: UICollectionViewDelegateFlowLayout, UICollectionView
                 if let hei = self.editImageStore?.getHEImage(forId: item.assetIdentifier) {
                     heiImage = hei
                     if hei.updatedTime == cell.bindingTime {
-                        debugPrint("방어")
+                        //debugPrint("방어")
                         return
                     }
                 } else if let asset = PHAsset.fetchAssets(withLocalIdentifiers: [item.assetIdentifier], options: PHFetchOptions()).firstObject {
                     phAsset = asset
                     let dateTime = asset.markDate?.timeIntervalSince1970
                     if dateTime == cell.bindingTime {
-                        debugPrint("방어")
+                        //debugPrint("방어")
                         return
                     }
                 } else {

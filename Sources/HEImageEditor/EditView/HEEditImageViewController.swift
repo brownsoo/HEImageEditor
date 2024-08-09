@@ -1050,6 +1050,13 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             guard let self else { return }
             self.selectedTool = nil
             self.imageStickerTray?.hide()
+            
+            if EditorConfig.actionDoneEditorWhenImageStickerEditingConfirm {
+                self.modalTransitionStyle = .crossDissolve
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    self.cancel()
+                }
+            }
         }
         
         let trayFrame = getImageStickerTrayFrame()

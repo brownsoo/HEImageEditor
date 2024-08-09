@@ -90,7 +90,6 @@ final class HELibraryView: UIView {
     }()
     
     internal var cameraPhotoButton: UIButton?
-    internal var cameraVideoButton: UIButton?
     internal let countView = UIView()
     internal let countButton: UIButton = {
         let bt = UIButton(frame: CGRect(origin: .zero, size: CGSize(width: 32, height: 32)))
@@ -295,29 +294,8 @@ final class HELibraryView: UIView {
         }
         
         // 카메라 사용 여부에 따라 버튼 추가
-        if PickerConfig.pickerSources.contains(.videoCapture)
-            && (PickerConfig.library.mediaType == .photoAndVideo || PickerConfig.library.mediaType == .video) {
-            let iconImage = PickerConfig.icons.videoFillIcon?.withTintColor(.white, renderingMode: .alwaysOriginal).he.resize(CGSize(width: 16, height: 16))
-            let iconView = UIImageView(frame: .init(origin: .zero, size: CGSize(width: 32, height: 32)))
-            iconView.contentMode = .center
-            iconView.backgroundColor = UIColor(white: 136 / 255.0, alpha: 1.0)
-            iconView.layer.cornerRadius = 16
-            iconView.layer.masksToBounds = true
-            iconView.image = iconImage
-            let renderer = UIGraphicsImageRenderer(bounds: .init(origin: .zero, size: CGSize(width: 32, height: 32)))
-            let icon = renderer.image { rendererContext in
-                iconView.layer.render(in: rendererContext.cgContext)
-            }
-            
-            let bt = UIButton(frame: .init(origin: .zero, size: CGSize(width: 42, height: 42)))
-            bt.contentEdgeInsets = .init(top: 5, left: 5, bottom: 5, right: 5)
-            bt.setImage(icon, for: .normal)
-            rearStack.addArrangedSubview(bt)
-            cameraVideoButton = bt
-        }
-        
         if PickerConfig.pickerSources.contains(.photoCapture)
-            && (PickerConfig.library.mediaType == .photoAndVideo || PickerConfig.library.mediaType == .photo) {
+            || PickerConfig.pickerSources.contains(.videoCapture) {
             let iconView = UIImageView(frame: .init(origin: .zero, size: CGSize(width: 32, height: 32)))
             iconView.contentMode = .center
             iconView.backgroundColor = UIColor(white: 136 / 255.0, alpha: 1.0)

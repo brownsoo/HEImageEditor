@@ -38,6 +38,8 @@
 "_noSelectionToEdit" = "편집할 대상을 찾지 못했습니다.";
 "_cannotFindMediaFile" = "미디어 파일을 찾지 못했습니다.";
 "_videoTooHeavy" = "%@MB 이하인 동영상을 선택해주세요.";
-"_edited" = "편집 상태";
+"_edited" = "편집 적용";
 "_library_changed_alert" = "사진 앨범 정보가 업데이트 되었습니다.";
 "_photos_empty_messge" = "사진이 없습니다.";
+"_only_video_selectable" = "동영상만 선택 가능합니다.";
+"_only_image_selectable" = "이미지만 선택 가능합니다.";

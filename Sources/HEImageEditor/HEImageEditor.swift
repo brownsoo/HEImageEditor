@@ -18,6 +18,7 @@ public protocol HEImageEditor: UIViewController {
 
 public protocol HEImageEditorDelegate: AnyObject {
     func didFinishEditImages(_ editor: HEImageEditor)
+    func didCancelEditImages(_ editor: HEImageEditor)
     func confirmingResetEditImage(_ editor: HEImageEditor, hei: HEEditImage, completion: @escaping (Bool) -> Void)
     
     func cannotAttachMoreImageStickers(_ editor: HEImageEditor)
@@ -25,6 +26,7 @@ public protocol HEImageEditorDelegate: AnyObject {
 }
 
 public extension HEImageEditorDelegate {
+//    func didCancelEditImages(_ editor: HEImageEditor) {}
     func confirmingResetEditImage(_ editor: HEImageEditor, hei: HEEditImage, completion: @escaping (Bool) -> Void) {
         completion(true)
     }
@@ -171,6 +173,8 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
     
     @objc
     private func didClickCancel() {
+        delegate?.didCancelEditImages(self)
+        
         if let nc = self.navigationController, nc.viewControllers.count > 1 {
             nc.popViewController(animated: true)
         } else {

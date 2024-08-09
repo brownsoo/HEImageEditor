@@ -145,6 +145,11 @@ extension ViewController: HEImageStickerTrayViewDataSource {
 }
 
 extension ViewController: HEImageEditorDelegate {
+    
+    func didCancelEditImages(_ editor: HEImageEditor) {
+        debugPrint("== didCancelEditImages ==")
+    }
+    
     func didFinishEditImages(_ editor: HEImageEditor) {
         debugPrint("== didFinishEditImages ==")
         if let picker = editor.navigationController as? HEImagePicker {
@@ -324,7 +329,8 @@ extension ViewController: HEImagePickerDelegate {
                 } else {
                     news.append(HEEditImage(id: photo.identifier,
                                             origin: photo.url,
-                                            editState: nil))
+                                            editState: nil,
+                                            phAsset: photo.asset))
                 }
                 break
             case .video(_):
@@ -342,10 +348,36 @@ extension ViewController: HEImagePickerDelegate {
         vc.initialIndex = items.firstIndex(where: { $0.identifier == item.identifier }) ?? 0
         picker.pushViewController(vc, animated: true)
     }
+    
+    func imagePicker(_ picker: HEImagePicker, shouldAddToSelection identifier: String, numSelections: Int) -> Bool {
+        if numSelections > 0,
+           let asset = PHAsset.fetchAssets(withLocalIdentifiers: [identifier], options: nil).firstObject {
+            if asset.mediaType == .video {
+                let alert = UIAlertController(title: nil, message: "동영상은 1개까지 선택 가능합니다.", preferredStyle: .alert)
+                let okayAction = UIAlertAction(title: "확인", style: .default, handler: nil)
+                alert.addAction(okayAction)
+                self.findPresentaion().present(alert, animated: true, completion: nil)
+                return false
+            }
+        }
+        return true
+    }
 }
 
 
 extension ViewController {
+    
+    private func findPresentaion() -> UIViewController {
+        var vc: UIViewController = self
+        while true {
+            if let v = vc.presentedViewController, !(v is UIAlertController) {
+                vc = v
+            } else {
+                break
+            }
+        }
+        return vc
+    }
     
     // MARK: Start HEImageEditor with picking a image
     
@@ -385,12 +417,13 @@ extension ViewController {
     @objc func pickWithHEPicker() {
         
         var config = HEImagePickerConfiguration()
-        config.pickerSources = [.libraryPick, .photoCapture]
+        config.pickerSources = [.libraryPick, .photoCapture, .videoCapture]
         config.shouldSaveNewPicturesToAlbum = true
+        config.shouldSelectSingleType = true
         config.targetImageSize = .cappedTo(size: 1500)
-        config.library.mediaType = .photo
+        config.library.mediaType = .photoAndVideo
         config.library.defaultMultipleSelection = true
-        config.library.maxNumberOfItems = 100
+        config.library.maxNumberOfItems = 5
         
         let picker = HEImagePicker(configuration: config)
         picker.pickerDelegate = self
