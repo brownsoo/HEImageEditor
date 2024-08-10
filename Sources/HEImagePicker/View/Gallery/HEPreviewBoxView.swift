@@ -544,7 +544,7 @@ extension HEPreviewBoxView: UICollectionViewDelegateFlowLayout, UICollectionView
             var phAsset: PHAsset?
             var heiImage: HEImage?
             if cell.bindingIdentifier == item.assetIdentifier {
-                if let hei = self.editImageStore?.getHEImage(forId: item.assetIdentifier) {
+                if let hei = self.editImageStore?.getHEImage(forAssetIdentifier: item.assetIdentifier) {
                     heiImage = hei
                     if hei.updatedTime == cell.bindingTime {
                         //debugPrint("방어")
@@ -568,12 +568,14 @@ extension HEPreviewBoxView: UICollectionViewDelegateFlowLayout, UICollectionView
             
             let task = Task(priority: .userInitiated) {
                 
-                if let heiImage = heiImage ?? self.editImageStore?.getHEImage(forId: item.assetIdentifier) {
+                if let heiImage = heiImage ?? self.editImageStore?.getHEImage(forAssetIdentifier: item.assetIdentifier) {
                     cell.bindingTime = heiImage.updatedTime
                     await loadPreviewWithHEImage(heiImage, forCell: cell, selection: item).value
+                    
                 } else if let phAsset = phAsset ?? PHAsset.fetchAssets(withLocalIdentifiers: [item.assetIdentifier], options: PHFetchOptions()).firstObject {
                     cell.bindingTime = phAsset.markDate?.timeIntervalSince1970
                     await loadPreview(phAsset, forCell: cell, selection: item).value
+                    
                 } else {
                     woops("뭐지?")
                 }

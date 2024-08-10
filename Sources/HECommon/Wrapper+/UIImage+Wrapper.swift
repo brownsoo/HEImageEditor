@@ -5,8 +5,39 @@
 
 import UIKit
 import Accelerate
+import ImageIO
 
 public extension HEWrapper where Base: UIImage {
+    
+    // FIXME: 잘 안됨..
+    func gifFirstFrameImage() -> UIImage? {
+        guard let imageData = base.cgImage?.dataProvider?.data,
+              let source = CGImageSourceCreateWithData(imageData as CFData, nil) else {
+            return nil
+        }
+        
+        if let firstFrame = CGImageSourceCreateImageAtIndex(source, 0, nil) {
+            let firstFrameImage = UIImage(cgImage: firstFrame)
+            return firstFrameImage
+        }
+        return nil
+    }
+    
+    func gifData() -> Data? {
+        if let imageData = base.cgImage?.dataProvider?.data,
+           let data = CFDataGetBytePtr(imageData) {
+            let length = CFDataGetLength(imageData)
+            return Data(bytes: data, count: length)
+        }
+        return nil
+    }
+    
+    func isGIF() -> Bool {
+        guard let imageData = base.cgImage?.dataProvider?.data else { return false }
+        let source = CGImageSourceCreateWithData(imageData, nil)
+        let count = CGImageSourceGetCount(source!)
+        return count > 1
+    }
     
     // 회전 정정
     func fixOrientation() -> UIImage {

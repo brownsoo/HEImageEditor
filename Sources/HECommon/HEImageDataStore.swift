@@ -8,16 +8,27 @@
 import Foundation
 import Kingfisher
 import UIKit
+import ImageIO
 
 public protocol HEImageCache: AnyObject {
     
     /// 원본 이미지 캐시
     func cacheOriginImage(uiImage: UIImage, forId id: String) -> Task<URL, Error>
+    /// 원본 이미지 캐시
     func cacheOriginImageSync(uiImage: UIImage, forId id: String) throws -> URL
+    /// 원본 이미지 캐시
+    func cacheOriginImage(imageData: Data, forId id: String, isGif: Bool) -> Task<URL, Error>
+    /// 원본 이미지 캐시
+    func cacheOriginImageSync(imageData: Data, forId id: String, isGif: Bool) throws -> URL
+    
+    
     /// 편집 이미지 캐시
     func cacheEditImage(uiImage: UIImage, forHei hei: HEImage) -> Task<URL, Error>
-    /// 크롭된 중간 이미지 캐시
+    /// 중간 정리된 이미지 캐시
     func cacheFattenImage(uiImage: UIImage, forHei hei: HEImage) -> Task<URL, Error>
+    /// 중간 정리된 이미지 캐시
+    func cacheFattenImageSync(uiImage: UIImage, forHei hei: HEImage) throws -> URL
+    func cacheFattenImageSync(imageData: Data, forHei hei: HEImage) throws -> URL
     /// 썸네일 이미지 캐시
     func cacheThumbnailImage(uiImage: UIImage, forHei hei: HEImage) -> Task<URL, Error>
     
@@ -38,6 +49,7 @@ public protocol HEImageCache: AnyObject {
     
     
     /// 캐시된 URL 값만 확인
+    @available(*, deprecated, message: "원본 경로를 id 로 측정하는 데 문제가 있음")
     func getCachedOriginImageURL(forId id: String) throws -> URL?
     /// 캐시된 URL 값만 확인
     func getCachedFattenImageURL(forId id: String) throws -> URL?
@@ -68,6 +80,7 @@ public protocol HEImageDataStore {
     func getHEImage(at index: Int) -> HEImage?
     
     func getHEImage(forId id: String) -> HEImage?
+    func getHEImage(forAssetIdentifier identifier: String) -> HEImage?
     
     @discardableResult
     func replaceHEImage(at index: Int, with item: HEImage) -> Bool
@@ -96,6 +109,7 @@ public extension String {
         return self.replacingOccurrences(of: "~", with: "/")
     }
     
+    @available(*, deprecated, message: "원본 경로를 id 로 측정하는 데 문제가 있음")
     var heImageCacheOriginFileName: String {
         return self.toHEImageCacheIdentifier() + ".png"
     }
@@ -178,6 +192,10 @@ public class HESimpleEditImageStore: HEEditImageStore {
     
     public func getHEImage(forId id: String) -> HEImage? {
         images.first(where: { $0.id == id })
+    }
+    
+    public func getHEImage(forAssetIdentifier identifier: String) -> HEImage? {
+        images.first(where: { ($0.phAssetIdentifier ?? $0.id) == identifier })
     }
     
     public func replaceHEImage(_ exist: HEImage, with item: HEImage) -> Bool {
@@ -280,6 +298,7 @@ extension HESimpleEditImageStore {
         }
     }
     
+    @available(*, deprecated, message: "원본 경로를 id 로 측정하는 데 문제가 있음")
     public func getCachedOriginImageURL(forId id: String) throws -> URL? {
         let fileName = id.heImageCacheOriginFileName
         let fileURL: URL = try fileURL(fileName: fileName)
@@ -307,49 +326,94 @@ extension HESimpleEditImageStore {
         return nil
     }
     
+    // MARK: Caching -
+    
     public func cacheOriginImage(uiImage: UIImage, forId id: String) -> Task<URL, Error> {
-        let fileName = id.heImageCacheOriginFileName
         return Task.detached { [weak self] in
-            guard let self, let data = uiImage.pngData() else {
+            guard let self else {
                 throw HEError.generateFileData
             }
-            let fileURL: URL = try await fileURL(fileName: fileName)
-            FileManager.default.createFile(atPath: fileURL.path, contents: data)
-            
-            await memCacheImage(uiImage, forUrl: fileURL)
-            trace(fileURL)
-            return fileURL
+            return try await self.cacheOriginImageSync(uiImage: uiImage, forId: id)
+        }
+    }
+    
+    public func cacheOriginImage(imageData: Data, forId id: String, isGif: Bool) -> Task<URL, any Error> {
+        return Task.detached { [weak self] in
+            guard let self else {
+                throw HEError.generateFileData
+            }
+            return try await self.cacheOriginImageSync(imageData: imageData, forId: id, isGif: isGif)
         }
     }
     
     public func cacheOriginImageSync(uiImage: UIImage, forId id: String) throws -> URL {
-        let fileName = id.heImageCacheOriginFileName
-        guard let data = uiImage.pngData() else {
+        if uiImage.he.isGIF(), let data = uiImage.he.gifData() {
+            return try cacheOriginImageSync(imageData: data, forId: id, isGif: true)
+        } else if let data = uiImage.pngData() {
+            return try cacheOriginImageSync(imageData: data, forId: id, isGif: false)
+        } else {
             throw HEError.generateFileData
         }
-        let fileURL: URL = try fileURL(fileName: fileName)
-        FileManager.default.createFile(atPath: fileURL.path, contents: data)
-        Task.detached { [weak self] in
-            await self?.memCacheImage(uiImage, forUrl: fileURL)
+    }
+    
+    public func cacheOriginImageSync(imageData: Data, forId id: String, isGif: Bool) throws -> URL {
+        defer {
+            trace(fileURL)
         }
-        trace(fileURL)
+        let fileName = id.toHEImageCacheIdentifier() + (isGif ? ".gif" : ".png")
+        let fileURL: URL = try fileURL(fileName: fileName)
+        FileManager.default.createFile(atPath: fileURL.path, contents: imageData)
+        
+        if isGif {
+            guard let source = CGImageSourceCreateWithData(imageData as CFData, nil) else {
+                woops("image doesn't exist")
+                return fileURL
+            }
+            Task.detached { [weak self] in
+                if let uiImage = UIImage.animatedImage(with: source) {
+                    await self?.memCacheImage(uiImage, forUrl: fileURL)
+                }
+            }
+        } else {
+            Task.detached { [weak self] in
+                if let uiImage = UIImage(data: imageData) {
+                    await self?.memCacheImage(uiImage, forUrl: fileURL)
+                }
+            }
+        }
+        
         return fileURL
     }
     
     public func cacheFattenImage(uiImage: UIImage, forHei hei: HEImage) -> Task<URL, any Error> {
-        let fileName = hei.id.heImageCacheFattenFileName
         return Task.detached { [weak self] in
-            guard let self, let data = uiImage.pngData() else {
+            guard let self else {
                 throw HEError.generateFileData
             }
-            let fileURL: URL = try await fileURL(fileName: fileName)
-            FileManager.default.createFile(atPath: fileURL.path, contents: data)
-            
-            await memCacheImage(uiImage, forUrl: fileURL)
-            hei.setFattenImageURL(fileURL)
-            
-            return fileURL
+            return try await self.cacheFattenImageSync(uiImage: uiImage, forHei: hei)
         }
+    }
+    
+    public func cacheFattenImageSync(uiImage: UIImage, forHei hei: HEImage) throws -> URL {
+        guard let data = uiImage.pngData() else {
+            throw HEError.generateFileData
+        }
+        return try cacheFattenImageSync(imageData: data, forHei: hei)
+    }
+    
+    public func cacheFattenImageSync(imageData: Data, forHei hei: HEImage) throws -> URL {
+        let fileName = hei.id.heImageCacheFattenFileName
+        let fileURL: URL = try fileURL(fileName: fileName)
+        FileManager.default.createFile(atPath: fileURL.path, contents: imageData)
+        hei.setFattenImageURL(fileURL)
+        
+        Task.detached { [weak self] in
+            if let uiImage = UIImage(data: imageData) {
+                await self?.memCacheImage(uiImage, forUrl: fileURL)
+            }
+        }
+        
+        return fileURL
     }
     
     public func cacheEditImage(uiImage: UIImage, forHei hei: HEImage) -> Task<URL, Error> {

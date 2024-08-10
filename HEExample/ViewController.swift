@@ -284,7 +284,7 @@ extension ViewController: HEImagePickerDelegate {
     }
     
     func imagePicker(_ picker: HEImagePicker, captionWithIdentifer identifier: String) -> String? {
-        let url = imageStore.getHEImage(forId: identifier)?.editImageURL
+        let url = imageStore.getHEImage(forAssetIdentifier: identifier)?.editImageURL
         return url != nil ? "편집 적용" : nil
     }
     
@@ -293,11 +293,18 @@ extension ViewController: HEImagePickerDelegate {
         picker.dismiss(animated: true) {
             Task {
                 if let photo = items.singlePhoto {
-                    if let hei = picker.editImageStore.getHEImage(forId: photo.identifier),
-                       let editURL = hei.editImageURL {
+                    if let hei = picker.editImageStore.getHEImage(forId: photo.identifier) {
                         debugPrint(hei)
-                        if let data = try? Data(contentsOf: editURL) {
-                            self.resultImageView.image = UIImage(data: data)
+                        if let editURL = hei.editImageURL {
+                            if let data = try? Data(contentsOf: editURL) {
+                                self.resultImageView.image = UIImage(data: data)
+                            }
+                        } else if let originURL = hei.originURL {
+                            if originURL.pathExtension == "gif" {
+                                self.resultImageView.loadGif(url: originURL)
+                            } else if let data = try? Data(contentsOf: originURL) {
+                                self.resultImageView.image = UIImage(data: data)
+                            }
                         }
                     } else if let asset = photo.asset, asset.playbackStyle == .imageAnimated {
                         debugPrint("GIF 원본이다!!", photo)
@@ -323,14 +330,17 @@ extension ViewController: HEImagePickerDelegate {
         items.enumerated().forEach { it in
             switch it.element {
             case .photo(let photo):
-                if let exist = exists.first(where: { $0.id == photo.identifier}),
+                if let exist = exists.first(where: { ($0.phAssetIdentifier ?? $0.id) == photo.identifier}), // 피커의 identifier는 어셋 우선
                    let hei = HEEditImage.fromHEImage(exist) {
                     news.append(hei)
+                    debugPrint(hei)
                 } else {
-                    news.append(HEEditImage(id: photo.identifier,
-                                            origin: photo.url,
-                                            editState: nil,
-                                            phAsset: photo.asset))
+                    let hei = HEEditImage(id: photo.identifier,
+                                          origin: photo.url,
+                                          editState: nil,
+                                          phAsset: photo.asset)
+                    news.append(hei)
+                    debugPrint(hei)
                 }
                 break
             case .video(_):

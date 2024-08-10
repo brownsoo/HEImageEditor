@@ -26,6 +26,17 @@ extension PHCachingImageManager {
         return options
     }
     
+    func fetchImageData(for asset: PHAsset,
+                        callback: @escaping (Data, [String: Any]) -> Void) {
+        let options = photoImageRequestOptions()
+        requestImageDataAndOrientation(for: asset, options: options) { data, _, _, _ in
+            if let data = data {
+                let exifs = data.he.metadataForImageData()
+                callback(data, exifs)
+            }
+        }
+    }
+    
     func fetchImage(for asset: PHAsset,
                     cropRect: CGRect,
                     targetSize: CGSize,

@@ -17,6 +17,7 @@ public class HEMediaPhoto {
     /// 지정된 아이디 or PHAsset의 identifier, or uuid
     public var identifier: String
     public let url: URL
+    @available(*, deprecated, message: "사용 안함, 추후 제거 ")
     public let fromCamera: Bool
     public var asset: PHAsset?
     public var extraTask: HEMediaPhotoExtraTask?

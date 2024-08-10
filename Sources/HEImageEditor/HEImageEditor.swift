@@ -317,14 +317,22 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
     private func startEditImage(hei: HEEditImage, tool: HEImageEditorConfiguration.EditTool?) async {
         let topBuilder = self.makeEditTopBarView()
         do {
-            let image: UIImage
+            var image: UIImage
             let editState: HEEditState? = hei.editState
-            debugPrint(hei)
             
             if hei.editImageURL != nil && (editState?.fattened == true || hei.fattenImageURL != nil) {
                 image = try await self.imageStore.fattenImage(forHei: hei).value
             } else {
-                image = try await self.imageStore.editImage(forHei: hei).value
+                if hei.editImageURL == nil && hei.originURL?.pathExtension == "gif" {
+                    image = try await self.imageStore.originImage(forHei: hei).value
+                    trace(image.he.isGIF())
+                    if let first = image.pngData(), let stop = UIImage(data: first) {
+                        image = stop
+                        let _ = self.imageStore.cacheFattenImage(uiImage: stop, forHei: hei)
+                    }
+                } else {
+                    image = try await self.imageStore.editImage(forHei: hei).value
+                }
             }
             
             setupHEConfiguration()

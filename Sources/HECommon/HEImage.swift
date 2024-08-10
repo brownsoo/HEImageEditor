@@ -20,6 +20,7 @@ open class HEImage: CustomDebugStringConvertible {
     public internal(set) var fattenImageURL: URL?
     public internal(set) var thumbnailURL: URL?
     public internal(set) var phAsset: PHAsset?
+    public internal(set) var phAssetIdentifier: String?
     
     public init(id: String = UUID().uuidString, origin: URL, phAsset: PHAsset? = nil) {
         self.id = id
@@ -27,6 +28,7 @@ open class HEImage: CustomDebugStringConvertible {
         self.originImage = nil
         self.updatedTime = Date().timeIntervalSince1970
         self.phAsset = phAsset
+        self.phAssetIdentifier = phAsset?.localIdentifier
     }
     
     public init(id: String = UUID().uuidString, image: UIImage, phAsset: PHAsset? = nil) {
@@ -35,6 +37,7 @@ open class HEImage: CustomDebugStringConvertible {
         self.originImage = image
         self.updatedTime = Date().timeIntervalSince1970
         self.phAsset = phAsset
+        self.phAssetIdentifier = phAsset?.localIdentifier
     }
     
     init(id: String,
@@ -46,6 +49,7 @@ open class HEImage: CustomDebugStringConvertible {
         self.originImage = originImage
         self.updatedTime = Date().timeIntervalSince1970
         self.phAsset = phAsset
+        self.phAssetIdentifier = phAsset?.localIdentifier
     }
     
     public func setEditImageURL(_ url: URL?) {
@@ -77,6 +81,7 @@ open class HEImage: CustomDebugStringConvertible {
         hei.fattenImageURL = self.fattenImageURL
         hei.thumbnailURL = self.thumbnailURL
         hei.updatedTime = self.updatedTime
+        hei.phAssetIdentifier = self.phAssetIdentifier
         return hei
     }
     
@@ -90,6 +95,7 @@ HEImage::
     - thumbnailURL: \(thumbnailURL?.absoluteString ?? "nil")
     - updatedTime: \(updatedTime)
     - phAsset: \(self.phAsset?.localIdentifier ?? "nil")
+    - phAssetIdentifier: \(self.phAssetIdentifier ?? "nil")
 """
     }
 }

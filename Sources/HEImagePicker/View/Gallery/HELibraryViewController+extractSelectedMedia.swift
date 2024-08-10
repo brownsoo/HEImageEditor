@@ -21,12 +21,16 @@ extension HELibraryViewController {
         v.previewBox.currentZoomableView?.stopVideoPlay()
         
         var previewSelection: [(asset: PHAsset?, hei: HEImage?, cropRect: CGRect?)] = []
+        
+        // 선택없이 현재 미리보기에 표시된 미디어를 추출
         if PickerConfig.allowPickWithoutSelection,
            let identifier = self.v.previewBox.currentZoomableView?.currentAssetIdentifier {
-            if let hei = self.editImageStore.getHEImage(forId: identifier) {
+            if let hei = self.editImageStore.getHEImage(forAssetIdentifier: identifier) {
                 previewSelection = [(hei.phAsset, hei, nil)]
+                
             } else if let asset = self.assetMediaManager.fetchAsset(assetIdentifier: identifier) {
                 previewSelection = [(asset, nil, nil)]
+                
             } else {
                 woops("뭐냐??!!")
             }
@@ -35,7 +39,7 @@ extension HELibraryViewController {
         DispatchQueue.global(qos: .userInitiated).async {
             
             var selectedItems: [(asset: PHAsset?, hei: HEImage?, cropRect: CGRect?)] = self.selectedItems.compactMap {
-                if let hei = self.editImageStore.getHEImage(forId: $0.assetIdentifier) {
+                if let hei = self.editImageStore.getHEImage(forAssetIdentifier: $0.assetIdentifier) {
                     return (hei.phAsset, hei, $0.cropRect)
                 }
                 if let asset = PHAsset.fetchAssets(withLocalIdentifiers: [$0.assetIdentifier], options: PHFetchOptions()).firstObject {
@@ -279,19 +283,38 @@ extension HELibraryViewController {
         case .video:
             callback(nil)
         case .image:
-            self.fetchImageAndCrop(for: asset) { [self] image, exifMeta in
-                // cache
-                let image = image.resizedImageIfNeeded()
-                Task {
+            self.fetchImageData(for: asset) { [self] data, exifMeta in
+                
+                if !self.isMultipleSelectionEnabled { // 단일 선택이면, 편집도 단일로 진행
+                    self.editImageStore.clearAll()
+                }
+                debugPrint(exifMeta)
+                Task.detached(priority: .userInitiated) { [weak self] in
                     do {
-                        if !self.isMultipleSelectionEnabled { // 단일 선택이면, 편집도 단일로 진행
-                            self.editImageStore.clearAll()
+                        guard let self else { return }
+                        let isGif = exifMeta["{GIF}"] != nil
+                        let id = UUID().uuidString
+                        let image = UIImage(data: data)
+                        let url: URL
+                        if isGif {
+                            url = try await editImageStore.cacheOriginImageSync(imageData: data, forId: id, isGif: true)
+                        } else {
+                            if case .cappedTo(size: _) = PickerConfig.targetImageSize,
+                               let image = image?.resizedImageIfNeeded(),
+                               let resizedData = image.pngData() {
+                                url = try await editImageStore.cacheOriginImageSync(imageData: resizedData, forId: id, isGif: false)
+                            } else {
+                                url = try await editImageStore.cacheOriginImageSync(imageData: data, forId: id, isGif: false)
+                            }
                         }
-                        let url = try await editImageStore.cacheOriginImage(uiImage: image, forId: asset.localIdentifier).value
-                        self.editImageStore.addHEImage(HEImage(id: asset.localIdentifier, origin: url))
-                        let photo = HEMediaPhoto(identifier: asset.localIdentifier,
+                        
+                        await self.editImageStore.addHEImage(
+                            HEImage(id: id, origin: url, phAsset: asset)
+                        )
+                        
+                        let photo = HEMediaPhoto(identifier: id,
                                                  url: url,
-                                                 thumbnail: image.he.thumbnail(),
+                                                 thumbnail: image?.he.thumbnail(),
                                                  exifMeta: exifMeta,
                                                  asset: asset)
                         DispatchQueue.main.async {
@@ -367,13 +390,19 @@ extension HELibraryViewController {
     
     // MARK: - Fetching Media
     
-    private func fetchImageAndCrop(for asset: PHAsset,
-                                   withCropRect: CGRect? = nil,
-                                   callback: @escaping (_ photo: UIImage, _ exif: [String: Any]) -> Void) {
+//    private func fetchImageAndCrop(for asset: PHAsset,
+//                                   withCropRect: CGRect? = nil,
+//                                   callback: @escaping (_ photo: UIImage, _ exif: [String: Any]) -> Void) {
+//        libraryViewDidProcessingNext()
+//        let cropRect = withCropRect ?? DispatchQueue.main.sync { v.currentCropRect() }
+//        let ts = targetSize(for: asset, cropRect: cropRect)
+//        assetMediaManager.phImageManager?.fetchImage(for: asset, cropRect: cropRect, targetSize: ts, callback: callback)
+//    }
+    
+    private func fetchImageData(for asset: PHAsset,
+                                callback: @escaping (_ data: Data, _ exif: [String: Any]) -> Void) {
         libraryViewDidProcessingNext()
-        let cropRect = withCropRect ?? DispatchQueue.main.sync { v.currentCropRect() }
-        let ts = targetSize(for: asset, cropRect: cropRect)
-        assetMediaManager.phImageManager?.fetchImage(for: asset, cropRect: cropRect, targetSize: ts, callback: callback)
+        assetMediaManager.phImageManager?.fetchImageData(for: asset, callback: callback)
     }
     
     private func fetchVideoOriginalURL(for asset: PHAsset,

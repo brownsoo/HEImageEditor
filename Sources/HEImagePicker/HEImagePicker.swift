@@ -39,7 +39,7 @@ public protocol HEImagePickerDelegate: AnyObject {
 
 public extension HEImagePickerDelegate {
     func imagePicker(_ picker: HEImagePicker, captionWithIdentifer identifier: String) -> String? {
-        return picker.editImageStore.getHEImage(forId: identifier)?.editImageURL == nil ? nil : PickerConfig.wordings.edited
+        return picker.editImageStore.getHEImage(forAssetIdentifier: identifier)?.editImageURL == nil ? nil : PickerConfig.wordings.edited
     }
     func imagePicker(_ picker: HEImagePicker, shouldAddToSelection identifier: String, numSelections: Int) -> Bool {
         return true
@@ -50,7 +50,7 @@ public extension HEImagePickerDelegate {
     func imagePicker(_ picker: HEImagePicker, replacingItemWithIdentifer identifier: String) -> HEMediaItem? {
         let imageStore = picker.editImageStore
         do {
-            if let hei = imageStore.getHEImage(forId: identifier) {
+            if let hei = imageStore.getHEImage(forAssetIdentifier: identifier) {
                 let photo = try hei.toMediaPhoto(imageCache: imageStore)
                 return HEMediaItem.photo(p: photo)
             }
