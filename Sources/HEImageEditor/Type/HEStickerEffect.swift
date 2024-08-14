@@ -15,6 +15,11 @@ public class HEStickerEffect: NSObject {
     let gesScale: CGFloat
     let gesRotation: CGFloat
     let totalTranslationPoint: CGPoint
+    let visibleFrame: CGRect
+    
+    var isTextSticker: Bool {
+        false
+    }
     
     public init(
         id: String,
@@ -25,7 +30,8 @@ public class HEStickerEffect: NSObject {
         originFrame: CGRect,
         gesScale: CGFloat,
         gesRotation: CGFloat,
-        totalTranslationPoint: CGPoint
+        totalTranslationPoint: CGPoint,
+        visibleFrame: CGRect
     ) {
         self.id = id
         self.kind = kind
@@ -36,6 +42,7 @@ public class HEStickerEffect: NSObject {
         self.gesScale = gesScale
         self.gesRotation = gesRotation
         self.totalTranslationPoint = totalTranslationPoint
+        self.visibleFrame = visibleFrame
         super.init()
     }
 }
@@ -49,6 +56,10 @@ public class HETextStickerEffect: HEStickerEffect {
     let fillColor: UIColor
     let font: UIFont?
     
+    override var isTextSticker: Bool {
+        true
+    }
+    
     public init(
         id: String,
         text: String,
@@ -61,7 +72,8 @@ public class HETextStickerEffect: HEStickerEffect {
         originFrame: CGRect,
         gesScale: CGFloat,
         gesRotation: CGFloat,
-        totalTranslationPoint: CGPoint
+        totalTranslationPoint: CGPoint,
+        visibleFrame: CGRect
     ) {
         self.text = text
         self.textColor = textColor
@@ -76,7 +88,8 @@ public class HETextStickerEffect: HEStickerEffect {
             originFrame: originFrame,
             gesScale: gesScale,
             gesRotation: gesRotation,
-            totalTranslationPoint: totalTranslationPoint
+            totalTranslationPoint: totalTranslationPoint,
+            visibleFrame: visibleFrame
         )
     }
 }

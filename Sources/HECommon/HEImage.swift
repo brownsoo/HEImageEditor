@@ -71,10 +71,10 @@ open class HEImage: CustomDebugStringConvertible {
         self.phAsset = asset
     }
     
-    public func clone(withNewId newId: String) -> HEImage {
+    open func clone(withNewId newId: String) -> HEImage {
         let hei = HEImage(id: newId,
                           origin: self.originURL,
-                          originImage: self.originImage,
+                          originImage: self.originImage, 
                           phAsset: self.phAsset
         )
         hei.editImageURL = self.editImageURL
@@ -88,7 +88,7 @@ open class HEImage: CustomDebugStringConvertible {
     open var debugDescription: String {
         """
 HEImage::
-    - \(id)
+    - id: \(id)
     - originURL: \(originURL?.absoluteString ?? "nil")
     - editImageURL: \(editImageURL?.absoluteString ?? "nil")
     - fattenImageURL: \(fattenImageURL?.absoluteString ?? "nil")

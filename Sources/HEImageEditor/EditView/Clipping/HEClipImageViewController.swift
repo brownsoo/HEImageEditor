@@ -55,7 +55,7 @@ public class HEClipImageViewController: UIViewController, HEClipImageView {
     /// 편집 영역을 화면 안쪽으로 넣을 수 있음.
     private var editRectInsets: UIEdgeInsets = .init(top: 48,  // 상위뷰의 툴바 영역
                                              left: 0,
-                                             bottom: 72, // 하위 탭바 영역
+                                             bottom: 76, // 하위 탭바 영역
                                              right: 0)
     
     private var scrollView: UIScrollView!
@@ -73,7 +73,11 @@ public class HEClipImageViewController: UIViewController, HEClipImageView {
     private var bottomView: UIView?
     private var bottomViewHeight: CGFloat = 0
     
-    private lazy var topView = HETopConfirmBarView()
+    private lazy var topView: HETopConfirmBarView = {
+        let topView = HETopConfirmBarView()
+        topView.backgroundColor = UIColor.black
+        return topView
+    }()
     /// 회전, 크롭 툴 아이템 뷰
     private var toolView: HEClipActionToolView!
     
@@ -114,7 +118,12 @@ public class HEClipImageViewController: UIViewController, HEClipImageView {
     
     var cancelClipBlock: (() -> Void)?
     
-    var dismissCallback: (() -> Void)?
+    /// Bool - 콜백 성격
+    ///
+    /// - true : 확정
+    /// - false : 취소
+    /// - nil : 특수
+    var dismissCallback: ((Bool?) -> Void)?
     
     public override var prefersStatusBarHidden: Bool { true }
     
@@ -157,6 +166,7 @@ public class HEClipImageViewController: UIViewController, HEClipImageView {
         self.toolView = HEClipActionToolView(clipRatios: HEImageEditorConfiguration.default().clipRatios,
                                                        originImageSize: image.size,
                                                        selectedRatio: self.selectedRatio)
+        self.toolView.backgroundColor = UIColor.black
         self.bottomViewBuilder = bottomViewBuilder
         
         super.init(nibName: nil, bundle: nil)
@@ -208,7 +218,7 @@ public class HEClipImageViewController: UIViewController, HEClipImageView {
             view.insertSubview(animateImageView, belowSubview: toolView)
             
             cancelClipAnimateFrame = clipBoxFrame
-            UIView.animate(withDuration: 0.25, animations: {
+            UIView.animate(withDuration: 0.18, animations: {
                 animateImageView.frame = self.clipBoxFrame
                 self.bottomView?.alpha = 1
             }) { _ in
@@ -218,9 +228,11 @@ public class HEClipImageViewController: UIViewController, HEClipImageView {
                 }) { _ in
                     animateImageView.removeFromSuperview()
                 }
-                self.topView.show(animate: true)
-                self.toolView.show()
             }
+            
+            self.topView.show(animate: true)
+            self.toolView.show()
+            
         } else {
             bottomView?.alpha = 1
             scrollView.alpha = 1
@@ -338,9 +350,9 @@ public class HEClipImageViewController: UIViewController, HEClipImageView {
         editInsets.top += insets.top
         var rect = CGRect.zero
         rect.origin.x = editInsets.left
-        rect.origin.y = insets.top
+        rect.origin.y = editInsets.top
         rect.size.width = UIScreen.main.bounds.width - editInsets.width
-        rect.size.height = UIScreen.main.bounds.height - editInsets.top - self.bottomViewHeight - HEClipActionToolView.viewHeight - insets.bottom
+        rect.size.height = UIScreen.main.bounds.height - editInsets.top - self.bottomViewHeight - HEClipActionToolView.viewHeight - editInsets.bottom - insets.bottom
         return rect
     }
     
@@ -418,6 +430,8 @@ public class HEClipImageViewController: UIViewController, HEClipImageView {
     }
     
     private func changeClipBoxFrame(newFrame: CGRect) {
+        debugPrint("\(newFrame)")
+        
         guard clipBoxFrame != newFrame else {
             return
         }
@@ -490,16 +504,36 @@ public class HEClipImageViewController: UIViewController, HEClipImageView {
         cancelClipBlock?()
         topView.hide()
         if isDismissTransitional() {
-            dismiss(animated: animateDismiss, completion: dismissCallback)
+            dismiss(animated: animateDismiss, completion: { [weak self] in
+                self?.dismissCallback?(false)
+            })
         } else {
             mimicAnimateDismiss(targetFrame: presentAnimateFrame) { [weak self] in
-                self?.dismissCallback?()
+                self?.dismissCallback?(false)
             }
         }
     }
     
     private func isDismissTransitional() -> Bool {
         return presentingViewController is HEEditImageViewController
+    }
+    
+    func doneEditWithNoConfirm() {
+        let image = clipImage()
+        dismissAnimateFromRect = clipBoxFrame
+        dismissAnimateImage = image.clipImage
+        let targetRect = clipDoneBlock?(angle, image.editRect, selectedRatio) ?? presentAnimateFrame
+        
+        topView.hide()
+        if isDismissTransitional() {
+            dismiss(animated: animateDismiss, completion: { [weak self] in
+                self?.dismissCallback?(nil)
+            })
+        } else {
+            mimicAnimateDismiss(targetFrame: targetRect) { [weak self] in
+                self?.dismissCallback?(nil)
+            }
+        }
     }
     
     public func doneEdit() {
@@ -510,10 +544,12 @@ public class HEClipImageViewController: UIViewController, HEClipImageView {
         
         topView.hide()
         if isDismissTransitional() {
-            dismiss(animated: animateDismiss, completion: dismissCallback)
+            dismiss(animated: animateDismiss, completion: { [weak self] in
+                self?.dismissCallback?(true)
+            })
         } else {
             mimicAnimateDismiss(targetFrame: targetRect) { [weak self] in
-                self?.dismissCallback?()
+                self?.dismissCallback?(true)
             }
         }
     }

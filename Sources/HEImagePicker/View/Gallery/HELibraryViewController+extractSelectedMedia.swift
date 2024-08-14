@@ -24,11 +24,11 @@ extension HELibraryViewController {
         
         // 선택없이 현재 미리보기에 표시된 미디어를 추출
         if PickerConfig.allowPickWithoutSelection,
-           let identifier = self.v.previewBox.currentZoomableView?.currentAssetIdentifier {
-            if let hei = self.editImageStore.getHEImage(forAssetIdentifier: identifier) {
+           let assetIdentifier = self.v.previewBox.currentZoomableView?.currentAssetIdentifier {
+            if let hei = self.editImageStore.getHEImage(forAssetIdentifier: assetIdentifier) {
                 previewSelection = [(hei.phAsset, hei, nil)]
                 
-            } else if let asset = self.assetMediaManager.fetchAsset(assetIdentifier: identifier) {
+            } else if let asset = self.assetMediaManager.fetchAsset(assetIdentifier: assetIdentifier) {
                 previewSelection = [(asset, nil, nil)]
                 
             } else {
@@ -129,27 +129,27 @@ extension HELibraryViewController {
                 asyncGroup.notify(queue: .main) {
                     // TODO: sort the array based on the initial order of the assets in selectedAssets
                     resultMediaItems.sort { (first, second) -> Bool in
-                        var firstAsset: String?
-                        var secondAsset: String?
+                        var firstAssetIdentifier: String?
+                        var secondAssetIdentifier: String?
                         
                         switch first {
                         case .photo(let photo):
-                            firstAsset = photo.identifier
+                            firstAssetIdentifier = photo.asset?.localIdentifier ?? photo.identifier
                         case .video(let video):
-                            firstAsset = video.identifier
+                            firstAssetIdentifier = video.asset?.localIdentifier ?? video.identifier
                         }
-                        guard let firstIndex = assetDictionary[firstAsset] else {
+                        guard let firstIndex = assetDictionary[firstAssetIdentifier] else {
                             return false
                         }
                         
                         switch second {
                         case .photo(let photo):
-                            secondAsset = photo.identifier
+                            secondAssetIdentifier = photo.asset?.localIdentifier ?? photo.identifier
                         case .video(let video):
-                            secondAsset = video.identifier
+                            secondAssetIdentifier = video.asset?.localIdentifier ?? video.identifier
                         }
                         
-                        guard let secondIndex = assetDictionary[secondAsset] else {
+                        guard let secondIndex = assetDictionary[secondAssetIdentifier] else {
                             return false
                         }
                         
@@ -288,7 +288,7 @@ extension HELibraryViewController {
                 if !self.isMultipleSelectionEnabled { // 단일 선택이면, 편집도 단일로 진행
                     self.editImageStore.clearAll()
                 }
-                debugPrint(exifMeta)
+                // debugPrint(exifMeta)
                 Task.detached(priority: .userInitiated) { [weak self] in
                     do {
                         guard let self else { return }
@@ -301,7 +301,7 @@ extension HELibraryViewController {
                         } else {
                             if case .cappedTo(size: _) = PickerConfig.targetImageSize,
                                let image = image?.resizedImageIfNeeded(),
-                               let resizedData = image.pngData() {
+                               let resizedData = image.jpegData(compressionQuality: 0.8) {
                                 url = try await editImageStore.cacheOriginImageSync(imageData: resizedData, forId: id, isGif: false)
                             } else {
                                 url = try await editImageStore.cacheOriginImageSync(imageData: data, forId: id, isGif: false)

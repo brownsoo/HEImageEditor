@@ -13,9 +13,13 @@ import ImageIO
 public protocol HEImageCache: AnyObject {
     
     /// 원본 이미지 캐시
+    @available(*, deprecated, message: "GIF 측정이 부정확")
     func cacheOriginImage(uiImage: UIImage, forId id: String) -> Task<URL, Error>
+    func cacheOriginImage(uiImage: UIImage, forId id: String, isGif: Bool) -> Task<URL, Error>
     /// 원본 이미지 캐시
+    @available(*, deprecated, message: "GIF 측정이 부정확")
     func cacheOriginImageSync(uiImage: UIImage, forId id: String) throws -> URL
+    func cacheOriginImageSync(uiImage: UIImage, forId id: String, isGif: Bool) throws -> URL
     /// 원본 이미지 캐시
     func cacheOriginImage(imageData: Data, forId id: String, isGif: Bool) -> Task<URL, Error>
     /// 원본 이미지 캐시
@@ -49,12 +53,12 @@ public protocol HEImageCache: AnyObject {
     
     
     /// 캐시된 URL 값만 확인
-    @available(*, deprecated, message: "원본 경로를 id 로 측정하는 데 문제가 있음")
-    func getCachedOriginImageURL(forId id: String) throws -> URL?
+//    @available(*, deprecated, message: "원본 경로를 id 로 측정하는 데 문제가 있음")
+//    func getCachedOriginImageURL(forId id: String) throws -> URL?
     /// 캐시된 URL 값만 확인
-    func getCachedFattenImageURL(forId id: String) throws -> URL?
+//    func getCachedFattenImageURL(forId id: String) throws -> URL?
     /// 캐시된 URL 값만 확인
-    func getCachedEditImageURL(forId id: String) throws -> URL?
+    // func getCachedEditImageURL(forId id: String) throws -> URL?
     
     
     func clearCached(forHei hei: HEImage, includeOrigin: Bool) async
@@ -109,21 +113,30 @@ public extension String {
         return self.replacingOccurrences(of: "~", with: "/")
     }
     
-    @available(*, deprecated, message: "원본 경로를 id 로 측정하는 데 문제가 있음")
-    var heImageCacheOriginFileName: String {
-        return self.toHEImageCacheIdentifier() + ".png"
+//    @available(*, deprecated, message: "원본 경로를 id 로 측정하는 데 문제가 있음")
+//    var heImageCacheOriginFileName: String {
+//        return self.toHEImageCacheIdentifier() + ".png"
+//    }
+    
+    func heImageCacheEditFileName(date: Date = Date()) -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "_yyMMdd_HHmmss"
+        let timeString = dateFormatter.string(from: date)
+        return self.toHEImageCacheIdentifier() + timeString + "+edit.png"
     }
     
-    var heImageCacheEditFileName: String {
-        return self.toHEImageCacheIdentifier() + "+edit.png"
+    func heImageCacheFattenFileName(date: Date = Date()) -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "_yyMMdd_HHmmss"
+        let timeString = dateFormatter.string(from: date)
+        return self.toHEImageCacheIdentifier() + timeString + "+fatten.png"
     }
     
-    var heImageCacheFattenFileName: String {
-        return self.toHEImageCacheIdentifier() + "+fatten.png"
-    }
-    
-    var heImageCacheThumbFileName: String {
-        return self.toHEImageCacheIdentifier() + "+thumb.png"
+    func heImageCacheThumbFileName(date: Date = Date()) -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "_yyMMdd_HHmmss"
+        let timeString = dateFormatter.string(from: date)
+        return self.toHEImageCacheIdentifier() + timeString + "+thumb.png"
     }
 }
 
@@ -298,42 +311,62 @@ extension HESimpleEditImageStore {
         }
     }
     
-    @available(*, deprecated, message: "원본 경로를 id 로 측정하는 데 문제가 있음")
-    public func getCachedOriginImageURL(forId id: String) throws -> URL? {
-        let fileName = id.heImageCacheOriginFileName
-        let fileURL: URL = try fileURL(fileName: fileName)
-        if FileManager.default.fileExists(atPath: fileURL.absoluteString) {
-            return fileURL
-        }
-        return nil
-    }
+//    @available(*, deprecated, message: "원본 경로를 id 로 측정하는 데 문제가 있음")
+//    public func getCachedOriginImageURL(forId id: String) throws -> URL? {
+//        let fileName = id.heImageCacheOriginFileName
+//        let fileURL: URL = try fileURL(fileName: fileName)
+//        if FileManager.default.fileExists(atPath: fileURL.absoluteString) {
+//            return fileURL
+//        }
+//        return nil
+//    }
+//    
+//    public func getCachedFattenImageURL(forId id: String) throws -> URL? {
+//        let fileName = id.heImageCacheFattenFileName
+//        let fileURL: URL = try fileURL(fileName: fileName)
+//        if FileManager.default.fileExists(atPath: fileURL.absoluteString) {
+//            return fileURL
+//        }
+//        return nil
+//    }
     
-    public func getCachedFattenImageURL(forId id: String) throws -> URL? {
-        let fileName = id.heImageCacheFattenFileName
-        let fileURL: URL = try fileURL(fileName: fileName)
-        if FileManager.default.fileExists(atPath: fileURL.absoluteString) {
-            return fileURL
-        }
-        return nil
-    }
-    
-    public func getCachedEditImageURL(forId id: String) throws -> URL? {
-        let fileName = id.heImageCacheEditFileName
-        let fileURL: URL = try fileURL(fileName: fileName)
-        if FileManager.default.fileExists(atPath: fileURL.absoluteString) {
-            return fileURL
-        }
-        return nil
-    }
+//    public func getCachedEditImageURL(forId id: String) throws -> URL? {
+//        let fileName = id.heImageCacheEditFileName
+//        let fileURL: URL = try fileURL(fileName: fileName)
+//        if FileManager.default.fileExists(atPath: fileURL.absoluteString) {
+//            return fileURL
+//        }
+//        return nil
+//    }
     
     // MARK: Caching -
     
+    @available(*, deprecated)
     public func cacheOriginImage(uiImage: UIImage, forId id: String) -> Task<URL, Error> {
         return Task.detached { [weak self] in
             guard let self else {
                 throw HEError.generateFileData
             }
             return try await self.cacheOriginImageSync(uiImage: uiImage, forId: id)
+        }
+    }
+    
+    public func cacheOriginImage(uiImage: UIImage, forId id: String, isGif: Bool) -> Task<URL, Error> {
+        return Task.detached { [weak self] in
+            guard let self else {
+                throw HEError.generateFileData
+            }
+            return try await self.cacheOriginImageSync(uiImage: uiImage, forId: id, isGif: isGif)
+        }
+    }
+    
+    public func cacheOriginImageSync(uiImage: UIImage, forId id: String, isGif: Bool) throws -> URL {
+        if isGif, let data = uiImage.he.gifData() {
+            return try cacheOriginImageSync(imageData: data, forId: id, isGif: true)
+        } else if let data = uiImage.jpegData(compressionQuality: 0.8) {
+            return try cacheOriginImageSync(imageData: data, forId: id, isGif: false)
+        } else {
+            throw HEError.generateFileData
         }
     }
     
@@ -346,10 +379,11 @@ extension HESimpleEditImageStore {
         }
     }
     
+    @available(*, deprecated)
     public func cacheOriginImageSync(uiImage: UIImage, forId id: String) throws -> URL {
         if uiImage.he.isGIF(), let data = uiImage.he.gifData() {
             return try cacheOriginImageSync(imageData: data, forId: id, isGif: true)
-        } else if let data = uiImage.pngData() {
+        } else if let data = uiImage.jpegData(compressionQuality: 0.8) {
             return try cacheOriginImageSync(imageData: data, forId: id, isGif: false)
         } else {
             throw HEError.generateFileData
@@ -357,23 +391,29 @@ extension HESimpleEditImageStore {
     }
     
     public func cacheOriginImageSync(imageData: Data, forId id: String, isGif: Bool) throws -> URL {
-        defer {
-            trace(fileURL)
-        }
-        let fileName = id.toHEImageCacheIdentifier() + (isGif ? ".gif" : ".png")
+        let fileName = id.toHEImageCacheIdentifier() + (isGif ? ".gif" : ".jpg")
         let fileURL: URL = try fileURL(fileName: fileName)
         FileManager.default.createFile(atPath: fileURL.path, contents: imageData)
         
+        #if DEBUG
+        let bcf = ByteCountFormatter()
+        bcf.allowedUnits = [ByteCountFormatter.Units.useKB]
+        bcf.countStyle = ByteCountFormatter.CountStyle.memory
+        let bytesString = bcf.string(fromByteCount: Int64(imageData.count))
+        debugPrint(bytesString)
+        #endif
+        
         if isGif {
-            guard let source = CGImageSourceCreateWithData(imageData as CFData, nil) else {
-                woops("image doesn't exist")
-                return fileURL
-            }
-            Task.detached { [weak self] in
-                if let uiImage = UIImage.animatedImage(with: source) {
-                    await self?.memCacheImage(uiImage, forUrl: fileURL)
-                }
-            }
+            // gif 메모리 캐시 제거
+//            guard let source = CGImageSourceCreateWithData(imageData as CFData, nil) else {
+//                woops("image doesn't exist")
+//                return fileURL
+//            }
+//            Task.detached { [weak self] in
+//                if let uiImage = UIImage.animatedImage(with: source) {
+//                    await self?.memCacheImage(uiImage, forUrl: fileURL)
+//                }
+//            }
         } else {
             Task.detached { [weak self] in
                 if let uiImage = UIImage(data: imageData) {
@@ -395,17 +435,19 @@ extension HESimpleEditImageStore {
     }
     
     public func cacheFattenImageSync(uiImage: UIImage, forHei hei: HEImage) throws -> URL {
-        guard let data = uiImage.pngData() else {
+        guard let data = uiImage.jpegData(compressionQuality: 0.8) else {
             throw HEError.generateFileData
         }
         return try cacheFattenImageSync(imageData: data, forHei: hei)
     }
     
     public func cacheFattenImageSync(imageData: Data, forHei hei: HEImage) throws -> URL {
-        let fileName = hei.id.heImageCacheFattenFileName
+        let fileName = hei.id.heImageCacheFattenFileName()
         let fileURL: URL = try fileURL(fileName: fileName)
         FileManager.default.createFile(atPath: fileURL.path, contents: imageData)
         hei.setFattenImageURL(fileURL)
+        
+        logFileSize(dataCount: imageData.count)
         
         Task.detached { [weak self] in
             if let uiImage = UIImage(data: imageData) {
@@ -417,9 +459,9 @@ extension HESimpleEditImageStore {
     }
     
     public func cacheEditImage(uiImage: UIImage, forHei hei: HEImage) -> Task<URL, Error> {
-        let fileName = hei.id.heImageCacheEditFileName
+        let fileName = hei.id.heImageCacheEditFileName()
         return Task.detached { [weak self] in
-            guard let self, let data = uiImage.pngData() else {
+            guard let self, let data = uiImage.jpegData(compressionQuality: 0.8) else {
                 throw HEError.generateFileData
             }
             let fileURL: URL = try await fileURL(fileName: fileName)
@@ -428,15 +470,17 @@ extension HESimpleEditImageStore {
             await memCacheImage(uiImage, forUrl: fileURL)
             hei.setEditImageURL(fileURL)
             
+            logFileSize(dataCount: data.count)
+            
             return fileURL
         }
     }
     
     public func cacheThumbnailImage(uiImage: UIImage, forHei hei: HEImage) -> Task<URL, Error> {
-        let fileName = hei.id.heImageCacheThumbFileName
+        let fileName = hei.id.heImageCacheThumbFileName()
         return Task.detached { [weak self] in
             let thumbnail = uiImage.he.thumbnail()
-            guard let self, let data = thumbnail.pngData() else {
+            guard let self, let data = thumbnail.jpegData(compressionQuality: 0.8) else {
                 throw HEError.generateFileData
             }
             let fileURL: URL = try await fileURL(fileName: fileName)
@@ -444,6 +488,8 @@ extension HESimpleEditImageStore {
             
             await memCacheImage(uiImage, forUrl: fileURL)
             hei.setThumbnailURL(fileURL)
+            
+            logFileSize(dataCount: data.count)
             
             return fileURL
         }
@@ -476,6 +522,16 @@ extension HESimpleEditImageStore {
 }
 
 extension HESimpleEditImageStore {
+    
+    nonisolated func logFileSize(dataCount: Int) {
+#if DEBUG
+        let bcf = ByteCountFormatter()
+        bcf.allowedUnits = [ByteCountFormatter.Units.useKB]
+        bcf.countStyle = ByteCountFormatter.CountStyle.memory
+        let bytesString = bcf.string(fromByteCount: Int64(dataCount))
+        debugPrint(bytesString)
+#endif
+    }
     
     func removeFile(_ fileURL: URL) {
         Task.detached {

@@ -46,6 +46,22 @@ public class HEDrawPath: NSObject {
         super.init()
     }
     
+    init(pathColor: UIColor, path: UIBezierPath, bgPath: UIBezierPath, ratio: CGFloat, index: Int, points: [CGPoint]) {
+        self.pathColor = pathColor
+        self.path = path
+        self.bgPath = bgPath
+        self.ratio = ratio
+        self.index = index
+        self.points = points
+    }
+    
+    func clone() -> HEDrawPath {
+        let drawPath = HEDrawPath(pathColor: self.pathColor, path: self.path, bgPath: self.bgPath, ratio: self.ratio,
+                                  index: self.index, points: self.points)
+        drawPath.willDelete = self.willDelete
+        return drawPath
+    }
+    
     func addLine(to point: CGPoint) {
         points.append(point)
         
@@ -134,8 +150,18 @@ public class HEMosaicPath: NSObject {
         
         self.ratio = ratio
         self.startPoint = CGPoint(x: startPoint.x / ratio, y: startPoint.y / ratio)
-        
         super.init()
+    }
+    
+    init(path: UIBezierPath, ratio: CGFloat, startPoint: CGPoint, linePoints: [CGPoint]) {
+        self.path = path
+        self.ratio = ratio
+        self.startPoint = startPoint
+        self.linePoints = linePoints
+    }
+    
+    func clone() -> HEMosaicPath {
+        return HEMosaicPath(path: self.path, ratio: self.ratio, startPoint: self.startPoint, linePoints: self.linePoints.map { $0 })
     }
     
     func addLine(to point: CGPoint) {

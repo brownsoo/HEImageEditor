@@ -47,3 +47,28 @@ public class HEEditState: NSObject {
         super.init()
     }
 }
+
+public extension HEEditState {
+    func clone() -> HEEditState {
+        return HEEditState(drawPaths: self.drawPaths.map { $0.clone() },
+                           mosaicPaths: self.mosaicPaths.map { $0.clone() },
+                           clipStatus: self.clipStatus?.clone(),
+                           adjustStatus: self.adjustStatus,
+                           selectFilter: self.selectFilter?.clone(),
+                           stickers: self.stickers,
+                           actions: self.actions,
+                           fattened: self.fattened)
+            
+    }
+}
+
+extension HEEditState {
+    public override var debugDescription: String {
+        """
+HEEditState::
+    - clipStatus: \(clipStatus.debugDescription)
+    - stickers: \(stickers.debugDescription)
+"""
+    }
+}
+

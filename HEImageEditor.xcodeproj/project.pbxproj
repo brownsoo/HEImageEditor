@@ -83,6 +83,7 @@
 		17B2DD1B2C3F611300662FC4 /* HEPickerNavigationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B2DD1A2C3F611300662FC4 /* HEPickerNavigationController.swift */; };
 		17B2DD1E2C3F70A600662FC4 /* HEImageUtil.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E2D87C2C290986005F5E0B /* HEImageUtil.swift */; };
 		17C8ED8A2C148390006F390A /* HEClipActionToolView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17C8ED892C148390006F390A /* HEClipActionToolView.swift */; };
+		17D4A05B2C6A5DE9006781C6 /* UIImageView+Wrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D4A05A2C6A5DE9006781C6 /* UIImageView+Wrapper.swift */; };
 		17D691982C12EC32007443EC /* HEClipBottomView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D691972C12EC32007443EC /* HEClipBottomView.swift */; };
 		17D6919D2C168A9C007443EC /* HEEditState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D6919C2C168A9C007443EC /* HEEditState.swift */; };
 		17D691A02C16976B007443EC /* DebugLine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17D6919F2C16976B007443EC /* DebugLine.swift */; };
@@ -286,6 +287,7 @@
 		17B2DD162C3E0E1100662FC4 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/HEImageEditorLocalizable.strings; sourceTree = "<group>"; };
 		17B2DD1A2C3F611300662FC4 /* HEPickerNavigationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEPickerNavigationController.swift; sourceTree = "<group>"; };
 		17C8ED892C148390006F390A /* HEClipActionToolView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEClipActionToolView.swift; sourceTree = "<group>"; };
+		17D4A05A2C6A5DE9006781C6 /* UIImageView+Wrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImageView+Wrapper.swift"; sourceTree = "<group>"; };
 		17D691972C12EC32007443EC /* HEClipBottomView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEClipBottomView.swift; sourceTree = "<group>"; };
 		17D6919C2C168A9C007443EC /* HEEditState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEEditState.swift; sourceTree = "<group>"; };
 		17D6919F2C16976B007443EC /* DebugLine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugLine.swift; sourceTree = "<group>"; };
@@ -528,6 +530,7 @@
 				FDBD955D2B148C74005EE2F8 /* UIGraphicsImageRenderer+Wrapper.swift */,
 				17B2DCF52C3B9E0B00662FC4 /* UIApplication+Wrapper.swift */,
 				17B2DD042C3BABA700662FC4 /* Data+Wrapper.swift */,
+				17D4A05A2C6A5DE9006781C6 /* UIImageView+Wrapper.swift */,
 			);
 			path = "Wrapper+";
 			sourceTree = "<group>";
@@ -882,6 +885,8 @@
 				17B2DD022C3BA50A00662FC4 /* PBXTargetDependency */,
 			);
 			name = HEImagePicker;
+			packageProductDependencies = (
+			);
 			productName = HEImagePicker;
 			productReference = 1744BA3B2C330B4E00F5395B /* HEImagePicker.framework */;
 			productType = "com.apple.product-type.framework";
@@ -1148,6 +1153,7 @@
 				17B2DCFB2C3BA3C600662FC4 /* HEError.swift in Sources */,
 				17B2DCE42C3B967200662FC4 /* HEWrapper.swift in Sources */,
 				17B2DCE92C3B969D00662FC4 /* UIColor+Wrapper.swift in Sources */,
+				17D4A05B2C6A5DE9006781C6 /* UIImageView+Wrapper.swift in Sources */,
 				17DF34D82C50DB27002EE282 /* HEEnlargeButton.swift in Sources */,
 				17B2DD052C3BABA700662FC4 /* Data+Wrapper.swift in Sources */,
 			);

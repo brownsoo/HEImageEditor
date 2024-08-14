@@ -311,7 +311,8 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
             let image = image.resizedImageIfNeeded()
             do {
                 let newId = UUID().uuidString
-                let url = try await self.editImageStore.cacheOriginImage(uiImage: image, forId: newId).value
+                let isGif = exifMeta?["{GIF}"] != nil
+                let url = try await self.editImageStore.cacheOriginImage(uiImage: image, forId: newId, isGif: isGif).value
                 let thumbnail = image.he.thumbnail()
                 let photo = HEMediaPhoto(identifier: newId,
                                          url: url,
@@ -419,7 +420,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
             }
         }
         
-        currentlySelectedIdentifier = selectedItems.last?.assetIdentifier ?? getSelectionForJustPreview()?.assetIdentifier
+        currentlySelectedIdentifier = selectedItems.first?.assetIdentifier ?? getSelectionForJustPreview()?.assetIdentifier
         
         v.setMultipleSelectionMode(on: isMultipleSelectionEnabled)
         v.countView.isHidden = !isMultipleSelectionEnabled || selectedItems.isEmpty

@@ -53,6 +53,39 @@ class HEMultipleSelectionIndicator: UIView {
     }
 }
 
+
+class HESingleSelectionIndicator: UIView {
+    
+    let checkedCircle = UIImageView()
+    let uncheckedCircle = UIImageView()
+
+    convenience init() {
+        self.init(frame: .zero)
+        
+        let size: CGFloat = 24
+        addSubview(checkedCircle)
+        addSubview(uncheckedCircle)
+        checkedCircle.image = imageFromBundle("icCheckOvalOn")
+        uncheckedCircle.image = imageFromBundle("icCheckOvalOff")
+        
+        checkedCircle.makeConstraints { v in
+            v.edgesConstraintToSuperview(edges: .all, priority: .defaultHigh)
+            v.sizeAnchorConstraintTo(size)
+        }
+        uncheckedCircle.makeConstraints { v in
+            v.edgesConstraintToSuperview(edges: .all, priority: .defaultHigh)
+            v.sizeAnchorConstraintTo(size)
+        }
+        
+        set(checked: false)
+    }
+    
+    func set(checked: Bool) {
+        checkedCircle.isHidden = !checked
+        uncheckedCircle.isHidden = checked
+    }
+}
+
 class HELibraryViewCell: UICollectionViewCell {
     
     static let reuseIdentifier = "HE.LibraryViewCell"
@@ -65,6 +98,7 @@ class HELibraryViewCell: UICollectionViewCell {
     let durationLabel = UILabel()
     let selectionOverlay = UIView()
     let multipleSelectionIndicator = HEMultipleSelectionIndicator()
+    let singleSelectionIndicator = HESingleSelectionIndicator()
     let captionLabel = UILabel()
     var captionLabelFilledHeight: NSLayoutConstraint?
     private var imageLoadTask: Task<(), Never>?
@@ -89,10 +123,11 @@ class HELibraryViewCell: UICollectionViewCell {
         super.init(frame: frame)
         
         contentView.addSubview(imageView)
+        contentView.addSubview(selectionOverlay)
         contentView.addSubview(captionLabel)
         contentView.addSubview(durationLabel)
-        contentView.addSubview(selectionOverlay)
         contentView.addSubview(multipleSelectionIndicator)
+        contentView.addSubview(singleSelectionIndicator)
         
         imageView.makeConstraints { v in
             v.edgesConstraintToSuperview(edges: .all)
@@ -117,7 +152,13 @@ class HELibraryViewCell: UICollectionViewCell {
         multipleSelectionIndicator.makeConstraints { v in
             v.topAnchorConstraintToSuperview(4)
             v.trailingAnchorConstraintToSuperview(-4)
-            
+            v.isHidden = true
+        }
+        
+        singleSelectionIndicator.makeConstraints { v in
+            v.topAnchorConstraintToSuperview(4)
+            v.trailingAnchorConstraintToSuperview(-4)
+            v.isHidden = true
         }
         
         imageView.contentMode = .scaleAspectFill

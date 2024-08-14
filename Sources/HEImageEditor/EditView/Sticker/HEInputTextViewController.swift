@@ -255,6 +255,7 @@ public class HEInputTextViewController: UIViewController {
         topToolBar.cancelClickCallback = { [weak self] in self?.cancelBtnClick() }
         topToolBar.confirmClickCallback = { [weak self] in self?.doneBtnClick() }
         topToolBar.alpha = 0
+        topToolBar.backgroundColor = .black
         
         textColorBtn.addTarget(self, action: #selector(textColorBtnClick), for: .touchUpInside)
         textBackgroundBtn.addTarget(self, action: #selector(textBackgroundBtnClick), for: .touchUpInside)
@@ -374,35 +375,18 @@ public class HEInputTextViewController: UIViewController {
         textView.tintColor = .clear
         textView.resignFirstResponder()
         
-        var image: UIImage?
-        let textRect: CGRect
-        if fillStyle == .area {
-            textRect = textView.frame
-        } else {
-            let rects = calculateTextRectsByChar()
-            let initial = CGRect(x: 10000, y: 10000, width: 0, height: 0)
-            textRect = rects.reduce(initial) { prev, rect in
-                let x = min(prev.minX, rect.minX)
-                let y = min(prev.minY, rect.minY)
-                return CGRect(x: x,
-                              y: y,
-                              width: max(prev.width, rect.width),
-                              height: prev.height +  rect.height)
-            }
-        }
-        for subview in textView.subviews {
-            if NSStringFromClass(subview.classForCoder) == "_UITextContainerView" {
-                //                    var frame = subview.frame
-                //                    let size = textView.sizeThatFits(frame.size)
-                image = UIGraphicsImageRenderer.he.renderImage(size: textView.bounds.size) { context in
-                    if currentFillColor != .clear {
-                        textLayer.render(in: context)
-                    }
-                    subview.layer.render(in: context)
-                }
-                // FIXME: 위 렌더러에서 한번에 처리하기..
-                image = image?.he.clipImage(angle: 0, editRect: textRect, isCircle: false)
-            }
+        let label = UILabel()
+        label.font = UIFont(descriptor: currentFont.fontDescriptor, size: currentFont.pointSize*10)
+        label.text = textView.text
+        label.textColor = currentTextColor
+        label.backgroundColor = currentFillColor
+        label.numberOfLines = 0
+        label.sizeToFit()
+        label.textAlignment = .center
+        label.frame = label.frame.insetBy(dx: -100.0, dy: -80.0)
+        
+        let image = UIGraphicsImageRenderer.he.renderImage(size: label.bounds.size) { context in
+            label.layer.render(in: context)
         }
         
         animateDismiss(delay: 0.18) {  [weak self] in

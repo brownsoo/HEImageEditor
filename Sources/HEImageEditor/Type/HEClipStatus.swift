@@ -27,4 +27,8 @@ public struct HEClipStatus {
     var rotation: CGFloat {
         angle / 180 * CGFloat.pi
     }
+    
+    func clone() -> HEClipStatus {
+        HEClipStatus(editRect: self.editRect, angle: self.angle, ratio: self.ratio?.clone())
+    }
 }

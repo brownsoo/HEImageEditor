@@ -38,6 +38,11 @@ public extension HEImageEditorDelegate {
     }
 }
 
+enum TouchStickerType {
+    case image
+    case text
+}
+
 /// 다수 이미지 편집기
 ///
 /// - 내부적으로 HEEditImageView 를 편집모드로 사용한다.
@@ -113,15 +118,18 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
         shouldLayout = false
         
         let insets = self.view.safeAreaInsets
-        collView.frame = view.bounds
+        
         topBarView.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: insets.top + topBarViewHeight)
         
         bottomToolView.frame = CGRect(x: 0,
                                       y: view.frame.height - bottomToolViewHeight - insets.bottom,
                                       width: view.bounds.width,
                                       height: bottomToolViewHeight + insets.bottom)
-        
-        
+        let top = topBarView.frame.maxY
+        collView.frame = CGRect(x: 0,
+                                y: top,
+                                width: view.bounds.width,
+                                height: bottomToolView.frame.minY - top)
         if initialIndex > 0 && initialIndex < imageStore.all().count {
             collView.isPagingEnabled = false
             collView.scrollToItem(at: IndexPath(row: initialIndex, section: 0), at: .centeredHorizontally, animated: false)
@@ -213,9 +221,9 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
         let topbar = HETopBarView()
         let cancelButton = UIButton()
         cancelButton.also { it in
-            let icon = UIImage.he.getImage("icArrowRight") ?? UIImage(systemName: "chevron.left")
+            let icon = UIImage.he.getImage("icArrowRight") ?? UIImage(systemName: "chevron.left", withConfiguration: UIImage.SymbolConfiguration(pointSize: 24, weight: .regular, scale: .default))
             it.setImage(icon, for: .normal)
-            it.frame = CGRect(origin: .zero, size: .init(width: 48, height: 48))
+            it.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
         }
         topbar.addLeadingView(cancelButton)
         
@@ -235,7 +243,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
         cancelButton.addAction(.init(handler: { [weak self] _ in self?.didClickCancel() }), for: .touchUpInside)
         confirmButton.addAction(.init(handler: { [weak self] _ in self?.didConfirmClick() }), for: .touchUpInside)
         
-        return (topbar, 44)
+        return (topbar, HETopBarView.contentHeight)
     }
     
     /// 메인 하단 툴바
@@ -253,24 +261,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
     }
     
     private func onBottomToolSelected(type: HEImageEditorConfiguration.EditTool) {
-        guard let currentIndex, let he = imageStore.getHEImage(at: currentIndex) else {
-            return
-        }
-        // 편집 데이터가 없는 경우, 모델 변환
-        let hei: HEEditImage
-        if (he as? HEEditImage) == nil {
-            hei = he.toEditImage()!
-            imageStore.replaceHEImage(at: currentIndex, with: he.toEditImage()!)
-        } else {
-            hei = he.toEditImage()!
-        }
-        
-        self.editingImage = hei
-        Task { @MainActor in
-           await self.startEditImage(hei: hei, tool: type)
-        }
-        .store(in: &cancellables)
-        
+        startEditCurrent(type: type, stickerId: nil)
     }
     
     private func setupHEConfiguration() {
@@ -284,7 +275,6 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
                 .imageStickerTray(nil)
         }
     }
-    
     
     // 편집 모드의 상단바 구성
     private func makeEditTopBarView() -> HEEditImageTopToolViewBuilder {
@@ -314,7 +304,31 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
         }
     }
     
-    private func startEditImage(hei: HEEditImage, tool: HEImageEditorConfiguration.EditTool?) async {
+    
+    private func startEditCurrent(type: HEImageEditorConfiguration.EditTool, stickerId: String?) {
+        guard let currentIndex, let he = imageStore.getHEImage(at: currentIndex) else {
+            return
+        }
+        // 편집 데이터가 없는 경우, 모델 변환
+        let hei: HEEditImage
+        if (he as? HEEditImage) == nil {
+            hei = he.toEditImage()!
+            imageStore.replaceHEImage(at: currentIndex, with: he.toEditImage()!)
+        } else {
+            hei = he.toEditImage()!
+        }
+        
+        self.editingImage = hei
+        Task { @MainActor in
+           await self.showImageEditor(hei: hei, tool: type, stickerId: stickerId)
+        }
+        .store(in: &cancellables)
+    }
+    
+    
+    private func showImageEditor(hei: HEEditImage,
+                                 tool: HEImageEditorConfiguration.EditTool?,
+                                 stickerId: String?) async {
         let topBuilder = self.makeEditTopBarView()
         do {
             var image: UIImage
@@ -325,8 +339,8 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
             } else {
                 if hei.editImageURL == nil && hei.originURL?.pathExtension == "gif" {
                     image = try await self.imageStore.originImage(forHei: hei).value
-                    trace(image.he.isGIF())
-                    if let first = image.pngData(), let stop = UIImage(data: first) {
+                    //trace(image.he.isGIF())
+                    if let first = image.jpegData(compressionQuality: 0.8), let stop = UIImage(data: first) {
                         image = stop
                         let _ = self.imageStore.cacheFattenImage(uiImage: stop, forHei: hei)
                     }
@@ -341,6 +355,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
             vc.delegate = self
             vc.editId = hei.id
             vc.initialEditTool = tool
+            vc.initialStickerId = stickerId
             vc.animateDismiss = true
             
             vc.modalPresentationStyle = .overFullScreen
@@ -499,13 +514,15 @@ extension HEImageEditorViewController: UICollectionViewDataSource, UICollectionV
 //        trace()
         
         if let cell = cell as? HEImageViewPageCell, let hei = imageStore.getHEImage(at: indexPath.row) {
-            cell.loadImage(task: imageStore.editImage(forHei: hei))
+            cell.loadImage(task: imageStore.editImage(forHei: hei), editState: (hei as? HEEditImage)?.editState)
             
             if resetToastView.superview == nil {
                 showResetToastIfNeed(isEdited: hei.editImageURL != nil)
             } else {
                 hideResetToast()
             }
+            
+            cell.delegate = self
         }
     }
     
@@ -535,12 +552,40 @@ extension HEImageEditorViewController: UICollectionViewDataSource, UICollectionV
     
 }
 
+extension HEImageEditorViewController: HEImageViewPageCellDelegate {
+    func imageViewPageCell(_ cell: HEImageViewPageCell, tapOnStickerId stickerId: String, stickerType: TouchStickerType) {
+        if stickerType == .image {
+            startEditCurrent(type: .imageSticker, stickerId: stickerId)
+        } else {
+            startEditCurrent(type: .textSticker, stickerId: stickerId)
+        }
+    }
+}
 
+
+protocol HEImageViewPageCellDelegate: AnyObject {
+    func imageViewPageCell(_ cell: HEImageViewPageCell, tapOnStickerId stickerId: String, stickerType: TouchStickerType)
+}
+
+struct StickerArea {
+    let id: String
+    let center: CGPoint
+    let radius: CGFloat
+    let width: CGFloat
+    let height: CGFloat
+    let type: TouchStickerType
+    let rotation: CGFloat
+}
 
 class HEImageViewPageCell: UICollectionViewCell {
     
     private var imageView: UIImageView!
     private var imageLoadTask: Cancellable?
+    private var stickerAreas: [StickerArea] = []
+    private lazy var tapGes = UITapGestureRecognizer(target: self, action: #selector(tapAction(_:)))
+    weak var delegate: HEImageViewPageCellDelegate?
+    
+    private let previewArea = UIView()
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -557,13 +602,16 @@ class HEImageViewPageCell: UICollectionViewCell {
                 it.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
             ])
         }
+        
+        contentView.addSubview(previewArea)
+        contentView.addGestureRecognizer(tapGes)
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func loadImage(task: Task<UIImage, Error>) {
+    func loadImage(task: Task<UIImage, Error>, editState: HEEditState?) {
 //        trace()
         imageView.image = nil
         imageLoadTask?.cancel()
@@ -572,9 +620,93 @@ class HEImageViewPageCell: UICollectionViewCell {
                 let image = try await task.value
                 if Task.isCancelled { return }
                 self?.imageView.image = image
+                self?.getStickerAreas(editState)
             } catch {
                 woops(error)
             }
         }
+    }
+    
+    private func getStickerAreas(_ editState: HEEditState?) {
+        guard let editState else { return }
+        let screenScale = UIScreen.main.scale
+        let imageRect = imageView.calculateScaleFitRectOfImage()
+        var areas: [StickerArea] = []
+        for sticker in editState.stickers {
+            var visibleFrame = sticker.visibleFrame
+            visibleFrame.origin.x += imageRect.origin.x
+            visibleFrame.origin.y += imageRect.origin.y
+            
+            let length = (sticker.originFrame.width + sticker.originFrame.height) / 2
+            var radius = (length - HEImageStickerView.edgeInset * screenScale) * sticker.originScale * sticker.gesScale
+            radius = max(0, radius)
+            areas.append(StickerArea(
+                id: sticker.id,
+                center: CGPoint(x: visibleFrame.midX, y: visibleFrame.midY),
+                radius: radius,
+                width: visibleFrame.width,
+                height: visibleFrame.height,
+                type: sticker.isTextSticker ? TouchStickerType.text : .image,
+                rotation: sticker.originAngle + sticker.gesRotation
+            ))
+        }
+        
+        self.stickerAreas = areas.reversed()
+        
+        // 이하 : 테스트 영역 체크용
+//        if let area = areas.first {
+//            
+//            debugPrint(area)
+//            
+//            previewArea.backgroundColor = .yellow.withAlphaComponent(0.3)
+//            previewArea.layer.masksToBounds = true
+////            let length = min(area.width, area.height)
+////            previewArea.frame = CGRect(x: area.center.x - length / 2,
+////                                       y: area.center.y - length / 2,
+////                                       width: length,
+////                                       height: length)
+//            previewArea.frame = CGRect(x: area.center.x - area.radius / 2,
+//                                       y: area.center.y - area.radius / 2,
+//                                       width: area.radius,
+//                                       height: area.radius)
+//            previewArea.layer.cornerRadius = area.radius / 2
+//        }
+    }
+    
+    @objc
+    private func tapAction(_ ges: UITapGestureRecognizer) {
+        let p = ges.location(in: contentView)
+        guard let area = stickerAreas.first (where: { area in
+            let dis = sqrt(pow(p.x - area.center.x, 2) + pow(p.y - area.center.y, 2))
+            return dis < area.radius / 2
+        }) else {
+            return
+        }
+        
+        trace(area)
+        delegate?.imageViewPageCell(self, tapOnStickerId: area.id, stickerType: area.type)
+        
+    }
+}
+
+
+fileprivate extension UIImageView {
+    func calculateScaleFitRectOfImage() -> CGRect {
+        guard var imgSize = self.image?.size else {
+            return .zero
+        }
+        let vSize = self.frame.size
+        let scaleW = vSize.width / imgSize.width
+        let scaleH = vSize.height / imgSize.height
+        let aspect = min(scaleW, scaleH)
+        imgSize = CGSize(width: imgSize.width * aspect, height: imgSize.height * aspect)
+        var imageRect = CGRect(origin: .zero, size: imgSize)
+        imageRect.origin.x = (vSize.width - imageRect.size.width) / 2
+        imageRect.origin.y = (vSize.height - imageRect.size.height) / 2
+        
+        imageRect.origin.x += self.frame.origin.x
+        imageRect.origin.y += self.frame.origin.y
+        
+        return imageRect
     }
 }

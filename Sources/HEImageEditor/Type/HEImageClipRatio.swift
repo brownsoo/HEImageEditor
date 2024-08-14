@@ -21,6 +21,10 @@ public class HEImageClipRatio: NSObject {
         self.isCircle = isCircle
         super.init()
     }
+    
+    func clone() -> HEImageClipRatio {
+        HEImageClipRatio(title: self.title, whRatio: self.whRatio, iconName: self.iconName, isCircle: self.isCircle)
+    }
 }
 
 extension HEImageClipRatio {

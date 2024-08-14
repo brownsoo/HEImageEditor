@@ -233,9 +233,10 @@ extension HELibraryViewController: UICollectionViewDelegate {
         if isMultipleSelectionEnabled {
             cell.multipleSelectionIndicator.isHidden = false
             cell.multipleSelectionIndicator.selectionColor = PickerConfig.colors.multipleItemsSelectedCircleColor ?? PickerConfig.colors.tintColor
-            
+            cell.singleSelectionIndicator.isHidden = true
         } else {
             cell.multipleSelectionIndicator.isHidden = true
+            cell.singleSelectionIndicator.isHidden = false
         }
         
         cell.isOverlaySelection = cell.bindingAssetIdentifier == currentlySelected
@@ -255,8 +256,10 @@ extension HELibraryViewController: UICollectionViewDelegate {
                 scrollViewZoomScale: currentSelection.scrollViewZoomScale)
             
             cell.multipleSelectionIndicator.set(number: index + 1) // start at 1, not 0
+            cell.singleSelectionIndicator.set(checked: true)
         } else {
             cell.multipleSelectionIndicator.set(number: nil)
+            cell.singleSelectionIndicator.set(checked: false)
         }
 
         if let caption = delegate?.libraryView(self, captionWithIdentifer: cell.bindingAssetIdentifier) {

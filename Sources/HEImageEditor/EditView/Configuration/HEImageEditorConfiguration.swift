@@ -156,6 +156,8 @@ public class HEImageEditorConfiguration: NSObject {
         }
     }
     
+    /// AI 스티커 스케일 조정값
+    @objc public var aiStickerScale: CGFloat = 2.4
     
     @objc public var textStickerDefaultFont: UIFont?
     /// 텍스트 스티커에서 글줄 내리기 허용 여부

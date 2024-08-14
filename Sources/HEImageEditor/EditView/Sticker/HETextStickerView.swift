@@ -46,7 +46,8 @@ class HETextStickerView: HEBaseStickerView {
             originFrame: originFrame,
             gesScale: gesScale,
             gesRotation: gesRotation,
-            totalTranslationPoint: totalTranslationPoint
+            totalTranslationPoint: totalTranslationPoint,
+            visibleFrame: visibleFrame
         )
     }
     
@@ -163,6 +164,8 @@ class HETextStickerView: HEBaseStickerView {
     
     class func calculateSize(image: UIImage) -> CGSize {
         var size = image.size
+        size.width /= 10
+        size.height /= 10
         size.width += Self.edgeInset * 2
         size.height += Self.edgeInset * 2
         return size

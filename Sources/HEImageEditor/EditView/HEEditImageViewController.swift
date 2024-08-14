@@ -22,7 +22,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     override open var prefersHomeIndicatorAutoHidden: Bool { true }
     
     override open var supportedInterfaceOrientations: UIInterfaceOrientationMask {
-        deviceIsiPhone() ? .portrait : .all
+        .portrait
     }
     
     public weak var delegate: HEEditImageViewDelegate?
@@ -274,6 +274,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     private var bottomToolViewBuilder: HEEditImageBottomToolViewBuilder!
     
     public var initialEditTool: HEImageEditorConfiguration.EditTool?
+    public var initialStickerId: String?
     
     deinit {
         cleanToolViewStateTimer()
@@ -365,18 +366,25 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 
                 let sameSelection = self.selectedTool == toolType
                 if sameSelection {
-                    self.stopCurrentEditing()
+                    if self.selectedTool == .imageSticker || self.selectedTool == .textSticker {
+                        self.changeMainFrameToFullMode()
+                    }
+                    self.stopJustCurrentEditing(changingTool: true)
+                    self.selectedTool = nil
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                         toolbar.throttlingChangeTool = false
                     }
                     return
+                }
+                if self.selectedTool == .imageSticker || self.selectedTool == .textSticker {
+                    self.changeMainFrameToFullMode()
                 }
                 
                 var changeDelay: TimeInterval = 0.0
                 if editView.isImageEditing {
                     changeDelay = 0.3
                     self.loadingView.show(inCenterOf: self.view)
-                    self.stopJustCurrentEditing()
+                    self.stopJustCurrentEditing(changingTool: true)
                     toolbar.selectTool(toolType, dispatchingEvent: false)
                 }
                 
@@ -439,7 +447,23 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     override open func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         setupFreeDrawing()
-        
+        // 초기 툴 처리
+        if let initialStickerId {
+            if let sticker = initialStickers.first(where: { $0.id == initialStickerId }) {
+                if let sticker = sticker as? HETextStickerView {
+                    self.stickerDidTap(sticker)
+                    self.sticker(sticker, editText: sticker.text)
+                } else if sticker is HEImageStickerView {
+                    sticker.showBorder()
+                    self.stickerDidTap(sticker)
+                    bottomToolView?.selectTool(.imageSticker)
+                }
+            }
+        } else if let tool = initialEditTool {
+            self.bottomToolView?.selectTool(tool)
+        }
+        self.initialEditTool = nil
+        self.initialStickerId = nil
     }
     
     override open func viewDidLayoutSubviews() {
@@ -452,9 +476,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         trace("didLayout")
         let insets = self.view.safeAreaInsets
         
-        mainScrollView.frame = view.bounds
-        resetContainerViewFrame()
-        
         if let topBarView {
             topBarView.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: insets.top + topBarViewHeight)
         }
@@ -464,6 +485,9 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                                         y: view.frame.height - bottomToolViewHeight - insets.bottom,
                                         width: view.he.width,
                                         height: bottomToolViewHeight + insets.bottom)
+        
+        mainScrollView.frame = getFrameForFullMode()
+        resetContainerViewFrame()
         
         let toolTop = bottomToolViewContainer.frame.minY
         
@@ -526,14 +550,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             drawColorCollectionView?.scrollToItem(at: IndexPath(row: index, section: 0), at: .centeredHorizontally, animated: false)
         }
         
-        // 초기 툴 처리
-        if let tool = initialEditTool {
-            DispatchQueue.main.async {
-                self.initialEditTool = nil
-                self.bottomToolView?.selectTool(tool)
-            }
-        }
-        
     }
 
     override open func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
@@ -585,8 +601,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         }
     }
     
-    private func resetContainerViewFrame() {
-        mainScrollView.setZoomScale(1, animated: true)
+    private func resetContainerViewFrame(animate: Bool = false) {
+        mainScrollView.setZoomScale(1, animated: animate)
         imageView.image = editImage
         let editRect = currentClipStatus.editRect
         
@@ -596,10 +612,12 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         let w = ratio * editSize.width * mainScrollView.zoomScale
         let h = ratio * editSize.height * mainScrollView.zoomScale
         // editSize 를 화면에 맞춰 중앙에 위치
-        containerView.frame = CGRect(x: max(0, (scrollViewSize.width - w) / 2),
-                                     y: max(0, (scrollViewSize.height - h) / 2),
-                                     width: w, height: h)
-        mainScrollView.contentSize = containerView.frame.size
+        let containerViewFrame = CGRect(x: max(0, (scrollViewSize.width - w) / 2),
+                                        y: max(0, (scrollViewSize.height - h) / 2),
+                                        width: w, height: h)
+        
+        containerView.frame = containerViewFrame
+        mainScrollView.contentSize = containerViewFrame.size
         
         if currentClipStatus.ratio?.isCircle == true {
             let mask = CAShapeLayer()
@@ -638,8 +656,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     private func setupUI() {
         view.backgroundColor = .black
         
-        view.addSubview(childVCContainer)
-        
         // 메인 컨텐츠
         view.addSubview(mainScrollView)
         mainScrollView.addSubview(containerView)
@@ -648,6 +664,9 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         containerView.addSubview(stickersContainer)
         containerView.addSubview(mosaicStickerActiveContainer)
         mosaicStickerActiveContainer.isHidden = true
+        
+        view.addSubview(childVCContainer)
+        childVCContainer.isHidden = true
         
         // 상단 툴바
         if let topBarView {
@@ -851,11 +870,11 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     }
     
     public func stopCurrentEditing() {
-        self.stopJustCurrentEditing()
+        self.stopJustCurrentEditing(changingTool: false)
         self.selectedTool = nil
     }
     
-    private func stopJustCurrentEditing() {
+    private func stopJustCurrentEditing(changingTool: Bool) {
         
         switch self.selectedTool {
         case .draw:
@@ -863,7 +882,11 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             break
         case .clip:
             if let vc = self.currentEditController as? HEClipImageViewController {
-                vc.doneEdit()
+                if changingTool {
+                    vc.doneEditWithNoConfirm()
+                } else {
+                    vc.doneEdit()
+                }
             }
             break
         case .imageSticker:
@@ -892,7 +915,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     public func startClipping() {
         let allowClipWithoutKeepingState = EditorConfig.allowClipWithoutKeepingState
-        
         if allowClipWithoutKeepingState && self.hasEditEffect() {
             showAlert(text: EditorConfig.wordings.alert.clippingWithoutState, confirmAction: { [weak self] _ in
                 self?.startClippingFlow(allowClipWithoutKeepingState: true)
@@ -921,7 +943,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         let vc = HEClipImageViewController(image: currentEditImage, 
                                            status: currentClipStatus,
                                            bottomViewBuilder: self.clipImageBottomViewBuilder)
-        
+        self.changeMainFrameToFullMode()
         let rect = mainScrollView.convert(containerView.frame, to: view)
         vc.presentAnimateFrame = rect
         vc.presentAnimateImage = currentEditImage.he
@@ -945,11 +967,23 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         
         vc.cancelClipBlock = { [weak self] in
             self?.selectedTool = nil
-            self?.resetContainerViewFrame()
+            self?.changeMainFrameToFullMode()
         }
-        vc.dismissCallback = { [weak self] in
-            self?.removeEditController()
-            self?.finishEditingDismissAnimate()
+        vc.dismissCallback = { [weak self] isDone in
+            guard let self else { return }
+            self.removeEditController()
+            self.finishEditingDismissAnimate()
+            
+            if self.selectedTool == nil && EditorConfig.actionDoneEditorWhenImageStickerEditingConfirm {
+                if let isDone {
+                    self.modalTransitionStyle = .crossDissolve
+                    if isDone {
+                        self.done()
+                    } else {
+                        self.cancel()
+                    }
+                }
+            }
         }
         
         self.addToEditController(vc)
@@ -1021,6 +1055,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 imageStickerTray.selectImageStickerBlock = nil
                 self.editingTopView.confirmClickCallback = nil
                 self.editingTopView.cancelClickCallback = nil
+                self.changeMainFrameToFullMode()
             }
             self.hideAiStickerToast()
             self.editingTopView.hide()
@@ -1036,37 +1071,79 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         editingTopView.show(animate: false)
         editingTopView.confirmClickCallback = { [weak self] in
             guard let self else { return }
+            self.loadingView.show(inCenterOf: self.view)
             self.selectedTool = nil
             self.imageStickerTray?.hide()
+            self.changeMainFrameToFullMode()
             
             if EditorConfig.actionDoneEditorWhenImageStickerEditingConfirm {
                 self.modalTransitionStyle = .crossDissolve
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                     self.done()
                 }
             }
         }
         editingTopView.cancelClickCallback = {[weak self] in
             guard let self else { return }
-            self.selectedTool = nil
-            self.imageStickerTray?.hide()
-            
             if EditorConfig.actionDoneEditorWhenImageStickerEditingConfirm {
                 self.modalTransitionStyle = .crossDissolve
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                     self.cancel()
                 }
+            } else {
+                self.selectedTool = nil
+                self.imageStickerTray?.hide()
             }
         }
         
         let trayFrame = getImageStickerTrayFrame()
         imageStickerTray.show(in: view, frame: trayFrame)
         
-        self.topBarView?.hide()
+        
+        changeMainFrameToStickerMode(animate: true)
+        
+//        self.topBarView?.hide()
         setToolView(show: false)
         setDrawViews(hidden: true)
         setFilterViews(hidden: true)
         setAdjustViews(hidden: true)
+    }
+    
+    private func changeMainFrameToStickerMode(animate: Bool = false) {
+        let target = getFrameForStickerMode()
+        if target == mainScrollView.frame { return }
+        mainScrollView.frame = target
+        let oldContainerSize = stickersContainer.frame.size
+        resetContainerViewFrame(animate: animate)
+        recalculateStickersFrame(oldContainerSize, currentClipStatus.angle, currentClipStatus.angle)
+    }
+    
+    private func changeMainFrameToFullMode(animate: Bool = false) {
+        let target = getFrameForFullMode()
+        if target == mainScrollView.frame { return }
+        let oldContainerSize = stickersContainer.frame.size
+        mainScrollView.frame = target
+        resetContainerViewFrame(animate: animate)
+        recalculateStickersFrame(oldContainerSize, currentClipStatus.angle, currentClipStatus.angle)
+    }
+    
+    private func getFrameForStickerMode() -> CGRect {
+        let insets = view.safeAreaInsets
+        let top = topBarView?.frame.maxY ?? insets.top
+        let trayFrame = getImageStickerTrayFrame()
+        return CGRect(x: 0,
+                      y: top,
+                      width: view.bounds.width,
+                      height: trayFrame.minY - top)
+    }
+    
+    private func getFrameForFullMode() -> CGRect {
+        let insets = view.safeAreaInsets
+        let top = topBarView?.frame.maxY ?? insets.top
+        return CGRect(x: 0,
+                      y: top,
+                      width: view.bounds.width,
+                      height: bottomToolViewContainer.frame.minY - top)
     }
     
     // MARK: -- startTextSticker
@@ -1188,7 +1265,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     @objc
     public func cancel() {
-        dismiss(animated: false) {
+        modalTransitionStyle = .crossDissolve
+        dismiss(animated: true) {
             self.delegate?.cancelledEditImage(self)
         }
     }
@@ -1202,6 +1280,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         var editModel: HEEditState?
         
         func callback(delay: TimeInterval) {
+            self.loadingView.hide()
             self.delegate?.didFinishEditImage(self, resultImage: resImage, editId: editId, editModel: editModel)
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
                 self.dismiss(animated: false)
@@ -1213,9 +1292,15 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             return
         }
         
-        let loadingView = HELoadingView()
-        loadingView.show(inCenterOf: view)
+        if loadingView.superview == nil {
+            loadingView.show(inCenterOf: self.view)
+        }
         
+        // makes visible frames
+        stickersContainer.subviews.compactMap({ $0 as? HEBaseStickerView }).forEach { sticker in
+            let stickerRightFrame = stickersContainer.convert(sticker.frame, to: containerView)
+            sticker.visibleFrame = stickerRightFrame
+        }
         let stickerStates = stickersContainer.subviews.compactMap({ ($0 as? HEBaseStickerView)?.state })
         
         autoreleasepool {
@@ -1231,9 +1316,10 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                         editRect: currentClipStatus.editRect,
                         isCircle: currentClipStatus.ratio?.isCircle ?? false
                     ) ?? resImage
-                if let oriDataSize = originalImage.jpegData(compressionQuality: 1)?.count {
-                    resImage = resImage.he.compress(to: oriDataSize)
-                }
+                // 원소스에서 원본 해상도로 변환하는 것 같으나, 하단에 하얀 줄이 생기는 문제가 있어서 주석처리
+//                if let oriDataSize = originalImage.jpegData(compressionQuality: 1)?.count {
+//                    resImage = resImage.he.compress(to: oriDataSize)
+//                }
                 // 편집상태 모아서
                 editModel = HEEditState(
                     drawPaths: drawPaths,
@@ -1248,8 +1334,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 debugPrint(editModel!)
                 // 내보내~
                 DispatchQueue.main.async {
-                    loadingView.hide()
-                    callback(delay: 0.5)
+                    callback(delay: 0.5) // HEImageEditor 에 반영되는 시간 딜레이
                 }
             }
         }
@@ -1276,6 +1361,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         target.view.frame = childVCContainer.bounds
         target.didMove(toParent: self)
         self.currentEditController = target
+        self.childVCContainer.isHidden = false
     }
     
     private func removeEditController() {
@@ -1285,6 +1371,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
             exist.removeFromParent()
         }
         self.currentEditController = nil
+        self.childVCContainer.isHidden = true
     }
     
     
@@ -1589,6 +1676,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                                  textColor: UIColor? = nil,
                                  fillColor: UIColor? = nil,
                                  font: UIFont? = nil) {
+        changeMainFrameToFullMode()
+        
         var bgImage: UIImage?
         autoreleasepool {
             // Calculate image displayed frame on the screen.
@@ -1731,6 +1820,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                     delegate?.cannotAttachMoreImageStickers(self)
                 }
                 
+                let scaleUp = EditorConfig.aiStickerScale
+                
                 for result in results {
                     
                     if let sticker = imageStickerTray.randomStickerOnFace(inSection: 0) {
@@ -1738,8 +1829,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                         let scale = mainScrollView.zoomScale
                         
                         let inFrame = getAiStickerOriginFrame(stickerFrameInImage: result.frame.insetBy(
-                            dx: -HEImageStickerView.edgeInset * 2 * UIScreen.main.scale,
-                            dy: -HEImageStickerView.edgeInset * 2 * UIScreen.main.scale)
+                            dx: -HEImageStickerView.edgeInset * UIScreen.main.scale * scaleUp,
+                            dy: -HEImageStickerView.edgeInset * UIScreen.main.scale * scaleUp)
                         )
                         
                         let radian = currentClipStatus.rotation
@@ -1808,11 +1899,14 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         // Calculate the display rect of container view.
         let x = (mainScrollView.contentOffset.x - containerView.frame.minX) / scale
         let y = (mainScrollView.contentOffset.y - containerView.frame.minY) / scale
-        let w = view.frame.width / scale
-        let h = view.frame.height / scale
+        let w = mainScrollView.frame.width / scale
+        let h = mainScrollView.frame.height / scale
         // Convert to text stickers container view.
         let r = containerView.convert(CGRect(x: x, y: y, width: w, height: h), to: stickersContainer)
-        let originFrame = CGRect(x: r.minX + (r.width - size.width) / 2, y: r.minY + (r.height - size.height) / 2, width: size.width, height: size.height)
+        let originFrame = CGRect(x: r.minX + (r.width - size.width) / 2, 
+                                 y: r.minY + (r.height - size.height) / 2,
+                                 width: size.width,
+                                 height: size.height)
         return originFrame
     }
     
@@ -2342,6 +2436,11 @@ extension HEEditImageViewController: HEInputTextViewControllerDelegate {
     }
     
     func inputTextViewControllerDidCancel() {
+//        if EditorConfig.actionDoneEditorWhenImageStickerEditingConfirm {
+//            self.modalTransitionStyle = .crossDissolve
+//            self.cancel()
+//        } else {
+//        }
         selectedTool = nil
         setToolView(show: true)
     }
@@ -2353,30 +2452,31 @@ extension HEEditImageViewController: HEInputTextViewControllerDelegate {
 
 extension HEEditImageViewController: HEStickerViewDelegate {
     
-    func stickerBeginOperation(_ sticker: HEBaseStickerView) {
-        stickersContainer.bringSubviewToFront(sticker)
-        preStickerState = sticker.state
-        // 쓰레기통 표시
+    // 쓰레기통 표시
+    private func showTrashbin() {
         trashbinView.layer.removeAllAnimations()
         trashbinView.isHidden = false
         trashbinView.alpha = 0
+        trashbinView.backgroundColor = UIColor.he.trashbinNormalBgColor
+        let trayHidden = self.imageStickerTray?.isHidden == true
         var frame = trashbinView.frame
-        let visibleMaxY = min(
-            containerView.frame.maxY - 20,
-            bottomToolViewContainer.frame.minY - 86
-        )
-        frame.origin.y = visibleMaxY - trashbinSize.height + 18
-        let target = frame
-        frame.origin.y = target.origin.y + 15
+        let containerBottom = mainScrollView.convert(containerView.frame, to: view).maxY
+        var visibleMaxY = trayHidden ? bottomToolViewContainer.frame.minY : getImageStickerTrayFrame().minY
+        visibleMaxY = min(visibleMaxY, containerBottom) - 10
+        frame.origin.y = visibleMaxY - trashbinSize.height
         trashbinView.frame = frame
-        UIView.animate(withDuration: 0.25, delay: 0.2) {
-            self.trashbinView.frame = target
+        trashbinView.transform = CGAffineTransform(scaleX: 0.2, y: 0.2)
+        UIView.animate(withDuration: 0.18, delay: 0.2) {
+            self.trashbinView.transform = .identity
             self.trashbinView.alpha = 1
         }
-        // 스티커 트레이 숨김
-        if imageStickerTray?.superview != nil {
-            imageStickerTray?.hide()            
-        }
+    }
+    
+    func stickerBeginOperation(_ sticker: HEBaseStickerView) {
+        stickersContainer.bringSubviewToFront(sticker)
+        preStickerState = sticker.state
+        
+        showTrashbin()
         
         stickersContainer.subviews.forEach { view in
             if view !== sticker {
@@ -2414,16 +2514,18 @@ extension HEEditImageViewController: HEStickerViewDelegate {
         var trashed = false
         
         if intersection.width <= 0 && intersection.height <= 0 {
-            sticker.moveToTrashbin()
+            sticker.moveToTrashbin(withHaptic: true)
             trashed = true
         } else {
             let point = panGes.location(in: view)
             if trashbinView.frame.contains(point) {
                 trashed = true
                 if sticker.alpha == 1 {
+                    UINotificationFeedbackGenerator().notificationOccurred(.warning)
+                    
                     trashbinView.backgroundColor = .he.trashbinTintBgColor
                     trashbinImgView.isHighlighted = true
-                    sticker.layer.removeAllAnimations()
+                    sticker.contentView.layer.removeAllAnimations()
                     sticker.hideBorder()
                     
                     let stickerCenter = containerView.convert(stickerRightFrame, to: view).center
@@ -2437,7 +2539,7 @@ extension HEEditImageViewController: HEStickerViewDelegate {
                         }
                     }
                     
-                    UIView.animate(withDuration: 0.14, delay: 0, options: [.curveEaseOut]) {
+                    UIView.animate(withDuration: 0.14, delay: 0, options: [.curveEaseOut, .beginFromCurrentState]) {
                         sticker.alpha = 0.2
                         sticker.contentView.transform = CGAffineTransform(translationX: moving.x * zoomScale, y: moving.y * zoomScale).scaledBy(x: 0.1, y: 0.1)
                     }
@@ -2446,7 +2548,7 @@ extension HEEditImageViewController: HEStickerViewDelegate {
                 if sticker.alpha != 1 {
                     trashbinView.backgroundColor = .he.trashbinNormalBgColor
                     trashbinImgView.isHighlighted = false
-                    sticker.layer.removeAllAnimations()
+                    sticker.contentView.layer.removeAllAnimations()
                     
                     if sticker.kind == .mosaic { // 모자이크는 애니 X
                         sticker.alpha = 1
@@ -2455,13 +2557,12 @@ extension HEEditImageViewController: HEStickerViewDelegate {
                         self.mosaicStickerActiveContainer.isHidden = false
                         trashed = false
                     } else {
-                        UIView.animate(withDuration: 0.14, delay: 0, options: [.curveEaseOut], animations: {
+                        UIView.animate(withDuration: 0.14, delay: 0, options: [.curveEaseOut, .beginFromCurrentState], animations: {
                             sticker.alpha = 1
                             sticker.contentView.transform = CGAffineTransform.identity
                         }) { comp in
                             if comp {
                                 sticker.showBorder()
-                                self.mosaicStickerActiveContainer.isHidden = false
                                 trashed = false
                             }
                         }
@@ -2488,9 +2589,6 @@ extension HEEditImageViewController: HEStickerViewDelegate {
         if selectedTool == nil {
             setToolView(show: true)
         } else {
-            if selectedTool == .imageSticker {
-                imageStickerTray?.show(in: view, frame: getImageStickerTrayFrame())
-            }
             if !isInSubEditController {
                 editingTopView.show()
             }
@@ -2499,10 +2597,13 @@ extension HEEditImageViewController: HEStickerViewDelegate {
         trashbinView.layer.removeAllAnimations()
         trashbinView.isHidden = true
         
+        let stickerRightFrame = stickersContainer.convert(sticker.frame, to: containerView)
+        sticker.visibleFrame = stickerRightFrame
+        
         var endState: HEStickerEffect? = sticker.state
         let point = panGes.location(in: view)
         if trashbinView.frame.contains(point) {
-            sticker.moveToTrashbin()
+            sticker.moveToTrashbin(withHaptic: false)
             endState = nil
         }
         

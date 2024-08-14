@@ -24,15 +24,41 @@ public class HEEditImage: HEImage {
         self.editState = editState
     }
     
+    public init?(hei: HEImage) {
+        if let originURL = hei.originURL {
+            super.init(id: hei.id, origin: originURL, phAsset: hei.phAsset)
+        } else if let originImage = hei.originImage {
+            super.init(id: hei.id, image: originImage, phAsset: hei.phAsset)
+        } else {
+            return nil
+        }
+        
+        setEditImageURL(hei.editImageURL)
+        setFattenImageURL(hei.fattenImageURL)
+        setThumbnailURL(hei.thumbnailURL)
+        setEditState((hei as? HEEditImage)?.editState)
+        
+        self.updatedTime = hei.updatedTime
+    }
+    
     public func setEditState(_ model: HEEditState?) {
         self.editState = model
         self.updatedTime = Date().timeIntervalSince1970
     }
     
+    public override func clone(withNewId newId: String) -> HEImage {
+        let copy = super.clone(withNewId: newId)
+        guard let hei = HEEditImage.fromHEImage(copy) else {
+            return copy
+        }
+        hei.editState = self.editState?.clone()
+        return hei
+    }
+    
     public override var debugDescription: String {
         """
 HEEditImage::
-    - id\(id)
+    - id: \(id)
     - originURL: \(originURL?.absoluteString ?? "nil")
     - editImageURL: \(editImageURL?.absoluteString ?? "nil")
     - fattenImageURL: \(fattenImageURL?.absoluteString ?? "nil")
@@ -50,13 +76,7 @@ public extension HEEditImage {
         if let e = hei as? HEEditImage {
             return e
         }
-        if let originURL = hei.originURL {
-            return HEEditImage(id: hei.id, origin: originURL, editState: nil, phAsset: hei.phAsset)
-        }
-        if let originImage = hei.originImage {
-            return HEEditImage(id: hei.id, image: originImage, editState: nil, phAsset: hei.phAsset)
-        }
-        return nil
+        return HEEditImage(hei: hei)
     }
 }
 

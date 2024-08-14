@@ -62,7 +62,7 @@ public class HEImageUtil {
                     newImage = image.he.resize(newHeight: preferImageResizingSize)
                 }
                 debugPrint("ImageUtil.checkImageDataAndResize::resized image size = \(newImage.size.width) x \(newImage.size.height)")
-                if let data = newImage.jpegData(compressionQuality: 0.7) {
+                if let data = newImage.jpegData(compressionQuality: 0.8) {
                     debugPrint("ImageUtil.checkImageDataAndResize::jpeg image")
                     fileData = data
                 }
@@ -110,7 +110,7 @@ public class HEImageUtil {
                         newImage = image.he.resize(newHeight: preferImageResizingSize)
                     }
                     debugPrint("checkFileSizeAndCache: 변경 size = \(newImage.size.width) x \(newImage.size.height)")
-                    if let data = newImage.jpegData(compressionQuality: 0.7) {
+                    if let data = newImage.jpegData(compressionQuality: 0.8) {
                         fileData = data
                     }
                 }
@@ -139,7 +139,7 @@ public class HEImageUtil {
         }
     }
     
-    public static func saveTempImage(_ image: UIImage, name: String, encoding: EncodingType = .png, completion: @escaping (Result<URL, Error>) -> Void) {
+    public static func saveTempImage(_ image: UIImage, name: String, encoding: EncodingType = .jpeg(quailty: 1.0), completion: @escaping (Result<URL, Error>) -> Void) {
         DispatchQueue.global().async {
             let tempDir = FileManager.default.temporaryDirectory
             let writeUrl = tempDir.appendingPathComponent(name)

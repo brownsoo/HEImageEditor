@@ -9,7 +9,7 @@ import ImageIO
 
 public extension HEWrapper where Base: UIImage {
     
-    // FIXME: 잘 안됨..
+    @available(*, deprecated, message: "잘 안됨...")
     func gifFirstFrameImage() -> UIImage? {
         guard let imageData = base.cgImage?.dataProvider?.data,
               let source = CGImageSourceCreateWithData(imageData as CFData, nil) else {
@@ -32,8 +32,9 @@ public extension HEWrapper where Base: UIImage {
         return nil
     }
     
+    @available(*, deprecated, message: "잘 안됨...")
     func isGIF() -> Bool {
-        guard let imageData = base.cgImage?.dataProvider?.data else { return false }
+        guard let imageData: CFData = base.cgImage?.dataProvider?.data else { return false }
         let source = CGImageSourceCreateWithData(imageData, nil)
         let count = CGImageSourceGetCount(source!)
         return count > 1
@@ -257,7 +258,7 @@ public extension HEWrapper where Base: UIImage {
             }
         }
         
-        if let imageData = base.pngData() {
+        if let imageData = base.jpegData(compressionQuality: 0.8) {
             let options = [
                 kCGImageSourceCreateThumbnailWithTransform: true,
                 kCGImageSourceCreateThumbnailFromImageAlways: true,

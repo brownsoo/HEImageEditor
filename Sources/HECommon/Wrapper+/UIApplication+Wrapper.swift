@@ -7,7 +7,7 @@
 
 import UIKit
 
-public extension HEWrapper  where Base: UIApplication {
+public extension HEWrapper where Base: UIApplication {
     
     @available(iOS 13.0, *)
     func findWindowScenes() -> [UIWindowScene] {

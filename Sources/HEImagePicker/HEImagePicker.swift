@@ -39,7 +39,15 @@ public protocol HEImagePickerDelegate: AnyObject {
 
 public extension HEImagePickerDelegate {
     func imagePicker(_ picker: HEImagePicker, captionWithIdentifer identifier: String) -> String? {
-        return picker.editImageStore.getHEImage(forAssetIdentifier: identifier)?.editImageURL == nil ? nil : PickerConfig.wordings.edited
+        if let hei = picker.editImageStore.getHEImage(forId: identifier),
+           hei.editImageURL != nil {
+            return PickerConfig.wordings.edited
+        }
+        if let hei = picker.editImageStore.getHEImage(forAssetIdentifier: identifier),
+           hei.editImageURL != nil {
+            return PickerConfig.wordings.edited
+        }
+        return nil
     }
     func imagePicker(_ picker: HEImagePicker, shouldAddToSelection identifier: String, numSelections: Int) -> Bool {
         return true
@@ -85,7 +93,11 @@ open class HEImagePicker: UINavigationController, HEPickerNavigationController {
     open override var preferredStatusBarStyle: UIStatusBarStyle {
         PickerConfig.preferredStatusBarStyle
     }
-    /// 편집 이미지 정보 저장소 
+    
+    open override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+        return .portrait
+    }
+    /// 편집 이미지 정보 저장소
     public var editImageStore: HEEditImageStore {
         set {
             mainVc.editImageStore = newValue
@@ -118,6 +130,8 @@ open class HEImagePicker: UINavigationController, HEPickerNavigationController {
         fatalError("init(coder:) has not been implemented")
     }
     
+    private var initiailHEImages: [HEImage] = []
+    
     open override func viewDidLoad() {
         super.viewDidLoad()
         viewControllers = [mainVc]
@@ -135,6 +149,15 @@ open class HEImagePicker: UINavigationController, HEPickerNavigationController {
                 self.pickerDelegate?.imagePicker(self, limitExceededOnSelectItemType: type)
             }
         }
+        
+        
+        self.initiailHEImages = self.editImageStore.all().map {
+            $0.clone(withNewId: $0.id)
+        }
+        
+//        trace("피커 시작")
+//        debugPrint(self.editImageStore.all())
+//        debugPrint(self.initiailHEImages)
     }
     
     public func reload() {
@@ -168,7 +191,7 @@ extension HEImagePicker: HELibraryViewDelegate {
     
     public func libraryView(_ libraryView: HELibraryViewController, didSelectItems items: [HEMediaItem], wantsEditSelection: HELibrarySelection?) {
         if let wantsEditSelection {
-            guard let item = items.first(where: { $0.identifier == wantsEditSelection.assetIdentifier }) ?? items.first else {
+            guard let item = items.first(where: { ($0.phAsset?.localIdentifier ?? $0.identifier) == wantsEditSelection.assetIdentifier }) ?? items.first else {
                 showAlert(PickerConfig.wordings.noSelectionToEdit)
                 return
             }
@@ -183,6 +206,10 @@ extension HEImagePicker: HELibraryViewDelegate {
     }
     
     public func libraryViewDidCancel(_ libraryView: HELibraryViewController) {
+        
+        self.editImageStore.clearAll()
+        self.editImageStore.addHEImages(self.initiailHEImages)
+        
         pickerDelegate?.imagePickerDidCancel(self)
     }
     

@@ -157,6 +157,18 @@ final public class HEAssetZoomableView: UIScrollView {
             }
             
             self.photoImageView.image = image
+            if !isLowResIntermediaryImage {
+                self.photoImageView.image = image
+                if photo.playbackStyle == .imageAnimated {
+                    let options = PHImageRequestOptions()
+                    options.isSynchronous = true
+                    PHImageManager.default().requestImageDataAndOrientation(for: photo, options: options) { [weak self] data, _, _, _ in
+                        if let data {
+                            self?.photoImageView.he.loadGif(data: data)
+                        }
+                    }
+                }
+            }
             self.setAssetFrame(for: self.photoImageView, with: image)
             
             // Stored crop position in multiple selection
@@ -180,7 +192,7 @@ final public class HEAssetZoomableView: UIScrollView {
             DispatchQueue.main.async { completion(false) }
             return
         }
-        currentAssetIdentifier = hei.id
+        currentAssetIdentifier = hei.phAssetIdentifier ?? hei.id
         currentAssetType = .image
         currentEditImageURL = hei.editImageURL
         currentEditTime = hei.updatedTime

@@ -103,6 +103,8 @@ public class HEBaseStickerView: UIView, UIGestureRecognizerDelegate {
         return self
     }
     
+    var visibleFrame: CGRect
+    
     weak var delegate: HEStickerViewDelegate?
     
     class func initWithState(_ effect: HEStickerEffect) -> HEBaseStickerView? {
@@ -136,6 +138,8 @@ public class HEBaseStickerView: UIView, UIGestureRecognizerDelegate {
         self.maxGesScale = CGFloat(512.0 / 150.0)
         // 최소 스케일 설정 - 최소 사이즈 50 , 기본 사이즈 150
         self.minGesScale = CGFloat(50.0 / 150.0)
+        
+        self.visibleFrame = originFrame
         super.init(frame: .zero)
         
         self.gesScale = gesScale

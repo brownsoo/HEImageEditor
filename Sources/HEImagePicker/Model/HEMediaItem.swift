@@ -15,10 +15,10 @@ public typealias HEMediaPhotoExtraTask = () async -> (thumbnail: UIImage?, exifM
 /// HEPicker 의 사진
 public class HEMediaPhoto {
     /// 지정된 아이디 or PHAsset의 identifier, or uuid
+    ///
+    /// - 주의: PHAsset 데이터를 조회할 때는 asset 값을 먼저 참조
     public var identifier: String
     public let url: URL
-    @available(*, deprecated, message: "사용 안함, 추후 제거 ")
-    public let fromCamera: Bool
     public var asset: PHAsset?
     public var extraTask: HEMediaPhotoExtraTask?
     
@@ -26,24 +26,20 @@ public class HEMediaPhoto {
                 url: URL,
                 thumbnail: UIImage?,
                 exifMeta: [String: Any]? = nil,
-                fromCamera: Bool = false,
                 asset: PHAsset? = nil) {
         self.identifier = identifier ?? asset?.localIdentifier ?? UUID().uuidString
         self.url = url
         self.extraTask = { (thumbnail, exifMeta) }
-        self.fromCamera = fromCamera
         self.asset = asset
     }
     
     public init(identifier: String?,
                 url: URL,
                 extraTask: HEMediaPhotoExtraTask? = nil,
-                fromCamera: Bool = false,
                 asset: PHAsset? = nil) {
         self.identifier = identifier ?? asset?.localIdentifier ?? UUID().uuidString
         self.url = url
         self.extraTask = extraTask
-        self.fromCamera = fromCamera
         self.asset = asset
     }
 }
@@ -60,8 +56,8 @@ public extension HEImage {
             extraTask = {
                 let image = try? await imageCache.editImage(forHei: hei).value
                 let thumbnail = image?.he.thumbnail()
-                let meta = image?.pngData()?.he.metadataForImageData()
-                return (thumbnail, meta)
+                //let meta = image?.pngData()?.he.metadataForImageData()
+                return (thumbnail, nil)
             }
             
         } else if let url = self.originURL {
@@ -69,16 +65,17 @@ public extension HEImage {
             extraTask = {
                 let image = try? await imageCache.originImage(forHei: hei).value
                 let thumbnail = image?.he.thumbnail()
-                let meta = image?.pngData()?.he.metadataForImageData()
-                return (thumbnail, meta)
+                //let meta = image?.pngData()?.he.metadataForImageData()
+                return (thumbnail, nil)
             }
             
         } else if let originImage = hei.originImage {
-            originURL = try imageCache.cacheOriginImageSync(uiImage: originImage, forId: hei.id)
+            let isGif = self.phAsset?.playbackStyle == .imageAnimated
+            originURL = try imageCache.cacheOriginImageSync(uiImage: originImage, forId: hei.id, isGif: isGif)
             extraTask = {
                 let thumbnail = originImage.he.thumbnail()
-                let meta = originImage.pngData()?.he.metadataForImageData()
-                return (thumbnail, meta)
+                //let meta = originImage.pngData()?.he.metadataForImageData()
+                return (thumbnail, nil)
             }
         } else {
             
@@ -100,31 +97,26 @@ public class HEMediaVideo {
     /// 지정된 아이디 or PHAsset의 identifier, or uuid
     public var identifier: String
     public var url: URL
-    public let fromCamera: Bool
     public var asset: PHAsset?
     public var thumbnailTask: (() async -> UIImage?)?
 
     public init(identifier: String?,
                 thumbnail: UIImage,
                 videoURL: URL,
-                fromCamera: Bool = false,
                 asset: PHAsset? = nil) {
         self.identifier = identifier ?? asset?.localIdentifier ?? UUID().uuidString
         self.thumbnailTask = { thumbnail }
         self.url = videoURL
-        self.fromCamera = fromCamera
         self.asset = asset
     }
     
     public init(identifier: String?,
                 videoURL: URL,
                 thumbnailTask: (() async -> UIImage?)?,
-                fromCamera: Bool = false,
                 asset: PHAsset? = nil) {
         self.identifier = identifier ?? asset?.localIdentifier ?? UUID().uuidString
         self.thumbnailTask = thumbnailTask
         self.url = videoURL
-        self.fromCamera = fromCamera
         self.asset = asset
     }
 }

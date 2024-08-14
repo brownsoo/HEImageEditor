@@ -148,6 +148,9 @@ extension ViewController: HEImageEditorDelegate {
     
     func didCancelEditImages(_ editor: HEImageEditor) {
         debugPrint("== didCancelEditImages ==")
+        if let picker = editor.navigationController as? HEImagePicker {
+            picker.reload()
+        }
     }
     
     func didFinishEditImages(_ editor: HEImageEditor) {
@@ -186,85 +189,6 @@ extension ViewController: HEEditorActionListener {
     func didUpdatedActions(_ actions: [HEEditAction], redoActions: [HEEditAction]) {
         editUndoBtn.isEnabled = !actions.isEmpty
         editRedoBtn.isEnabled = actions.count != redoActions.count
-    }
-}
-
-
-extension ViewController: PHPickerViewControllerDelegate {
-    func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
-        print(results)
-        
-        picker.dismiss(animated: true)
-        
-        
-        Task {
-            let existing: OrderedDictionary<String, HEEditImage> = imageStore.all().reduce(into: OrderedDictionary<String, HEImage>()) {
-                $0[$1.id] = $1
-            }.compactMapValues({ $0 as? HEEditImage })
-            
-            var newSelection = OrderedDictionary<String, HEEditImage>()
-            for result in results {
-                if let identifier = result.assetIdentifier {
-                    if let exist = existing[identifier] {
-                        newSelection[identifier] = exist
-                    } else {
-                        if let image = await loadImageObject(result: result) {
-                            print("image= \(image.size.width) x \(image.size.height)")
-                            if let fileUrl = try? await imageStore.cacheOriginImage(uiImage: image, forId: identifier).value {
-                                newSelection[identifier] = HEEditImage(
-                                    id: identifier,
-                                    origin: fileUrl,
-                                    editState: nil
-                                )
-                            } else {
-                                newSelection[identifier] = HEEditImage(
-                                    id: identifier,
-                                    image: image,
-                                    editState: nil
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-            
-            if newSelection.isEmpty { return }
-            let images = newSelection.values.map({ $0 })
-            startEditMultipleImages(images)
-        }
-        
-    }
-    
-    private func loadImageObject(result: PHPickerResult) async -> UIImage? {
-        let itemProvider = result.itemProvider
-        return await withCheckedContinuation { continuation in
-            if itemProvider.canLoadObject(ofClass: UIImage.self) {
-                itemProvider.loadObject(ofClass: UIImage.self) { image, error in
-                    continuation.resume(with: .success(image as? UIImage))
-                }
-            } else {
-                continuation.resume(with: .success(nil))
-            }
-        }
-    }
-    
-    private func askAuthorization(granted: @escaping () -> Void) {
-        PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
-            switch status {
-                
-            case .limited:
-                print("limited authorization granted")
-                
-            case .authorized:
-                print("authorization granted")
-                DispatchQueue.main.async {
-                    granted()                    
-                }
-            default:
-                print("Unimplemented")
-                
-            }
-        }
     }
 }
 
@@ -330,10 +254,10 @@ extension ViewController: HEImagePickerDelegate {
         items.enumerated().forEach { it in
             switch it.element {
             case .photo(let photo):
-                if let exist = exists.first(where: { ($0.phAssetIdentifier ?? $0.id) == photo.identifier}), // 피커의 identifier는 어셋 우선
+                if let exist = exists.first(where: { $0.id == photo.identifier}), // 피커의 identifier는 어셋 우선
                    let hei = HEEditImage.fromHEImage(exist) {
                     news.append(hei)
-                    debugPrint(hei)
+                    debugPrint("ViewController-didSelectToEditItem",hei)
                 } else {
                     let hei = HEEditImage(id: photo.identifier,
                                           origin: photo.url,
@@ -375,6 +299,88 @@ extension ViewController: HEImagePickerDelegate {
 }
 
 
+
+
+extension ViewController: PHPickerViewControllerDelegate {
+    func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+        print(results)
+        
+        picker.dismiss(animated: true)
+        
+        
+        Task {
+            let existing: OrderedDictionary<String, HEEditImage> = imageStore.all().reduce(into: OrderedDictionary<String, HEImage>()) {
+                $0[$1.id] = $1
+            }.compactMapValues({ $0 as? HEEditImage })
+            
+            var newSelection = OrderedDictionary<String, HEEditImage>()
+            for result in results {
+                if let identifier = result.assetIdentifier {
+                    if let exist = existing[identifier] {
+                        newSelection[identifier] = exist
+                    } else {
+                        if let image = await loadImageObject(result: result) {
+                            print("image= \(image.size.width) x \(image.size.height)")
+                            let asset = PHAsset.fetchAssets(withLocalIdentifiers: [result.assetIdentifier ?? ""], options: nil).firstObject
+                            if let fileUrl = try? await imageStore.cacheOriginImage(uiImage: image, forId: identifier, isGif: asset?.playbackStyle == .imageAnimated).value {
+                                newSelection[identifier] = HEEditImage(
+                                    id: identifier,
+                                    origin: fileUrl,
+                                    editState: nil
+                                )
+                            } else {
+                                newSelection[identifier] = HEEditImage(
+                                    id: identifier,
+                                    image: image,
+                                    editState: nil
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if newSelection.isEmpty { return }
+            let images = newSelection.values.map({ $0 })
+            startEditMultipleImages(images)
+        }
+        
+    }
+    
+    private func loadImageObject(result: PHPickerResult) async -> UIImage? {
+        let itemProvider = result.itemProvider
+        return await withCheckedContinuation { continuation in
+            if itemProvider.canLoadObject(ofClass: UIImage.self) {
+                itemProvider.loadObject(ofClass: UIImage.self) { image, error in
+                    continuation.resume(with: .success(image as? UIImage))
+                }
+            } else {
+                continuation.resume(with: .success(nil))
+            }
+        }
+    }
+    
+    private func askAuthorization(granted: @escaping () -> Void) {
+        PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
+            switch status {
+                
+            case .limited:
+                print("limited authorization granted")
+                
+            case .authorized:
+                print("authorization granted")
+                DispatchQueue.main.async {
+                    granted()                    
+                }
+            default:
+                print("Unimplemented")
+                
+            }
+        }
+    }
+}
+
+
 extension ViewController {
     
     private func findPresentaion() -> UIViewController {
@@ -389,16 +395,23 @@ extension ViewController {
         return vc
     }
     
-    // MARK: Start HEImageEditor with picking a image
+    // MARK: Start HEImagePicker with picking a image
     
     @objc func pickImage() {
-        askAuthorization { [weak self] in
-            let picker = UIImagePickerController()
-            picker.delegate = self
-            picker.sourceType = .photoLibrary
-            picker.mediaTypes = ["public.image"]
-            self?.showDetailViewController(picker, sender: nil)
-        }
+        
+        var config = HEImagePickerConfiguration()
+        config.pickerSources = [.libraryPick, .photoCapture, .videoCapture]
+        config.shouldSaveNewPicturesToAlbum = true
+        config.shouldSelectSingleType = false
+        config.targetImageSize = .cappedTo(size: 1500)
+        config.library.mediaType = .photoAndVideo
+        config.library.defaultMultipleSelection = false
+        config.library.maxNumberOfItems = 1
+        
+        let picker = HEImagePicker(configuration: config)
+        picker.pickerDelegate = self
+        picker.editImageStore = self.imageStore
+        showDetailViewController(picker, sender: nil)
     }
     
     // MARK: Start HEImageEditor with picking multiple images
@@ -549,6 +562,7 @@ extension ViewController {
     }
 }
 
+// UIImagePicker 예시
 extension ViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
         picker.dismiss(animated: true, completion: nil)
@@ -708,7 +722,7 @@ extension ViewController {
         
         let pickImageBtn = UIButton(type: .system)
         pickImageBtn.titleLabel?.font = UIFont.systemFont(ofSize: 14)
-        pickImageBtn.setTitle("UIImagePicker", for: .normal)
+        pickImageBtn.setTitle("Single", for: .normal)
         pickImageBtn.addTarget(self, action: #selector(pickImage), for: .touchUpInside)
         view.addSubview(pickImageBtn)
         pickImageBtn.snp.makeConstraints { make in
@@ -717,7 +731,7 @@ extension ViewController {
         }
         
         let pickMultipleBt = UIButton(type: .system)
-        pickMultipleBt.setTitle("PHPicker", for: .normal)
+        pickMultipleBt.setTitle("Multi", for: .normal)
         pickMultipleBt.addTarget(self, action: #selector(pickMutipleImages), for: .touchUpInside)
         view.addSubview(pickMultipleBt)
         pickMultipleBt.snp.makeConstraints { make in
@@ -726,7 +740,7 @@ extension ViewController {
         }
         
         let hePickerBt = UIButton(type: .system)
-        hePickerBt.setTitle("HEPicker", for: .normal)
+        hePickerBt.setTitle("이미지 5개, 비디오 1개", for: .normal)
         hePickerBt.addTarget(self, action: #selector(pickWithHEPicker), for: .touchUpInside)
         view.addSubview(hePickerBt)
         hePickerBt.snp.makeConstraints { make in

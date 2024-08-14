@@ -7,7 +7,7 @@ import UIKit
 
 class HEImageStickerView: HEBaseStickerView {
     
-    static let edgeInset: CGFloat = 5
+    static let edgeInset: CGFloat = 5 // in points
     
     private var image: UIImage
     
@@ -33,7 +33,8 @@ class HEImageStickerView: HEBaseStickerView {
             originFrame: originFrame,
             gesScale: gesScale,
             gesRotation: gesRotation,
-            totalTranslationPoint: totalTranslationPoint
+            totalTranslationPoint: totalTranslationPoint,
+            visibleFrame: visibleFrame
         )
     }
     

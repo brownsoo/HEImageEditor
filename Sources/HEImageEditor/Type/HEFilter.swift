@@ -83,6 +83,10 @@ public class HEFilter: NSObject {
         self.name = name
         self.applier = applier
     }
+    
+    func clone() -> HEFilter {
+        HEFilter(name: name, applier: self.applier)
+    }
 }
 
 extension HEFilter {
