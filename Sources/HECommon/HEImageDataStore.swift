@@ -363,7 +363,7 @@ extension HESimpleEditImageStore {
     public func cacheOriginImageSync(uiImage: UIImage, forId id: String, isGif: Bool) throws -> URL {
         if isGif, let data = uiImage.he.gifData() {
             return try cacheOriginImageSync(imageData: data, forId: id, isGif: true)
-        } else if let data = uiImage.jpegData(compressionQuality: 0.8) {
+        } else if let data = uiImage.he.fixOrientation().jpegData(compressionQuality: 1) {
             return try cacheOriginImageSync(imageData: data, forId: id, isGif: false)
         } else {
             throw HEError.generateFileData
@@ -383,7 +383,7 @@ extension HESimpleEditImageStore {
     public func cacheOriginImageSync(uiImage: UIImage, forId id: String) throws -> URL {
         if uiImage.he.isGIF(), let data = uiImage.he.gifData() {
             return try cacheOriginImageSync(imageData: data, forId: id, isGif: true)
-        } else if let data = uiImage.jpegData(compressionQuality: 0.8) {
+        } else if let data = uiImage.jpegData(compressionQuality: 1) {
             return try cacheOriginImageSync(imageData: data, forId: id, isGif: false)
         } else {
             throw HEError.generateFileData
@@ -480,7 +480,7 @@ extension HESimpleEditImageStore {
         let fileName = hei.id.heImageCacheThumbFileName()
         return Task.detached { [weak self] in
             let thumbnail = uiImage.he.thumbnail()
-            guard let self, let data = thumbnail.jpegData(compressionQuality: 0.8) else {
+            guard let self, let data = thumbnail.jpegData(compressionQuality: 0.6) else {
                 throw HEError.generateFileData
             }
             let fileURL: URL = try await fileURL(fileName: fileName)
