@@ -102,7 +102,7 @@ extension PHCachingImageManager {
         requestImage(for: asset, targetSize: CGSize(width: asset.pixelWidth, height: asset.pixelHeight),
                      contentMode: .aspectFill, options: options) { result, info in
             guard let image = result else {
-                woops("No Result 🛑")
+                lg.woops("No Result 🛑")
                 return
             }
             DispatchQueue.main.async {

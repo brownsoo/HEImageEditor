@@ -36,7 +36,7 @@ public class HEImageStickerTrayView: UIView, HEImageStickerTray {
     private var trayHeightConstraint: NSLayoutConstraint!
     
     deinit {
-        trace()
+        lg.trace()
     }
     
     override init(frame: CGRect) {

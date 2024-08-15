@@ -20,11 +20,21 @@ public class HEImageUtil {
     private init(){}
     
     public static func checkImageDataAndResize(image: UIImage,
+                                               maxFileSize: Double = 5.0 * 1024 * 1024, // 5MB
+                                               preferImageResizingSize: CGFloat = 1400) async -> Data? {
+        await withCheckedContinuation { continuation in
+            checkImageDataAndResize(image: image, maxFileSize: maxFileSize, preferImageResizingSize: preferImageResizingSize) { data in
+                continuation.resume(returning: data)
+            }
+        }
+    }
+    
+    public static func checkImageDataAndResize(image: UIImage,
                                         maxFileSize: Double = 5.0 * 1024 * 1024, // 5MB
                                         preferImageResizingSize: CGFloat = 1400, // points
                                         resultHandler: @escaping (Data?) -> Void) {
         DispatchQueue.global().async {
-            guard let fileData = image.jpegData(compressionQuality: 0.8) else {
+            guard let fileData = image.jpegData(compressionQuality: 1.0) else {
                 DispatchQueue.main.async {
                     resultHandler(nil)
                 }
@@ -172,11 +182,24 @@ public class HEImageUtil {
         }
     }
     
+    public static func saveTempImageData(_ data: Data, name: String) async throws -> URL {
+        try await withCheckedThrowingContinuation { continuation in
+            saveTempImageData(data, name: name) { result in
+                switch result {
+                case .success(let url):
+                    continuation.resume(returning: url)
+                case .failure(let error):
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+    
     public static func saveTempImageData(_ data: Data, name: String, completion: @escaping (Result<URL, Error>) -> Void) {
         DispatchQueue.global().async {
             let tempDir = FileManager.default.temporaryDirectory
             let writeUrl = tempDir.appendingPathComponent(name)
-            trace("write to: \(writeUrl.absoluteString)")
+            lg.trace("write to: \(writeUrl.absoluteString)")
             do {
                 try data.write(to: writeUrl, options: [Data.WritingOptions.fileProtectionMask])
                 DispatchQueue.main.async {

@@ -278,7 +278,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     
     deinit {
         cleanToolViewStateTimer()
-        trace()
+        lg.trace()
     }
     
     /// 에디터 시작 팩토리 함수
@@ -359,7 +359,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 guard let editView, let self else { return }
                 
                 if toolbar.throttlingChangeTool == true {
-                    woops("")
+                    lg.woops("")
                     return
                 }
                 toolbar.throttlingChangeTool = true
@@ -473,7 +473,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         }
         
         shouldLayout = false
-        trace("didLayout")
         let insets = self.view.safeAreaInsets
         
         if let topBarView {
@@ -1304,7 +1303,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         let stickerStates = stickersContainer.subviews.compactMap({ ($0 as? HEBaseStickerView)?.state })
         
         autoreleasepool {
-            trace("build image ----- > ----- > ----- > ----- >")
+            lg.trace("build image ----- > ----- > ----- > ----- >")
             
             resImage = buildImage() // 원본에 합치고
             
@@ -1869,8 +1868,8 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 self.loadingView.hide()
                 
             } catch {
-                woops("Vision Error ----")
-                woops(error)
+                lg.woops("Vision Error ----")
+                lg.woops(error)
             }
         }
     }
@@ -1986,8 +1985,6 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     }
     
     private func attachSticker(_ sticker: HEBaseStickerView, delay: TimeInterval = 0) {
-        trace("delay=\(delay)")
-        
         stickersContainer.subviews.forEach { view in
             (view as? HEStickerViewAdditional)?.resetState()
         }

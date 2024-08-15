@@ -77,7 +77,7 @@ public class HEPreviewBoxView: UIView {
     var lastPreviwingSelection: HELibrarySelection?
     
     deinit {
-        trace()
+        lg.trace()
     }
     
     init() {
@@ -296,7 +296,7 @@ extension HEPreviewBoxView {
                                                        updateCropInfo: updateCropInfo)
                 }
             } else {
-                woops("편집 이미지 스토어 !!")
+                lg.woops("편집 이미지 스토어 !!")
             }
         }
     }
@@ -358,7 +358,7 @@ extension HEPreviewBoxView {
                 case .audio, .unknown:
                     ()
                 @unknown default:
-                    woops("Bug. Unknown default.")
+                    lg.woops("Bug. Unknown default.")
                 }
             }
         }
@@ -577,7 +577,7 @@ extension HEPreviewBoxView: UICollectionViewDelegateFlowLayout, UICollectionView
                     await loadPreview(phAsset, forCell: cell, selection: item).value
                     
                 } else {
-                    woops("뭐지?")
+                    lg.woops("뭐지?")
                 }
                 
                 // When crop area changes in multiple selection mode,

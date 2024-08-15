@@ -347,7 +347,7 @@ public extension HEWrapper where Base: UIImage {
     func clipImage(angle: CGFloat, editRect: CGRect, isCircle: Bool) -> UIImage? {
         let a = ((Int(angle) % 360) - 360) % 360
         var newImage: UIImage = base
-        trace(a)
+        lg.trace(a)
         if a == -90 {
             newImage = rotate(orientation: .left)
         } else if a == -180 {

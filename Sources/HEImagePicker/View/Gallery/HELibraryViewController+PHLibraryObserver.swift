@@ -17,7 +17,7 @@ extension HELibraryViewController: PHPhotoLibraryChangeObserver {
     public func photoLibraryDidChange(_ changeInstance: PHChange) {
         guard let fetchResult = self.assetMediaManager.fetchResult,
               let collectionChanges = changeInstance.changeDetails(for: fetchResult) else {
-            woops("Some problems there.")
+            lg.woops("Some problems there.")
             return
         }
 
@@ -42,7 +42,7 @@ extension HELibraryViewController: PHPhotoLibraryChangeObserver {
                     guard finished,
                           let changedIndexes = collectionChanges.changedIndexes,
                           changedIndexes.count != 0 else {
-                        woops("Some problems there.")
+                        lg.woops("Some problems there.")
                         return
                     }
 
@@ -56,7 +56,7 @@ extension HELibraryViewController: PHPhotoLibraryChangeObserver {
     }
 
     fileprivate func updateAssetSelection() {
-        trace("라이브러리 갱신")
+        lg.trace("라이브러리 갱신")
         var items = self.selectedItems
         if items.count > 0 {
             DispatchQueue.global().async {
@@ -74,7 +74,7 @@ extension HELibraryViewController: PHPhotoLibraryChangeObserver {
                 
                 if self.selectedItems.count != items.count {
                     self.selectedItems = items
-                    trace("라이브러리 갱신 후 없어진 어셋 제거")
+                    lg.trace("라이브러리 갱신 후 없어진 어셋 제거")
                     DispatchQueue.main.async {
                         self.v.previewBox.reload()
                         self.v.albumCollectionView.reloadData()

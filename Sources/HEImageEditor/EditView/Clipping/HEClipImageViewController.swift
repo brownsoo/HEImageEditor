@@ -136,7 +136,7 @@ public class HEClipImageViewController: UIViewController, HEClipImageView {
     private var bottomViewBuilder: HEClipImageBottomViewBuilder?
     
     deinit {
-        trace()
+        lg.trace()
         self.cleanTimer()
     }
     

@@ -52,7 +52,7 @@ class HETextStickerView: HEBaseStickerView {
     }
     
     deinit {
-        trace()
+        lg.trace()
     }
     
     convenience init(state: HETextStickerEffect) {

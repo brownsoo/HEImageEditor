@@ -76,7 +76,7 @@ class HEAdjustSlider: UIView {
     var endAdjust: (() -> Void)?
     
     deinit {
-        trace()
+        lg.trace()
     }
     
     override init(frame: CGRect) {

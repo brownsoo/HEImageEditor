@@ -46,7 +46,7 @@ public actor HEFaceDetection {
         guard var observations = request.results else {
             return []
         }
-        trace("faces.count=\(observations.count)")
+        lg.trace("faces.count=\(observations.count)")
         observations.sort {
             ($0.faceCaptureQuality ?? 0) > ($1.faceCaptureQuality ?? 0)
         }

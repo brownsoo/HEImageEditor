@@ -51,11 +51,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     internal var initialStatusBarHidden = false
     internal var v = HELibraryView(frame: .zero)
     internal let attachButton = HELibraryAttachButton()
-    internal var shouldSelectingMediaType: PHAssetMediaType? = nil {
-        didSet {
-            trace(shouldSelectingMediaType)
-        }
-    }
+    internal var shouldSelectingMediaType: PHAssetMediaType? = nil
     internal var shouldSelectingMediaTypeBlockedCallback: ((PHAssetMediaType?) -> Void)?
     internal var limitExceededCallback: ((PHAssetMediaType) -> Void)?
     
@@ -323,7 +319,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
                     self.delegate?.libraryView(self, didCaptureItem: .photo(p: photo))
                 }
             } catch {
-                woops(error)
+                lg.woops(error)
                 await self.showAlert(error.localizedDescription)
             }
         }
@@ -578,7 +574,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
     deinit {
         v.previewBox.currentZoomableView?.videoView.deallocate()
         PHPhotoLibrary.shared().unregisterChangeObserver(self)
-        trace()
+        lg.trace()
     }
 }
 
@@ -695,7 +691,7 @@ extension HELibraryViewController: UIImagePickerControllerDelegate, UINavigation
     }
     
     public func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
-        trace(info[.mediaType] as? String) // UTType.movie.identifier or UTType.image.identifier
+        lg.trace(info[.mediaType] as? String) // UTType.movie.identifier or UTType.image.identifier
         picker.dismiss(animated: true)
         
         let fileName: String
@@ -720,7 +716,7 @@ extension HELibraryViewController: UIImagePickerControllerDelegate, UINavigation
             }
         }
         
-        trace(fileName)
+        lg.trace(fileName)
         
         if mediaType == UTType.movie.identifier {
             if let url {
@@ -739,7 +735,7 @@ extension HELibraryViewController: UIImagePickerControllerDelegate, UINavigation
                             self?.didImageCaptured(image: image, exifMeta: info[.mediaMetadata] as? [String: Any])
                         }
                     } catch {
-                        trace(error)
+                        lg.trace(error)
                         if let self {
                             let alert = UIHelper.cannotFindMediaAlert(v.cameraPhotoButton ?? v.previewBox)
                             self.present(alert, animated: true)
@@ -770,7 +766,7 @@ extension HELibraryViewController: UIImagePickerControllerDelegate, UINavigation
             }
             
             let (data, response) = try await URLSession.shared.data(from: url)
-            trace(response)
+            lg.trace(response)
             if let image = UIImage(data: data) {
                 return image
             }

@@ -702,7 +702,7 @@ extension HEInputTextViewController: UITextViewDelegate {
                         
                         cursor += offset
                         
-                        trace("\(offset)  cursor - \(cursor) location - \(selectedRange.location)  :: \(comp)")
+                        //lg.trace("\(offset)  cursor - \(cursor) location - \(selectedRange.location)  :: \(comp)")
                         
                         if selectedRange.location > cursor { // 줄바꿈에 따른 커서 이동
                             selectedRange.location += 1
@@ -717,7 +717,7 @@ extension HEInputTextViewController: UITextViewDelegate {
                 } else {
                     cursor += line.count
                     makingLines.append(line)
-                    trace("cursor - \(cursor)")
+                    //lg.trace("cursor - \(cursor)")
                 }
                 
                 lineIndex += 1
@@ -725,7 +725,7 @@ extension HEInputTextViewController: UITextViewDelegate {
             
             var newlines: [String] = makingLines
             if newlines.count > textStickerMaximumLines {
-                trace("넘어서는 라인 제거")
+                lg.trace("넘어서는 라인 제거")
                 newlines = Array(newlines[0..<textStickerMaximumLines])
             }
             

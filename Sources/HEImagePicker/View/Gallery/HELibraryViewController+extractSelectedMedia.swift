@@ -32,7 +32,7 @@ extension HELibraryViewController {
                 previewSelection = [(asset, nil, nil)]
                 
             } else {
-                woops("뭐냐??!!")
+                lg.woops("뭐냐??!!")
             }
         }
         
@@ -45,7 +45,7 @@ extension HELibraryViewController {
                 if let asset = PHAsset.fetchAssets(withLocalIdentifiers: [$0.assetIdentifier], options: PHFetchOptions()).firstObject {
                     return (asset, nil, $0.cropRect)
                 }
-                woops("뭐냐??!!")
+                lg.woops("뭐냐??!!")
                 return nil
             }
             
@@ -87,7 +87,7 @@ extension HELibraryViewController {
                                 let photo = try hei.toMediaPhoto(imageCache: self.editImageStore)
                                 resultMediaItems.append(HEMediaItem.photo(p: photo))
                             } catch {
-                                woops(error)
+                                lg.woops(error)
                             }
                             
                             asyncGroup.leave()
@@ -180,7 +180,7 @@ extension HELibraryViewController {
                                 photoCallback(photo)
                             }
                         } catch {
-                            woops(error)
+                            lg.woops(error)
                         }
                     }
                 } else if let asset = item.asset {
@@ -211,12 +211,12 @@ extension HELibraryViewController {
                             }
                         }
                     @unknown default:
-                        woops("unknown default reached. Check code.")
+                        lg.woops("unknown default reached. Check code.")
                     }
                     return
                 }
                 else {
-                    woops("unknown item data reached. Check code.")
+                    lg.woops("unknown item data reached. Check code.")
                 }
             }
         }
@@ -260,7 +260,7 @@ extension HELibraryViewController {
                                                      asset: asset)
                             callback(video)
                         } else {
-                            woops("Problems with fetching videoURL.")
+                            lg.woops("Problems with fetching videoURL.")
                             callback(nil)
                         }
                     }
@@ -269,7 +269,7 @@ extension HELibraryViewController {
         case .image:
             callback(nil)
         @unknown default:
-            woops("unknown default reached. Check code.")
+            lg.woops("unknown default reached. Check code.")
             callback(nil)
         }
     }
@@ -321,13 +321,13 @@ extension HELibraryViewController {
                             callback(photo)
                         }
                     } catch {
-                        woops(error)
+                        lg.woops(error)
                         callback(nil)
                     }
                 }
             }
         @unknown default:
-            woops("unknown default reached. Check code.")
+            lg.woops("unknown default reached. Check code.")
             callback(nil)
         }
     }

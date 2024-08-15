@@ -102,7 +102,7 @@ class HETextView: UITextView {
         let isEmpty = self.text.isEmpty
         let alignment = isEmpty ? placeholderAlignment : cachedAlignment
         if self.textAlignment != alignment {
-            trace()
+            lg.trace()
             self.textAlignment = alignment
             UIView.animate(withDuration: 0.1) {
                 if isEmpty {

@@ -14,14 +14,16 @@ public class HEEditImage: HEImage {
     
     public internal(set) var editState: HEEditState?
     
-    public init(id: String = UUID().uuidString, origin: URL, editState: HEEditState?, phAsset: PHAsset? = nil) {
+    public init(id: String = UUID().uuidString, origin: URL, editState: HEEditState?, phAsset: PHAsset?) {
         super.init(id: id, origin: origin, phAsset: phAsset)
         self.editState = editState
     }
     
-    public init(id: String = UUID().uuidString, image: UIImage, editState: HEEditState?, phAsset: PHAsset? = nil) {
+    @available(*, deprecated, message: "origin URL 로 생성하기를 권함.")
+    public init(id: String = UUID().uuidString, image: UIImage, editState: HEEditState?, phAsset: PHAsset?) {
         super.init(id: id, image: image, phAsset: phAsset)
         self.editState = editState
+        lg.woops("이미지로 생성됨")
     }
     
     public init?(hei: HEImage) {

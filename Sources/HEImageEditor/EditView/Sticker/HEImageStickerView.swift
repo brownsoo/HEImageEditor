@@ -43,7 +43,7 @@ class HEImageStickerView: HEBaseStickerView {
     }
     
     deinit {
-        trace()
+        lg.trace()
     }
     
     convenience init(state: HEImageStickerEffect) {

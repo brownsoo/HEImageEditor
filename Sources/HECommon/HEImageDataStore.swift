@@ -447,7 +447,7 @@ extension HESimpleEditImageStore {
         FileManager.default.createFile(atPath: fileURL.path, contents: imageData)
         hei.setFattenImageURL(fileURL)
         
-        logFileSize(dataCount: imageData.count)
+        lg.trace(imageData.he.fileSizeInKB)
         
         Task.detached { [weak self] in
             if let uiImage = UIImage(data: imageData) {
@@ -470,7 +470,7 @@ extension HESimpleEditImageStore {
             await memCacheImage(uiImage, forUrl: fileURL)
             hei.setEditImageURL(fileURL)
             
-            logFileSize(dataCount: data.count)
+            lg.trace(data.he.fileSizeInKB)
             
             return fileURL
         }
@@ -489,7 +489,7 @@ extension HESimpleEditImageStore {
             await memCacheImage(uiImage, forUrl: fileURL)
             hei.setThumbnailURL(fileURL)
             
-            logFileSize(dataCount: data.count)
+            lg.trace(data.he.fileSizeInKB)
             
             return fileURL
         }
@@ -523,23 +523,13 @@ extension HESimpleEditImageStore {
 
 extension HESimpleEditImageStore {
     
-    nonisolated func logFileSize(dataCount: Int) {
-#if DEBUG
-        let bcf = ByteCountFormatter()
-        bcf.allowedUnits = [ByteCountFormatter.Units.useKB]
-        bcf.countStyle = ByteCountFormatter.CountStyle.memory
-        let bytesString = bcf.string(fromByteCount: Int64(dataCount))
-        debugPrint(bytesString)
-#endif
-    }
-    
     func removeFile(_ fileURL: URL) {
         Task.detached {
             do {
                 try FileManager.default.removeItem(at: fileURL)
-                trace("removeFile - \(fileURL.absoluteString)")
+                lg.trace("removeFile - \(fileURL.absoluteString)")
             } catch {
-                woops(error)
+                lg.woops(error)
             }
         }
     }
@@ -549,9 +539,7 @@ extension HESimpleEditImageStore {
     }
     
     func getMemCachedImage(forUrl url: URL) -> UIImage? {
-        let cached = memCache.object(forKey: NSString(string: url.absoluteString))
-        trace(cached != nil)
-        return cached
+        return memCache.object(forKey: NSString(string: url.absoluteString))
     }
     
     func clearMemCachedImage(forUrl url: URL) {
@@ -631,7 +619,7 @@ final class HERemoteImageDownloader {
                 case .success(let value):
                     continuation.resume(returning: value.image.withRenderingMode(.alwaysOriginal))
                 case .failure(let error):
-                    woops(error)
+                    lg.woops(error)
                     continuation.resume(returning: nil)
                 }
             }

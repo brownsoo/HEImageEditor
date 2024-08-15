@@ -86,7 +86,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
     
     deinit {
         HEImageEditorConfiguration.default().imageStickerTray(nil)
-        trace()
+        lg.trace()
     }
     
     public init(imageStore: HEEditImageStore,
@@ -361,7 +361,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
             vc.modalPresentationStyle = .overFullScreen
             self.present(vc, animated: false)
         } catch {
-            woops(error)
+            lg.woops(error)
         }
     }
 }
@@ -374,7 +374,7 @@ extension HEImageEditorViewController: HEEditImageViewDelegate {
         editingImage = nil
         // 편집 데이터 교체
         guard let editId, let hei = imageStore.getHEImage(forId: editId) as? HEEditImage else {
-            woops("!!!")
+            lg.woops("!!!")
             return
         }
         loadingView.show(inCenterOf: self.view)
@@ -388,7 +388,7 @@ extension HEImageEditorViewController: HEEditImageViewDelegate {
                     let _ = try await imageStore.cacheFattenImage(uiImage: originImage, forHei: hei).value
                 }
             } catch {
-                woops(error)
+                lg.woops(error)
             }
             
             debugPrint(hei)
@@ -409,7 +409,7 @@ extension HEImageEditorViewController: HEEditImageViewDelegate {
             do {
                 let _ = try await imageStore.cacheFattenImage(uiImage: resultImage, forHei: hei).value
             } catch {
-                woops(error)
+                lg.woops(error)
             }
             debugPrint(hei)
             loadingView.hide()
@@ -499,11 +499,11 @@ extension HEImageEditorViewController: UICollectionViewDelegateFlowLayout {
 extension HEImageEditorViewController: UICollectionViewDataSource, UICollectionViewDelegate {
     
     public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-        trace(currentIndex)
+        lg.trace(currentIndex)
     }
     
     public func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
-        trace(currentIndex)
+        lg.trace(currentIndex)
     }
     
     public func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
@@ -622,7 +622,7 @@ class HEImageViewPageCell: UICollectionViewCell {
                 self?.imageView.image = image
                 self?.getStickerAreas(editState)
             } catch {
-                woops(error)
+                lg.woops(error)
             }
         }
     }
@@ -683,7 +683,7 @@ class HEImageViewPageCell: UICollectionViewCell {
             return
         }
         
-        trace(area)
+        lg.trace(area)
         delegate?.imageViewPageCell(self, tapOnStickerId: area.id, stickerType: area.type)
         
     }

@@ -21,7 +21,7 @@ internal extension PermissionCheckable where Self: UIViewController {
             if hasPermission {
                 block()
             } else {
-                trace("Not enough permissions.")
+                lg.trace("Not enough permissions.")
             }
         }
     }
@@ -31,7 +31,7 @@ internal extension PermissionCheckable where Self: UIViewController {
             if hasPermission {
                 block()
             } else {
-                trace("Not enough permissions.")
+                lg.trace("Not enough permissions.")
             }
         }
     }
@@ -84,7 +84,7 @@ struct PermissionManager {
                }
            }
        @unknown default:
-           trace("Bug. Write to developers please.")
+           lg.trace("Bug. Write to developers please.")
        }
    }
 
@@ -108,7 +108,7 @@ struct PermissionManager {
                }
            }
        @unknown default:
-           trace("Bug. Write to developers please.")
+           lg.trace("Bug. Write to developers please.")
        }
    }
 }

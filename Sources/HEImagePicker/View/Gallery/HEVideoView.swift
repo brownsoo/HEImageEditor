@@ -146,14 +146,12 @@ extension HEVideoView {
     }
     
     public func play() {
-        trace()
         player.play()
         showPlayImage(show: false)
         addReachEndObserver()
     }
     
     public func pause() {
-        trace()
         player.pause()
         showPlayImage(show: true)
     }

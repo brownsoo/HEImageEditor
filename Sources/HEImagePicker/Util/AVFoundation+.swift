@@ -112,7 +112,7 @@ extension AVAsset {
                 removeOldFile: Bool = false,
                 progressSession: @escaping (_  exportSession: AVAssetExportSession?) -> Void) async -> AVAssetExportSession? {
         guard let exportSession = AVAssetExportSession(asset: self, presetName: PickerConfig.video.compression) else {
-            woops("AVAsset -> Could not create an export session.")
+            lg.woops("AVAsset -> Could not create an export session.")
             progressSession(nil)
             return nil
         }

@@ -113,7 +113,7 @@ open class HEImagePicker: UINavigationController, HEPickerNavigationController {
     
     deinit {
         userInfo = [:]
-        trace()
+        lg.trace()
     }
     
     public convenience init() {
@@ -174,7 +174,7 @@ extension HEImagePicker: HELibraryViewDelegate {
     }
     
     public func libraryView(_ libraryView: HELibraryViewController, didToggleMultipleSelectionEnabled enabled: Bool) {
-        trace(enabled)
+        lg.trace(enabled)
     }
     
     public func libraryView(_ libraryView: HELibraryViewController, shouldAddToSelection identifier: String, numSelections: Int) -> Bool {

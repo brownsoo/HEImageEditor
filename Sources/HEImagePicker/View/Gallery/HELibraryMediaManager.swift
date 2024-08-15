@@ -66,7 +66,7 @@ final public class HELibraryMediaManager {
             
             guard let assetsToStartCaching = fetchResult?.assetsAtIndexPaths(addedIndexPaths),
                   let assetsToStopCaching = fetchResult?.assetsAtIndexPaths(removedIndexPaths) else {
-                trace("Some problems in fetching and caching assets.")
+                lg.trace("Some problems in fetching and caching assets.")
                 return
             }
             
@@ -92,7 +92,7 @@ final public class HELibraryMediaManager {
                                           duration: CMTime?) async -> URL? {
         
         guard let asset = await self.extractAVAsset(for: videoAsset) else {
-            woops("Don't have the asset");
+            lg.woops("Don't have the asset");
             return nil
         }
         
@@ -118,7 +118,7 @@ final public class HELibraryMediaManager {
                   let videoCompositionTrack = assetComposition
                 .addMutableTrack(withMediaType: .video,
                                  preferredTrackID: kCMPersistentTrackID_Invalid) else {
-                woops("Problems with video track")
+                lg.woops("Problems with video track")
                 return nil
                 
             }
@@ -186,7 +186,7 @@ final public class HELibraryMediaManager {
             })
             
             guard let exportedSession else {
-                woops("Don't have URL.")
+                lg.woops("Don't have URL.")
                 return nil
             }
             
@@ -198,16 +198,16 @@ final public class HELibraryMediaManager {
                     }
                     return url
                 } else {
-                    woops("Don't have URL.")
+                    lg.woops("Don't have URL.")
                 }
             case .failed:
-                woops("Export of the video failed : \(String(describing: exportedSession.error))")
+                lg.woops("Export of the video failed : \(String(describing: exportedSession.error))")
             default:
-                woops("Export session completed with \(exportedSession.status) status. Not handled.")
+                lg.woops("Export session completed with \(exportedSession.status) status. Not handled.")
             }
             
         } catch let error {
-            woops("Error: \(error)")
+            lg.woops(error)
         }
         return nil
     }

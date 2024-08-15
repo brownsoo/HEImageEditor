@@ -326,14 +326,23 @@ extension ViewController: PHPickerViewControllerDelegate {
                                 newSelection[identifier] = HEEditImage(
                                     id: identifier,
                                     origin: fileUrl,
-                                    editState: nil
+                                    editState: nil,
+                                    phAsset: asset
                                 )
                             } else {
-                                newSelection[identifier] = HEEditImage(
-                                    id: identifier,
-                                    image: image,
-                                    editState: nil
-                                )
+                                if let data = await HEImageUtil.checkImageDataAndResize(image: image) {
+                                    do {
+                                        let url = try await HEImageUtil.saveTempImageData(data, name: identifier.toHEImageCacheIdentifier() + ".jpg")
+                                        newSelection[identifier] = HEEditImage(
+                                            id: identifier,
+                                            origin: url,
+                                            editState: nil,
+                                            phAsset: asset
+                                        )
+                                    } catch {
+                                        debugPrint(error)
+                                    }
+                                }
                             }
                         }
                     }

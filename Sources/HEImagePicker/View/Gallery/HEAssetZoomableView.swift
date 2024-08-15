@@ -234,7 +234,7 @@ final public class HEAssetZoomableView: UIScrollView {
                     completion(false)
                 }
             } catch {
-                woops(error)
+                lg.woops(error)
                 DispatchQueue.main.async {
                     completion(false)                    
                 }
@@ -324,7 +324,7 @@ fileprivate extension HEAssetZoomableView {
     /// Calculate zoom scale which will fit the image to square
     func calculateSquaredZoomScale() -> CGFloat {
         guard let image = assetImageView.image else {
-            trace("No image")
+            lg.trace("No image")
             return 1.0
         }
         

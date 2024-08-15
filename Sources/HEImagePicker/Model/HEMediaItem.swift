@@ -49,8 +49,8 @@ public extension HEImage {
         let hei = self
         let originURL: URL
         let extraTask: HEMediaPhotoExtraTask
-        // 편집 이미지 우선
         
+        // 편집 이미지 우선
         if let url = self.editImageURL {
             originURL = url
             extraTask = {
