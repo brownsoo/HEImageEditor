@@ -379,14 +379,20 @@ public class HEInputTextViewController: UIViewController {
         label.font = UIFont(descriptor: currentFont.fontDescriptor, size: currentFont.pointSize*10)
         label.text = textView.text
         label.textColor = currentTextColor
-        label.backgroundColor = currentFillColor
         label.numberOfLines = 0
-        label.sizeToFit()
+        let width = textView.frame.size.width - (textView.textContainerInset.left + textView.textContainerInset.right)
+        let height = textView.frame.size.height - (textView.textContainerInset.top + textView.textContainerInset.bottom)
+        let fitSize = CGSize(width: width * 10.0, height: height * 10.0)
+        label.frame.size = label.sizeThatFits(fitSize)
         label.textAlignment = .center
-        label.frame = label.frame.insetBy(dx: -100.0, dy: -80.0)
+        let container = UIView()
+        container.frame = label.frame.insetBy(dx: -100.0, dy: -80.0)
+        container.backgroundColor = currentFillColor
+        container.addSubview(label)
+        label.center = CGPoint(x: container.bounds.midX, y: container.bounds.midY)
         
-        let image = UIGraphicsImageRenderer.he.renderImage(size: label.bounds.size) { context in
-            label.layer.render(in: context)
+        let image = UIGraphicsImageRenderer.he.renderImage(size: container.bounds.size) { context in
+            container.layer.render(in: context)
         }
         
         animateDismiss(delay: 0.18) {  [weak self] in
