@@ -158,6 +158,12 @@ extension ViewController: HEImageEditorDelegate {
         if let picker = editor.navigationController as? HEImagePicker {
             picker.reload()
             picker.popToRootViewController(animated: true)
+        } else {
+            if let nc = editor.navigationController, nc.viewControllers.count > 1 {
+                nc.popViewController(animated: true)
+            } else {
+                editor.dismiss(animated: true)
+            }
         }
     }
     
