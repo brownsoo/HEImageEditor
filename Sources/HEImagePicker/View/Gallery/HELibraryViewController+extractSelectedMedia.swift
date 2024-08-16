@@ -37,7 +37,6 @@ extension HELibraryViewController {
         }
         
         DispatchQueue.global(qos: .userInitiated).async {
-            
             var selectedItems: [(asset: PHAsset?, hei: HEImage?, cropRect: CGRect?)] = self.selectedItems.compactMap {
                 if let hei = self.editImageStore.getHEImage(forAssetIdentifier: $0.assetIdentifier) {
                     return (hei.phAsset, hei, $0.cropRect)
@@ -58,6 +57,16 @@ extension HELibraryViewController {
                     self.exportLoadingView.hide()
                 }
                 return
+            }
+            
+            // 선택된 것으로 스토어 정리
+            let selections = self.selectedItems
+            let all = self.editImageStore.all()
+            let exceptions = all.filter { it in
+                !selections.contains(where: { $0.assetIdentifier == (it.phAssetIdentifier ?? it.id) })
+            }
+            for exception in exceptions {
+                self.editImageStore.removeHEImage(exception.id)
             }
             
             // Multiple selection
@@ -283,7 +292,11 @@ extension HELibraryViewController {
         case .video:
             callback(nil)
         case .image:
-            self.fetchImageData(for: asset) { [self] data, exifMeta in
+            var targetSize: CGSize?
+            if case .cappedTo(let size) = PickerConfig.targetImageSize {
+                targetSize = CGSize(width: size, height: size)
+            }
+            self.fetchImageData(for: asset, targetSize: targetSize) { [self] data, exifMeta in
                 
                 if !self.isMultipleSelectionEnabled { // 단일 선택이면, 편집도 단일로 진행
                     self.editImageStore.clearAll()
@@ -299,13 +312,13 @@ extension HELibraryViewController {
                         if isGif {
                             url = try await editImageStore.cacheOriginImageSync(imageData: data, forId: id, isGif: true)
                         } else {
-                            if case .cappedTo(size: _) = PickerConfig.targetImageSize,
-                               let image = image?.resizedImageIfNeeded(),
-                               let resizedData = image.jpegData(compressionQuality: 0.8) {
-                                url = try await editImageStore.cacheOriginImageSync(imageData: resizedData, forId: id, isGif: false)
-                            } else {
-                                url = try await editImageStore.cacheOriginImageSync(imageData: data, forId: id, isGif: false)
-                            }
+//                            if case .cappedTo(let size) = PickerConfig.targetImageSize,
+//                               let image = image?.resizedImageIfNeeded(),
+//                               let resizedData = image.jpegData(compressionQuality: 0.8) {
+//                                url = try await editImageStore.cacheOriginImageSync(imageData: resizedData, forId: id, isGif: false)
+//                            } else {
+//                            }
+                            url = try await editImageStore.cacheOriginImageSync(imageData: data, forId: id, isGif: false)
                         }
                         
                         await self.editImageStore.addHEImage(
@@ -400,9 +413,10 @@ extension HELibraryViewController {
 //    }
     
     private func fetchImageData(for asset: PHAsset,
+                                targetSize: CGSize?,
                                 callback: @escaping (_ data: Data, _ exif: [String: Any]) -> Void) {
         libraryViewDidProcessingNext()
-        assetMediaManager.phImageManager?.fetchImageData(for: asset, callback: callback)
+        assetMediaManager.phImageManager?.fetchImageData(for: asset, targetSize: targetSize, callback: callback)
     }
     
     private func fetchVideoOriginalURL(for asset: PHAsset,

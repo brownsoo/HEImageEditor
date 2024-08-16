@@ -34,7 +34,7 @@ public class HEImageUtil {
                                         preferImageResizingSize: CGFloat = 1400, // points
                                         resultHandler: @escaping (Data?) -> Void) {
         DispatchQueue.global().async {
-            guard let fileData = image.jpegData(compressionQuality: 1.0) else {
+            guard let fileData = image.jpegData(compressionQuality: 0.8) else {
                 DispatchQueue.main.async {
                     resultHandler(nil)
                 }

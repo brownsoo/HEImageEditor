@@ -27,13 +27,23 @@ extension PHCachingImageManager {
     }
     
     func fetchImageData(for asset: PHAsset,
+                        targetSize: CGSize?,
                         callback: @escaping (Data, [String: Any]) -> Void) {
         let options = photoImageRequestOptions()
-        requestImageDataAndOrientation(for: asset, options: options) { data, _, _, _ in
-            if let data = data {
-                let exifs = data.he.metadataForImageData()
-                callback(data, exifs)
+        if let targetSize {
+            requestImage(for: asset, targetSize: targetSize, contentMode: .aspectFit, options: options) { image, _ in
+                if let data = image?.jpegData(compressionQuality: 0.8) {
+                    let exifs = data.he.metadataForImageData()
+                    callback(data, exifs)
+                }
             }
+        } else {
+            requestImageDataAndOrientation(for: asset, options: options) { data, _, _, _ in
+                if let data = data {
+                    let exifs = data.he.metadataForImageData()
+                    callback(data, exifs)
+                }
+            }            
         }
     }
     

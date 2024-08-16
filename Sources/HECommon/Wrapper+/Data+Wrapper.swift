@@ -19,7 +19,7 @@ public extension HEWrapper where Base == Data {
         return [:]
     }
     
-    func fileSizeInKB() -> String {
+    var fileSizeInKB: String {
         let bcf = ByteCountFormatter()
         bcf.allowedUnits = [ByteCountFormatter.Units.useKB]
         bcf.countStyle = ByteCountFormatter.CountStyle.memory

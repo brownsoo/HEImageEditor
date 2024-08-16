@@ -752,7 +752,7 @@ extension HELibraryViewController: UIImagePickerControllerDelegate, UINavigation
     }
     
     func imageTakenGenerateName() -> String {
-        return "temp_\(Int(Date().timeIntervalSince1970 * 1000)).png"
+        return "temp_\(Int(Date().timeIntervalSince1970 * 1000)).jpg"
     }
 
     func getImage(forURL url: URL) -> Task<UIImage, Error> {

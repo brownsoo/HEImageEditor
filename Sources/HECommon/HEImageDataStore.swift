@@ -62,6 +62,7 @@ public protocol HEImageCache: AnyObject {
     
     
     func clearCached(forHei hei: HEImage, includeOrigin: Bool) async
+    func clearAllCachedFiles() async
 }
 
 public extension HEImageCache {
@@ -113,30 +114,25 @@ public extension String {
         return self.replacingOccurrences(of: "~", with: "/")
     }
     
-//    @available(*, deprecated, message: "원본 경로를 id 로 측정하는 데 문제가 있음")
-//    var heImageCacheOriginFileName: String {
-//        return self.toHEImageCacheIdentifier() + ".png"
-//    }
-    
     func heImageCacheEditFileName(date: Date = Date()) -> String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "_yyMMdd_HHmmss"
         let timeString = dateFormatter.string(from: date)
-        return self.toHEImageCacheIdentifier() + timeString + "+edit.png"
+        return self.toHEImageCacheIdentifier() + timeString + "+edit.jpg"
     }
     
     func heImageCacheFattenFileName(date: Date = Date()) -> String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "_yyMMdd_HHmmss"
         let timeString = dateFormatter.string(from: date)
-        return self.toHEImageCacheIdentifier() + timeString + "+fatten.png"
+        return self.toHEImageCacheIdentifier() + timeString + "+fatten.jpg"
     }
     
     func heImageCacheThumbFileName(date: Date = Date()) -> String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "_yyMMdd_HHmmss"
         let timeString = dateFormatter.string(from: date)
-        return self.toHEImageCacheIdentifier() + timeString + "+thumb.png"
+        return self.toHEImageCacheIdentifier() + timeString + "+thumb.jpg"
     }
 }
 
@@ -363,7 +359,7 @@ extension HESimpleEditImageStore {
     public func cacheOriginImageSync(uiImage: UIImage, forId id: String, isGif: Bool) throws -> URL {
         if isGif, let data = uiImage.he.gifData() {
             return try cacheOriginImageSync(imageData: data, forId: id, isGif: true)
-        } else if let data = uiImage.he.fixOrientation().jpegData(compressionQuality: 1) {
+        } else if let data = uiImage.he.fixOrientation().jpegData(compressionQuality: 0.8) {
             return try cacheOriginImageSync(imageData: data, forId: id, isGif: false)
         } else {
             throw HEError.generateFileData
@@ -383,7 +379,7 @@ extension HESimpleEditImageStore {
     public func cacheOriginImageSync(uiImage: UIImage, forId id: String) throws -> URL {
         if uiImage.he.isGIF(), let data = uiImage.he.gifData() {
             return try cacheOriginImageSync(imageData: data, forId: id, isGif: true)
-        } else if let data = uiImage.jpegData(compressionQuality: 1) {
+        } else if let data = uiImage.jpegData(compressionQuality: 0.8) {
             return try cacheOriginImageSync(imageData: data, forId: id, isGif: false)
         } else {
             throw HEError.generateFileData
@@ -395,13 +391,7 @@ extension HESimpleEditImageStore {
         let fileURL: URL = try fileURL(fileName: fileName)
         FileManager.default.createFile(atPath: fileURL.path, contents: imageData)
         
-        #if DEBUG
-        let bcf = ByteCountFormatter()
-        bcf.allowedUnits = [ByteCountFormatter.Units.useKB]
-        bcf.countStyle = ByteCountFormatter.CountStyle.memory
-        let bytesString = bcf.string(fromByteCount: Int64(imageData.count))
-        debugPrint(bytesString)
-        #endif
+        lg.trace(imageData.he.fileSizeInKB)
         
         if isGif {
             // gif 메모리 캐시 제거
@@ -518,6 +508,15 @@ extension HESimpleEditImageStore {
         hei.setFattenImageURL(nil)
         hei.setEditImageURL(nil)
         hei.setThumbnailURL(nil)
+    }
+    
+    public func clearAllCachedFiles() async {
+        do {
+            try FileManager.default.removeItem(at: directoryURL())
+            lg.trace()
+        } catch {
+            lg.woops(error)
+        }
     }
 }
 

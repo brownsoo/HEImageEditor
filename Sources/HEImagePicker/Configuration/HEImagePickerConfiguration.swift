@@ -114,7 +114,7 @@ public struct HEImagePickerConfiguration {
     
     /// Ex: cappedTo:1024 will make sure images from the library or the camera will be
     /// resized to fit in a 1024x1024 box. Defaults to original image size.
-    public var targetImageSize = HEPickerImageSize.original
+    public var targetImageSize = HEPickerImageSize.cappedTo(size: 1200)
     
     /// Adds a Overlay View to the camera
     public var overlayView: UIView?
