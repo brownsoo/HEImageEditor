@@ -63,10 +63,10 @@ open class HELogger: _HELoggerBase {
         let leading = "\(tag) 💥 \(time) \(th) \(file) (L\(line))::\(funcName)"
         if let obj = object {
             // print("\(leading) \(obj)")
-            logger.log("\(leading, privacy: .public) \(String(describing: obj), privacy: .public)")
+            logger.error("\(leading, privacy: .public) \(String(describing: obj), privacy: .public)")
         } else {
             //print("\(leading) nil")
-            logger.log("\(leading, privacy: .public)  nil")
+            logger.error("\(leading, privacy: .public)  nil")
         }
     }
 #endif

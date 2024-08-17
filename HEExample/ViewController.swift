@@ -219,12 +219,20 @@ extension ViewController: HEImagePickerDelegate {
     }
     
     func imagePicker(_ picker: HEImagePicker, didSelectItems items: [HEMediaItem]) {
-        print(items)
+        DispatchQueue.global().async {
+            for item in items {
+                if let url = picker.editImageStore.getHEImage(forId: item.identifier)?.originURL,
+                   let fileData = try? Data(contentsOf: url) {
+                    
+                    debugPrint("파일 originURL 크기:: " + fileData.he.fileSizeInKB)
+                }
+            }
+        }
         picker.dismiss(animated: true) {
             Task {
                 if let photo = items.singlePhoto {
                     if let hei = picker.editImageStore.getHEImage(forId: photo.identifier) {
-                        debugPrint(hei)
+                        debugPrint(photo)
                         if let editURL = hei.editImageURL {
                             if let data = try? Data(contentsOf: editURL) {
                                 self.resultImageView.image = UIImage(data: data)
@@ -418,7 +426,6 @@ extension ViewController {
         config.pickerSources = [.libraryPick, .photoCapture, .videoCapture]
         config.shouldSaveNewPicturesToAlbum = true
         config.shouldSelectSingleType = false
-        config.targetImageSize = .cappedTo(size: 1500)
         config.library.mediaType = .photoAndVideo
         config.library.defaultMultipleSelection = false
         config.library.maxNumberOfItems = 1
@@ -458,10 +465,24 @@ extension ViewController {
         config.pickerSources = [.libraryPick, .photoCapture, .videoCapture]
         config.shouldSaveNewPicturesToAlbum = true
         config.shouldSelectSingleType = true
-        config.targetImageSize = .cappedTo(size: 1500)
         config.library.mediaType = .photoAndVideo
         config.library.defaultMultipleSelection = true
         config.library.maxNumberOfItems = 5
+        
+        let picker = HEImagePicker(configuration: config)
+        picker.pickerDelegate = self
+        picker.editImageStore = self.imageStore
+        showDetailViewController(picker, sender: nil)
+    }
+    
+    @objc func pickWithHEPicker100() {
+        
+        var config = HEImagePickerConfiguration()
+        config.pickerSources = [.libraryPick, .photoCapture]
+        config.shouldSaveNewPicturesToAlbum = true
+        config.library.mediaType = .photo
+        config.library.defaultMultipleSelection = true
+        config.library.maxNumberOfItems = 100
         
         let picker = HEImagePicker(configuration: config)
         picker.pickerDelegate = self
@@ -746,7 +767,7 @@ extension ViewController {
         }
         
         let pickMultipleBt = UIButton(type: .system)
-        pickMultipleBt.setTitle("Multi", for: .normal)
+        pickMultipleBt.setTitle("PHPicker", for: .normal)
         pickMultipleBt.addTarget(self, action: #selector(pickMutipleImages), for: .touchUpInside)
         view.addSubview(pickMultipleBt)
         pickMultipleBt.snp.makeConstraints { make in
@@ -755,12 +776,21 @@ extension ViewController {
         }
         
         let hePickerBt = UIButton(type: .system)
-        hePickerBt.setTitle("이미지 5개, 비디오 1개", for: .normal)
+        hePickerBt.setTitle("이미지5,비디오1", for: .normal)
         hePickerBt.addTarget(self, action: #selector(pickWithHEPicker), for: .touchUpInside)
         view.addSubview(hePickerBt)
         hePickerBt.snp.makeConstraints { make in
             make.top.equalTo(pickMultipleBt)
             make.left.equalTo(pickMultipleBt.snp.right).offset(20)
+        }
+        
+        let hePickerBt2 = UIButton(type: .system)
+        hePickerBt2.setTitle("이미지 100개", for: .normal)
+        hePickerBt2.addTarget(self, action: #selector(pickWithHEPicker100), for: .touchUpInside)
+        view.addSubview(hePickerBt2)
+        hePickerBt2.snp.makeConstraints { make in
+            make.top.equalTo(hePickerBt)
+            make.left.equalTo(hePickerBt.snp.right).offset(20)
         }
         
         resultImageView = UIImageView()

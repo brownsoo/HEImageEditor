@@ -211,7 +211,9 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
         self.perform(#selector(self.hideResetToast), with: nil, afterDelay: 0.0)
         Task {
             hei.setEditState(nil)
-            await imageStore.clearCached(forHei: hei, includeOrigin: false)
+            hei.setFattenImageURL(nil)
+            hei.setEditImageURL(nil)
+            hei.setThumbnailURL(nil)
             collView.reloadItems(at: [IndexPath(row: index, section: 0)])
         }
     }
