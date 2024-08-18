@@ -39,6 +39,7 @@ class HEEditActionManager {
     }
     
     func storeAction(_ action: HEEditAction) {
+        guard EditorConfig.actionManagerAllowToStore else { return }
         actions.append(action)
         redoActions = actions
         

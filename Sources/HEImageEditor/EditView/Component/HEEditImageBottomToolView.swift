@@ -120,9 +120,9 @@ open class HEEditImageBottomToolView: UIView, HEEditToolView {
         let toolsWidth = (Self.itemSize.width + interitemSpacing) * toolsCount - interitemSpacing
         let inset = (fullSpace - toolsWidth) / 2
         self.collView.contentInset = UIEdgeInsets(top: 0,
-                                                            left: max(inset, Self.padding.left),
-                                                            bottom: 0,
-                                                            right: max(inset, Self.padding.right))
+                                                  left: max(inset, Self.padding.left),
+                                                  bottom: 0,
+                                                  right: max(inset, Self.padding.right))
     }
     
     open override func layoutSubviews() {

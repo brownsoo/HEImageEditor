@@ -352,66 +352,12 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         super.init(nibName: nil, bundle: nil)
         
         // 하단 툴바 구성자
-        self.bottomToolViewBuilder = bottomToolViewBuilder ?? { editView in
+        self.bottomToolViewBuilder = bottomToolViewBuilder ?? { [weak self] _ in
             // 기본 툴바
             let toolbar = HEEditImageBottomToolView(tools: ts)
-            toolbar.toolSelectListener = { [weak editView, weak self] toolType in
-                guard let editView, let self else { return }
-                
-                if toolbar.throttlingChangeTool == true {
-                    lg.woops("")
-                    return
-                }
-                toolbar.throttlingChangeTool = true
-                
-                let sameSelection = self.selectedTool == toolType
-                if sameSelection {
-                    if self.selectedTool == .imageSticker || self.selectedTool == .textSticker {
-                        self.changeMainFrameToFullMode()
-                    }
-                    self.stopJustCurrentEditing(changingTool: true)
-                    self.selectedTool = nil
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        toolbar.throttlingChangeTool = false
-                    }
-                    return
-                }
-                if self.selectedTool == .imageSticker || self.selectedTool == .textSticker {
-                    self.changeMainFrameToFullMode()
-                }
-                
-                var changeDelay: TimeInterval = 0.0
-                if editView.isImageEditing {
-                    changeDelay = 0.3
-                    self.loadingView.show(inCenterOf: self.view)
-                    self.stopJustCurrentEditing(changingTool: true)
-                    toolbar.selectTool(toolType, dispatchingEvent: false)
-                }
-                
-                DispatchQueue.main.asyncAfter(deadline: .now() + changeDelay) {
-                    switch toolType {
-                    case .draw:
-                        editView.startDrawing()
-                    case .clip:
-                        editView.startClipping()
-                    case .imageSticker:
-                        editView.startImageSticker()
-                    case .textSticker:
-                        editView.startTextSticker()
-                    case .mosaicDraw:
-                        editView.startMosaicDrawing()
-                    case .filter:
-                        editView.startFiltering()
-                    case .adjust:
-                        editView.startAdjusting()
-                    }
-                    
-                    toolbar.throttlingChangeTool = false
-                    
-                    self.loadingView.hide()
-                }
+            toolbar.toolSelectListener = { toolType in
+                self?.onSelectedBottomTool(toolType)
             }
-            
             return (toolbar, 76)
         }
         
@@ -851,6 +797,63 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         
         if reloadData {
             drawColorCollectionView?.reloadData()
+        }
+    }
+    
+    private func onSelectedBottomTool(_ toolType: HEImageEditorConfiguration.EditTool) {
+        guard let toolbar = self.bottomToolView as? HEEditImageBottomToolView else { return }
+        if toolbar.throttlingChangeTool == true {
+            lg.woops("")
+            return
+        }
+        toolbar.throttlingChangeTool = true
+        
+        let sameSelection = self.selectedTool == toolType
+        if sameSelection {
+            if self.selectedTool == .imageSticker || self.selectedTool == .textSticker {
+                self.changeMainFrameToFullMode()
+            }
+            self.stopJustCurrentEditing(changingTool: true)
+            self.selectedTool = nil
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                toolbar.throttlingChangeTool = false
+            }
+            return
+        }
+        if self.selectedTool == .imageSticker || self.selectedTool == .textSticker {
+            self.changeMainFrameToFullMode()
+        }
+        
+        var changeDelay: TimeInterval = 0.0
+        if self.isImageEditing {
+            changeDelay = 0.3
+            self.loadingView.show(inCenterOf: self.view)
+            self.stopJustCurrentEditing(changingTool: true)
+            toolbar.selectTool(toolType, dispatchingEvent: false)
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + changeDelay) { [weak self] in
+            guard let self else { return }
+            switch toolType {
+            case .draw:
+                self.startDrawing()
+            case .clip:
+                self.startClipping()
+            case .imageSticker:
+                self.startImageSticker()
+            case .textSticker:
+                self.startTextSticker()
+            case .mosaicDraw:
+                self.startMosaicDrawing()
+            case .filter:
+                self.startFiltering()
+            case .adjust:
+                self.startAdjusting()
+            }
+            
+            toolbar.throttlingChangeTool = false
+            
+            self.loadingView.hide()
         }
     }
     
