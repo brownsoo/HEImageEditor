@@ -57,6 +57,11 @@ public class HEEditImage: HEImage {
         return hei
     }
     
+    public override func resetToOrigin() {
+        super.resetToOrigin()
+        self.editState = nil
+    }
+    
     public override var debugDescription: String {
         """
 HEEditImage::

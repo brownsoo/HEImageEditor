@@ -210,10 +210,7 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
     private func executeReset(_ hei: HEEditImage, index: Int) {
         self.perform(#selector(self.hideResetToast), with: nil, afterDelay: 0.0)
         Task {
-            hei.setEditState(nil)
-            hei.setFattenImageURL(nil)
-            hei.setEditImageURL(nil)
-            hei.setThumbnailURL(nil)
+            hei.resetToOrigin()
             collView.reloadItems(at: [IndexPath(row: index, section: 0)])
         }
     }

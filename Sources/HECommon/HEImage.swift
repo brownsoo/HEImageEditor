@@ -52,23 +52,30 @@ open class HEImage: CustomDebugStringConvertible {
         self.phAssetIdentifier = phAsset?.localIdentifier
     }
     
-    public func setEditImageURL(_ url: URL?) {
+    open func setEditImageURL(_ url: URL?) {
         self.editImageURL = url
         self.updatedTime = Date().timeIntervalSince1970
     }
     
-    public func setFattenImageURL(_ url: URL?) {
+    open func setFattenImageURL(_ url: URL?) {
         self.fattenImageURL = url
         self.updatedTime = Date().timeIntervalSince1970
     }
     
-    public func setThumbnailURL(_ url: URL?) {
+    open func setThumbnailURL(_ url: URL?) {
         self.thumbnailURL = url
         self.updatedTime = Date().timeIntervalSince1970
     }
     
-    public func setPHAsset(_ asset: PHAsset?) {
+    open func setPHAsset(_ asset: PHAsset?) {
         self.phAsset = asset
+    }
+    
+    open func resetToOrigin() {
+        self.editImageURL = nil
+        self.fattenImageURL = nil
+        self.thumbnailURL = nil
+        self.updatedTime = Date().timeIntervalSince1970
     }
     
     open func clone(withNewId newId: String) -> HEImage {

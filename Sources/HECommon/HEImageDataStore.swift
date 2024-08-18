@@ -504,15 +504,13 @@ extension HESimpleEditImageStore {
             clearMemCachedImage(forUrl: thumbnailURL)
             removeFile(thumbnailURL)
         }
-        
-        hei.setFattenImageURL(nil)
-        hei.setEditImageURL(nil)
-        hei.setThumbnailURL(nil)
+        hei.resetToOrigin()
     }
     
     public func clearAllCachedFiles() async {
         do {
             try FileManager.default.removeItem(at: directoryURL())
+            memCache.removeAllObjects()
             lg.trace()
         } catch {
             lg.woops(error)
