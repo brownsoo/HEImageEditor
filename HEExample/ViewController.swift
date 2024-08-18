@@ -84,7 +84,7 @@ class ViewController: UIViewController {
         imageStickers.append(contentsOf: (1...18).map { (v) -> String in
             "imageSticker" + String(v)
         }.compactMap { name in
-            HEImageSticker(id: UUID().uuidString) {
+            HEImageSticker(id: name) {
                 UIImage(named: name) ?? UIImage()
             }
         })
