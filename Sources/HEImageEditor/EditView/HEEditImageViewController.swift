@@ -1851,7 +1851,7 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                         }
                         
                         let imageSticker = HEImageStickerView(
-                            id: sticker.id,
+                            //id: sticker.id,
                             kind: .faceAI,
                             image: image,
                             originScale: 1 / scale,
@@ -2005,6 +2005,9 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
                 sticker.transform = sticker.originTransform
             })
         }
+        
+        let stickerRightFrame = stickersContainer.convert(sticker.frame, to: containerView)
+        sticker.visibleFrame = stickerRightFrame
     }
     
     private func removeSticker(id: String?, withHaptic haptic: Bool = true) {

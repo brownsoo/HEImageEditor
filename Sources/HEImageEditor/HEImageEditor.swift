@@ -491,7 +491,7 @@ extension HEImageEditorViewController {
 
 extension HEImageEditorViewController: UICollectionViewDelegateFlowLayout {
     public func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return view.bounds.size
+        return CGSize(width: view.bounds.width, height: bottomToolView.frame.minY - topBarView.frame.maxY)
     }
 }
 
@@ -675,15 +675,18 @@ class HEImageViewPageCell: UICollectionViewCell {
     @objc
     private func tapAction(_ ges: UITapGestureRecognizer) {
         let p = ges.location(in: contentView)
-        guard let area = stickerAreas.first (where: { area in
+        var infos = stickerAreas.map({ area in
             let dis = sqrt(pow(p.x - area.center.x, 2) + pow(p.y - area.center.y, 2))
-            return dis < area.radius / 2
-        }) else {
+            return (area, dis)
+        })
+        infos.sort(by: { a, b in
+            return a.1 < b.1
+        })
+        guard let area = infos.first, area.1 < (area.0.radius / 2) else {
             return
         }
-        
         lg.trace(area)
-        delegate?.imageViewPageCell(self, tapOnStickerId: area.id, stickerType: area.type)
+        delegate?.imageViewPageCell(self, tapOnStickerId: area.0.id, stickerType: area.0.type)
         
     }
 }
