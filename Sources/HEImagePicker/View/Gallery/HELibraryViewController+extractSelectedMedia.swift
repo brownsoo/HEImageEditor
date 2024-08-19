@@ -308,18 +308,7 @@ extension HELibraryViewController {
                         let isGif = exifMeta["{GIF}"] != nil
                         let id = UUID().uuidString
                         let image = UIImage(data: data)
-                        let url: URL
-                        if isGif {
-                            url = try await editImageStore.cacheOriginImageSync(imageData: data, forId: id, isGif: true)
-                        } else {
-//                            if case .cappedTo(let size) = PickerConfig.targetImageSize,
-//                               let image = image?.resizedImageIfNeeded(),
-//                               let resizedData = image.jpegData(compressionQuality: 0.8) {
-//                                url = try await editImageStore.cacheOriginImageSync(imageData: resizedData, forId: id, isGif: false)
-//                            } else {
-//                            }
-                            url = try await editImageStore.cacheOriginImageSync(imageData: data, forId: id, isGif: false)
-                        }
+                        let url: URL = try await editImageStore.cacheOriginImageSync(imageData: data, forId: id, isGif: isGif)
                         
                         await self.editImageStore.addHEImage(
                             HEImage(id: id, origin: url, phAsset: asset)
