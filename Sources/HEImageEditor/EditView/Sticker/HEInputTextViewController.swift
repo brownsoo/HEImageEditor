@@ -375,24 +375,55 @@ public class HEInputTextViewController: UIViewController {
         textView.tintColor = .clear
         textView.resignFirstResponder()
         
-        let label = UILabel()
-        label.font = UIFont(descriptor: currentFont.fontDescriptor, size: currentFont.pointSize*10)
-        label.text = textView.text
-        label.textColor = currentTextColor
-        label.numberOfLines = 0
-        let width = textView.frame.size.width - (textView.textContainerInset.left + textView.textContainerInset.right)
-        let height = textView.frame.size.height - (textView.textContainerInset.top + textView.textContainerInset.bottom)
-        let fitSize = CGSize(width: width * 10.0, height: height * 10.0)
-        label.frame.size = label.sizeThatFits(fitSize)
-        label.textAlignment = .center
-        let container = UIView()
-        container.frame = label.frame.insetBy(dx: -100.0, dy: -80.0)
-        container.backgroundColor = currentFillColor
-        container.addSubview(label)
-        label.center = CGPoint(x: container.bounds.midX, y: container.bounds.midY)
-        
-        let image = UIGraphicsImageRenderer.he.renderImage(size: container.bounds.size) { context in
-            container.layer.render(in: context)
+        var image: UIImage?
+        let textRect: CGRect
+        if fillStyle == .area {
+            textRect = textView.frame
+            //        let label = UILabel()
+            //        label.font = UIFont(descriptor: currentFont.fontDescriptor, size: currentFont.pointSize*10)
+            //        label.text = textView.text
+            //        label.textColor = currentTextColor
+            //        label.numberOfLines = 0
+            //        let width = textView.frame.size.width - (textView.textContainerInset.left + textView.textContainerInset.right)
+            //        let height = textView.frame.size.height - (textView.textContainerInset.top + textView.textContainerInset.bottom)
+            //        let fitSize = CGSize(width: width * 10.0, height: height * 10.0)
+            //        label.frame.size = label.sizeThatFits(fitSize)
+            //        label.textAlignment = .center
+            //        let container = UIView()
+            //        container.frame = label.frame.insetBy(dx: -100.0, dy: -80.0)
+            //        container.backgroundColor = currentFillColor
+            //        container.addSubview(label)
+            //        label.center = CGPoint(x: container.bounds.midX, y: container.bounds.midY)
+            //
+            //        let image = UIGraphicsImageRenderer.he.renderImage(size: container.bounds.size) { context in
+            //            container.layer.render(in: context)
+            //        }
+        } else {
+            let rects = calculateTextRectsByChar()
+            let initial = CGRect(x: 10000, y: 10000, width: 0, height: 0)
+            textRect = rects.reduce(initial) { prev, rect in
+                let x = min(prev.minX, rect.minX)
+                let y = min(prev.minY, rect.minY)
+                return CGRect(x: x,
+                              y: y,
+                              width: max(prev.width, rect.width),
+                              height: prev.height +  rect.height)
+            }
+            
+            for subview in textView.subviews {
+                if NSStringFromClass(subview.classForCoder) == "_UITextContainerView" {
+                    //                    var frame = subview.frame
+                    //                    let size = textView.sizeThatFits(frame.size)
+                    image = UIGraphicsImageRenderer.he.renderImage(size: textView.bounds.size) { context in
+                        if currentFillColor != .clear {
+                            textLayer.render(in: context)
+                        }
+                        subview.layer.render(in: context)
+                    }
+                    // FIXME: 위 렌더러에서 한번에 처리하기..
+                    image = image?.he.clipImage(angle: 0, editRect: textRect, isCircle: false)
+                }
+            }
         }
         
         animateDismiss(delay: 0.18) {  [weak self] in
@@ -433,7 +464,7 @@ public class HEInputTextViewController: UIViewController {
     private func adjustTextViewFrame(duration: TimeInterval) {
         let toolFrame = getToolViewFrame(keyboardHeight: self.keyboardHeight)
         let topFrame = topToolBar.frame
-        let maxWidth = EditorConfig.textInputLimit == .lineWidth ? EditorConfig.textStickerMaximumWidthPerLine : view.bounds.width
+        let maxWidth = view.bounds.width
         let availableAea = CGSize(width: maxWidth,
                                   height: toolFrame.minY - topFrame.maxY)
         
@@ -690,73 +721,51 @@ extension HEInputTextViewController: UITextViewDelegate {
         var makingLines: [String] = []
         var selectedRange = textView.selectedRange
         
-        if EditorConfig.textInputLimit == .charactersCount {
-            var lines = resolved.components(separatedBy: .newlines)
-            var cursor = 0
-            var lineIndex = 0
-            
-            while lineIndex < lines.count {
-                let line = lines[lineIndex]
-                if line.count > textStickerMaximumCharactersPerLine {
-                    var start = line.startIndex
-                    var offset = 0
-                    while start < line.endIndex {
-                        offset = min(offset + textStickerMaximumCharactersPerLine, line.count - offset)
-                        let end = line.index(start, offsetBy: offset)
-                        let comp = line[start..<end]
-                        makingLines.append(String(comp))
-                        
-                        cursor += offset
-                        
-                        //lg.trace("\(offset)  cursor - \(cursor) location - \(selectedRange.location)  :: \(comp)")
-                        
-                        if selectedRange.location > cursor { // 줄바꿈에 따른 커서 이동
-                            selectedRange.location += 1
-                        }
-                        
-                        start = end
+        var lines = resolved.components(separatedBy: .newlines)
+        var cursor = 0
+        var lineIndex = 0
+        
+        while lineIndex < lines.count {
+            let line = lines[lineIndex]
+            if line.count > textStickerMaximumCharactersPerLine {
+                var start = line.startIndex
+                var offset = 0
+                while start < line.endIndex {
+                    offset = min(offset + textStickerMaximumCharactersPerLine, line.count - offset)
+                    let end = line.index(start, offsetBy: offset)
+                    let comp = line[start..<end]
+                    makingLines.append(String(comp))
+                    
+                    cursor += offset
+                    
+                    //lg.trace("\(offset)  cursor - \(cursor) location - \(selectedRange.location)  :: \(comp)")
+                    
+                    if selectedRange.location > cursor { // 줄바꿈에 따른 커서 이동
+                        selectedRange.location += 1
                     }
-                    if lineIndex + 1 < lines.count { // 다음 글줄에 붙여서 계산하도록 한다.
-                        let lastFriction = makingLines.popLast() ?? ""
-                        lines[lineIndex + 1] = lastFriction + lines[lineIndex + 1]
-                    }
-                } else {
-                    cursor += line.count
-                    makingLines.append(line)
-                    //lg.trace("cursor - \(cursor)")
+                    
+                    start = end
                 }
-                
-                lineIndex += 1
-            }
-            
-            var newlines: [String] = makingLines
-            if newlines.count > textStickerMaximumLines {
-                lg.trace("넘어서는 라인 제거")
-                newlines = Array(newlines[0..<textStickerMaximumLines])
-            }
-            
-            resolved = newlines.joined(separator: "\n")
-        } else {
-            
-            let numberOfGlyphs = textView.layoutManager.numberOfGlyphs
-            var index = 0, lineCount = 0
-            var lineRange = NSRange(location: NSNotFound, length: 0)
-            var trimmingEnd: Int?
-            while index < numberOfGlyphs {
-                textView.layoutManager.lineFragmentRect(forGlyphAt: index, effectiveRange: &lineRange)
-                index = NSMaxRange(lineRange)
-                lineCount += 1
-                if lineCount > 4 && trimmingEnd == nil {
-                    trimmingEnd = index
+                if lineIndex + 1 < lines.count { // 다음 글줄에 붙여서 계산하도록 한다.
+                    let lastFriction = makingLines.popLast() ?? ""
+                    lines[lineIndex + 1] = lastFriction + lines[lineIndex + 1]
                 }
+            } else {
+                cursor += line.count
+                makingLines.append(line)
+                //lg.trace("cursor - \(cursor)")
             }
-            // trace("lineCount=\(lineCount), trimmingEnd=\(trimmingEnd ?? -1)")
-            if let trimmingEnd {
-//                trace("넘어서는 라인 글자 제거")
-                let endIndex = resolved.index(resolved.startIndex, offsetBy: min(trimmingEnd - 1, resolved.count))
-                resolved = String(text[..<endIndex])
-            }
+            
+            lineIndex += 1
         }
+        
+        var newlines: [String] = makingLines
+        if newlines.count > textStickerMaximumLines {
+            lg.trace("넘어서는 라인 제거")
+            newlines = Array(newlines[0..<textStickerMaximumLines])
+        }
+        
+        resolved = newlines.joined(separator: "\n")
         
         if text != resolved {
             var newRange = NSRange()

@@ -65,10 +65,8 @@ public class HEImageEditorConfiguration: NSObject {
     public var maxTextStickersCount = 50
     /// 최대 텍스트 수
     public var maxTextLength = 60
-    /// 텍스트 입력 제한 방식
-    public var textInputLimit: TextInputLimit = .lineWidth
     /// 자르기, 회전할 때 편집상태를 보전할 지 여부
-    public var allowClipWithoutKeepingState = true
+    public var allowClipWithoutKeepingState = false
     /// 이미지 스티커 트레이 뷰 높이
     public var imageStickerTrayHeight: CGFloat = 156
     /// 이미지 스티커 편집의 확인 버튼을 누를 때, 에디터를 완료시킬 지 여부
@@ -77,7 +75,7 @@ public class HEImageEditorConfiguration: NSObject {
     public var actionDoneEditorWhenImageStickerEditingConfirm = true
     
     /// 편집 동작을 저장하고 redo, undo 할지 여부
-    public var actionManagerAllowToStore = false
+    public var actionManagerAllowToStore = true
     
     private var _tools: [HEImageEditorConfiguration.EditTool] = [.textSticker,  .imageSticker, .clip]
     
@@ -170,7 +168,7 @@ public class HEImageEditorConfiguration: NSObject {
     @objc public var textStickerMaximumWidthPerLine: CGFloat = 334
     
     /// 텍스트 스티커 배경 넣기 스타일
-    @objc public var textStickerFillStyle: TextStickerFillStyle = TextStickerFillStyle.area
+    @objc public var textStickerFillStyle: TextStickerFillStyle = TextStickerFillStyle.character
     
     private var _filters: [HEFilter] = HEFilter.all
     /// Filters for image editor.
@@ -238,10 +236,6 @@ public extension HEImageEditorConfiguration {
         ///
         /// - related : textStickerMaximumCharactersPerLine
         case charactersCount
-        /// 라인 가로 길이로 제한
-        ///
-        /// - related : textStickerMaximumWidthPerLine
-        case lineWidth
     }
     
     @objc enum TextStickerFillStyle: Int {
