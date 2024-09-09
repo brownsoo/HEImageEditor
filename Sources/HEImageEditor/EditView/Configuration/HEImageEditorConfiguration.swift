@@ -77,7 +77,7 @@ public class HEImageEditorConfiguration: NSObject {
     /// 편집 동작을 저장하고 redo, undo 할지 여부
     public var actionManagerAllowToStore = true
     
-    private var _tools: [HEImageEditorConfiguration.EditTool] = [.textSticker,  .imageSticker, .clip]
+    private var _tools: [HEImageEditorConfiguration.EditTool] = [.textSticker,  .imageSticker, .clip, .filter, .mosaicDraw, .adjust, .draw]
     
     /// Edit image tools.
     /// - warning: 이미지스티커를 포함할 경우, imageStickerTray: HEImageStickerTray를 꼭 설정해야 함.

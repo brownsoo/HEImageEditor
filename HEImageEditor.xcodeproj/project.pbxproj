@@ -1017,10 +1017,10 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
+				17E74D542C44E4FE00302946 /* HEExample */,
 				E40208D6256B9BA60077F5DC /* HEImageEditor */,
 				1744BA3A2C330B4E00F5395B /* HEImagePicker */,
 				17B2DCB12C3B83FF00662FC4 /* HECommon */,
-				17E74D542C44E4FE00302946 /* HEExample */,
 			);
 		};
 /* End PBXProject section */
@@ -1495,13 +1495,19 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 7C22KDQ3EX;
+				DEVELOPMENT_TEAM = TB576F3KJ6;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = HEExample/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "카메라 좀 ..";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "마이크 좀..";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "포토앨범 더더더";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "포토앨범좀..";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UIRequiredDeviceCapabilities = armv7;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -1511,7 +1517,7 @@
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = HE.HEExample;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.hansoolabs.photo-editor";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1529,13 +1535,19 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 7C22KDQ3EX;
+				DEVELOPMENT_TEAM = TB576F3KJ6;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = HEExample/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "카메라 좀 ..";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "마이크 좀..";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "포토앨범 더더더";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "포토앨범좀..";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UIRequiredDeviceCapabilities = armv7;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
@@ -1545,7 +1557,7 @@
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = HE.HEExample;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.hansoolabs.photo-editor";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
