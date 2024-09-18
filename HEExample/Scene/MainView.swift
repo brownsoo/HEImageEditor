@@ -7,12 +7,33 @@
 
 import Foundation
 import SwiftUI
+import SwiftData
 
 struct MainView: View {
+    @Environment(\.modelContext) private var modelContext
+    private var data = Array(0...20)
+    private var columns = [
+        GridItem(.adaptive(minimum: 150))
+    ]
+    
+    @Query(sort: \MyItem.createDate, order: .reverse)
+    private var allAlbums: [MyItem]
+    
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
             ScrollView {
-                Text("renew")
+                LazyVGrid(columns: columns, spacing: 10, content: {
+                    ForEach(data, id: \.self) { item in
+                        Text(String(item))
+                            .frame(height: 150, alignment: .center)
+                            .frame(maxWidth: .infinity)
+                            .background(.blue)
+                            .cornerRadius(10)
+                            .foregroundColor(.white)
+                            .font(.title)
+                    }
+                })
+                .padding(.horizontal)
             }
             
             HStack {
