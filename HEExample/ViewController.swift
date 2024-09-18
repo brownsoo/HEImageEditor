@@ -6,7 +6,7 @@
 //  Changed by brownsoo on 2024/summer
 
 import UIKit
-import SnapKit
+import SwiftUI
 import HECommon
 import HEImageEditor
 import HEImagePicker
@@ -67,7 +67,7 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        setupUI()
+//        setupUI()
         configImageEditor()
         
         
@@ -525,33 +525,3 @@ extension ViewController: UIImagePickerControllerDelegate, UINavigationControlle
     }
 }
 
-
-extension ViewController {
-    func setupUI() {
-        title = "Main"
-        view.backgroundColor = .systemBackground
-        
-        let stack = UIStackView()
-        stack.axis = .vertical
-        stack.distribution = .fillEqually
-        view.addSubview(stack)
-        stack.snp.makeConstraints { make in
-            make.leading.top.equalTo(view.safeAreaLayoutGuide).offset(30)
-            make.trailing.equalTo(view.safeAreaLayoutGuide).offset(-30)
-            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-30)
-        }
-        
-        let pickImageBtn = UIButton(type: .system)
-        pickImageBtn.titleLabel?.font = UIFont.systemFont(ofSize: 14)
-        pickImageBtn.setTitle("찍기", for: .normal)
-        pickImageBtn.addTarget(self, action: #selector(pickImage), for: .touchUpInside)
-        stack.addArrangedSubview(pickImageBtn)
-        
-        let hePickerBt2 = UIButton(type: .system)
-        hePickerBt2.setTitle("2nd앨범", for: .normal)
-        hePickerBt2.addTarget(self, action: #selector(pickWithHEPicker100), for: .touchUpInside)
-        stack.addArrangedSubview(hePickerBt2)
-        
-    }
-    
-}
