@@ -13,6 +13,7 @@
 		17189EBA2C10461E00270F4D /* UIKit+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17189EB92C10461E00270F4D /* UIKit+.swift */; };
 		17189EBC2C105BE500270F4D /* Trace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17189EBB2C105BE500270F4D /* Trace.swift */; };
 		172CEF4D2C9AF1F700CB99D9 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 172CEF4C2C9AF1F700CB99D9 /* MainView.swift */; };
+		172CEF4F2C9AF7E200CB99D9 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 172CEF4E2C9AF7E200CB99D9 /* RootView.swift */; };
 		17356E112C6DFBC3003FFB7C /* HELogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17356E102C6DFBC3003FFB7C /* HELogger.swift */; };
 		173DE6522C33B85B002BD7C6 /* HEPickerWordings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE6512C33B85B002BD7C6 /* HEPickerWordings.swift */; };
 		173DE6552C33B8AD002BD7C6 /* Bundle+Picker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 173DE6542C33B8AD002BD7C6 /* Bundle+Picker.swift */; };
@@ -229,6 +230,7 @@
 		17189EB92C10461E00270F4D /* UIKit+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIKit+.swift"; sourceTree = "<group>"; };
 		17189EBB2C105BE500270F4D /* Trace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Trace.swift; sourceTree = "<group>"; };
 		172CEF4C2C9AF1F700CB99D9 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
+		172CEF4E2C9AF7E200CB99D9 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		17356E102C6DFBC3003FFB7C /* HELogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HELogger.swift; sourceTree = "<group>"; };
 		173DE6512C33B85B002BD7C6 /* HEPickerWordings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEPickerWordings.swift; sourceTree = "<group>"; };
 		173DE6542C33B8AD002BD7C6 /* Bundle+Picker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Bundle+Picker.swift"; sourceTree = "<group>"; };
@@ -541,6 +543,7 @@
 			isa = PBXGroup;
 			children = (
 				172CEF4C2C9AF1F700CB99D9 /* MainView.swift */,
+				172CEF4E2C9AF7E200CB99D9 /* RootView.swift */,
 			);
 			path = Scene;
 			sourceTree = "<group>";
@@ -1178,6 +1181,7 @@
 				172CEF4D2C9AF1F700CB99D9 /* MainView.swift in Sources */,
 				17E74D5C2C44E4FE00302946 /* ViewController.swift in Sources */,
 				17E74D582C44E4FE00302946 /* AppDelegate.swift in Sources */,
+				172CEF4F2C9AF7E200CB99D9 /* RootView.swift in Sources */,
 				17E74D5A2C44E4FE00302946 /* SceneDelegate.swift in Sources */,
 				1789E8AC2C67C79A0022CE3F /* UIImageView+.swift in Sources */,
 			);

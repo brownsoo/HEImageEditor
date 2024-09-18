@@ -8,16 +8,6 @@
 import Foundation
 import SwiftUI
 
-
-struct RootView: View {
-    var body: some View {
-        NavigationStack {
-            MainView()
-        }
-    }
-}
-
-
 struct MainView: View {
     var body: some View {
         VStack {
@@ -27,11 +17,21 @@ struct MainView: View {
             
             HStack {
                 Button(action: {}) {
+                    Image(systemName: "gear")
+                        .padding()
+                }
+                Spacer()
+                Button(action: {}) {
                     Image(systemName: "plus")
                         .padding()
                         .background {
-                            Circle().foregroundColor(Color(uiColor: .systemGray5))
+                            Rectangle().foregroundColor(Color(uiColor: .systemGray5))
                         }
+                }
+                Spacer()
+                Button(action: {}) {
+                    Image(systemName: "magnifyingglass")
+                        .padding()
                 }
             }
             .frame(maxWidth: .infinity)
