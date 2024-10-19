@@ -54,7 +54,7 @@ public extension HEImage {
         if let url = self.editImageURL {
             originURL = url
             extraTask = {
-                let image = try? await imageCache.editImage(forHei: hei).value
+                let image = try? await imageCache.editImage(forHei: hei)
                 let thumbnail = image?.he.thumbnail()
                 //let meta = image?.pngData()?.he.metadataForImageData()
                 return (thumbnail, nil)
@@ -63,7 +63,7 @@ public extension HEImage {
         } else if let url = self.originURL {
             originURL = url
             extraTask = {
-                let image = try? await imageCache.originImage(forHei: hei).value
+                let image = try? await imageCache.originImage(forHei: hei)
                 let thumbnail = image?.he.thumbnail()
                 //let meta = image?.pngData()?.he.metadataForImageData()
                 return (thumbnail, nil)
@@ -71,7 +71,17 @@ public extension HEImage {
             
         } else if let originImage = hei.originImage {
             let isGif = self.phAsset?.playbackStyle == .imageAnimated
-            originURL = try imageCache.cacheOriginImageSync(uiImage: originImage, forId: hei.id, isGif: isGif)
+            
+            let data = originImage.he.fixOrientation().jpegData(compressionQuality: 0.8)
+            let fileName = id.toHEImageCacheIdentifier() + (isGif ? ".gif" : ".jpg")
+            let fileURL: URL = try HESimpleEditImageStore.fileURL(fileName: fileName)
+            
+            let success = FileManager.default.createFile(atPath: fileURL.path, contents: data)
+            if !success {
+                throw HEError.generateFileData
+            }
+            hei.setOriginImageURL(fileURL)
+            originURL = fileURL
             extraTask = {
                 let thumbnail = originImage.he.thumbnail()
                 //let meta = originImage.pngData()?.he.metadataForImageData()

@@ -318,49 +318,53 @@ open class HEImageEditorViewController: UIViewController, HEImageEditor {
         }
         
         self.editingImage = hei
-        Task { @MainActor in
-           await self.showImageEditor(hei: hei, tool: type, stickerId: stickerId)
-        }
-        .store(in: &cancellables)
+        self.showImageEditor(hei: hei, tool: type, stickerId: stickerId)
     }
     
     
     private func showImageEditor(hei: HEEditImage,
                                  tool: HEImageEditorConfiguration.EditTool?,
-                                 stickerId: String?) async {
-        let topBuilder = self.makeEditTopBarView()
-        do {
-            var image: UIImage
-            let editState: HEEditState? = hei.editState
-            
-            if hei.editImageURL != nil && (editState?.fattened == true || hei.fattenImageURL != nil) {
-                image = try await self.imageStore.fattenImage(forHei: hei).value
-            } else {
-                if hei.editImageURL == nil && hei.originURL?.pathExtension == "gif" {
-                    image = try await self.imageStore.originImage(forHei: hei).value
-                    //trace(image.he.isGIF())
-                    if let first = image.jpegData(compressionQuality: 0.8), let stop = UIImage(data: first) {
-                        image = stop
-                        let _ = self.imageStore.cacheFattenImage(uiImage: stop, forHei: hei)
-                    }
+                                 stickerId: String?) {
+        Task {
+            let topBuilder = self.makeEditTopBarView()
+            do {
+                var image: UIImage?
+                let editState: HEEditState? = hei.editState
+                
+                if hei.editImageURL != nil && (editState?.fattened == true || hei.fattenImageURL != nil) {
+                    image = try await self.imageStore.fattenImage(forHei: hei)
                 } else {
-                    image = try await self.imageStore.editImage(forHei: hei).value
+                    if hei.editImageURL == nil && hei.originURL?.pathExtension != "jpg" {
+                        image = try await self.imageStore.originImage(forHei: hei)
+                        //trace(image.he.isGIF())
+                        if let first = image?.jpegData(compressionQuality: 0.8), let stop = UIImage(data: first) {
+                            image = stop
+                            let _ = try await self.imageStore.cacheFattenImage(uiImage: stop, forHei: hei)
+                        }
+                    } else {
+                        image = try await self.imageStore.editImage(forHei: hei)
+                    }
                 }
+                
+                guard let image else {
+                    showAlert(text: "이미지를 찾지 못했습니다.(1)")
+                    return
+                }
+                
+                setupHEConfiguration()
+                
+                let vc = HEEditImageViewController(image: image, editState: editState, topToolViewBuilder: topBuilder)
+                vc.delegate = self
+                vc.editId = hei.id
+                vc.initialEditTool = tool
+                vc.initialStickerId = stickerId
+                vc.animateDismiss = true
+                
+                vc.modalPresentationStyle = .overFullScreen
+                self.present(vc, animated: false)
+            } catch {
+                lg.woops(error)
             }
-            
-            setupHEConfiguration()
-            
-            let vc = HEEditImageViewController(image: image, editState: editState, topToolViewBuilder: topBuilder)
-            vc.delegate = self
-            vc.editId = hei.id
-            vc.initialEditTool = tool
-            vc.initialStickerId = stickerId
-            vc.animateDismiss = true
-            
-            vc.modalPresentationStyle = .overFullScreen
-            self.present(vc, animated: false)
-        } catch {
-            lg.woops(error)
         }
     }
 }
@@ -380,11 +384,11 @@ extension HEImageEditorViewController: HEEditImageViewDelegate {
         Task {
             hei.setEditState(editModel)
             do {
-                let _ = try await imageStore.cacheEditImage(uiImage: resultImage, forHei: hei).value
-                let _ = try await imageStore.cacheThumbnailImage(uiImage: resultImage, forHei: hei).value
+                let _ = try await imageStore.cacheEditImage(uiImage: resultImage, forHei: hei)
+                let _ = try await imageStore.cacheThumbnailImage(uiImage: resultImage, forHei: hei)
                 if hei.fattenImageURL == nil { // 편집으로 진입시, 중간 편집본으로 진행하도록 하기 위해 원본으로 지정 
-                    let originImage = try await imageStore.originImage(forHei: hei).value
-                    let _ = try await imageStore.cacheFattenImage(uiImage: originImage, forHei: hei).value
+                    let originImage = try await imageStore.originImage(forHei: hei)
+                    let _ = try await imageStore.cacheFattenImage(uiImage: originImage, forHei: hei)
                 }
             } catch {
                 lg.woops(error)
@@ -406,7 +410,7 @@ extension HEImageEditorViewController: HEEditImageViewDelegate {
         loadingView.show(inCenterOf: self.view)
         Task {
             do {
-                let _ = try await imageStore.cacheFattenImage(uiImage: resultImage, forHei: hei).value
+                let _ = try await imageStore.cacheFattenImage(uiImage: resultImage, forHei: hei)
             } catch {
                 lg.woops(error)
             }
@@ -513,7 +517,10 @@ extension HEImageEditorViewController: UICollectionViewDataSource, UICollectionV
 //        trace()
         
         if let cell = cell as? HEImageViewPageCell, let hei = imageStore.getHEImage(at: indexPath.row) {
-            cell.loadImage(task: imageStore.editImage(forHei: hei), editState: (hei as? HEEditImage)?.editState)
+            let task = Task { [weak self] in
+                return try await self?.imageStore.editImage(forHei: hei)
+            }
+            cell.loadImage(task: task, editState: (hei as? HEEditImage)?.editState)
             
             if resetToastView.superview == nil {
                 showResetToastIfNeed(isEdited: hei.editImageURL != nil)
@@ -610,7 +617,7 @@ class HEImageViewPageCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func loadImage(task: Task<UIImage, Error>, editState: HEEditState?) {
+    func loadImage(task: Task<UIImage?, Error>, editState: HEEditState?) {
 //        trace()
         imageView.image = nil
         imageLoadTask?.cancel()

@@ -12,7 +12,7 @@ import Photos
 open class HEImage: CustomDebugStringConvertible {
     
     public let id: String
-    public let originURL: URL?
+    public internal(set) var originURL: URL?
     public let originImage: UIImage?
     
     public var updatedTime: TimeInterval
@@ -50,6 +50,11 @@ open class HEImage: CustomDebugStringConvertible {
         self.updatedTime = Date().timeIntervalSince1970
         self.phAsset = phAsset
         self.phAssetIdentifier = phAsset?.localIdentifier
+    }
+    
+    open func setOriginImageURL(_ url: URL?) {
+        self.originURL = url
+        self.updatedTime = Date().timeIntervalSince1970
     }
     
     open func setEditImageURL(_ url: URL?) {

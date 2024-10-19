@@ -204,9 +204,9 @@ final public class HEAssetZoomableView: UIScrollView {
             do {
                 let image: UIImage
                 if hei.editImageURL != nil {
-                    image = try await imageCache.editImage(forHei: hei).value
+                    image = try await imageCache.editImage(forHei: hei)
                 } else {
-                    image = try await imageCache.originImage(forHei: hei).value
+                    image = try await imageCache.originImage(forHei: hei)
                 }
                 DispatchQueue.main.async {
                     if self.photoImageView.isDescendant(of: self) == false {

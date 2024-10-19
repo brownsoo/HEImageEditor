@@ -109,6 +109,8 @@
 		17DF34D82C50DB27002EE282 /* HEEnlargeButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17DF34D72C50DB27002EE282 /* HEEnlargeButton.swift */; };
 		17DF34DA2C50EAB7002EE282 /* EdgeLineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17DF34D92C50EAB7002EE282 /* EdgeLineView.swift */; };
 		17E2D87B2C290272005F5E0B /* HEImageSticker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E2D87A2C290272005F5E0B /* HEImageSticker.swift */; };
+		17E486D32CC3DE36007543D1 /* HEImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E486D22CC3DE31007543D1 /* HEImageCache.swift */; };
+		17E486D52CC3DFC3007543D1 /* HESimpleEditImageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E486D42CC3DFC0007543D1 /* HESimpleEditImageStore.swift */; };
 		17E74D582C44E4FE00302946 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E74D572C44E4FE00302946 /* AppDelegate.swift */; };
 		17E74D5A2C44E4FE00302946 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E74D592C44E4FE00302946 /* SceneDelegate.swift */; };
 		17E74D5C2C44E4FE00302946 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E74D5B2C44E4FE00302946 /* ViewController.swift */; };
@@ -321,6 +323,8 @@
 		17DF34D92C50EAB7002EE282 /* EdgeLineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EdgeLineView.swift; sourceTree = "<group>"; };
 		17E2D87A2C290272005F5E0B /* HEImageSticker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEImageSticker.swift; sourceTree = "<group>"; };
 		17E2D87C2C290986005F5E0B /* HEImageUtil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEImageUtil.swift; sourceTree = "<group>"; };
+		17E486D22CC3DE31007543D1 /* HEImageCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HEImageCache.swift; sourceTree = "<group>"; };
+		17E486D42CC3DFC0007543D1 /* HESimpleEditImageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HESimpleEditImageStore.swift; sourceTree = "<group>"; };
 		17E74D552C44E4FE00302946 /* HEExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HEExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		17E74D572C44E4FE00302946 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		17E74D592C44E4FE00302946 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -331,12 +335,6 @@
 		17E74D652C44E4FF00302946 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		17E74E112C44E5B900302946 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/Main.strings; sourceTree = "<group>"; };
 		17E74E132C44E5B900302946 /* ko */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ko; path = ko.lproj/LaunchScreen.strings; sourceTree = "<group>"; };
-		17E74E162C44E5CD00302946 /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ar.lproj/Main.strings; sourceTree = "<group>"; };
-		17E74E172C44E5CD00302946 /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ar.lproj/LaunchScreen.strings; sourceTree = "<group>"; };
-		17E74E182C44E5F100302946 /* es-419 */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "es-419"; path = "es-419.lproj/Main.strings"; sourceTree = "<group>"; };
-		17E74E192C44E5F100302946 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/LaunchScreen.strings; sourceTree = "<group>"; };
-		17E74E1A2C44E5F100302946 /* es-419 */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "es-419"; path = "es-419.lproj/LaunchScreen.strings"; sourceTree = "<group>"; };
-		17E74E1B2C44E5F200302946 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Main.strings; sourceTree = "<group>"; };
 		17E74E1D2C44E61300302946 /* cubano-regular-webfont.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "cubano-regular-webfont.ttf"; sourceTree = "<group>"; };
 		17E74E1E2C44E61300302946 /* Homestead-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Homestead-Regular.ttf"; sourceTree = "<group>"; };
 		17E74E1F2C44E61300302946 /* Haymaker.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Haymaker.ttf; sourceTree = "<group>"; };
@@ -356,32 +354,6 @@
 		17E74E2D2C44E61300302946 /* BLANCH_CONDENSED.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = BLANCH_CONDENSED.otf; sourceTree = "<group>"; };
 		17E74E2E2C44E61300302946 /* vevey.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = vevey.ttf; sourceTree = "<group>"; };
 		17E74E2F2C44E61300302946 /* Arvil_Sans.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Arvil_Sans.ttf; sourceTree = "<group>"; };
-		17E74E432C44E63100302946 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Main.strings; sourceTree = "<group>"; };
-		17E74E442C44E63100302946 /* id */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = id; path = id.lproj/Main.strings; sourceTree = "<group>"; };
-		17E74E452C44E63100302946 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Main.strings; sourceTree = "<group>"; };
-		17E74E462C44E63100302946 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/LaunchScreen.strings; sourceTree = "<group>"; };
-		17E74E472C44E63100302946 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/LaunchScreen.strings; sourceTree = "<group>"; };
-		17E74E482C44E63100302946 /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/LaunchScreen.strings; sourceTree = "<group>"; };
-		17E74E492C44E63100302946 /* id */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = id; path = id.lproj/LaunchScreen.strings; sourceTree = "<group>"; };
-		17E74E4A2C44E63100302946 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/Main.strings; sourceTree = "<group>"; };
-		17E74E4B2C44E66000302946 /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/LaunchScreen.strings"; sourceTree = "<group>"; };
-		17E74E4C2C44E66000302946 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/LaunchScreen.strings; sourceTree = "<group>"; };
-		17E74E4D2C44E66000302946 /* tr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = tr; path = tr.lproj/Main.strings; sourceTree = "<group>"; };
-		17E74E4E2C44E66000302946 /* pt-BR */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/Main.strings"; sourceTree = "<group>"; };
-		17E74E4F2C44E66000302946 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Main.strings; sourceTree = "<group>"; };
-		17E74E502C44E66000302946 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/LaunchScreen.strings"; sourceTree = "<group>"; };
-		17E74E512C44E66000302946 /* ms */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ms; path = ms.lproj/LaunchScreen.strings; sourceTree = "<group>"; };
-		17E74E522C44E66000302946 /* uk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = uk; path = uk.lproj/Main.strings; sourceTree = "<group>"; };
-		17E74E532C44E66000302946 /* uk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = uk; path = uk.lproj/LaunchScreen.strings; sourceTree = "<group>"; };
-		17E74E542C44E66000302946 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/Main.strings; sourceTree = "<group>"; };
-		17E74E552C44E66000302946 /* vi */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = vi; path = vi.lproj/Main.strings; sourceTree = "<group>"; };
-		17E74E562C44E66000302946 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Main.strings"; sourceTree = "<group>"; };
-		17E74E572C44E66000302946 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/Main.strings"; sourceTree = "<group>"; };
-		17E74E582C44E66000302946 /* tr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = tr; path = tr.lproj/LaunchScreen.strings; sourceTree = "<group>"; };
-		17E74E592C44E66000302946 /* vi */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = vi; path = vi.lproj/LaunchScreen.strings; sourceTree = "<group>"; };
-		17E74E5A2C44E66000302946 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/LaunchScreen.strings; sourceTree = "<group>"; };
-		17E74E5B2C44E66000302946 /* ms */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ms; path = ms.lproj/Main.strings; sourceTree = "<group>"; };
-		17E74E5C2C44E66000302946 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/LaunchScreen.strings"; sourceTree = "<group>"; };
 		E40208D7256B9BA60077F5DC /* HEImageEditor.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = HEImageEditor.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E40208DA256B9BA60077F5DC /* HEImageEditor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HEImageEditor.h; sourceTree = "<group>"; };
 		E40208E4256B9F9C0077F5DC /* HEEditImageViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HEEditImageViewController.swift; sourceTree = "<group>"; };
@@ -676,6 +648,8 @@
 		17B2DCB02C3B835D00662FC4 /* HECommon */ = {
 			isa = PBXGroup;
 			children = (
+				17E486D42CC3DFC0007543D1 /* HESimpleEditImageStore.swift */,
+				17E486D22CC3DE31007543D1 /* HEImageCache.swift */,
 				17B2DCE22C3B84AF00662FC4 /* HECommon.h */,
 				17D692262C253644007443EC /* HEError.swift */,
 				17B2DCF72C3BA0C600662FC4 /* HEImage.swift */,
@@ -990,7 +964,7 @@
 				BuildIndependentTargetsInParallel = YES;
 				CLASSPREFIX = HE;
 				LastSwiftUpdateCheck = 1520;
-				LastUpgradeCheck = 1540;
+				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					1744BA3A2C330B4E00F5395B = {
 						CreatedOnToolsVersion = 15.4;
@@ -1012,22 +986,6 @@
 				en,
 				Base,
 				ko,
-				de,
-				ar,
-				"zh-Hans",
-				ja,
-				uk,
-				"es-419",
-				it,
-				ms,
-				"zh-Hant",
-				tr,
-				"pt-BR",
-				vi,
-				ru,
-				fr,
-				id,
-				nl,
 			);
 			mainGroup = E40208CD256B9BA60077F5DC;
 			packageReferences = (
@@ -1176,10 +1134,12 @@
 				17B2DD1E2C3F70A600662FC4 /* HEImageUtil.swift in Sources */,
 				17B2DCFA2C3BA32500662FC4 /* HEImageDataStore.swift in Sources */,
 				17B2DCFB2C3BA3C600662FC4 /* HEError.swift in Sources */,
+				17E486D32CC3DE36007543D1 /* HEImageCache.swift in Sources */,
 				17B2DCE42C3B967200662FC4 /* HEWrapper.swift in Sources */,
 				17B2DCE92C3B969D00662FC4 /* UIColor+Wrapper.swift in Sources */,
 				17D4A05B2C6A5DE9006781C6 /* UIImageView+Wrapper.swift in Sources */,
 				17DF34D82C50DB27002EE282 /* HEEnlargeButton.swift in Sources */,
+				17E486D52CC3DFC3007543D1 /* HESimpleEditImageStore.swift in Sources */,
 				17B2DD052C3BABA700662FC4 /* Data+Wrapper.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1321,22 +1281,6 @@
 			isa = PBXVariantGroup;
 			children = (
 				17E74E112C44E5B900302946 /* ko */,
-				17E74E162C44E5CD00302946 /* ar */,
-				17E74E182C44E5F100302946 /* es-419 */,
-				17E74E1B2C44E5F200302946 /* de */,
-				17E74E432C44E63100302946 /* ja */,
-				17E74E442C44E63100302946 /* id */,
-				17E74E452C44E63100302946 /* fr */,
-				17E74E4A2C44E63100302946 /* it */,
-				17E74E4D2C44E66000302946 /* tr */,
-				17E74E4E2C44E66000302946 /* pt-BR */,
-				17E74E4F2C44E66000302946 /* ru */,
-				17E74E522C44E66000302946 /* uk */,
-				17E74E542C44E66000302946 /* nl */,
-				17E74E552C44E66000302946 /* vi */,
-				17E74E562C44E66000302946 /* zh-Hans */,
-				17E74E572C44E66000302946 /* zh-Hant */,
-				17E74E5B2C44E66000302946 /* ms */,
 			);
 			name = Main.strings;
 			sourceTree = "<group>";
@@ -1345,22 +1289,6 @@
 			isa = PBXVariantGroup;
 			children = (
 				17E74E132C44E5B900302946 /* ko */,
-				17E74E172C44E5CD00302946 /* ar */,
-				17E74E192C44E5F100302946 /* de */,
-				17E74E1A2C44E5F100302946 /* es-419 */,
-				17E74E462C44E63100302946 /* it */,
-				17E74E472C44E63100302946 /* ja */,
-				17E74E482C44E63100302946 /* fr */,
-				17E74E492C44E63100302946 /* id */,
-				17E74E4B2C44E66000302946 /* pt-BR */,
-				17E74E4C2C44E66000302946 /* ru */,
-				17E74E502C44E66000302946 /* zh-Hans */,
-				17E74E512C44E66000302946 /* ms */,
-				17E74E532C44E66000302946 /* uk */,
-				17E74E582C44E66000302946 /* tr */,
-				17E74E592C44E66000302946 /* vi */,
-				17E74E5A2C44E66000302946 /* nl */,
-				17E74E5C2C44E66000302946 /* zh-Hant */,
 			);
 			name = LaunchScreen.strings;
 			sourceTree = "<group>";
@@ -1373,6 +1301,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
@@ -1409,6 +1338,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
@@ -1444,6 +1374,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
@@ -1480,6 +1411,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
@@ -1593,6 +1525,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -1658,6 +1591,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -1717,6 +1651,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = "";
@@ -1748,6 +1683,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = "";

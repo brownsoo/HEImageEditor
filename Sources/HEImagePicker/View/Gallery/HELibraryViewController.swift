@@ -308,7 +308,7 @@ public class HELibraryViewController: UIViewController, PermissionCheckable {
             do {
                 let newId = UUID().uuidString
                 let isGif = exifMeta?["{GIF}"] != nil
-                let url = try await self.editImageStore.cacheOriginImage(uiImage: image, forId: newId, isGif: isGif).value
+                let url = try await self.editImageStore.cacheOriginImage(uiImage: image, forId: newId, isGif: isGif)
                 let thumbnail = image.he.thumbnail()
                 let photo = HEMediaPhoto(identifier: newId,
                                          url: url,

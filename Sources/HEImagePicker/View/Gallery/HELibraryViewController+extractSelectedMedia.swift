@@ -93,7 +93,7 @@ extension HELibraryViewController {
                     if let hei = item.hei {
                         Task {
                             do {
-                                let photo = try hei.toMediaPhoto(imageCache: self.editImageStore)
+                                let photo = try await hei.toMediaPhoto(imageCache: self.editImageStore)
                                 resultMediaItems.append(HEMediaItem.photo(p: photo))
                             } catch {
                                 lg.woops(error)
@@ -176,10 +176,10 @@ extension HELibraryViewController {
                 if let hei = item.hei {
                     Task {
                         do {
-                            let photo = try hei.toMediaPhoto(imageCache: self.editImageStore)
-                            if !self.isMultipleSelectionEnabled { // 단일 선택이면, 편집도 단일로 진행
-                                self.editImageStore.clearAll()
-                                self.editImageStore.addHEImage(hei)
+                            let photo = try await hei.toMediaPhoto(imageCache: self.editImageStore)
+                            if await !self.isMultipleSelectionEnabled { // 단일 선택이면, 편집도 단일로 진행
+                                await self.editImageStore.clearAll()
+                                await self.editImageStore.addHEImage(hei)
                             }
                             
                             DispatchQueue.main.async { [weak self] in
@@ -308,7 +308,7 @@ extension HELibraryViewController {
                         let isGif = exifMeta["{GIF}"] != nil
                         let id = UUID().uuidString
                         let image = UIImage(data: data)
-                        let url: URL = try await editImageStore.cacheOriginImageSync(imageData: data, forId: id, isGif: isGif)
+                        let url: URL = try await editImageStore.cacheOriginImage(imageData: data, forId: id, isGif: isGif)
                         
                         await self.editImageStore.addHEImage(
                             HEImage(id: id, origin: url, phAsset: asset)

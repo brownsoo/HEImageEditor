@@ -15,7 +15,7 @@ final public class HELibraryMediaManager {
     public var collection: PHAssetCollection?
     public var fetchResult: PHFetchResult<PHAsset>?
     internal var previousPreheatRect: CGRect = .zero
-    private (set) var phImageManager: PHCachingImageManager?
+    private(set) var phImageManager: PHCachingImageManager?
     internal var exportTimer: Timer?
     internal var currentExportSessions: [AVAssetExportSession] = []
 
@@ -176,11 +176,12 @@ final public class HELibraryMediaManager {
                 if let s = progressSession {
                     self.currentExportSessions.append(s)
                 }
+                let progress = progressSession?.progress // TODO: deprecated iOS18
                 DispatchQueue.main.async {
                     self.exportTimer = Timer.scheduledTimer(timeInterval: 0.1,
                                                             target: self,
                                                             selector: #selector(self.onTickExportTimer),
-                                                            userInfo: progressSession,
+                                                            userInfo: progress,
                                                             repeats: true)
                 }
             })
@@ -236,12 +237,12 @@ final public class HELibraryMediaManager {
     }
     
     @objc func onTickExportTimer(sender: Timer) {
-        if let exportSession = sender.userInfo as? AVAssetExportSession {
-            if exportSession.progress > 0 {
-                exportProgressListener?(exportSession.progress)
+        if let progress = sender.userInfo as? Float {
+            if progress > 0 {
+                exportProgressListener?(progress)
             }
             
-            if exportSession.progress > 0.99 {
+            if progress > 0.99 {
                 sender.invalidate()
                 exportProgressListener?(0)
                 self.exportTimer = nil

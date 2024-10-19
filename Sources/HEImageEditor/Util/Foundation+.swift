@@ -22,7 +22,7 @@ extension TimeInterval {
 }
 
 // Combine Cancellable
-extension Task : Cancellable {}
+extension Task : @retroactive Cancellable {}
 
 extension CGPoint {
     func minus(_ dest: CGPoint) -> CGPoint {

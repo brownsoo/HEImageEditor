@@ -9,7 +9,7 @@ import Foundation
 import Combine
 
 // Combine Cancellable
-extension Task : Cancellable {}
+extension Task : @retroactive Cancellable {}
 
 extension Array {
     func get(at index: Int) -> Element? {

@@ -126,7 +126,11 @@ extension AVAsset {
         
         progressSession(exportSession)
         
-        await exportSession.export()
+        if #available(iOS 18.0, *) {
+           try? await exportSession.export(to: destination, as: PickerConfig.video.fileType)
+        } else {
+            await exportSession.export()            
+        }
         return exportSession
     }
 }
