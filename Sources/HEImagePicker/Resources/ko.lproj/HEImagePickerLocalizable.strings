@@ -24,7 +24,7 @@
 "_videoTooLong" = "%@초 이하인 동영상을 선택해주세요.";
 "_videoTooShort" = "동영상 길이는 최소 %@초 이상이어야 합니다.";
 "_warningItemsLimit" = "최대 %d개 까지 선택할 수 있습니다.";
-"_attach" = "첨부하기";
+"_attach" = "추가하기";
 "_editPhoto" = "사진 편집";
 "_all" = "전체";
 "_allPhotos" = "모든 사진";

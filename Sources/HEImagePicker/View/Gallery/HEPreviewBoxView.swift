@@ -319,7 +319,12 @@ extension HEPreviewBoxView {
                 }
                 self.delegate?.previewBoxView(self, updateCropInfoOfAssetIdentifier: asset.localIdentifier)
                 
-                if !isLowResIntermediaryImage {
+                if isLowResIntermediaryImage {
+                    cell.smallIndicator.isHidden = false
+                    cell.smallIndicator.startAnimating()
+                }
+                else {
+                    cell.smallIndicator.isHidden = true
                     self.hideLoader()
                     self.delegate?.previewBoxViewFinishedLoadingImage(self)
                     DispatchQueue.main.async {
@@ -629,7 +634,7 @@ class HEPreviewCell: UICollectionViewCell {
     var bindingTime: TimeInterval?
     
     lazy var zoomableView = HEAssetZoomableView()
-    
+    lazy var smallIndicator = UIActivityIndicatorView(style: .medium)
     var squareCropButton: UIButton?
     
     var isZoomable: Bool = true {
@@ -661,6 +666,14 @@ class HEPreviewCell: UICollectionViewCell {
         zoomableView.zoomableViewDelegate = self
         zoomableView.makeConstraints { v in
             v.edgesConstraintToSuperview(edges: .all, priority: .defaultHigh)
+        }
+        
+        smallIndicator.color = .white
+        smallIndicator.isHidden = true
+        contentView.addSubview(smallIndicator)
+        smallIndicator.makeConstraints { v in
+            v.centerXAnchorConstraintToSuperview()
+            v.centerYAnchorConstraintToSuperview()
         }
         
         // Crop Button

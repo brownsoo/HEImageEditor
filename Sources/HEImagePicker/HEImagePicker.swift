@@ -123,7 +123,6 @@ open class HEImagePicker: UINavigationController, HEPickerNavigationController {
     public required init(configuration: HEImagePickerConfiguration) {
         HEImagePickerConfiguration.shared = configuration
         super.init(nibName: nil, bundle: nil)
-        modalPresentationStyle = .fullScreen
     }
     
     required public init?(coder aDecoder: NSCoder) {

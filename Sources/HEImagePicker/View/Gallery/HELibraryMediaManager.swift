@@ -177,13 +177,11 @@ final public class HELibraryMediaManager {
                     self.currentExportSessions.append(s)
                 }
                 let progress = progressSession?.progress // TODO: deprecated iOS18
-                DispatchQueue.main.async {
-                    self.exportTimer = Timer.scheduledTimer(timeInterval: 0.1,
-                                                            target: self,
-                                                            selector: #selector(self.onTickExportTimer),
-                                                            userInfo: progress,
-                                                            repeats: true)
-                }
+                self.exportTimer = Timer.scheduledTimer(timeInterval: 0.1,
+                                                        target: self,
+                                                        selector: #selector(self.onTickExportTimer),
+                                                        userInfo: progress,
+                                                        repeats: true)
             })
             
             guard let exportedSession else {

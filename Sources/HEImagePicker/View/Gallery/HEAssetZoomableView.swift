@@ -30,7 +30,6 @@ final public class HEAssetZoomableView: UIScrollView {
     public fileprivate(set) var currentAssetType: PHAssetMediaType?
     private var currentEditImageURL: URL?
     private var currentEditTime: TimeInterval?
-    
     // Image view of the asset for convenience. Can be video preview image view or photo image view.
     public var assetImageView: UIImageView {
         return isVideoMode ? videoView.previewImageView : photoImageView
@@ -156,9 +155,9 @@ final public class HEAssetZoomableView: UIScrollView {
                 self.photoImageView.clipsToBounds = true
             }
             
-            self.photoImageView.image = image
-            if !isLowResIntermediaryImage {
+            if isLowResIntermediaryImage {
                 self.photoImageView.image = image
+            } else {
                 if photo.playbackStyle == .imageAnimated {
                     let options = PHImageRequestOptions()
                     options.isSynchronous = true
@@ -167,6 +166,8 @@ final public class HEAssetZoomableView: UIScrollView {
                             self?.photoImageView.he.loadGif(data: data)
                         }
                     }
+                } else {
+                    self.photoImageView.image = image
                 }
             }
             self.setAssetFrame(for: self.photoImageView, with: image)

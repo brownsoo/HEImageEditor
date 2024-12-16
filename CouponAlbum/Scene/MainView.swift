@@ -11,13 +11,16 @@ import SwiftData
 
 struct MainView: View {
     @Environment(\.modelContext) private var modelContext
+    
+    @Query(sort: \MyItem.createDate, order: .reverse) private var allAlbums: [MyItem]
+    
+    @State private var showingPhotoSelection = false
+    
     private var data = Array(0...20)
     private var columns = [
         GridItem(.adaptive(minimum: 150))
     ]
     
-    @Query(sort: \MyItem.createDate, order: .reverse)
-    private var allAlbums: [MyItem]
     
     var body: some View {
         VStack(spacing: 0) {
@@ -37,26 +40,32 @@ struct MainView: View {
             }
             
             HStack {
-                Button(action: {}) {
+                NavigationLink(destination: SettingView()) {
                     Image(systemName: "gear")
                         .padding()
                 }
                 Spacer()
-                Button(action: {}) {
+                
+                Button(action: { showingPhotoSelection.toggle() }) {
                     Image(systemName: "plus")
                         .padding()
-                        .background {
-                            Rectangle().foregroundColor(Color(uiColor: .systemGray5))
-                        }
                 }
+                .fullScreenCover(isPresented: $showingPhotoSelection, onDismiss: {}) {
+                    PhotoSelectionView(isPresented: $showingPhotoSelection, didSelectedImage: { url in
+                        print(url)
+                        showingPhotoSelection = false
+                        
+                    })
+                    .edgesIgnoringSafeArea(.bottom)
+                }
+                
                 Spacer()
-                Button(action: {}) {
+                NavigationLink(destination: Text("Hello")) {
                     Image(systemName: "magnifyingglass")
                         .padding()
                 }
             }
             .frame(maxWidth: .infinity)
-//            .frame(height: 54)
             .background(Color(uiColor: .systemGroupedBackground))
         }
     }

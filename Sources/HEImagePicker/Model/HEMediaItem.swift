@@ -13,7 +13,7 @@ import HECommon
 public typealias HEMediaPhotoExtraTask = () async -> (thumbnail: UIImage?, exifMeta:  [String: Any]?)
 
 /// HEPicker 의 사진
-public class HEMediaPhoto {
+public class HEMediaPhoto: @unchecked Sendable {
     /// 지정된 아이디 or PHAsset의 identifier, or uuid
     ///
     /// - 주의: PHAsset 데이터를 조회할 때는 asset 값을 먼저 참조

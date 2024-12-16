@@ -24,7 +24,7 @@
 "_videoTooLong" = "Pick a video less than %@ seconds long";
 "_videoTooShort" = "The video must be at least %@ seconds";
 "_warningItemsLimit" = "The limit is %d photos or videos";
-"_attach" = "Attach";
+"_attach" = "Add";
 "_editPhoto" = "Edit photo";
 "_all" = "All";
 "_allPhotos" = "All Photos";

@@ -16,3 +16,12 @@ struct RootView: View {
         }
     }
 }
+
+/*
+ TODO: - select photo
+ - save, edit photo in app album
+ - manage photos in app album
+ - read date from photo
+ - create alarm with photo
+ - secret album
+ */
