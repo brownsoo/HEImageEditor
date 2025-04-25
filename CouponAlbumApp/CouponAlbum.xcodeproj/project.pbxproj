@@ -10,6 +10,7 @@
 		172CEF4D2C9AF1F700CB99D9 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 172CEF4C2C9AF1F700CB99D9 /* MainView.swift */; };
 		172CEF4F2C9AF7E200CB99D9 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 172CEF4E2C9AF7E200CB99D9 /* RootView.swift */; };
 		172CEF532C9B12E100CB99D9 /* MyAlbum.swift in Sources */ = {isa = PBXBuildFile; fileRef = 172CEF522C9B12E100CB99D9 /* MyAlbum.swift */; };
+		1731F80A2DBB3F0F00F1F954 /* HEImagePackage in Frameworks */ = {isa = PBXBuildFile; productRef = 1731F8092DBB3F0F00F1F954 /* HEImagePackage */; };
 		175B80062D0FD89700847C2C /* HEImagePackage in Frameworks */ = {isa = PBXBuildFile; productRef = 175B80052D0FD89700847C2C /* HEImagePackage */; };
 		175B80082D0FD8AB00847C2C /* SettingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 175B80072D0FD8AB00847C2C /* SettingView.swift */; };
 		175B800A2D0FDA0C00847C2C /* PhotoSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 175B80092D0FDA0300847C2C /* PhotoSelectionView.swift */; };
@@ -104,6 +105,7 @@
 			files = (
 				175B80062D0FD89700847C2C /* HEImagePackage in Frameworks */,
 				17E74E772C46508200302946 /* Collections in Frameworks */,
+				1731F80A2DBB3F0F00F1F954 /* HEImagePackage in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -228,6 +230,7 @@
 			packageProductDependencies = (
 				17E74E762C46508200302946 /* Collections */,
 				175B80052D0FD89700847C2C /* HEImagePackage */,
+				1731F8092DBB3F0F00F1F954 /* HEImagePackage */,
 			);
 			productName = HEExample;
 			productReference = 17E74D552C44E4FE00302946 /* CouponAlbum.app */;
@@ -262,7 +265,7 @@
 			packageReferences = (
 				17E74E5F2C4517DF00302946 /* XCRemoteSwiftPackageReference "Kingfisher" */,
 				17E74E752C46508200302946 /* XCRemoteSwiftPackageReference "swift-collections" */,
-				175B80042D0FD89700847C2C /* XCLocalSwiftPackageReference "../HEImageEditor" */,
+				1731F8082DBB3F0F00F1F954 /* XCLocalSwiftPackageReference "../HEImagePackage" */,
 			);
 			productRefGroup = E40208D8256B9BA60077F5DC /* Products */;
 			projectDirPath = "";
@@ -373,9 +376,11 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = TB576F3KJ6;
+				DISPLAY_NAME = "쿠폰앨범";
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CouponAlbum/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "$(DISPLAY_NAME)";
 				INFOPLIST_KEY_NSCameraUsageDescription = "카메라 좀 ..";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "마이크 좀..";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "포토앨범 더더더";
@@ -413,9 +418,11 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = TB576F3KJ6;
+				DISPLAY_NAME = "쿠폰앨범";
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CouponAlbum/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "$(DISPLAY_NAME)";
 				INFOPLIST_KEY_NSCameraUsageDescription = "카메라 좀 ..";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "마이크 좀..";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "포토앨범 더더더";
@@ -592,9 +599,9 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		175B80042D0FD89700847C2C /* XCLocalSwiftPackageReference "../HEImageEditor" */ = {
+		1731F8082DBB3F0F00F1F954 /* XCLocalSwiftPackageReference "../HEImagePackage" */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = ../HEImageEditor;
+			relativePath = ../HEImagePackage;
 		};
 /* End XCLocalSwiftPackageReference section */
 
@@ -618,6 +625,10 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		1731F8092DBB3F0F00F1F954 /* HEImagePackage */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = HEImagePackage;
+		};
 		175B80052D0FD89700847C2C /* HEImagePackage */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = HEImagePackage;
