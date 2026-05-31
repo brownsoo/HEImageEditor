@@ -1,27 +1,17 @@
-//
-//  RootView.swift
-//  HEExample
-//
-//  Created by hyonsoo on 9/18/24.
-//
-
-import Foundation
 import SwiftUI
-
+import SwiftData
 
 struct RootView: View {
     var body: some View {
         NavigationStack {
             MainView()
         }
+        .modelContainer(for: Coupon.self)
     }
 }
 
-/*
- TODO: - select photo
- - save, edit photo in app album
- - manage photos in app album
- - read date from photo
- - create alarm with photo
- - secret album
- */
+struct RootView_Previews: PreviewProvider {
+    static var previews: some View {
+        RootView()
+    }
+}

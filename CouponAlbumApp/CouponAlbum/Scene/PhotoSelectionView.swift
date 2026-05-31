@@ -1,96 +1,179 @@
-//
-//  PhotoSelectionView.swift
-//  CouponAlbum
-//
-//  Created by 브라운수 on 12/16/24.
-//
-
 import SwiftUI
+import UIKit
 import HECommon
-import HEImagePicker
 import HEImageEditor
 
 struct PhotoSelectionView: UIViewControllerRepresentable {
+    let sourceType: UIImagePickerController.SourceType
+    let onComplete: (UIImage) -> Void
+    let onCancel: () -> Void
     
-    @Binding var isPresented: Bool
-    var didSelectedImage: (([URL]) -> Void)
+    func makeUIViewController(context: Context) -> PickerAndEditorCoordinatorController {
+        let controller = PickerAndEditorCoordinatorController(
+            sourceType: sourceType,
+            onComplete: onComplete,
+            onCancel: onCancel
+        )
+        return controller
+    }
     
-    func makeUIViewController(context: Context) -> some UIViewController {
-        var config = HEImagePickerConfiguration()
-        config.pickerSources = [.libraryPick, .photoCapture]
-        config.shouldSaveNewPicturesToAlbum = true
-        config.shouldSelectSingleType = false
-        config.library.mediaType = .photo
-        config.library.defaultMultipleSelection = true
-        config.library.maxNumberOfItems = 100
+    func updateUIViewController(_ uiViewController: PickerAndEditorCoordinatorController, context: Context) {}
+}
 
-        let vc = CouponImagePicker(configuration: config)
-        vc.pickerDelegate = context.coordinator
-        return vc
+final class PickerAndEditorCoordinatorController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, HEEditImageViewDelegate, HEEditorActionListener {
+    
+    let sourceType: UIImagePickerController.SourceType
+    let onComplete: (UIImage) -> Void
+    let onCancel: () -> Void
+    
+    private var didShowPicker = false
+    
+    private lazy var editCancelBtn: UIButton = {
+        let btn = UIButton(type: .custom)
+        let icon = UIImage(systemName: "chevron.backward")?.withTintColor(.white)
+        btn.setImage(icon, for: .normal)
+        btn.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
+        return btn
+    }()
+    
+    private lazy var editDoneBtn: HEEnlargeButton = {
+        let btn = HEEnlargeButton(type: .custom)
+        btn.setTitleColor(.white, for: .normal)
+        btn.setTitle("완료", for: .normal)
+        btn.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
+        return btn
+    }()
+    
+    private lazy var editUndoBtn: HEEnlargeButton = {
+        let btn = HEEnlargeButton(type: .custom)
+        btn.setImage(UIImage(systemName: "arrow.uturn.backward.circle"), for: .normal)
+        btn.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
+        return btn
+    }()
+    
+    private lazy var editRedoBtn: HEEnlargeButton = {
+        let btn = HEEnlargeButton(type: .custom)
+        btn.setImage(UIImage(systemName: "arrow.uturn.forward.circle"), for: .normal)
+        btn.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
+        return btn
+    }()
+    
+    init(sourceType: UIImagePickerController.SourceType, onComplete: @escaping (UIImage) -> Void, onCancel: @escaping () -> Void) {
+        self.sourceType = sourceType
+        self.onComplete = onComplete
+        self.onCancel = onCancel
+        super.init(nibName: nil, bundle: nil)
     }
     
-    func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) {
-        guard let vc = uiViewController as? CouponImagePicker else {
-            return
-        }
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
-    func makeCoordinator() -> Coordinator {
-        let coord = Coordinator(view: self)
-        return coord
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        guard !didShowPicker else { return }
+        didShowPicker = true
+        
+        presentPicker()
     }
- 
-    class Coordinator: NSObject, HEImagePickerDelegate {
+    
+    private func presentPicker() {
+        let picker = UIImagePickerController()
+        picker.delegate = self
         
-        var view: PhotoSelectionView
-        
-        init(view: PhotoSelectionView) {
-            self.view = view
+        if UIImagePickerController.isSourceTypeAvailable(sourceType) {
+            picker.sourceType = sourceType
+        } else {
+            picker.sourceType = .photoLibrary
         }
         
-        func imagePicker(_ picker: HEImagePicker, didSelectItems items: [HEMediaItem]) {
-            switch items.first {
-            case .photo(let photo):
-                view.didSelectedImage(items.photoItems.map { $0.url })
-                
-            case .video(_):
-                break
-                
-            case .none:
-                break
+        present(picker, animated: true)
+    }
+    
+    // MARK: - UIImagePickerControllerDelegate
+    
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        picker.dismiss(animated: true) { [weak self] in
+            guard let self = self else { return }
+            guard let image = info[.originalImage] as? UIImage else {
+                self.onCancel()
+                return
             }
-        }
-        
-        func imagePickerDidCancel(_ picker: HEImagePicker) {
-            view.isPresented = false
+            
+            // Fix orientation and resize image for editor performance
+            let fixedImage = image.he.fixOrientation()
+            let w = min(1280, fixedImage.size.width)
+            let resizedImage = fixedImage.he.resize(newWidth: w)
+            
+            // Limit tools to clip (crop & rotate)
+            HEImageEditorConfiguration.default().tools = [.clip]
+            HEImageEditorConfiguration.default().clipRatios = [.origin, .custom, .wh1x1, .wh4x3]
+            
+            HEEditImageViewController.showImageEditor(
+                parent: self,
+                image: resizedImage,
+                delegate: self,
+                topToolViewBuilder: self.makeTopToolBuilder()
+            )
         }
     }
-}
-
-
-final class CouponImagePicker: HEImagePicker {
-    var imageStickers: [HEImageSticker] = []
-    lazy var imageStore = HESimpleEditImageStore()
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        self.editImageStore = self.imageStore
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        picker.dismiss(animated: true) { [weak self] in
+            self?.onCancel()
+        }
+    }
+    
+    // MARK: - HEEditImageViewDelegate
+    
+    func didFinishEditImage(_ editView: HEEditImageView, resultImage: UIImage, editId: String?, editModel: HEEditState?) {
+        onComplete(resultImage)
+    }
+    
+    func didClipWithoutKeepingState(_ editView: HEEditImageView, resultImage: UIImage, editId: String?) {}
+    
+    func cancelledEditImage(_ editView: HEEditImageView) {
+        onCancel()
+    }
+    
+    // MARK: - HEEditorActionListener
+    
+    func didUpdatedActions(_ actions: [HEEditAction], redoActions: [HEEditAction]) {
+        editUndoBtn.isEnabled = !actions.isEmpty
+        editRedoBtn.isEnabled = actions.count != redoActions.count
+    }
+    
+    // MARK: - Top Tool Bar Builder
+    
+    private func makeTopToolBuilder() -> HEEditImageTopToolViewBuilder {
+        return { [weak self] editView in
+            let toolView = HETopBarView()
+            if let self = self {
+                toolView.addLeadingView(self.editCancelBtn)
+                toolView.addTrailingView(self.editUndoBtn)
+                toolView.addTrailingView(self.editRedoBtn)
+                toolView.addTrailingView(self.editDoneBtn)
+                
+                self.editCancelBtn.addAction(.init(handler: { _ in
+                    editView.cancel()
+                }), for: .touchUpInside)
+                
+                self.editUndoBtn.addAction(.init(handler: { _ in
+                    editView.undo()
+                }), for: .touchUpInside)
+                
+                self.editRedoBtn.addAction(.init(handler: { _ in
+                    editView.redo()
+                }), for: .touchUpInside)
+                
+                self.editDoneBtn.addAction(.init(handler: { _ in
+                    editView.done()
+                }), for: .touchUpInside)
+                
+                editView.addActionChangedListener(self)
+            }
+            return (toolView, 44)
+        }
     }
 }
-
-//@objc func pickImage() {
-//    
-//    var config = HEImagePickerConfiguration()
-//    config.pickerSources = [.libraryPick, .photoCapture]
-//    config.shouldSaveNewPicturesToAlbum = true
-//    config.shouldSelectSingleType = false
-//    config.library.mediaType = .photoAndVideo
-//    config.library.defaultMultipleSelection = false
-//    config.library.maxNumberOfItems = 1
-//    
-//    let picker = HEImagePicker(configuration: config)
-//    picker.pickerDelegate = self
-//    picker.editImageStore = self.imageStore
-//    showDetailViewController(picker, sender: nil)
-//}
