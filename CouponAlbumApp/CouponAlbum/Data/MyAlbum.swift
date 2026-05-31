@@ -118,28 +118,7 @@ class CouponOCRProcessor {
             return OCRResult(brand: nil, expirationDate: nil, barcodeValue: nil, barcodeType: nil)
         }
         
-        // 1. Barcode Detection
-        var detectedBarcode: String? = nil
-        var detectedBarcodeType: String? = nil
-        
-        let barcodeRequest = VNDetectBarcodesRequest()
-        let barcodeHandler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-        do {
-            try barcodeHandler.perform([barcodeRequest])
-            if let results = barcodeRequest.results, let firstBarcode = results.first {
-                detectedBarcode = firstBarcode.payloadStringValue
-                let symbology = firstBarcode.symbology
-                if symbology == .qr {
-                    detectedBarcodeType = "qr"
-                } else {
-                    detectedBarcodeType = "code128"
-                }
-            }
-        } catch {
-            print("Barcode detection failed: \(error)")
-        }
-        
-        // 2. Text Recognition (OCR)
+        // 1. Text Recognition (OCR)
         var recognizedTexts: [String] = []
         let textRequest = VNRecognizeTextRequest { request, error in
             guard let results = request.results as? [VNRecognizedTextObservation] else { return }
@@ -159,6 +138,68 @@ class CouponOCRProcessor {
             print("Text recognition failed: \(error)")
         }
         
+        // 2. Barcode Detection (Multi-pass)
+        var detectedBarcode: String? = nil
+        var detectedBarcodeType: String? = nil
+        
+        let barcodeRequest = VNDetectBarcodesRequest()
+        
+        // Pass 1: Original Image
+        let barcodeHandler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+        do {
+            try barcodeHandler.perform([barcodeRequest])
+            if let results = barcodeRequest.results, let firstBarcode = results.first {
+                detectedBarcode = firstBarcode.payloadStringValue
+                detectedBarcodeType = firstBarcode.symbology == .qr ? "qr" : "code128"
+                print("[OCRProcessor] Barcode detected in Pass 1 (Original)")
+            }
+        } catch {
+            print("Barcode detection Pass 1 failed: \(error)")
+        }
+        
+        // Pass 2: Grayscale + Contrast (2.2) + Sharpen (1.5)
+        if detectedBarcode == nil {
+            if let preprocessedCG = preprocessImageForBarcode(cgImage, contrast: 2.2, sharpness: 1.5) {
+                let handler = VNImageRequestHandler(cgImage: preprocessedCG, options: [:])
+                do {
+                    try handler.perform([barcodeRequest])
+                    if let results = barcodeRequest.results, let firstBarcode = results.first {
+                        detectedBarcode = firstBarcode.payloadStringValue
+                        detectedBarcodeType = firstBarcode.symbology == .qr ? "qr" : "code128"
+                        print("[OCRProcessor] Barcode detected in Pass 2 (High Contrast & Sharpen)")
+                    }
+                } catch {
+                    print("Barcode detection Pass 2 failed: \(error)")
+                }
+            }
+        }
+        
+        // Pass 3: Grayscale + Extreme Contrast (3.5) + Unsharp Mask (radius: 2.5, intensity: 1.0)
+        if detectedBarcode == nil {
+            if let preprocessedCG = preprocessImageWithUnsharpMask(cgImage, contrast: 3.5, radius: 2.5, intensity: 1.0) {
+                let handler = VNImageRequestHandler(cgImage: preprocessedCG, options: [:])
+                do {
+                    try handler.perform([barcodeRequest])
+                    if let results = barcodeRequest.results, let firstBarcode = results.first {
+                        detectedBarcode = firstBarcode.payloadStringValue
+                        detectedBarcodeType = firstBarcode.symbology == .qr ? "qr" : "code128"
+                        print("[OCRProcessor] Barcode detected in Pass 3 (Unsharp Mask & Extreme Contrast)")
+                    }
+                } catch {
+                    print("Barcode detection Pass 3 failed: \(error)")
+                }
+            }
+        }
+        
+        // Pass 4: Fallback to OCR text parsing (checking recognizedTexts for barcode numbers)
+        if detectedBarcode == nil {
+            if let parsedDigits = parseBarcodeFromText(from: recognizedTexts) {
+                detectedBarcode = parsedDigits
+                detectedBarcodeType = "code128"
+                print("[OCRProcessor] Barcode detected in Pass 4 (OCR Fallback): \(parsedDigits)")
+            }
+        }
+        
         // 3. Extract metadata with heuristics
         let parsedDate = parseExpirationDate(from: recognizedTexts)
         let parsedBrand = parseBrand(from: recognizedTexts)
@@ -169,6 +210,75 @@ class CouponOCRProcessor {
             barcodeValue: detectedBarcode,
             barcodeType: detectedBarcodeType
         )
+    }
+    
+    private static func preprocessImageForBarcode(_ cgImage: CGImage, contrast: Float, sharpness: Float) -> CGImage? {
+        let ciImage = CIImage(cgImage: cgImage)
+        
+        // 1. Grayscale & Contrast
+        guard let colorFilter = CIFilter(name: "CIColorControls") else { return nil }
+        colorFilter.setValue(ciImage, forKey: kCIInputImageKey)
+        colorFilter.setValue(0.0, forKey: kCIInputSaturationKey) // saturation to 0 (grayscale)
+        colorFilter.setValue(contrast, forKey: kCIInputContrastKey) // increase contrast
+        
+        guard let colorCorrected = colorFilter.outputImage else { return nil }
+        
+        // 2. Sharpening
+        guard let sharpenFilter = CIFilter(name: "CISharpenLuminance") else { return nil }
+        sharpenFilter.setValue(colorCorrected, forKey: kCIInputImageKey)
+        sharpenFilter.setValue(sharpness, forKey: kCIInputSharpnessKey)
+        
+        guard let sharpened = sharpenFilter.outputImage else { return nil }
+        
+        let context = CIContext(options: nil)
+        return context.createCGImage(sharpened, from: sharpened.extent)
+    }
+    
+    private static func preprocessImageWithUnsharpMask(_ cgImage: CGImage, contrast: Float, radius: Float, intensity: Float) -> CGImage? {
+        let ciImage = CIImage(cgImage: cgImage)
+        
+        // 1. Grayscale & Contrast
+        guard let colorFilter = CIFilter(name: "CIColorControls") else { return nil }
+        colorFilter.setValue(ciImage, forKey: kCIInputImageKey)
+        colorFilter.setValue(0.0, forKey: kCIInputSaturationKey)
+        colorFilter.setValue(contrast, forKey: kCIInputContrastKey)
+        
+        guard let colorCorrected = colorFilter.outputImage else { return nil }
+        
+        // 2. Unsharp Mask (sharpens edges of blurred codes)
+        guard let unsharpFilter = CIFilter(name: "CIUnsharpMask") else { return nil }
+        unsharpFilter.setValue(colorCorrected, forKey: kCIInputImageKey)
+        unsharpFilter.setValue(radius, forKey: kCIInputRadiusKey)
+        unsharpFilter.setValue(intensity, forKey: kCIInputIntensityKey)
+        
+        guard let unsharpened = unsharpFilter.outputImage else { return nil }
+        
+        let context = CIContext(options: nil)
+        return context.createCGImage(unsharpened, from: unsharpened.extent)
+    }
+    
+    private static func parseBarcodeFromText(from texts: [String]) -> String? {
+        let patterns = [
+            #"^\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}$"#, // 16 digits (e.g. 1234-5678-9012-3456)
+            #"^\d{12}$"#,                                  // 12 digits (UPC)
+            #"^\d{13}$"#,                                  // 13 digits (EAN)
+            #"^\d{4}[-\s]?\d{4}[-\s]?\d{4}$"#,             // 12 digits with separators
+            #"^\d{24}$"#                                   // 24 digits
+        ]
+        
+        for line in texts {
+            let cleanLine = line.trimmingCharacters(in: .whitespacesAndNewlines)
+            for pattern in patterns {
+                if let range = cleanLine.range(of: pattern, options: .regularExpression) {
+                    let matchedStr = String(cleanLine[range])
+                    let digitsOnly = matchedStr.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+                    if digitsOnly.count >= 8 {
+                        return digitsOnly
+                    }
+                }
+            }
+        }
+        return nil
     }
     
     private static func parseExpirationDate(from texts: [String]) -> Date? {
