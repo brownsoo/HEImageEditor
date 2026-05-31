@@ -1,0 +1,74 @@
+//
+//  HEEditState.swift
+//  HEImageEditor
+//
+//  Created by 브라운수 on 6/10/24.
+//
+
+import Foundation
+
+/// 편집 정보
+public class HEEditState: NSObject {
+    /// 드로잉스
+    public let drawPaths: [HEDrawPath]
+    /// 모자잌스
+    public let mosaicPaths: [HEMosaicPath]
+    
+    public let clipStatus: HEClipStatus?
+    /// 색조 상태
+    public let adjustStatus: HEAdjustStatus
+    
+    public let selectFilter: HEFilter?
+    
+    public let stickers: [HEStickerEffect]
+    
+    public let actions: [HEEditAction]
+    /// 편집 정보들을 합쳐 이미지를 재생성했는 지 체크 
+    public var fattened: Bool
+    
+    public init(
+        drawPaths: [HEDrawPath] = [],
+        mosaicPaths: [HEMosaicPath] = [],
+        clipStatus: HEClipStatus? = nil,
+        adjustStatus: HEAdjustStatus = HEAdjustStatus(),
+        selectFilter: HEFilter? = nil,
+        stickers: [HEStickerEffect] = [],
+        actions: [HEEditAction] = [],
+        fattened: Bool = false
+    ) {
+        self.drawPaths = drawPaths
+        self.mosaicPaths = mosaicPaths
+        self.clipStatus = clipStatus
+        self.adjustStatus = adjustStatus
+        self.selectFilter = selectFilter
+        self.stickers = stickers
+        self.actions = actions
+        self.fattened = fattened
+        super.init()
+    }
+}
+
+public extension HEEditState {
+    func clone() -> HEEditState {
+        return HEEditState(drawPaths: self.drawPaths.map { $0.clone() },
+                           mosaicPaths: self.mosaicPaths.map { $0.clone() },
+                           clipStatus: self.clipStatus?.clone(),
+                           adjustStatus: self.adjustStatus,
+                           selectFilter: self.selectFilter?.clone(),
+                           stickers: self.stickers,
+                           actions: self.actions,
+                           fattened: self.fattened)
+            
+    }
+}
+
+extension HEEditState {
+    public override var debugDescription: String {
+        """
+HEEditState::
+    - clipStatus: \(clipStatus.debugDescription)
+    - stickers: \(stickers.debugDescription)
+"""
+    }
+}
+
