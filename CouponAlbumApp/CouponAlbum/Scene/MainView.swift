@@ -741,7 +741,10 @@ struct MainView: View {
                                         .padding(.horizontal, 16)
                                     }
                                     .padding(.top, 200) // Positioned below the selected card (at y=10, height=180)
-                                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                                    .transition(.asymmetric(
+                                        insertion: .offset(y: -180).combined(with: .opacity),
+                                        removal: .offset(y: -180).combined(with: .opacity)
+                                    ))
                                     .zIndex(1)
                                 }
                                 
@@ -917,7 +920,10 @@ struct MainView: View {
                                         .padding(.horizontal, 16)
                                     }
                                     .padding(.top, 200)
-                                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                                    .transition(.asymmetric(
+                                        insertion: .offset(y: -180).combined(with: .opacity),
+                                        removal: .offset(y: -180).combined(with: .opacity)
+                                    ))
                                     .zIndex(1)
                                 }
                                 
