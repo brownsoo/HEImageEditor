@@ -17,6 +17,7 @@ final class Coupon {
     var isUsed: Bool
     var createdDate: Date
     var memo: String?
+    var isNotificationEnabled: Bool
     
     init(
         id: UUID = UUID(),
@@ -27,7 +28,8 @@ final class Coupon {
         barcodeType: String? = nil,
         isUsed: Bool = false,
         createdDate: Date = Date(),
-        memo: String? = nil
+        memo: String? = nil,
+        isNotificationEnabled: Bool = false
     ) {
         self.id = id
         self.imageName = imageName
@@ -38,6 +40,7 @@ final class Coupon {
         self.isUsed = isUsed
         self.createdDate = createdDate
         self.memo = memo
+        self.isNotificationEnabled = isNotificationEnabled
     }
     
     var isExpired: Bool {
@@ -336,5 +339,119 @@ struct BarcodeGenerator {
         let context = CIContext()
         guard let cgImage = context.createCGImage(transformedImage, from: transformedImage.extent) else { return nil }
         return UIImage(cgImage: cgImage)
+    }
+}
+
+// MARK: - Local Notification Manager
+
+final class NotificationManager {
+    static let shared = NotificationManager()
+    
+    private init() {}
+    
+    /// Requests notification authorization from the user
+    func requestAuthorization() async -> Bool {
+        do {
+            let authorized = try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])
+            print("Notification authorization status: \(authorized)")
+            return authorized
+        } catch {
+            print("Failed to request notification authorization: \(error)")
+            return false
+        }
+    }
+    
+    /// Check current authorization status
+    func getAuthorizationStatus() async -> UNAuthorizationStatus {
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        return settings.authorizationStatus
+    }
+    
+    /// Schedules notifications for a coupon (D-3 and D-1 at 9:00 AM)
+    func scheduleNotification(for coupon: Coupon) {
+        // Cancel any existing notifications for this coupon first
+        cancelNotification(for: coupon)
+        
+        guard !coupon.isUsed, !coupon.isExpired, coupon.isNotificationEnabled else {
+            print("Skipping notification schedule for '\(coupon.brand)': isUsed=\(coupon.isUsed), isExpired=\(coupon.isExpired), enabled=\(coupon.isNotificationEnabled)")
+            return
+        }
+        
+        let center = UNUserNotificationCenter.current()
+        let calendar = Calendar.current
+        
+        // Start of day of the expiration date
+        let expirationStartOfDay = calendar.startOfDay(for: coupon.expirationDate)
+        
+        let reminders = [
+            (daysBefore: 3, idSuffix: "_d3", body: "사용 기한이 3일 남았습니다. 잊지 말고 사용하세요!"),
+            (daysBefore: 1, idSuffix: "_d1", body: "사용 기한이 하루 남았습니다! 오늘 꼭 사용하세요.")
+        ]
+        
+        for reminder in reminders {
+            // Subtract days
+            guard let alertDate = calendar.date(byAdding: .day, value: -reminder.daysBefore, to: expirationStartOfDay),
+                  let finalAlertDate = calendar.date(bySettingHour: 9, minute: 0, second: 0, of: alertDate) else {
+                continue
+            }
+            
+            // Only schedule if the calculated time is in the future
+            if finalAlertDate > Date() {
+                let content = UNMutableNotificationContent()
+                content.title = "쿠폰 만료 임박: \(coupon.brand)"
+                content.body = reminder.body
+                content.sound = .default
+                
+                // Keep expiration date on the notification if needed
+                content.userInfo = ["couponId": coupon.id.uuidString]
+                
+                let dateComponents = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second], from: finalAlertDate)
+                let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
+                
+                let identifier = "\(coupon.id.uuidString)\(reminder.idSuffix)"
+                let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+                
+                center.add(request) { error in
+                    if let error = error {
+                        print("Failed to schedule notification for \(coupon.brand) (ID: \(identifier)): \(error.localizedDescription)")
+                    } else {
+                        print("Successfully scheduled notification for \(coupon.brand) at \(finalAlertDate) (ID: \(identifier))")
+                    }
+                }
+            } else {
+                print("Skipping reminder (\(reminder.daysBefore) days before) for \(coupon.brand) because alert date \(finalAlertDate) is in the past.")
+            }
+        }
+        
+        // Log currently pending notifications for debugging
+        printPendingNotifications()
+    }
+    
+    /// Cancels all pending notifications for a coupon
+    func cancelNotification(for coupon: Coupon) {
+        let center = UNUserNotificationCenter.current()
+        let identifiers = [
+            "\(coupon.id.uuidString)_d3",
+            "\(coupon.id.uuidString)_d1"
+        ]
+        center.removePendingNotificationRequests(withIdentifiers: identifiers)
+        print("Cancelled pending notifications for \(coupon.brand) (IDs: \(identifiers))")
+    }
+    
+    /// Debug helper to print all pending notification requests
+    func printPendingNotifications() {
+        UNUserNotificationCenter.current().getPendingNotificationRequests { requests in
+            print("--- Pending Notification Requests (\(requests.count)) ---")
+            for request in requests {
+                let triggerInfo: String
+                if let trigger = request.trigger as? UNCalendarNotificationTrigger, let nextDate = trigger.nextTriggerDate() {
+                    triggerInfo = "Trigger Date: \(nextDate)"
+                } else {
+                    triggerInfo = "Trigger: \(String(describing: request.trigger))"
+                }
+                print("- ID: \(request.identifier) | Title: \(request.content.title) | \(triggerInfo)")
+            }
+            print("--------------------------------------------------")
+        }
     }
 }

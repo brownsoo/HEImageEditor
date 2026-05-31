@@ -260,6 +260,8 @@ struct CouponAddConfirmView: View {
     @State private var barcodeType: String? = nil
     
     @State private var isOCRLoading = true
+    @State private var isNotificationEnabled = false
+    @State private var showingAddPermissionAlert = false
     
     var body: some View {
         NavigationView {
@@ -335,6 +337,35 @@ struct CouponAddConfirmView: View {
                                 .background(Color(.secondarySystemGroupedBackground))
                                 .cornerRadius(8)
                         }
+                        
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("알림 설정")
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundColor(.secondary)
+                            Toggle("만료일 D-3, D-1 알림 받기", isOn: Binding(
+                                get: { isNotificationEnabled },
+                                set: { newValue in
+                                    if newValue {
+                                        Task {
+                                            let authorized = await NotificationManager.shared.requestAuthorization()
+                                            await MainActor.run {
+                                                if authorized {
+                                                    isNotificationEnabled = true
+                                                } else {
+                                                    isNotificationEnabled = false
+                                                    showingAddPermissionAlert = true
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        isNotificationEnabled = false
+                                    }
+                                }
+                            ))
+                            .padding()
+                            .background(Color(.secondarySystemGroupedBackground))
+                            .cornerRadius(8)
+                        }
                     }
                     .padding(.horizontal, 16)
                     
@@ -360,6 +391,16 @@ struct CouponAddConfirmView: View {
             .navigationBarItems(leading: Button("취소") { isPresented = false })
             .onAppear {
                 performOCR()
+            }
+            .alert("알림 권한 필요", isPresented: $showingAddPermissionAlert) {
+                Button("설정으로 이동") {
+                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(url)
+                    }
+                }
+                Button("취소", role: .cancel) {}
+            } message: {
+                Text("쿠폰 만료 리마인더 알림을 받으려면 기기 설정에서 알림 권한을 허용해야 합니다.")
             }
         }
     }
@@ -409,11 +450,17 @@ struct CouponAddConfirmView: View {
                 barcodeValue: trimmedBarcode.isEmpty ? nil : trimmedBarcode,
                 barcodeType: type,
                 isUsed: false,
-                memo: trimmedMemo.isEmpty ? nil : trimmedMemo
+                memo: trimmedMemo.isEmpty ? nil : trimmedMemo,
+                isNotificationEnabled: isNotificationEnabled
             )
             
             modelContext.insert(newCoupon)
             try? modelContext.save()
+            
+            if isNotificationEnabled {
+                NotificationManager.shared.scheduleNotification(for: newCoupon)
+            }
+            
             isPresented = false
         }
     }
@@ -459,12 +506,52 @@ struct MainView: View {
     @State private var editBarcode = ""
     @State private var editDate = Date()
     @State private var editMemo = ""
+    @State private var editNotificationEnabled = false
+    @State private var showingPermissionAlert = false
     
     private func prepopulateEditFields(for coupon: Coupon) {
         editBrand = coupon.brand
         editBarcode = coupon.barcodeValue ?? ""
         editDate = coupon.expirationDate
         editMemo = coupon.memo ?? ""
+        editNotificationEnabled = coupon.isNotificationEnabled
+    }
+    
+    private func handleNotificationToggle(for coupon: Coupon, enabled: Bool) {
+        if enabled {
+            Task {
+                let authorized = await NotificationManager.shared.requestAuthorization()
+                await MainActor.run {
+                    if authorized {
+                        coupon.isNotificationEnabled = true
+                        NotificationManager.shared.scheduleNotification(for: coupon)
+                        try? modelContext.save()
+                    } else {
+                        coupon.isNotificationEnabled = false
+                        showingPermissionAlert = true
+                    }
+                }
+            }
+        } else {
+            coupon.isNotificationEnabled = false
+            NotificationManager.shared.cancelNotification(for: coupon)
+            try? modelContext.save()
+        }
+    }
+    
+    private func handleNotificationSave(for coupon: Coupon) {
+        Task {
+            let authorized = await NotificationManager.shared.requestAuthorization()
+            await MainActor.run {
+                if authorized {
+                    NotificationManager.shared.scheduleNotification(for: coupon)
+                } else {
+                    coupon.isNotificationEnabled = false
+                    try? modelContext.save()
+                    showingPermissionAlert = true
+                }
+            }
+        }
     }
     
     private func getCardOffset(for coupon: Coupon, index: Int, selectedIndex: Int?, isUsedTab: Bool) -> CGFloat {
@@ -665,6 +752,23 @@ struct MainView: View {
                                             
                                             Divider()
                                             
+                                            HStack {
+                                                Text("만료일 리마인더 알림")
+                                                    .font(.system(size: 14, weight: .semibold))
+                                                    .foregroundColor(.secondary)
+                                                Spacer()
+                                                
+                                                Toggle("", isOn: Binding(
+                                                    get: { expanded.isNotificationEnabled },
+                                                    set: { newValue in
+                                                        handleNotificationToggle(for: expanded, enabled: newValue)
+                                                    }
+                                                ))
+                                                .labelsHidden()
+                                            }
+                                            
+                                            Divider()
+                                            
                                             HStack(alignment: .top) {
                                                 Text("메모")
                                                     .font(.system(size: 14, weight: .semibold))
@@ -704,6 +808,11 @@ struct MainView: View {
                                             Button(action: {
                                                 withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
                                                     expanded.isUsed.toggle()
+                                                    if expanded.isUsed {
+                                                        NotificationManager.shared.cancelNotification(for: expanded)
+                                                    } else if expanded.isNotificationEnabled {
+                                                        NotificationManager.shared.scheduleNotification(for: expanded)
+                                                    }
                                                     try? modelContext.save()
                                                     selectedCoupon = nil
                                                 }
@@ -721,6 +830,7 @@ struct MainView: View {
                                             }
                                             
                                             Button(action: {
+                                                NotificationManager.shared.cancelNotification(for: expanded)
                                                 CouponImageStore.shared.deleteImage(name: expanded.imageName)
                                                 modelContext.delete(expanded)
                                                 try? modelContext.save()
@@ -883,6 +993,11 @@ struct MainView: View {
                                             Button(action: {
                                                 withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
                                                     expanded.isUsed.toggle()
+                                                    if expanded.isUsed {
+                                                        NotificationManager.shared.cancelNotification(for: expanded)
+                                                    } else if expanded.isNotificationEnabled {
+                                                        NotificationManager.shared.scheduleNotification(for: expanded)
+                                                    }
                                                     try? modelContext.save()
                                                     selectedCoupon = nil
                                                 }
@@ -900,6 +1015,7 @@ struct MainView: View {
                                             }
                                             
                                             Button(action: {
+                                                NotificationManager.shared.cancelNotification(for: expanded)
                                                 CouponImageStore.shared.deleteImage(name: expanded.imageName)
                                                 modelContext.delete(expanded)
                                                 try? modelContext.save()
@@ -1000,6 +1116,10 @@ struct MainView: View {
                             DatePicker("사용기한", selection: $editDate, displayedComponents: .date)
                         }
                         
+                        Section(header: Text("알림 설정")) {
+                            Toggle("만료일 리마인더 알림 받기", isOn: $editNotificationEnabled)
+                        }
+                        
                         Section(header: Text("메모")) {
                             TextField("간단한 메모 입력", text: $editMemo)
                         }
@@ -1018,6 +1138,15 @@ struct MainView: View {
                             } else {
                                 coupon.barcodeType = nil
                             }
+                            
+                            // Update notification status
+                            coupon.isNotificationEnabled = editNotificationEnabled
+                            if editNotificationEnabled && !coupon.isUsed && !coupon.isExpired {
+                                handleNotificationSave(for: coupon)
+                            } else {
+                                NotificationManager.shared.cancelNotification(for: coupon)
+                            }
+                            
                             try? modelContext.save()
                             showingEditSheet = false
                         }
@@ -1031,6 +1160,16 @@ struct MainView: View {
                let uiImage = CouponImageStore.shared.loadImage(name: coupon.imageName) {
                 ZoomableImageView(image: uiImage, isPresented: $showingFullImage)
             }
+        }
+        .alert("알림 권한 필요", isPresented: $showingPermissionAlert) {
+            Button("설정으로 이동") {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+            Button("취소", role: .cancel) {}
+        } message: {
+            Text("쿠폰 만료 리마인더 알림을 받으려면 기기 설정에서 알림 권한을 허용해야 합니다.")
         }
     }
 }
