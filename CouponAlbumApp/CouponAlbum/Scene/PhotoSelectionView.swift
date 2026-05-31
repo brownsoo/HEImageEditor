@@ -128,7 +128,11 @@ final class PickerAndEditorCoordinatorController: UIViewController, UIImagePicke
     // MARK: - HEEditImageViewDelegate
     
     func didFinishEditImage(_ editView: HEEditImageView, resultImage: UIImage, editId: String?, editModel: HEEditState?) {
-        onComplete(resultImage)
+        // HEEditImageViewController dismisses itself on a 0.5s delay inside callback(delay: 0.5).
+        // Delay onComplete to avoid sheet presentation collision and blank screens.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
+            self?.onComplete(resultImage)
+        }
     }
     
     func didClipWithoutKeepingState(_ editView: HEEditImageView, resultImage: UIImage, editId: String?) {}

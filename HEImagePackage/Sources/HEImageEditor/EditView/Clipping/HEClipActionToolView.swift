@@ -227,7 +227,7 @@ extension HEClipActionToolView: UICollectionViewDelegateFlowLayout {
         if section == .separator {
             return .init(top: 0, left: 0, bottom: 4, right: 0)
         }
-        let inset = (collectionView.frame.width - clipActionColContentViewWidth) / 2
+        let inset = max(0, (collectionView.frame.width - clipActionColContentViewWidth) / 2)
         if section == .rotate {
             return UIEdgeInsets(top: 0, left: inset, bottom: 4, right: 0)
         }

@@ -109,7 +109,7 @@ open class HEEditImageBottomToolView: UIView, HEEditToolView {
         let fullSpace = self.frame.width
         let space = fullSpace - Self.padding.width
         
-        if minimumWidth < space {
+        if toolsCount > 1 && minimumWidth < space {
             let remain = fullSpace - Self.itemSize.width * toolsCount
             let equalSpace = remain / (toolsCount + 1) // 양쪽 포함 공백
             let sidePadding = equalSpace * 2 * CGFloat(47.0 / 52.0) // 양쪽 여백 비율 : 47/52

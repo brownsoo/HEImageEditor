@@ -246,247 +246,6 @@ struct ZoomableImageView: View {
     }
 }
 
-// MARK: - Coupon Detail View (Apple Wallet Detail Card)
-
-struct CouponDetailView: View {
-    @Environment(\.modelContext) private var modelContext
-    let coupon: Coupon
-    @Binding var isPresented: Bool
-    
-    @State private var showingEditSheet = false
-    @State private var showingFullImage = false
-    
-    // Edit Form State
-    @State private var editBrand = ""
-    @State private var editBarcode = ""
-    @State private var editDate = Date()
-    @State private var editMemo = ""
-    
-    var body: some View {
-        NavigationView {
-            ScrollView {
-                VStack(spacing: 24) {
-                    // Card View displayed at the top
-                    CouponCardView(coupon: coupon)
-                        .padding(.top, 16)
-                    
-                    // Barcode render (If value exists)
-                    if let barcodeVal = coupon.barcodeValue, !barcodeVal.isEmpty {
-                        VStack(spacing: 12) {
-                            Text("매장 리더기에 이 바코드를 스캔하세요")
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundColor(.secondary)
-                            
-                            // High Contrast white box
-                            VStack(spacing: 8) {
-                                if let barcodeImg = BarcodeGenerator.generateBarcode(from: barcodeVal, type: coupon.barcodeType) {
-                                    Image(uiImage: barcodeImg)
-                                        .resizable()
-                                        .interpolation(.none)
-                                        .aspectRatio(contentMode: .fit)
-                                        .frame(height: coupon.barcodeType == "qr" ? 140 : 80)
-                                        .padding(.vertical, 8)
-                                } else {
-                                    Text("바코드를 생성할 수 없습니다")
-                                        .foregroundColor(.red)
-                                }
-                                
-                                Text(barcodeVal)
-                                    .font(.system(size: 15, weight: .bold, design: .monospaced))
-                                    .foregroundColor(.black)
-                                    .tracking(2.0)
-                            }
-                            .padding(20)
-                            .background(Color.white)
-                            .cornerRadius(12)
-                            .shadow(color: Color.black.opacity(0.1), radius: 4)
-                        }
-                        .padding(.horizontal, 16)
-                    } else {
-                        VStack(spacing: 12) {
-                            Text("스캔 가능한 바코드가 등록되지 않았습니다")
-                                .font(.system(size: 13, weight: .medium))
-                                .foregroundColor(.secondary)
-                            
-                            Button(action: {
-                                prepopulateEditFields()
-                                showingEditSheet = true
-                            }) {
-                                HStack {
-                                    Image(systemName: "plus.circle")
-                                    Text("바코드 번호 추가")
-                                }
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.blue)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 8)
-                                .background(Color.blue.opacity(0.1))
-                                .cornerRadius(20)
-                            }
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 24)
-                        .background(Color(.secondarySystemGroupedBackground))
-                        .cornerRadius(12)
-                        .padding(.horizontal, 16)
-                    }
-                    
-                    // Information Section
-                    VStack(alignment: .leading, spacing: 16) {
-                        HStack {
-                            Text("사용기한")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.secondary)
-                            Spacer()
-                            Text(coupon.expirationDate, style: .date)
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundColor(coupon.isExpired ? .red : .primary)
-                        }
-                        
-                        Divider()
-                        
-                        HStack(alignment: .top) {
-                            Text("메모")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.secondary)
-                            Spacer()
-                            Text(coupon.memo ?? "입력된 메모가 없습니다.")
-                                .font(.system(size: 14))
-                                .foregroundColor((coupon.memo ?? "").isEmpty ? .secondary : .primary)
-                                .multilineTextAlignment(.trailing)
-                                .frame(maxWidth: 220, alignment: .trailing)
-                        }
-                    }
-                    .padding(16)
-                    .background(Color(.secondarySystemGroupedBackground))
-                    .cornerRadius(12)
-                    .padding(.horizontal, 16)
-                    
-                    // Action Buttons
-                    VStack(spacing: 12) {
-                        // View original image
-                        Button(action: { showingFullImage = true }) {
-                            HStack {
-                                Image(systemName: "photo")
-                                Text("원본 쿠폰 이미지 보기")
-                            }
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.primary)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 50)
-                            .background(Color(.secondarySystemGroupedBackground))
-                            .cornerRadius(12)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color.primary.opacity(0.1), lineWidth: 1)
-                            )
-                        }
-                        
-                        // Toggle Used state
-                        Button(action: {
-                            withAnimation(.spring()) {
-                                coupon.isUsed.toggle()
-                                try? modelContext.save()
-                                isPresented = false
-                            }
-                        }) {
-                            HStack {
-                                Image(systemName: coupon.isUsed ? "arrow.uturn.backward.circle" : "checkmark.circle")
-                                Text(coupon.isUsed ? "다시 사용 가능하게 설정" : "사용 완료로 표시 (보관함 이동)")
-                            }
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 50)
-                            .background(coupon.isUsed ? Color.orange : Color.blue)
-                            .cornerRadius(12)
-                        }
-                        
-                        // Delete Button
-                        Button(action: {
-                            CouponImageStore.shared.deleteImage(name: coupon.imageName)
-                            modelContext.delete(coupon)
-                            try? modelContext.save()
-                            isPresented = false
-                        }) {
-                            HStack {
-                                Image(systemName: "trash")
-                                Text("쿠폰 완전히 삭제")
-                            }
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundColor(.red)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 50)
-                            .background(Color.red.opacity(0.08))
-                            .cornerRadius(12)
-                        }
-                    }
-                    .padding(.horizontal, 16)
-                }
-            }
-            .background(Color(.systemGroupedBackground))
-            .navigationTitle(coupon.brand)
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarItems(
-                leading: Button("닫기") { isPresented = false },
-                trailing: Button("편집") {
-                    prepopulateEditFields()
-                    showingEditSheet = true
-                }
-            )
-            .sheet(isPresented: $showingEditSheet) {
-                // Edit Sheet
-                NavigationView {
-                    Form {
-                        Section(header: Text("기본 정보")) {
-                            TextField("브랜드/사용처", text: $editBrand)
-                            TextField("바코드 번호", text: $editBarcode)
-                                .keyboardType(.numberPad)
-                            DatePicker("사용기한", selection: $editDate, displayedComponents: .date)
-                        }
-                        
-                        Section(header: Text("메모")) {
-                            TextField("간단한 메모 입력", text: $editMemo)
-                        }
-                    }
-                    .navigationTitle("상세 정보 수정")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .navigationBarItems(
-                        leading: Button("취소") { showingEditSheet = false },
-                        trailing: Button("저장") {
-                            coupon.brand = editBrand.trimmingCharacters(in: .whitespacesAndNewlines)
-                            coupon.barcodeValue = editBarcode.trimmingCharacters(in: .whitespacesAndNewlines)
-                            coupon.expirationDate = editDate
-                            coupon.memo = editMemo.trimmingCharacters(in: .whitespacesAndNewlines)
-                            // Re-detect barcode type if modified
-                            if !editBarcode.isEmpty {
-                                coupon.barcodeType = editBarcode.count <= 8 ? "qr" : "code128"
-                            } else {
-                                coupon.barcodeType = nil
-                            }
-                            try? modelContext.save()
-                            showingEditSheet = false
-                        }
-                        .disabled(editBrand.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                    )
-                }
-            }
-            .fullScreenCover(isPresented: $showingFullImage) {
-                if let uiImage = CouponImageStore.shared.loadImage(name: coupon.imageName) {
-                    ZoomableImageView(image: uiImage, isPresented: $showingFullImage)
-                }
-            }
-        }
-    }
-    
-    private func prepopulateEditFields() {
-        editBrand = coupon.brand
-        editBarcode = coupon.barcodeValue ?? ""
-        editDate = coupon.expirationDate
-        editMemo = coupon.memo ?? ""
-    }
-}
-
 // MARK: - Coupon Confirm & Add View
 
 struct CouponAddConfirmView: View {
@@ -667,6 +426,11 @@ struct SourceTypeItem: Identifiable {
     let sourceType: UIImagePickerController.SourceType
 }
 
+struct ConfirmImageItem: Identifiable {
+    let id = UUID()
+    let image: UIImage
+}
+
 // MARK: - Main Coupon Wallet View
 
 struct MainView: View {
@@ -676,56 +440,131 @@ struct MainView: View {
     @Query(filter: #Predicate<Coupon> { !$0.isUsed }, sort: \Coupon.expirationDate, order: .forward) private var activeCoupons: [Coupon]
     @Query(filter: #Predicate<Coupon> { $0.isUsed }, sort: \Coupon.expirationDate, order: .reverse) private var usedCoupons: [Coupon]
     
-    @State private var showingDetailSheet = false
     @State private var selectedCoupon: Coupon? = nil
     
     // Add flow state
     @State private var activeSourceItem: SourceTypeItem? = nil
     @State private var imageToConfirm: UIImage? = nil
-    @State private var showingConfirmSheet = false
+    @State private var confirmImageItem: ConfirmImageItem? = nil
     @State private var showingAddMenu = false
     
     // Segmented selection
     @State private var selectedTab = 0 // 0: 활성 쿠폰 (지갑), 1: 사용 완료 쿠폰 (보관소)
+    
+    // Inline Details & Edit States
+    @State private var showingEditSheet = false
+    @State private var showingFullImage = false
+    
+    @State private var editBrand = ""
+    @State private var editBarcode = ""
+    @State private var editDate = Date()
+    @State private var editMemo = ""
+    
+    private func prepopulateEditFields(for coupon: Coupon) {
+        editBrand = coupon.brand
+        editBarcode = coupon.barcodeValue ?? ""
+        editDate = coupon.expirationDate
+        editMemo = coupon.memo ?? ""
+    }
+    
+    private func getCardOffset(for coupon: Coupon, index: Int, selectedIndex: Int?, isUsedTab: Bool) -> CGFloat {
+        guard let selectedIndex = selectedIndex else { return 0 }
+        let isExpanded = selectedCoupon?.id == coupon.id
+        if isExpanded {
+            if isUsedTab {
+                return CGFloat(10 - (index * 196))
+            } else {
+                return CGFloat(10 - (index * 50))
+            }
+        } else {
+            return index < selectedIndex ? -1000 : 1000
+        }
+    }
+    
+    private func getCardOpacity(for coupon: Coupon, selectedIndex: Int?) -> Double {
+        guard let selectedIndex = selectedIndex else { return 1.0 }
+        let isExpanded = selectedCoupon?.id == coupon.id
+        return isExpanded ? 1.0 : 0.0
+    }
     
     var body: some View {
         ZStack {
             Color(.systemGroupedBackground).ignoresSafeArea()
             
             VStack(spacing: 0) {
-                // Header Bar
-                HStack {
-                    Text("모바일 쿠폰 지갑")
-                        .font(.system(size: 26, weight: .bold, design: .rounded))
-                        .foregroundColor(.primary)
-                    Spacer()
-                    
-                    Button(action: { showingAddMenu.toggle() }) {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.system(size: 30))
+                if let expanded = selectedCoupon {
+                    // Expanded Header
+                    HStack {
+                        Button(action: {
+                            withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
+                                selectedCoupon = nil
+                            }
+                        }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "chevron.left")
+                                Text("지갑")
+                            }
+                            .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(.blue)
-                    }
-                    .confirmationDialog("쿠폰 사진 추가", isPresented: $showingAddMenu, titleVisibility: .visible) {
-                        Button("카메라로 촬영하기") {
-                            activeSourceItem = SourceTypeItem(sourceType: .camera)
                         }
-                        Button("앨범에서 사진 가져오기") {
-                            activeSourceItem = SourceTypeItem(sourceType: .photoLibrary)
+                        
+                        Spacer()
+                        
+                        Text(expanded.brand)
+                            .font(.system(size: 18, weight: .bold, design: .rounded))
+                            .foregroundColor(.primary)
+                            .lineLimit(1)
+                        
+                        Spacer()
+                        
+                        Button("편집") {
+                            prepopulateEditFields(for: expanded)
+                            showingEditSheet = true
+                        }
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.blue)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 16)
+                    .padding(.bottom, 12)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                } else {
+                    // Normal Header Bar
+                    HStack {
+                        Text("모바일 쿠폰 지갑")
+                            .font(.system(size: 26, weight: .bold, design: .rounded))
+                            .foregroundColor(.primary)
+                        Spacer()
+                        
+                        Button(action: { showingAddMenu.toggle() }) {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 30))
+                                .foregroundColor(.blue)
+                        }
+                        .confirmationDialog("쿠폰 사진 추가", isPresented: $showingAddMenu, titleVisibility: .visible) {
+                            Button("카메라로 촬영하기") {
+                                activeSourceItem = SourceTypeItem(sourceType: .camera)
+                            }
+                            Button("앨범에서 사진 가져오기") {
+                                activeSourceItem = SourceTypeItem(sourceType: .photoLibrary)
+                            }
                         }
                     }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 16)
+                    .padding(.bottom, 12)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    
+                    // Tabs Segment Control
+                    Picker("", selection: $selectedTab) {
+                        Text("보관 중 (\(activeCoupons.count))").tag(0)
+                        Text("사용 완료 (\(usedCoupons.count))").tag(1)
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 12)
+                    .transition(.move(edge: .top).combined(with: .opacity))
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 16)
-                .padding(.bottom, 12)
-                
-                // Tabs Segment Control
-                Picker("", selection: $selectedTab) {
-                    Text("보관 중 (\(activeCoupons.count))").tag(0)
-                    Text("사용 완료 (\(usedCoupons.count))").tag(1)
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal, 16)
-                .padding(.bottom, 12)
                 
                 if selectedTab == 0 {
                     // Active Wallet (Stacked overlapping cards)
@@ -745,23 +584,192 @@ struct MainView: View {
                         }
                         .frame(maxWidth: .infinity)
                     } else {
+                        let selectedIndex = activeCoupons.firstIndex(where: { $0.id == selectedCoupon?.id })
+                        
                         ScrollView {
-                            // Apple Wallet negative spacing layout
-                            VStack(spacing: -130) {
-                                ForEach(activeCoupons) { coupon in
-                                    CouponCardView(coupon: coupon)
-                                        .onTapGesture {
-                                            selectedCoupon = coupon
-                                            showingDetailSheet = true
+                            ZStack(alignment: .top) {
+                                if let expanded = selectedCoupon {
+                                    // Detail view inline
+                                    VStack(spacing: 24) {
+                                        // Barcode
+                                        if let barcodeVal = expanded.barcodeValue, !barcodeVal.isEmpty {
+                                            VStack(spacing: 12) {
+                                                Text("매장 리더기에 이 바코드를 스캔하세요")
+                                                    .font(.system(size: 12, weight: .medium))
+                                                    .foregroundColor(.secondary)
+                                                
+                                                VStack(spacing: 8) {
+                                                    if let barcodeImg = BarcodeGenerator.generateBarcode(from: barcodeVal, type: expanded.barcodeType) {
+                                                        Image(uiImage: barcodeImg)
+                                                            .resizable()
+                                                            .interpolation(.none)
+                                                            .aspectRatio(contentMode: .fit)
+                                                            .frame(height: expanded.barcodeType == "qr" ? 140 : 80)
+                                                            .padding(.vertical, 8)
+                                                    } else {
+                                                        Text("바코드를 생성할 수 없습니다")
+                                                            .foregroundColor(.red)
+                                                    }
+                                                    
+                                                    Text(barcodeVal)
+                                                        .font(.system(size: 15, weight: .bold, design: .monospaced))
+                                                        .foregroundColor(.black)
+                                                        .tracking(2.0)
+                                                }
+                                                .padding(20)
+                                                .background(Color.white)
+                                                .cornerRadius(12)
+                                                .shadow(color: Color.black.opacity(0.1), radius: 4)
+                                            }
+                                            .padding(.horizontal, 16)
+                                        } else {
+                                            VStack(spacing: 12) {
+                                                Text("스캔 가능한 바코드가 등록되지 않았습니다")
+                                                    .font(.system(size: 13, weight: .medium))
+                                                    .foregroundColor(.secondary)
+                                                
+                                                Button(action: {
+                                                    prepopulateEditFields(for: expanded)
+                                                    showingEditSheet = true
+                                                }) {
+                                                    HStack {
+                                                        Image(systemName: "plus.circle")
+                                                        Text("바코드 번호 추가")
+                                                    }
+                                                    .font(.system(size: 14, weight: .semibold))
+                                                    .foregroundColor(.blue)
+                                                    .padding(.horizontal, 16)
+                                                    .padding(.vertical, 8)
+                                                    .background(Color.blue.opacity(0.1))
+                                                    .cornerRadius(20)
+                                                }
+                                            }
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 24)
+                                            .background(Color(.secondarySystemGroupedBackground))
+                                            .cornerRadius(12)
+                                            .padding(.horizontal, 16)
                                         }
-                                        .scrollTransition(.interactive) { content, phase in
-                                            content
-                                                .scaleEffect(phase.isIdentity ? 1.0 : 0.96)
+                                        
+                                        // Info section
+                                        VStack(alignment: .leading, spacing: 16) {
+                                            HStack {
+                                                Text("사용기한")
+                                                    .font(.system(size: 14, weight: .semibold))
+                                                    .foregroundColor(.secondary)
+                                                Spacer()
+                                                Text(expanded.expirationDate, style: .date)
+                                                    .font(.system(size: 14, weight: .bold))
+                                                    .foregroundColor(expanded.isExpired ? .red : .primary)
+                                            }
+                                            
+                                            Divider()
+                                            
+                                            HStack(alignment: .top) {
+                                                Text("메모")
+                                                    .font(.system(size: 14, weight: .semibold))
+                                                    .foregroundColor(.secondary)
+                                                Spacer()
+                                                Text(expanded.memo ?? "입력된 메모가 없습니다.")
+                                                    .font(.system(size: 14))
+                                                    .foregroundColor((expanded.memo ?? "").isEmpty ? .secondary : .primary)
+                                                    .multilineTextAlignment(.trailing)
+                                                    .frame(maxWidth: 220, alignment: .trailing)
+                                            }
                                         }
+                                        .padding(16)
+                                        .background(Color(.secondarySystemGroupedBackground))
+                                        .cornerRadius(12)
+                                        .padding(.horizontal, 16)
+                                        
+                                        // Action buttons
+                                        VStack(spacing: 12) {
+                                            Button(action: { showingFullImage = true }) {
+                                                HStack {
+                                                    Image(systemName: "photo")
+                                                    Text("원본 쿠폰 이미지 보기")
+                                                }
+                                                .font(.system(size: 16, weight: .semibold))
+                                                .foregroundColor(.primary)
+                                                .frame(maxWidth: .infinity)
+                                                .frame(height: 50)
+                                                .background(Color(.secondarySystemGroupedBackground))
+                                                .cornerRadius(12)
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 12)
+                                                        .stroke(Color.primary.opacity(0.1), lineWidth: 1)
+                                                )
+                                            }
+                                            
+                                            Button(action: {
+                                                withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
+                                                    expanded.isUsed.toggle()
+                                                    try? modelContext.save()
+                                                    selectedCoupon = nil
+                                                }
+                                            }) {
+                                                HStack {
+                                                    Image(systemName: expanded.isUsed ? "arrow.uturn.backward.circle" : "checkmark.circle")
+                                                    Text(expanded.isUsed ? "다시 사용 가능하게 설정" : "사용 완료로 표시 (보관함 이동)")
+                                                }
+                                                .font(.system(size: 16, weight: .semibold))
+                                                .foregroundColor(.white)
+                                                .frame(maxWidth: .infinity)
+                                                .frame(height: 50)
+                                                .background(expanded.isUsed ? Color.orange : Color.blue)
+                                                .cornerRadius(12)
+                                            }
+                                            
+                                            Button(action: {
+                                                CouponImageStore.shared.deleteImage(name: expanded.imageName)
+                                                modelContext.delete(expanded)
+                                                try? modelContext.save()
+                                                selectedCoupon = nil
+                                            }) {
+                                                HStack {
+                                                    Image(systemName: "trash")
+                                                    Text("쿠폰 완전히 삭제")
+                                                }
+                                                .font(.system(size: 15, weight: .semibold))
+                                                .foregroundColor(.red)
+                                                .frame(maxWidth: .infinity)
+                                                .frame(height: 50)
+                                                .background(Color.red.opacity(0.08))
+                                                .cornerRadius(12)
+                                            }
+                                        }
+                                        .padding(.horizontal, 16)
+                                    }
+                                    .padding(.top, 200) // Positioned below the selected card (at y=10, height=180)
+                                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                                    .zIndex(1)
                                 }
+                                
+                                // Cards Stack
+                                VStack(spacing: -130) {
+                                    ForEach(activeCoupons) { coupon in
+                                        let index = activeCoupons.firstIndex(where: { $0.id == coupon.id }) ?? 0
+                                        let isExpanded = selectedCoupon?.id == coupon.id
+                                        
+                                        CouponCardView(coupon: coupon)
+                                            .zIndex(isExpanded ? 10 : Double(index))
+                                            .offset(y: getCardOffset(for: coupon, index: index, selectedIndex: selectedIndex, isUsedTab: false))
+                                            .opacity(getCardOpacity(for: coupon, selectedIndex: selectedIndex))
+                                            .onTapGesture {
+                                                withAnimation(.spring(response: 0.55, dampingFraction: 0.82)) {
+                                                    if selectedCoupon == nil {
+                                                        selectedCoupon = coupon
+                                                    } else if isExpanded {
+                                                        selectedCoupon = nil
+                                                    }
+                                                }
+                                            }
+                                    }
+                                }
+                                .padding(.top, 16)
+                                .padding(.bottom, selectedCoupon != nil ? 40 : 140)
+                                .zIndex(2)
                             }
-                            .padding(.top, 16)
-                            .padding(.bottom, 140) // Allow scrolling past final card overlap
                         }
                     }
                 } else {
@@ -779,46 +787,243 @@ struct MainView: View {
                         }
                         .frame(maxWidth: .infinity)
                     } else {
+                        let selectedIndex = usedCoupons.firstIndex(where: { $0.id == selectedCoupon?.id })
+                        
                         ScrollView {
-                            VStack(spacing: 16) {
-                                ForEach(usedCoupons) { coupon in
-                                    CouponCardView(coupon: coupon)
-                                        .grayscale(0.8)
-                                        .opacity(0.6)
-                                        .onTapGesture {
-                                            selectedCoupon = coupon
-                                            showingDetailSheet = true
+                            ZStack(alignment: .top) {
+                                if let expanded = selectedCoupon {
+                                    // Detail view inline for Used Coupons
+                                    VStack(spacing: 24) {
+                                        // Barcode
+                                        if let barcodeVal = expanded.barcodeValue, !barcodeVal.isEmpty {
+                                            VStack(spacing: 12) {
+                                                Text("매장 리더기에 이 바코드를 스캔하세요")
+                                                    .font(.system(size: 12, weight: .medium))
+                                                    .foregroundColor(.secondary)
+                                                
+                                                VStack(spacing: 8) {
+                                                    if let barcodeImg = BarcodeGenerator.generateBarcode(from: barcodeVal, type: expanded.barcodeType) {
+                                                        Image(uiImage: barcodeImg)
+                                                            .resizable()
+                                                            .interpolation(.none)
+                                                            .aspectRatio(contentMode: .fit)
+                                                            .frame(height: expanded.barcodeType == "qr" ? 140 : 80)
+                                                            .padding(.vertical, 8)
+                                                    } else {
+                                                        Text("바코드를 생성할 수 없습니다")
+                                                            .foregroundColor(.red)
+                                                    }
+                                                    
+                                                    Text(barcodeVal)
+                                                        .font(.system(size: 15, weight: .bold, design: .monospaced))
+                                                        .foregroundColor(.black)
+                                                        .tracking(2.0)
+                                                }
+                                                .padding(20)
+                                                .background(Color.white)
+                                                .cornerRadius(12)
+                                                .shadow(color: Color.black.opacity(0.1), radius: 4)
+                                            }
+                                            .padding(.horizontal, 16)
                                         }
+                                        
+                                        // Info section
+                                        VStack(alignment: .leading, spacing: 16) {
+                                            HStack {
+                                                Text("사용기한")
+                                                    .font(.system(size: 14, weight: .semibold))
+                                                    .foregroundColor(.secondary)
+                                                Spacer()
+                                                Text(expanded.expirationDate, style: .date)
+                                                    .font(.system(size: 14, weight: .bold))
+                                                    .foregroundColor(.primary)
+                                            }
+                                            
+                                            Divider()
+                                            
+                                            HStack(alignment: .top) {
+                                                Text("메모")
+                                                    .font(.system(size: 14, weight: .semibold))
+                                                    .foregroundColor(.secondary)
+                                                Spacer()
+                                                Text(expanded.memo ?? "입력된 메모가 없습니다.")
+                                                    .font(.system(size: 14))
+                                                    .foregroundColor((expanded.memo ?? "").isEmpty ? .secondary : .primary)
+                                                    .multilineTextAlignment(.trailing)
+                                                    .frame(maxWidth: 220, alignment: .trailing)
+                                            }
+                                        }
+                                        .padding(16)
+                                        .background(Color(.secondarySystemGroupedBackground))
+                                        .cornerRadius(12)
+                                        .padding(.horizontal, 16)
+                                        
+                                        // Action buttons
+                                        VStack(spacing: 12) {
+                                            Button(action: { showingFullImage = true }) {
+                                                HStack {
+                                                    Image(systemName: "photo")
+                                                    Text("원본 쿠폰 이미지 보기")
+                                                }
+                                                .font(.system(size: 16, weight: .semibold))
+                                                .foregroundColor(.primary)
+                                                .frame(maxWidth: .infinity)
+                                                .frame(height: 50)
+                                                .background(Color(.secondarySystemGroupedBackground))
+                                                .cornerRadius(12)
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 12)
+                                                        .stroke(Color.primary.opacity(0.1), lineWidth: 1)
+                                                )
+                                            }
+                                            
+                                            Button(action: {
+                                                withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
+                                                    expanded.isUsed.toggle()
+                                                    try? modelContext.save()
+                                                    selectedCoupon = nil
+                                                }
+                                            }) {
+                                                HStack {
+                                                    Image(systemName: expanded.isUsed ? "arrow.uturn.backward.circle" : "checkmark.circle")
+                                                    Text(expanded.isUsed ? "다시 사용 가능하게 설정" : "사용 완료로 표시 (보관함 이동)")
+                                                }
+                                                .font(.system(size: 16, weight: .semibold))
+                                                .foregroundColor(.white)
+                                                .frame(maxWidth: .infinity)
+                                                .frame(height: 50)
+                                                .background(expanded.isUsed ? Color.orange : Color.blue)
+                                                .cornerRadius(12)
+                                            }
+                                            
+                                            Button(action: {
+                                                CouponImageStore.shared.deleteImage(name: expanded.imageName)
+                                                modelContext.delete(expanded)
+                                                try? modelContext.save()
+                                                selectedCoupon = nil
+                                            }) {
+                                                HStack {
+                                                    Image(systemName: "trash")
+                                                    Text("쿠폰 완전히 삭제")
+                                                }
+                                                .font(.system(size: 15, weight: .semibold))
+                                                .foregroundColor(.red)
+                                                .frame(maxWidth: .infinity)
+                                                .frame(height: 50)
+                                                .background(Color.red.opacity(0.08))
+                                                .cornerRadius(12)
+                                            }
+                                        }
+                                        .padding(.horizontal, 16)
+                                    }
+                                    .padding(.top, 200)
+                                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                                    .zIndex(1)
                                 }
+                                
+                                VStack(spacing: 16) {
+                                    ForEach(usedCoupons) { coupon in
+                                        let index = usedCoupons.firstIndex(where: { $0.id == coupon.id }) ?? 0
+                                        let isExpanded = selectedCoupon?.id == coupon.id
+                                        
+                                        CouponCardView(coupon: coupon)
+                                            .grayscale(isExpanded ? 0.0 : 0.8)
+                                            .opacity(isExpanded ? 1.0 : (selectedCoupon == nil ? 0.6 : 0.0))
+                                            .zIndex(isExpanded ? 10 : Double(index))
+                                            .offset(y: getCardOffset(for: coupon, index: index, selectedIndex: selectedIndex, isUsedTab: true))
+                                            .onTapGesture {
+                                                withAnimation(.spring(response: 0.55, dampingFraction: 0.82)) {
+                                                    if selectedCoupon == nil {
+                                                        selectedCoupon = coupon
+                                                    } else if isExpanded {
+                                                        selectedCoupon = nil
+                                                    }
+                                                }
+                                            }
+                                    }
+                                }
+                                .padding(.top, 16)
+                                .padding(.bottom, selectedCoupon != nil ? 40 : 32)
+                                .zIndex(2)
                             }
-                            .padding(.top, 16)
-                            .padding(.bottom, 32)
                         }
                     }
                 }
             }
         }
-        .sheet(item: $activeSourceItem) { item in
+        .sheet(item: $activeSourceItem, onDismiss: {
+            NSLog("MainView: activeSourceItem sheet dismissed. imageToConfirm is nil? %d", self.imageToConfirm == nil ? 1 : 0)
+            if let img = self.imageToConfirm {
+                // Open confirmation sheet on a short delay to ensure clean UI state transition
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    NSLog("MainView: setting confirmImageItem with image")
+                    self.confirmImageItem = ConfirmImageItem(image: img)
+                    self.imageToConfirm = nil
+                }
+            }
+        }) { item in
             PhotoSelectionView(sourceType: item.sourceType) { croppedImage in
+                NSLog("MainView: PhotoSelectionView completed image selection")
                 self.imageToConfirm = croppedImage
                 self.activeSourceItem = nil
-                // Open confirmation form sheet on brief delay
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    self.showingConfirmSheet = true
-                }
             } onCancel: {
+                NSLog("MainView: PhotoSelectionView cancelled")
+                self.imageToConfirm = nil
                 self.activeSourceItem = nil
             }
             .edgesIgnoringSafeArea(.all)
         }
-        .sheet(isPresented: $showingConfirmSheet) {
-            if let img = imageToConfirm {
-                CouponAddConfirmView(image: img, isPresented: $showingConfirmSheet)
+        .sheet(item: $confirmImageItem) { confirmItem in
+            CouponAddConfirmView(image: confirmItem.image, isPresented: Binding(
+                get: { self.confirmImageItem != nil },
+                set: { newValue in
+                    if !newValue {
+                        self.confirmImageItem = nil
+                    }
+                }
+            ))
+        }
+        .sheet(isPresented: $showingEditSheet) {
+            if let coupon = selectedCoupon {
+                NavigationView {
+                    Form {
+                        Section(header: Text("기본 정보")) {
+                            TextField("브랜드/사용처", text: $editBrand)
+                            TextField("바코드 번호", text: $editBarcode)
+                                .keyboardType(.numberPad)
+                            DatePicker("사용기한", selection: $editDate, displayedComponents: .date)
+                        }
+                        
+                        Section(header: Text("메모")) {
+                            TextField("간단한 메모 입력", text: $editMemo)
+                        }
+                    }
+                    .navigationTitle("상세 정보 수정")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .navigationBarItems(
+                        leading: Button("취소") { showingEditSheet = false },
+                        trailing: Button("저장") {
+                            coupon.brand = editBrand.trimmingCharacters(in: .whitespacesAndNewlines)
+                            coupon.barcodeValue = editBarcode.trimmingCharacters(in: .whitespacesAndNewlines)
+                            coupon.expirationDate = editDate
+                            coupon.memo = editMemo.trimmingCharacters(in: .whitespacesAndNewlines)
+                            if !editBarcode.isEmpty {
+                                coupon.barcodeType = editBarcode.count <= 8 ? "qr" : "code128"
+                            } else {
+                                coupon.barcodeType = nil
+                            }
+                            try? modelContext.save()
+                            showingEditSheet = false
+                        }
+                        .disabled(editBrand.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    )
+                }
             }
         }
-        .sheet(isPresented: $showingDetailSheet) {
-            if let coupon = selectedCoupon {
-                CouponDetailView(coupon: coupon, isPresented: $showingDetailSheet)
+        .fullScreenCover(isPresented: $showingFullImage) {
+            if let coupon = selectedCoupon,
+               let uiImage = CouponImageStore.shared.loadImage(name: coupon.imageName) {
+                ZoomableImageView(image: uiImage, isPresented: $showingFullImage)
             }
         }
     }
