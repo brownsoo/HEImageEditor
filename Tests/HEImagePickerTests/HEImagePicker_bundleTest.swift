@@ -17,6 +17,6 @@ final class HEImagePicker_bundleTest: XCTestCase {
     
     func testPickerConfig() {
         let string = PickerConfig.wordings.attach
-        XCTAssertEqual(string, "첨부하기")
+        XCTAssertEqual(string, "추가하기")
     }
 }
