@@ -47,11 +47,11 @@ class HELibraryAttachButton: UIControl {
         countLabel.translatesAutoresizingMaskIntoConstraints = false
         label.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            countLabel.leftAnchor.constraint(equalTo: leftAnchor).with(priority: .defaultHigh),
+            countLabel.leftAnchor.constraint(equalTo: leftAnchor, constant: 8).with(priority: .defaultHigh),
             countLabel.topAnchor.constraint(equalTo: topAnchor, constant: 0).with(priority: .defaultHigh),
             countLabel.bottomAnchor.constraint(equalTo: bottomAnchor, constant: 0).with(priority: .defaultHigh),
             countLabel.rightAnchor.constraint(equalTo: label.leftAnchor, constant: -4),
-            label.rightAnchor.constraint(equalTo: rightAnchor, constant: 0),
+            label.rightAnchor.constraint(equalTo: rightAnchor, constant: -8),
             label.topAnchor.constraint(equalTo: topAnchor, constant: 0).with(priority: .defaultHigh + 1),
             label.bottomAnchor.constraint(equalTo: bottomAnchor).with(priority: .defaultHigh + 1)
         ])
