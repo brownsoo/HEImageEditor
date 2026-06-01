@@ -10,6 +10,8 @@ import XCTest
 import UIKit
 @testable import HEImageEditor
 
+// 전역 싱글톤 설정을 변경하므로 @MainActor 로 직렬화하여 병렬 실행 간섭을 막는다.
+@MainActor
 final class EditorConfigurationTests: XCTestCase {
 
     override func setUp() {
@@ -132,6 +134,28 @@ final class EditorConfigurationTests: XCTestCase {
     func testSaturationFilterValueOffsetByOne() {
         XCTAssertEqual(HEImageEditorConfiguration.AdjustTool.saturation.filterValue(0), 1, accuracy: 0.0001)
         XCTAssertEqual(HEImageEditorConfiguration.AdjustTool.saturation.filterValue(1), 2, accuracy: 0.0001)
+    }
+
+    // MARK: - 회귀 가드 (이전에 수정한 프로덕션 버그)
+
+    func testImpactFeedbackStyleSetterRespectsNewValue() {
+        // 이전 버그: setter 가 newValue 를 무시하고 항상 .medium 으로 강제했음.
+        let config = HEImageEditorConfiguration.default()
+        config.impactFeedbackStyle = .heavy
+        XCTAssertEqual(config.impactFeedbackStyle, .heavy)
+        config.impactFeedbackStyle = .light
+        XCTAssertEqual(config.impactFeedbackStyle, .light)
+    }
+
+    func testTextStickerFillColorsAreWithinRange() {
+        // 이전 버그: defaultTextFillColors 에 범위 초과값 rgba(524, 184, 0) 존재 → 클램핑됨.
+        for color in HEImageEditorConfiguration.default().textStickerBackgroundColors {
+            var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+            color.getRed(&r, green: &g, blue: &b, alpha: &a)
+            for component in [r, g, b, a] {
+                XCTAssertTrue((0...1).contains(component), "색상 컴포넌트가 범위를 벗어남: \(component)")
+            }
+        }
     }
 
     // MARK: - UI Configuration

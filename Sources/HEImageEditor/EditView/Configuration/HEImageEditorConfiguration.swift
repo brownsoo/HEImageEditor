@@ -43,7 +43,7 @@ public class HEImageEditorConfiguration: NSObject {
         .clear,
         .he.rgba(104, 204, 254),
         .he.rgba(254, 124, 62),
-        .he.rgba(524, 184, 0),
+        .he.rgba(254, 184, 0),
         .he.rgba(119, 224, 80),
         .he.rgba(255, 109, 130),
         .he.rgba(141, 141, 141)
@@ -224,7 +224,7 @@ public class HEImageEditorConfiguration: NSObject {
             return _impactFeedbackStyle
         }
         set {
-            _impactFeedbackStyle = .medium
+            _impactFeedbackStyle = newValue
         }
     }
 }

@@ -28,6 +28,8 @@ private final class SpyActionDelegate: HEEditActionManagerDelegate {
     }
 }
 
+// 전역 싱글톤 설정을 변경하므로 @MainActor 로 직렬화하여 병렬 실행 간섭을 막는다.
+@MainActor
 final class EditorActionManagerTests: XCTestCase {
 
     override func setUp() {

@@ -41,7 +41,7 @@ let package = Package(
             ]
         ),
         .testTarget(name: "HEImageEditorTests",
-                   dependencies: ["HEImageEditor"]),
+                   dependencies: ["HEImageEditor", "HECommon"]),
         .testTarget(name: "HEImagePickerTests",
                    dependencies: ["HEImagePicker"])
     ]
