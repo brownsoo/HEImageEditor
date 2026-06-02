@@ -163,9 +163,10 @@ class HETextStickerView: HEBaseStickerView {
     }
     
     class func calculateSize(image: UIImage) -> CGSize {
+        // 텍스트 이미지는 입력 화면의 포인트 크기(scale 보존)로 렌더링되고,
+        // 스티커도 동일한 포인트 좌표 공간(stickersContainer)에 배치되므로
+        // 그대로 사용해야 입력 화면과 동일한 크기(WYSIWYG)로 표시된다.
         var size = image.size
-        size.width /= 10
-        size.height /= 10
         size.width += Self.edgeInset * 2
         size.height += Self.edgeInset * 2
         return size

@@ -77,6 +77,13 @@ public class HEInputTextViewController: UIViewController {
         return bt
     }()
     
+    private lazy var fillStyleBtn: UIButton = {
+        let bt = UIButton(type: .custom)
+        bt.setImage(fillStyleIcon(for: fillStyle), for: .normal)
+        bt.contentEdgeInsets = UIEdgeInsets(top: 12, left: 14, bottom: 12, right: 14)
+        return bt
+    }()
+
     private lazy var topToolBar = HETopConfirmBarView()
     
     private lazy var textStickerMaximumLines = HEImageEditorConfiguration.default().textStickerMaximumLines
@@ -132,7 +139,11 @@ public class HEInputTextViewController: UIViewController {
     
     private lazy var textLayer = CAShapeLayer()
     
-    private let textLayerRadius: CGFloat = 1
+    /// 글자 맞춤(.character) 채우기 스타일의 모서리 반경.
+    private let textLayerRadius: CGFloat = 6
+
+    /// 영역(.area) 채우기 스타일의 박스 모서리 반경.
+    private let areaFillCornerRadius: CGFloat = 8
     
     private let maxTextCount = EditorConfig.maxTextLength
     
@@ -252,13 +263,15 @@ public class HEInputTextViewController: UIViewController {
         view.addSubview(topToolBar)
         topToolBar.addCenterView(textColorBtn)
         topToolBar.addCenterView(textBackgroundBtn)
+        topToolBar.addCenterView(fillStyleBtn)
         topToolBar.cancelClickCallback = { [weak self] in self?.cancelBtnClick() }
         topToolBar.confirmClickCallback = { [weak self] in self?.doneBtnClick() }
         topToolBar.alpha = 0
         topToolBar.backgroundColor = .black
-        
+
         textColorBtn.addTarget(self, action: #selector(textColorBtnClick), for: .touchUpInside)
         textBackgroundBtn.addTarget(self, action: #selector(textBackgroundBtnClick), for: .touchUpInside)
+        fillStyleBtn.addTarget(self, action: #selector(fillStyleBtnClick), for: .touchUpInside)
         
         view.addSubview(textView)
         view.addSubview(toolView)
@@ -297,7 +310,22 @@ public class HEInputTextViewController: UIViewController {
         selectedTool = .textBackground
         showToolsView()
     }
-    
+
+    @objc private func fillStyleBtnClick() {
+        fillStyle = (fillStyle == .area) ? .character : .area
+        fillStyleBtn.setImage(fillStyleIcon(for: fillStyle), for: .normal)
+        // 배경 채우기 모양이 바뀌므로 미리보기를 다시 그린다.
+        drawTextBackground()
+    }
+
+    /// 현재 채우기 스타일을 나타내는 아이콘.
+    private func fillStyleIcon(for style: HEImageEditorConfiguration.TextStickerFillStyle) -> UIImage? {
+        let name = (style == .area) ? "character.textbox" : "a.square.fill"
+        return UIImage(systemName: name)?
+            .withTintColor(.white)
+            .withRenderingMode(.alwaysOriginal)
+    }
+
     
     private func getColorSource() -> [UIColor] {
         if selectedTool == .textColor {
@@ -376,29 +404,14 @@ public class HEInputTextViewController: UIViewController {
         textView.resignFirstResponder()
         
         var image: UIImage?
+        // 채우기 스타일에 따라 잘라낼 영역(textRect)만 달라지고,
+        // 렌더링은 두 스타일 모두 동일하게 처리한다.
         let textRect: CGRect
         if fillStyle == .area {
-            textRect = textView.frame
-            //        let label = UILabel()
-            //        label.font = UIFont(descriptor: currentFont.fontDescriptor, size: currentFont.pointSize*10)
-            //        label.text = textView.text
-            //        label.textColor = currentTextColor
-            //        label.numberOfLines = 0
-            //        let width = textView.frame.size.width - (textView.textContainerInset.left + textView.textContainerInset.right)
-            //        let height = textView.frame.size.height - (textView.textContainerInset.top + textView.textContainerInset.bottom)
-            //        let fitSize = CGSize(width: width * 10.0, height: height * 10.0)
-            //        label.frame.size = label.sizeThatFits(fitSize)
-            //        label.textAlignment = .center
-            //        let container = UIView()
-            //        container.frame = label.frame.insetBy(dx: -100.0, dy: -80.0)
-            //        container.backgroundColor = currentFillColor
-            //        container.addSubview(label)
-            //        label.center = CGPoint(x: container.bounds.midX, y: container.bounds.midY)
-            //
-            //        let image = UIGraphicsImageRenderer.he.renderImage(size: container.bounds.size) { context in
-            //            container.layer.render(in: context)
-            //        }
+            // 영역 채우기: 텍스트 박스 전체를 사용한다.
+            textRect = textView.bounds
         } else {
+            // 글자 맞춤: 글자별 사각형들의 합집합을 사용한다.
             let rects = calculateTextRectsByChar()
             let initial = CGRect(x: 10000, y: 10000, width: 0, height: 0)
             textRect = rects.reduce(initial) { prev, rect in
@@ -409,20 +422,17 @@ public class HEInputTextViewController: UIViewController {
                               width: max(prev.width, rect.width),
                               height: prev.height +  rect.height)
             }
-            
-            for subview in textView.subviews {
-                if NSStringFromClass(subview.classForCoder) == "_UITextContainerView" {
-                    //                    var frame = subview.frame
-                    //                    let size = textView.sizeThatFits(frame.size)
-                    image = UIGraphicsImageRenderer.he.renderImage(size: textView.bounds.size) { context in
-                        if currentFillColor != .clear {
-                            textLayer.render(in: context)
-                        }
-                        subview.layer.render(in: context)
+        }
+
+        for subview in textView.subviews {
+            if NSStringFromClass(subview.classForCoder) == "_UITextContainerView" {
+                image = UIGraphicsImageRenderer.he.renderImage(size: textView.bounds.size) { context in
+                    if currentFillColor != .clear {
+                        textLayer.render(in: context)
                     }
-                    // FIXME: 위 렌더러에서 한번에 처리하기..
-                    image = image?.he.clipImage(angle: 0, editRect: textRect, isCircle: false)
+                    subview.layer.render(in: context)
                 }
+                image = image?.he.clipImage(angle: 0, editRect: textRect, isCircle: false)
             }
         }
         
@@ -574,55 +584,15 @@ extension HEInputTextViewController {
         
         if fillStyle == .area {
             let textArea = textView.bounds
-            
-            path.move(to: CGPoint(x: textArea.minX, y: textArea.minY + textLayerRadius))
-            path.addArc(withCenter: CGPoint(x: textArea.minX + textLayerRadius, y: textArea.minY + textLayerRadius), radius: textLayerRadius, startAngle: .pi, endAngle: .pi * 1.5, clockwise: true)
-            path.addLine(to: CGPoint(x: textArea.maxX - textLayerRadius, y: textArea.minY))
-            path.addArc(withCenter: CGPoint(x: textArea.maxX - textLayerRadius, y: textArea.minY + textLayerRadius), radius: textLayerRadius, startAngle: .pi * 1.5, endAngle: .pi * 2, clockwise: true)
-            
-            path.addLine(to: CGPoint(x: textArea.maxX, y: textArea.maxY - textLayerRadius))
-            path.addArc(withCenter: CGPoint(x: textArea.maxX - textLayerRadius, y: textArea.maxY - textLayerRadius), radius: textLayerRadius, startAngle: 0, endAngle: .pi / 2, clockwise: true)
-            path.addLine(to: CGPoint(x: textArea.minX + textLayerRadius, y: textArea.maxY))
-            path.addArc(withCenter: CGPoint(x: textArea.minX + textLayerRadius, y: textArea.maxY - textLayerRadius), radius: textLayerRadius, startAngle: .pi / 2, endAngle: .pi, clockwise: true)
-            path.addLine(to: CGPoint(x: textArea.minX, y: textArea.minY + textLayerRadius))
-            path.close()
-            
+            path.append(UIBezierPath(roundedRect: textArea, cornerRadius: areaFillCornerRadius))
         } else {
-            // 텍스트 글자에 맞춰 배경 생성
+            // 텍스트 글자(줄)에 맞춰 배경 생성.
+            // 가운데 정렬에서는 줄마다 좌우 가장자리(minX/maxX)가 다르므로,
+            // 줄별 둥근 사각형을 합집합(nonZero)으로 그려 좌우 대칭으로
+            // 자연스럽게 잇는다. (줄들은 세로로 겹쳐 하나의 형태로 채워진다)
             let rects = calculateTextRectsByChar()
-            for (index, rect) in rects.enumerated() {
-                if index == 0 {
-                    path.move(to: CGPoint(x: rect.minX, y: rect.minY + textLayerRadius))
-                    path.addArc(withCenter: CGPoint(x: rect.minX + textLayerRadius, y: rect.minY + textLayerRadius), radius: textLayerRadius, startAngle: .pi, endAngle: .pi * 1.5, clockwise: true)
-                    path.addLine(to: CGPoint(x: rect.maxX - textLayerRadius, y: rect.minY))
-                    path.addArc(withCenter: CGPoint(x: rect.maxX - textLayerRadius, y: rect.minY + textLayerRadius), radius: textLayerRadius, startAngle: .pi * 1.5, endAngle: .pi * 2, clockwise: true)
-                } else {
-                    let preRect = rects[index - 1]
-                    if rect.maxX > preRect.maxX {
-                        path.addLine(to: CGPoint(x: preRect.maxX, y: rect.minY - textLayerRadius))
-                        path.addArc(withCenter: CGPoint(x: preRect.maxX + textLayerRadius, y: rect.minY - textLayerRadius), radius: textLayerRadius, startAngle: -.pi, endAngle: -.pi * 1.5, clockwise: false)
-                        path.addLine(to: CGPoint(x: rect.maxX - textLayerRadius, y: rect.minY))
-                        path.addArc(withCenter: CGPoint(x: rect.maxX - textLayerRadius, y: rect.minY + textLayerRadius), radius: textLayerRadius, startAngle: .pi * 1.5, endAngle: .pi * 2, clockwise: true)
-                    } else if rect.maxX < preRect.maxX {
-                        path.addLine(to: CGPoint(x: preRect.maxX, y: preRect.maxY - textLayerRadius))
-                        path.addArc(withCenter: CGPoint(x: preRect.maxX - textLayerRadius, y: preRect.maxY - textLayerRadius), radius: textLayerRadius, startAngle: 0, endAngle: .pi / 2, clockwise: true)
-                        path.addLine(to: CGPoint(x: rect.maxX + textLayerRadius, y: preRect.maxY))
-                        path.addArc(withCenter: CGPoint(x: rect.maxX + textLayerRadius, y: preRect.maxY + textLayerRadius), radius: textLayerRadius, startAngle: -.pi / 2, endAngle: -.pi, clockwise: false)
-                    } else {
-                        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY + textLayerRadius))
-                    }
-                }
-                
-                if index == rects.count - 1 {
-                    path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - textLayerRadius))
-                    path.addArc(withCenter: CGPoint(x: rect.maxX - textLayerRadius, y: rect.maxY - textLayerRadius), radius: textLayerRadius, startAngle: 0, endAngle: .pi / 2, clockwise: true)
-                    path.addLine(to: CGPoint(x: rect.minX + textLayerRadius, y: rect.maxY))
-                    path.addArc(withCenter: CGPoint(x: rect.minX + textLayerRadius, y: rect.maxY - textLayerRadius), radius: textLayerRadius, startAngle: .pi / 2, endAngle: .pi, clockwise: true)
-                    
-                    let firstRect = rects[0]
-                    path.addLine(to: CGPoint(x: firstRect.minX, y: firstRect.minY + textLayerRadius))
-                    path.close()
-                }
+            for rect in rects {
+                path.append(UIBezierPath(roundedRect: rect, cornerRadius: textLayerRadius))
             }
         }
         
