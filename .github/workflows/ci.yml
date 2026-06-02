@@ -29,15 +29,8 @@ jobs:
       - name: Pick an available iOS simulator
         id: sim
         run: |
-          UDID=$(xcrun simctl list devices available --json \
-            | python3 -c "import sys, json; \
-devices = json.load(sys.stdin)['devices']; \
-cands = [d for rt, ds in devices.items() if 'iOS' in rt for d in ds if d.get('isAvailable') and 'iPhone' in d['name']]; \
-cands.sort(key=lambda d: d['name']); \
-print(cands[-1]['udid'] if cands else '', end='')")
-          if [ -z "$UDID" ]; then
-            echo "No available iOS simulator found"; exit 1
-          fi
+          UDID=$(xcrun simctl list devices available --json | python3 -c "import sys, json; ds = json.load(sys.stdin)['devices']; c = [d for rt, l in ds.items() if 'iOS' in rt for d in l if d.get('isAvailable') and 'iPhone' in d['name']]; c.sort(key=lambda d: d['name']); print(c[-1]['udid'] if c else '')")
+          if [ -z "$UDID" ]; then echo "No available iOS simulator found"; exit 1; fi
           echo "Using simulator $UDID"
           echo "udid=$UDID" >> "$GITHUB_OUTPUT"
 
