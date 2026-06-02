@@ -243,7 +243,10 @@ final class HELibraryView: UIView {
 
         var topConstraint: NSLayoutConstraint?
         previewBox.makeConstraints { v in
-            topConstraint = v.topAnchorConstraintToSuperview()
+            // 미리보기는 항상 네비게이션 바(=safe area 상단) 아래에서 시작한다.
+            // superview 상단에 붙이면 fullScreen present 시 네비게이션 바 뒤로 들어가
+            // 버튼과 겹치므로 safe area 상단을 기준으로 한다.
+            topConstraint = v.topAnchorConstraintTo(self.safeAreaLayoutGuide.topAnchor)
             v.bottomAnchorConstraintTo(albumHeadlineView.topAnchor)
             v.edgesConstraintToSuperview(edges: .horizontal)
             v.heightAnchor.constraint(equalTo: self.widthAnchor, multiplier: 1).isActive = true
