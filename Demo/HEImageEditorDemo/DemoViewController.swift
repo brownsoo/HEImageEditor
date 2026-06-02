@@ -166,6 +166,8 @@ final class DemoViewController: UIViewController {
     @objc private func didTapPicker() {
         let picker = HEImagePicker()
         picker.pickerDelegate = self
+        // 사진 피커는 전체 화면으로 표시한다. (네비게이션 바가 상태바 영역까지 정상 확보)
+        picker.modalPresentationStyle = .fullScreen
         present(picker, animated: true)
     }
 
