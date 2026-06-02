@@ -140,6 +140,9 @@ public class HEInputTextViewController: UIViewController {
     private lazy var textLayer = CAShapeLayer()
     
     private let textLayerRadius: CGFloat = 1
+
+    /// 영역(.area) 채우기 스타일의 박스 모서리 반경.
+    private let areaFillCornerRadius: CGFloat = 8
     
     private let maxTextCount = EditorConfig.maxTextLength
     
@@ -580,19 +583,7 @@ extension HEInputTextViewController {
         
         if fillStyle == .area {
             let textArea = textView.bounds
-            
-            path.move(to: CGPoint(x: textArea.minX, y: textArea.minY + textLayerRadius))
-            path.addArc(withCenter: CGPoint(x: textArea.minX + textLayerRadius, y: textArea.minY + textLayerRadius), radius: textLayerRadius, startAngle: .pi, endAngle: .pi * 1.5, clockwise: true)
-            path.addLine(to: CGPoint(x: textArea.maxX - textLayerRadius, y: textArea.minY))
-            path.addArc(withCenter: CGPoint(x: textArea.maxX - textLayerRadius, y: textArea.minY + textLayerRadius), radius: textLayerRadius, startAngle: .pi * 1.5, endAngle: .pi * 2, clockwise: true)
-            
-            path.addLine(to: CGPoint(x: textArea.maxX, y: textArea.maxY - textLayerRadius))
-            path.addArc(withCenter: CGPoint(x: textArea.maxX - textLayerRadius, y: textArea.maxY - textLayerRadius), radius: textLayerRadius, startAngle: 0, endAngle: .pi / 2, clockwise: true)
-            path.addLine(to: CGPoint(x: textArea.minX + textLayerRadius, y: textArea.maxY))
-            path.addArc(withCenter: CGPoint(x: textArea.minX + textLayerRadius, y: textArea.maxY - textLayerRadius), radius: textLayerRadius, startAngle: .pi / 2, endAngle: .pi, clockwise: true)
-            path.addLine(to: CGPoint(x: textArea.minX, y: textArea.minY + textLayerRadius))
-            path.close()
-            
+            path.append(UIBezierPath(roundedRect: textArea, cornerRadius: areaFillCornerRadius))
         } else {
             // 텍스트 글자에 맞춰 배경 생성
             let rects = calculateTextRectsByChar()
