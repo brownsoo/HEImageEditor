@@ -139,7 +139,8 @@ public class HEInputTextViewController: UIViewController {
     
     private lazy var textLayer = CAShapeLayer()
     
-    private let textLayerRadius: CGFloat = 1
+    /// 글자 맞춤(.character) 채우기 스타일의 모서리 반경.
+    private let textLayerRadius: CGFloat = 6
 
     /// 영역(.area) 채우기 스타일의 박스 모서리 반경.
     private let areaFillCornerRadius: CGFloat = 8
