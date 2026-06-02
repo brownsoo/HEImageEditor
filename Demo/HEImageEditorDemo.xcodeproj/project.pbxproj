@@ -9,12 +9,14 @@
 /* Begin PBXBuildFile section */
 		1A1111111111111111110001 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2222222222222222220001 /* AppDelegate.swift */; };
 		1A1111111111111111110002 /* DemoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2222222222222222220002 /* DemoViewController.swift */; };
+		1A1111111111111111110004 /* EmojiStickerDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2222222222222222220004 /* EmojiStickerDataSource.swift */; };
 		1A1111111111111111110003 /* HEImagePackage in Frameworks */ = {isa = PBXBuildFile; productRef = 1A9999999999999999990002 /* HEImagePackage */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		1A2222222222222222220001 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		1A2222222222222222220002 /* DemoViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoViewController.swift; sourceTree = "<group>"; };
+		1A2222222222222222220004 /* EmojiStickerDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiStickerDataSource.swift; sourceTree = "<group>"; };
 		1A2222222222222222220003 /* HEImageEditorDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HEImageEditorDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -43,6 +45,7 @@
 			children = (
 				1A2222222222222222220001 /* AppDelegate.swift */,
 				1A2222222222222222220002 /* DemoViewController.swift */,
+				1A2222222222222222220004 /* EmojiStickerDataSource.swift */,
 			);
 			path = HEImageEditorDemo;
 			sourceTree = "<group>";
@@ -130,6 +133,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1A1111111111111111110002 /* DemoViewController.swift in Sources */,
+				1A1111111111111111110004 /* EmojiStickerDataSource.swift in Sources */,
 				1A1111111111111111110001 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
