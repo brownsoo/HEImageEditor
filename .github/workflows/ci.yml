@@ -29,7 +29,21 @@ jobs:
       - name: Pick an available iOS simulator
         id: sim
         run: |
-          UDID=$(xcrun simctl list devices available --json | python3 -c "import sys, json; ds = json.load(sys.stdin)['devices']; c = [d for rt, l in ds.items() if 'iOS' in rt for d in l if d.get('isAvailable') and 'iPhone' in d['name']]; c.sort(key=lambda d: d['name']); print(c[-1]['udid'] if c else '')")
+          # 사용 가능한 iPhone 시뮬레이터 중 이름순 마지막(대체로 최신 모델)을 고른다.
+          cat > "$RUNNER_TEMP/pick_simulator.py" <<'PY'
+          import sys, json
+
+          devices = json.load(sys.stdin)["devices"]
+          candidates = [
+              device
+              for runtime, items in devices.items() if "iOS" in runtime
+              for device in items
+              if device.get("isAvailable") and "iPhone" in device["name"]
+          ]
+          candidates.sort(key=lambda d: d["name"])
+          print(candidates[-1]["udid"] if candidates else "")
+          PY
+          UDID=$(xcrun simctl list devices available --json | python3 "$RUNNER_TEMP/pick_simulator.py")
           if [ -z "$UDID" ]; then echo "No available iOS simulator found"; exit 1; fi
           echo "Using simulator $UDID"
           echo "udid=$UDID" >> "$GITHUB_OUTPUT"
@@ -43,7 +57,7 @@ jobs:
             echo "::group::Test $scheme"
             xcodebuild test \
               -scheme "$scheme" \
-              -destination "id=${{ steps.sim.outputs.udid }}" \
+              -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.udid }}" \
               CODE_SIGNING_ALLOWED=NO
             echo "::endgroup::"
           done
