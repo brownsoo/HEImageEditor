@@ -82,6 +82,7 @@ final class DemoViewController: UIViewController {
 
     private func makeButton(title: String, action: Selector) -> UIButton {
         let button = UIButton(type: .system)
+        button.translatesAutoresizingMaskIntoConstraints = false
         button.setTitle(title, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
         button.backgroundColor = .systemBlue
@@ -191,12 +192,17 @@ extension DemoViewController: HEImagePickerDelegate {
         picker.dismiss(animated: true)
         statusLabel.text = "사진 \(items.count)개를 선택했습니다."
 
-        guard let first = items.photoItems.first,
-              let image = UIImage(contentsOfFile: first.url.path) else {
-            return
+        guard let first = items.photoItems.first else { return }
+
+        // 원본 사진 디코딩은 비용이 크므로 백그라운드에서 수행하고 UI는 메인에서 갱신한다.
+        let path = first.url.path
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let image = UIImage(contentsOfFile: path) else { return }
+            DispatchQueue.main.async {
+                self?.currentImage = image
+                self?.previewImageView.image = image
+            }
         }
-        currentImage = image
-        previewImageView.image = image
     }
 
     func imagePickerDidCancel(_ picker: HEImagePicker) {

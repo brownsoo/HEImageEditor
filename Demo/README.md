@@ -19,12 +19,16 @@ open Demo/HEImageEditorDemo.xcodeproj
 명령줄에서 빌드 + 시뮬레이터 설치/실행:
 
 ```bash
+# 고정 derivedDataPath 로 빌드 (기기 이름에 의존하지 않도록 generic 대상 사용)
 xcodebuild build \
   -project Demo/HEImageEditorDemo.xcodeproj \
   -scheme HEImageEditorDemo \
-  -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
+  -destination 'generic/platform=iOS Simulator' \
+  -derivedDataPath build/DerivedData
 
-xcrun simctl install booted "$(find ~/Library/Developer/Xcode/DerivedData -name HEImageEditorDemo.app -type d | head -1)"
+# 시뮬레이터 부팅 후, 방금 빌드한 산출물 경로에서 설치/실행
+xcrun simctl boot 'iPhone 17 Pro' 2>/dev/null || true
+xcrun simctl install booted build/DerivedData/Build/Products/Debug-iphonesimulator/HEImageEditorDemo.app
 xcrun simctl launch booted com.heimageeditor.demo
 ```
 
