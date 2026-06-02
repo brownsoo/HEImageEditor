@@ -49,15 +49,12 @@ jobs:
           echo "udid=$UDID" >> "$GITHUB_OUTPUT"
 
       - name: Build & Test
-        # 통합 product 스킴(HEImagePackage)에는 test action 이 없으므로,
-        # 각 테스트 타깃이 의존하는 product 스킴을 개별적으로 테스트한다.
+        # product 스킴(HEImageEditor 등)에는 test action 이 없다.
+        # 패키지명과 타깃명이 겹쳐 생성되는 패키지 전체 스킴(HEImageEditor-Package)이
+        # 모든 테스트 타깃(HEImageEditorTests, HEImagePickerTests)을 포함하므로 이를 테스트한다.
         run: |
           set -o pipefail
-          for scheme in HEImageEditor HEImagePicker; do
-            echo "::group::Test $scheme"
-            xcodebuild test \
-              -scheme "$scheme" \
-              -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.udid }}" \
-              CODE_SIGNING_ALLOWED=NO
-            echo "::endgroup::"
-          done
+          xcodebuild test \
+            -scheme HEImageEditor-Package \
+            -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.udid }}" \
+            CODE_SIGNING_ALLOWED=NO
