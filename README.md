@@ -25,8 +25,8 @@ I improved functionality and added several features✨.
 
 
 ### <a id="Requirements"></a>Requirements
- * Swift 5.x
- * Xcode 12.x
+ * Swift 5.8+
+ * Xcode 15+
  * Target iOS 14.0
 
 ### <a id="Usage"></a>Usage
@@ -90,6 +90,20 @@ func startEditMultipleImages(_ images: [HEImage]) {
     present(vc, animated: true)
 }
 ```
+```swift
+// 이미지/비디오 피커 열기 (전체 화면 권장)
+func openPicker() {
+    let picker = HEImagePicker()
+    picker.pickerDelegate = self
+    picker.modalPresentationStyle = .fullScreen
+    present(picker, animated: true)
+}
+```
+
+### <a id="Demo"></a>Demo
+`Demo/HEImageEditorDemo.xcodeproj` 를 열면 시뮬레이터에서 에디터와 피커를 바로 확인할 수 있습니다.
+모든 편집 툴, 이모지·얼굴 AI·모자이크 이미지 스티커, 사진 피커가 구성되어 있습니다.
+자세한 실행 방법은 [Demo/README.md](Demo/README.md) 를 참고하세요.
 
 ### <a id="Languages"></a>Languages
 🇺🇸 English, 🇰🇷 Korean
