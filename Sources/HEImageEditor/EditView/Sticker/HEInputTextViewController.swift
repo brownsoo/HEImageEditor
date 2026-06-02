@@ -378,26 +378,8 @@ public class HEInputTextViewController: UIViewController {
         var image: UIImage?
         let textRect: CGRect
         if fillStyle == .area {
-            textRect = textView.frame
-            //        let label = UILabel()
-            //        label.font = UIFont(descriptor: currentFont.fontDescriptor, size: currentFont.pointSize*10)
-            //        label.text = textView.text
-            //        label.textColor = currentTextColor
-            //        label.numberOfLines = 0
-            //        let width = textView.frame.size.width - (textView.textContainerInset.left + textView.textContainerInset.right)
-            //        let height = textView.frame.size.height - (textView.textContainerInset.top + textView.textContainerInset.bottom)
-            //        let fitSize = CGSize(width: width * 10.0, height: height * 10.0)
-            //        label.frame.size = label.sizeThatFits(fitSize)
-            //        label.textAlignment = .center
-            //        let container = UIView()
-            //        container.frame = label.frame.insetBy(dx: -100.0, dy: -80.0)
-            //        container.backgroundColor = currentFillColor
-            //        container.addSubview(label)
-            //        label.center = CGPoint(x: container.bounds.midX, y: container.bounds.midY)
-            //
-            //        let image = UIGraphicsImageRenderer.he.renderImage(size: container.bounds.size) { context in
-            //            container.layer.render(in: context)
-            //        }
+            // 영역 채우기 스타일은 배경이 textView 전체 영역을 채우므로 bounds 를 그대로 사용한다.
+            textRect = textView.bounds
         } else {
             let rects = calculateTextRectsByChar()
             let initial = CGRect(x: 10000, y: 10000, width: 0, height: 0)
@@ -409,20 +391,18 @@ public class HEInputTextViewController: UIViewController {
                               width: max(prev.width, rect.width),
                               height: prev.height +  rect.height)
             }
-            
-            for subview in textView.subviews {
-                if NSStringFromClass(subview.classForCoder) == "_UITextContainerView" {
-                    //                    var frame = subview.frame
-                    //                    let size = textView.sizeThatFits(frame.size)
-                    image = UIGraphicsImageRenderer.he.renderImage(size: textView.bounds.size) { context in
-                        if currentFillColor != .clear {
-                            textLayer.render(in: context)
-                        }
-                        subview.layer.render(in: context)
+        }
+
+        for subview in textView.subviews {
+            if NSStringFromClass(subview.classForCoder) == "_UITextContainerView" {
+                image = UIGraphicsImageRenderer.he.renderImage(size: textView.bounds.size) { context in
+                    if currentFillColor != .clear {
+                        textLayer.render(in: context)
                     }
-                    // FIXME: 위 렌더러에서 한번에 처리하기..
-                    image = image?.he.clipImage(angle: 0, editRect: textRect, isCircle: false)
+                    subview.layer.render(in: context)
                 }
+                // FIXME: 위 렌더러에서 한번에 처리하기..
+                image = image?.he.clipImage(angle: 0, editRect: textRect, isCircle: false)
             }
         }
         
