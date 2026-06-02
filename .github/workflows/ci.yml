@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build & Test (iOS)
+    # iOS 전용 패키지(UIKit)이므로 macOS 러너에서 시뮬레이터로 빌드/테스트한다.
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Resolve package dependencies
+        run: xcodebuild -resolvePackageDependencies -scheme HEImagePackage
+
+      - name: Pick an available iOS simulator
+        id: sim
+        run: |
+          # 사용 가능한 iPhone 시뮬레이터 중 이름순 마지막(대체로 최신 모델)을 고른다.
+          cat > "$RUNNER_TEMP/pick_simulator.py" <<'PY'
+          import sys, json
+
+          devices = json.load(sys.stdin)["devices"]
+          candidates = [
+              device
+              for runtime, items in devices.items() if "iOS" in runtime
+              for device in items
+              if device.get("isAvailable") and "iPhone" in device["name"]
+          ]
+          candidates.sort(key=lambda d: d["name"])
+          print(candidates[-1]["udid"] if candidates else "")
+          PY
+          UDID=$(xcrun simctl list devices available --json | python3 "$RUNNER_TEMP/pick_simulator.py")
+          if [ -z "$UDID" ]; then echo "No available iOS simulator found"; exit 1; fi
+          echo "Using simulator $UDID"
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+
+      - name: Build & Test
+        # 통합 product 스킴(HEImagePackage)에는 test action 이 없으므로,
+        # 각 테스트 타깃이 의존하는 product 스킴을 개별적으로 테스트한다.
+        run: |
+          set -o pipefail
+          for scheme in HEImageEditor HEImagePicker; do
+            echo "::group::Test $scheme"
+            xcodebuild test \
+              -scheme "$scheme" \
+              -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.udid }}" \
+              CODE_SIGNING_ALLOWED=NO
+            echo "::endgroup::"
+          done
