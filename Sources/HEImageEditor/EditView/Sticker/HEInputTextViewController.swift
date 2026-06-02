@@ -586,41 +586,13 @@ extension HEInputTextViewController {
             let textArea = textView.bounds
             path.append(UIBezierPath(roundedRect: textArea, cornerRadius: areaFillCornerRadius))
         } else {
-            // 텍스트 글자에 맞춰 배경 생성
+            // 텍스트 글자(줄)에 맞춰 배경 생성.
+            // 가운데 정렬에서는 줄마다 좌우 가장자리(minX/maxX)가 다르므로,
+            // 줄별 둥근 사각형을 합집합(nonZero)으로 그려 좌우 대칭으로
+            // 자연스럽게 잇는다. (줄들은 세로로 겹쳐 하나의 형태로 채워진다)
             let rects = calculateTextRectsByChar()
-            for (index, rect) in rects.enumerated() {
-                if index == 0 {
-                    path.move(to: CGPoint(x: rect.minX, y: rect.minY + textLayerRadius))
-                    path.addArc(withCenter: CGPoint(x: rect.minX + textLayerRadius, y: rect.minY + textLayerRadius), radius: textLayerRadius, startAngle: .pi, endAngle: .pi * 1.5, clockwise: true)
-                    path.addLine(to: CGPoint(x: rect.maxX - textLayerRadius, y: rect.minY))
-                    path.addArc(withCenter: CGPoint(x: rect.maxX - textLayerRadius, y: rect.minY + textLayerRadius), radius: textLayerRadius, startAngle: .pi * 1.5, endAngle: .pi * 2, clockwise: true)
-                } else {
-                    let preRect = rects[index - 1]
-                    if rect.maxX > preRect.maxX {
-                        path.addLine(to: CGPoint(x: preRect.maxX, y: rect.minY - textLayerRadius))
-                        path.addArc(withCenter: CGPoint(x: preRect.maxX + textLayerRadius, y: rect.minY - textLayerRadius), radius: textLayerRadius, startAngle: -.pi, endAngle: -.pi * 1.5, clockwise: false)
-                        path.addLine(to: CGPoint(x: rect.maxX - textLayerRadius, y: rect.minY))
-                        path.addArc(withCenter: CGPoint(x: rect.maxX - textLayerRadius, y: rect.minY + textLayerRadius), radius: textLayerRadius, startAngle: .pi * 1.5, endAngle: .pi * 2, clockwise: true)
-                    } else if rect.maxX < preRect.maxX {
-                        path.addLine(to: CGPoint(x: preRect.maxX, y: preRect.maxY - textLayerRadius))
-                        path.addArc(withCenter: CGPoint(x: preRect.maxX - textLayerRadius, y: preRect.maxY - textLayerRadius), radius: textLayerRadius, startAngle: 0, endAngle: .pi / 2, clockwise: true)
-                        path.addLine(to: CGPoint(x: rect.maxX + textLayerRadius, y: preRect.maxY))
-                        path.addArc(withCenter: CGPoint(x: rect.maxX + textLayerRadius, y: preRect.maxY + textLayerRadius), radius: textLayerRadius, startAngle: -.pi / 2, endAngle: -.pi, clockwise: false)
-                    } else {
-                        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY + textLayerRadius))
-                    }
-                }
-                
-                if index == rects.count - 1 {
-                    path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - textLayerRadius))
-                    path.addArc(withCenter: CGPoint(x: rect.maxX - textLayerRadius, y: rect.maxY - textLayerRadius), radius: textLayerRadius, startAngle: 0, endAngle: .pi / 2, clockwise: true)
-                    path.addLine(to: CGPoint(x: rect.minX + textLayerRadius, y: rect.maxY))
-                    path.addArc(withCenter: CGPoint(x: rect.minX + textLayerRadius, y: rect.maxY - textLayerRadius), radius: textLayerRadius, startAngle: .pi / 2, endAngle: .pi, clockwise: true)
-                    
-                    let firstRect = rects[0]
-                    path.addLine(to: CGPoint(x: firstRect.minX, y: firstRect.minY + textLayerRadius))
-                    path.close()
-                }
+            for rect in rects {
+                path.append(UIBezierPath(roundedRect: rect, cornerRadius: textLayerRadius))
             }
         }
         
