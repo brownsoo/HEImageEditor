@@ -77,6 +77,13 @@ public class HEInputTextViewController: UIViewController {
         return bt
     }()
     
+    private lazy var fillStyleBtn: UIButton = {
+        let bt = UIButton(type: .custom)
+        bt.setImage(fillStyleIcon(for: fillStyle), for: .normal)
+        bt.contentEdgeInsets = UIEdgeInsets(top: 12, left: 14, bottom: 12, right: 14)
+        return bt
+    }()
+
     private lazy var topToolBar = HETopConfirmBarView()
     
     private lazy var textStickerMaximumLines = HEImageEditorConfiguration.default().textStickerMaximumLines
@@ -252,13 +259,15 @@ public class HEInputTextViewController: UIViewController {
         view.addSubview(topToolBar)
         topToolBar.addCenterView(textColorBtn)
         topToolBar.addCenterView(textBackgroundBtn)
+        topToolBar.addCenterView(fillStyleBtn)
         topToolBar.cancelClickCallback = { [weak self] in self?.cancelBtnClick() }
         topToolBar.confirmClickCallback = { [weak self] in self?.doneBtnClick() }
         topToolBar.alpha = 0
         topToolBar.backgroundColor = .black
-        
+
         textColorBtn.addTarget(self, action: #selector(textColorBtnClick), for: .touchUpInside)
         textBackgroundBtn.addTarget(self, action: #selector(textBackgroundBtnClick), for: .touchUpInside)
+        fillStyleBtn.addTarget(self, action: #selector(fillStyleBtnClick), for: .touchUpInside)
         
         view.addSubview(textView)
         view.addSubview(toolView)
@@ -297,7 +306,22 @@ public class HEInputTextViewController: UIViewController {
         selectedTool = .textBackground
         showToolsView()
     }
-    
+
+    @objc private func fillStyleBtnClick() {
+        fillStyle = (fillStyle == .area) ? .character : .area
+        fillStyleBtn.setImage(fillStyleIcon(for: fillStyle), for: .normal)
+        // 배경 채우기 모양이 바뀌므로 미리보기를 다시 그린다.
+        drawTextBackground()
+    }
+
+    /// 현재 채우기 스타일을 나타내는 아이콘.
+    private func fillStyleIcon(for style: HEImageEditorConfiguration.TextStickerFillStyle) -> UIImage? {
+        let name = (style == .area) ? "character.textbox" : "a.square.fill"
+        return UIImage(systemName: name)?
+            .withTintColor(.white)
+            .withRenderingMode(.alwaysOriginal)
+    }
+
     
     private func getColorSource() -> [UIColor] {
         if selectedTool == .textColor {
@@ -376,29 +400,14 @@ public class HEInputTextViewController: UIViewController {
         textView.resignFirstResponder()
         
         var image: UIImage?
+        // 채우기 스타일에 따라 잘라낼 영역(textRect)만 달라지고,
+        // 렌더링은 두 스타일 모두 동일하게 처리한다.
         let textRect: CGRect
         if fillStyle == .area {
-            textRect = textView.frame
-            //        let label = UILabel()
-            //        label.font = UIFont(descriptor: currentFont.fontDescriptor, size: currentFont.pointSize*10)
-            //        label.text = textView.text
-            //        label.textColor = currentTextColor
-            //        label.numberOfLines = 0
-            //        let width = textView.frame.size.width - (textView.textContainerInset.left + textView.textContainerInset.right)
-            //        let height = textView.frame.size.height - (textView.textContainerInset.top + textView.textContainerInset.bottom)
-            //        let fitSize = CGSize(width: width * 10.0, height: height * 10.0)
-            //        label.frame.size = label.sizeThatFits(fitSize)
-            //        label.textAlignment = .center
-            //        let container = UIView()
-            //        container.frame = label.frame.insetBy(dx: -100.0, dy: -80.0)
-            //        container.backgroundColor = currentFillColor
-            //        container.addSubview(label)
-            //        label.center = CGPoint(x: container.bounds.midX, y: container.bounds.midY)
-            //
-            //        let image = UIGraphicsImageRenderer.he.renderImage(size: container.bounds.size) { context in
-            //            container.layer.render(in: context)
-            //        }
+            // 영역 채우기: 텍스트 박스 전체를 사용한다.
+            textRect = textView.bounds
         } else {
+            // 글자 맞춤: 글자별 사각형들의 합집합을 사용한다.
             let rects = calculateTextRectsByChar()
             let initial = CGRect(x: 10000, y: 10000, width: 0, height: 0)
             textRect = rects.reduce(initial) { prev, rect in
@@ -409,20 +418,17 @@ public class HEInputTextViewController: UIViewController {
                               width: max(prev.width, rect.width),
                               height: prev.height +  rect.height)
             }
-            
-            for subview in textView.subviews {
-                if NSStringFromClass(subview.classForCoder) == "_UITextContainerView" {
-                    //                    var frame = subview.frame
-                    //                    let size = textView.sizeThatFits(frame.size)
-                    image = UIGraphicsImageRenderer.he.renderImage(size: textView.bounds.size) { context in
-                        if currentFillColor != .clear {
-                            textLayer.render(in: context)
-                        }
-                        subview.layer.render(in: context)
+        }
+
+        for subview in textView.subviews {
+            if NSStringFromClass(subview.classForCoder) == "_UITextContainerView" {
+                image = UIGraphicsImageRenderer.he.renderImage(size: textView.bounds.size) { context in
+                    if currentFillColor != .clear {
+                        textLayer.render(in: context)
                     }
-                    // FIXME: 위 렌더러에서 한번에 처리하기..
-                    image = image?.he.clipImage(angle: 0, editRect: textRect, isCircle: false)
+                    subview.layer.render(in: context)
                 }
+                image = image?.he.clipImage(angle: 0, editRect: textRect, isCircle: false)
             }
         }
         
