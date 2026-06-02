@@ -633,9 +633,11 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         }
         
         if tools.contains(.draw) {
-            bottomToolViewContainer.addSubview(eraserBtnBgBlurView)
-            bottomToolViewContainer.addSubview(eraserBtn)
-            bottomToolViewContainer.addSubview(eraserLineView)
+            // 지우개 버튼/구분선은 프레임을 view 좌표계로 계산하므로(viewDidLayoutSubviews),
+            // 색상 컬렉션뷰와 동일하게 view 에 추가해야 화면 밖으로 밀려나지 않는다.
+            view.addSubview(eraserBtnBgBlurView)
+            view.addSubview(eraserBtn)
+            view.addSubview(eraserLineView)
             containerView.addSubview(eraserCircleView)
             
             impactFeedback = UIImpactFeedbackGenerator(style: .light)
@@ -1221,6 +1223,9 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     private func setAdjustViews(hidden: Bool) {
         adjustCollectionView?.isHidden = hidden
         adjustSlider?.isHidden = hidden
+        // 표시할 때는 alpha 도 복원한다.
+        // (클립 완료 등으로 alpha 가 0 으로 남아 있어도 다시 보이도록)
+        adjustSlider?.alpha = hidden ? 0 : 1
     }
     
     private func changeAdjustTool(_ tool: HEImageEditorConfiguration.AdjustTool) {
@@ -2239,13 +2244,16 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
     func finishEditingDismissAnimate() {
         mainScrollView.alpha = 1
         mainScrollView.isHidden = false
+        // 조정(adjust) 툴이 선택된 경우에만 슬라이더를 복원한다.
+        // 그 외(예: 클립 완료 후 selectedTool == nil)에는 슬라이더를 숨긴 채 둔다.
+        let showsAdjustSlider = selectedTool == .adjust
         adjustSlider?.alpha = 0
-        adjustSlider?.isHidden = false
+        adjustSlider?.isHidden = !showsAdjustSlider
         if selectedTool == nil {
-            topBarView?.show()            
+            topBarView?.show()
         }
         UIView.animate(withDuration: 0.2, animations: {
-            self.adjustSlider?.alpha = 1
+            self.adjustSlider?.alpha = showsAdjustSlider ? 1 : 0
         })
     }
 }

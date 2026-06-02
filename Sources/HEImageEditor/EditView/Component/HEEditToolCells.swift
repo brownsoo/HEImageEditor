@@ -12,6 +12,9 @@ class HEDrawColorCell: UICollectionViewCell {
         let view = UIView()
         view.layer.masksToBounds = true
         view.frame = CGRect(x: 0, y: 0, width: 24, height: 24)
+        // 검정 바탕에서 검정 색상이 묻히지 않도록 아주 연한 흰색 테두리를 둔다.
+        view.layer.borderWidth = 1
+        view.layer.borderColor = UIColor.white.withAlphaComponent(0.2).cgColor
         return view
     }()
     
@@ -34,7 +37,9 @@ class HEDrawColorCell: UICollectionViewCell {
     override func layoutSubviews() {
         super.layoutSubviews()
         colorView.center = contentView.center
-        colorView.layer.cornerRadius = bounds.width / 2
+        // colorView 자신의 크기(24) 기준으로 반지름을 잡아야 원형이 된다.
+        // 셀(bounds) 기준으로 잡으면 반지름이 절반을 초과해 마름모처럼 렌더링된다.
+        colorView.layer.cornerRadius = colorView.bounds.width / 2
     }
 }
 

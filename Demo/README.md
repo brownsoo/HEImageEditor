@@ -5,7 +5,9 @@
 
 ## 기능
 
-- **샘플 이미지 편집** — 코드로 생성한 그라데이션 이미지를 `HEEditImageViewController.showImageEditor(...)` 로 편집합니다. (Text / Clip / Filter / Mosaic / Adjust)
+- **샘플 이미지 편집** — 코드로 생성한 그라데이션 이미지를 `HEEditImageViewController.showImageEditor(...)` 로 편집합니다. 모든 `EditTool` 을 활성화합니다. (Draw / Clip / ImageSticker / TextSticker / MosaicDraw / Filter / Adjust)
+  - 이미지 스티커는 외부 에셋 없이 이모지를 `UIImage` 로 렌더링해 제공합니다. (`EmojiStickerDataSource`)
+  - 특수 스티커인 **얼굴 AI**(`faceAI`, 얼굴 인식 후 이모지 자동 배치)와 **모자이크**(`mosaic`)도 함께 노출합니다.
 - **사진 피커 열기** — `HEImagePicker` 로 사진/동영상을 선택합니다. 선택한 첫 사진을 미리보기에 표시합니다.
 
 ## 실행

@@ -40,6 +40,10 @@ final class DemoViewController: UIViewController {
     /// 편집 진입에 사용할 현재 이미지(편집 결과로 갱신됨)
     private lazy var currentImage: UIImage = Self.makeSampleImage()
 
+    /// 이미지 스티커용 이모지 데이터 소스.
+    /// 트레이 뷰가 `dataSource` 를 weak 로 참조하므로 화면이 강하게 보유한다.
+    private let emojiStickerDataSource = EmojiStickerDataSource()
+
     // MARK: - Lifecycle
 
     override func viewDidLoad() {
@@ -96,11 +100,67 @@ final class DemoViewController: UIViewController {
     // MARK: - Actions
 
     @objc private func didTapEdit() {
+        configureAllEditTools()
         HEEditImageViewController.showImageEditor(
             parent: self,
             image: currentImage,
-            delegate: self
+            delegate: self,
+            topToolViewBuilder: Self.makeTopBarBuilder()
         )
+    }
+
+    /// 툴이 선택되지 않은 평상시 상단 바.
+    ///
+    /// 빌더를 넘기지 않으면 에디터 레벨 상단 바가 없어, 툴(Clip/Sticker/Text 등)을
+    /// 선택했을 때 나타나는 편집용 X/체크 버튼만 보인다. 이 빌더는 평상시에
+    /// 에디터 전체를 취소(`cancel()`)/완료(`done()`)하는 버튼을 노출한다.
+    private static func makeTopBarBuilder() -> HEEditImageTopToolViewBuilder {
+        { editView in
+            let topBar = HETopBarView()
+            topBar.backgroundColor = .black
+            topBar.addLeadingView(makeBarButton(title: "취소", weight: .regular) { [weak editView] in
+                editView?.cancel()
+            })
+            topBar.addTrailingView(makeBarButton(title: "완료", weight: .semibold) { [weak editView] in
+                editView?.done()
+            })
+            return (topBar, topBarHeight)
+        }
+    }
+
+    /// 상단 바 높이. 라이브러리의 `HETopBarView.contentHeight`(internal)와 동일한 값.
+    private static let topBarHeight: CGFloat = 48
+
+    private static func makeBarButton(
+        title: String,
+        weight: UIFont.Weight,
+        action: @escaping () -> Void
+    ) -> UIButton {
+        let button = UIButton(type: .system)
+        button.setTitle(title, for: .normal)
+        button.setTitleColor(.white, for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 16, weight: weight)
+        button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
+        button.addAction(.init(handler: { _ in action() }), for: .touchUpInside)
+        return button
+    }
+
+    /// 데모에서 모든 EditTool 을 사용하도록 에디터를 설정한다.
+    ///
+    /// `imageSticker` 는 `imageStickerTray` 가 없으면 에디터가 자동으로 제거하므로,
+    /// 이모지 스티커 트레이를 함께 주입한다.
+    private func configureAllEditTools() {
+        let config = HEImageEditorConfiguration.default()
+        config.tools = [.draw, .clip, .imageSticker, .textSticker, .mosaicDraw, .filter, .adjust]
+
+        let stickerTray = HEImageStickerTrayView()
+        stickerTray.dataSource = emojiStickerDataSource
+        config.imageStickerTray = stickerTray
+
+        // Clip / ImageSticker 의 X·체크 버튼이 에디터 전체를 종료하지 않고
+        // 해당 툴의 적용/취소만 수행하도록 한다.
+        // 에디터 전체의 취소/완료는 상단 바(makeTopBarBuilder)가 담당한다.
+        config.actionDoneEditorWhenImageStickerEditingConfirm = false
     }
 
     @objc private func didTapPicker() {

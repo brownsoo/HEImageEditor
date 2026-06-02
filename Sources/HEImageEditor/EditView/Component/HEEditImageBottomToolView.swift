@@ -207,13 +207,7 @@ class HEEditToolCell: UICollectionViewCell {
                 
             case .imageSticker:
                 icon = .he.getImage("icEditMnSticker") ?? UIImage(systemName: "face.smiling")?.withTintColor(.white, renderingMode: .alwaysOriginal)
-                badgeView.image = .he.getImage("editBadgeAi")
-                badgeView.frame = CGRect(x: 0, y: 0, width: 20, height: 16)
-                // 아이콘 중앙에서 5, -2 에 위치
-                badgeBottomConstraint.constant = -2
-                badgeLeftConstraint.constant = 5
-                badgeView.isHidden = false
-                
+
             case .textSticker:
                 icon = UIImage.he.getImage("icEditMnText") ?? UIImage(systemName: "t.square.fill")?.withTintColor(.white, renderingMode: .alwaysOriginal)
                 
