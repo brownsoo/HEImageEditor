@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build & Test (iOS)
+    # iOS 전용 패키지(UIKit)이므로 macOS 러너에서 시뮬레이터로 빌드/테스트한다.
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Resolve package dependencies
+        run: xcodebuild -resolvePackageDependencies -scheme HEImagePackage
+
+      - name: Pick an available iOS simulator
+        id: sim
+        run: |
+          UDID=$(xcrun simctl list devices available --json \
+            | python3 -c "import sys, json; \
+devices = json.load(sys.stdin)['devices']; \
+cands = [d for rt, ds in devices.items() if 'iOS' in rt for d in ds if d.get('isAvailable') and 'iPhone' in d['name']]; \
+cands.sort(key=lambda d: d['name']); \
+print(cands[-1]['udid'] if cands else '', end='')")
+          if [ -z "$UDID" ]; then
+            echo "No available iOS simulator found"; exit 1
+          fi
+          echo "Using simulator $UDID"
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+
+      - name: Build & Test
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -scheme HEImagePackage \
+            -destination "id=${{ steps.sim.outputs.udid }}" \
+            CODE_SIGNING_ALLOWED=NO
