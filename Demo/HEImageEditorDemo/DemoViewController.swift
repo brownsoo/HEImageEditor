@@ -267,6 +267,36 @@ extension DemoViewController: HEImagePickerDelegate {
         }
     }
 
+    /// 피커의 "사진 편집" 선택 → 해당 사진을 이미지 에디터로 연결한다.
+    func imagePicker(
+        _ picker: HEImagePicker,
+        didSelectToEditItem item: HEMediaItem,
+        inItems items: [HEMediaItem]
+    ) {
+        guard case let .photo(photo) = item else {
+            statusLabel.text = "이미지만 편집할 수 있습니다."
+            return
+        }
+
+        // 원본 사진 디코딩은 비용이 크므로 백그라운드에서 수행하고 UI는 메인에서 갱신한다.
+        let path = photo.url.path
+        DispatchQueue.global(qos: .userInitiated).async { [weak self, weak picker] in
+            guard let image = UIImage(contentsOfFile: path) else { return }
+            DispatchQueue.main.async {
+                guard let self, let picker else { return }
+                self.currentImage = image
+                self.configureAllEditTools()
+                // 피커 위에 에디터를 띄운다. 편집 완료는 didFinishEditImage 에서 처리된다.
+                HEEditImageViewController.showImageEditor(
+                    parent: picker,
+                    image: image,
+                    delegate: self,
+                    topToolViewBuilder: Self.makeTopBarBuilder()
+                )
+            }
+        }
+    }
+
     func imagePickerDidCancel(_ picker: HEImagePicker) {
         picker.dismiss(animated: true)
         statusLabel.text = "사진 선택을 취소했습니다."
