@@ -23,7 +23,9 @@ extension Bundle {
     /// 앱이 한국어를 지원하지 않으면 라이브러리 문자열이 영어로 표시되어
     /// 한/영이 섞이는 문제가 있다. 기기의 실제 언어 설정(AppleLanguages)을
     /// 기준으로 번들을 직접 선택해 라이브러리 문자열이 기기 언어를 따르도록 한다.
-    static let localizedBundle: Bundle = {
+    ///
+    /// 같은 파일의 자유 함수 `pickerLocalized(_:)` 에서 접근하므로 `fileprivate`.
+    fileprivate static let localizedBundle: Bundle = {
         let base = Bundle.local
         let deviceLanguages = UserDefaults.standard.stringArray(forKey: "AppleLanguages")
             ?? Locale.preferredLanguages
