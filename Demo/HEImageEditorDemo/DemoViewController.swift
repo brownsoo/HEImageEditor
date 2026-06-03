@@ -44,6 +44,10 @@ final class DemoViewController: UIViewController {
     /// 트레이 뷰가 `dataSource` 를 weak 로 참조하므로 화면이 강하게 보유한다.
     private let emojiStickerDataSource = EmojiStickerDataSource()
 
+    /// 피커에서 "사진 편집"으로 에디터를 띄운 경우의 피커 참조.
+    /// 편집 완료 시 결과를 이 피커의 편집 저장소에 반영하기 위해 사용한다.
+    private weak var pickerForEditing: HEImagePicker?
+
     // MARK: - Lifecycle
 
     override func viewDidLoad() {
@@ -221,6 +225,18 @@ extension DemoViewController: HEEditImageViewDelegate {
         currentImage = resultImage
         previewImageView.image = resultImage
         statusLabel.text = "편집을 완료했습니다."
+
+        // 피커에서 진입한 편집이면, 편집본을 저장하고 피커를 갱신한다.
+        // (편집 이미지 표시 + 썸네일 "편집" 캡션은 피커 기본 델리게이트가 처리)
+        if let picker = pickerForEditing, let editId,
+           let hei = picker.editImageStore.getHEImage(forAssetIdentifier: editId)
+            ?? picker.editImageStore.getHEImage(forId: editId) {
+            pickerForEditing = nil
+            Task { @MainActor in
+                _ = try? await picker.editImageStore.cacheEditImage(uiImage: resultImage, forHei: hei)
+                picker.reload()
+            }
+        }
     }
 
     func didClipWithoutKeepingState(
@@ -234,6 +250,7 @@ extension DemoViewController: HEEditImageViewDelegate {
     }
 
     func cancelledEditImage(_ editView: HEEditImageView) {
+        pickerForEditing = nil
         statusLabel.text = "편집을 취소했습니다."
     }
 
@@ -263,6 +280,47 @@ extension DemoViewController: HEImagePickerDelegate {
             DispatchQueue.main.async {
                 self?.currentImage = image
                 self?.previewImageView.image = image
+            }
+        }
+    }
+
+    /// 피커의 "사진 편집" 선택 → 해당 사진을 이미지 에디터로 연결한다.
+    func imagePicker(
+        _ picker: HEImagePicker,
+        didSelectToEditItem item: HEMediaItem,
+        inItems items: [HEMediaItem]
+    ) {
+        guard case let .photo(photo) = item else {
+            statusLabel.text = "이미지만 편집할 수 있습니다."
+            return
+        }
+
+        // 편집 결과를 다시 찾을 수 있도록 에셋 식별자를 editId 로 사용한다.
+        let editId = photo.asset?.localIdentifier ?? photo.identifier
+        // 피커의 편집 저장소에 해당 사진의 HEImage 가 없으면 등록한다.
+        if picker.editImageStore.getHEImage(forAssetIdentifier: editId) == nil {
+            picker.editImageStore.addHEImage(
+                HEImage(id: editId, origin: photo.url, phAsset: photo.asset)
+            )
+        }
+        pickerForEditing = picker
+
+        // 원본 사진 디코딩은 비용이 크므로 백그라운드에서 수행하고 UI는 메인에서 갱신한다.
+        let path = photo.url.path
+        DispatchQueue.global(qos: .userInitiated).async { [weak self, weak picker] in
+            guard let image = UIImage(contentsOfFile: path) else { return }
+            DispatchQueue.main.async {
+                guard let self, let picker else { return }
+                self.currentImage = image
+                self.configureAllEditTools()
+                // 피커 위에 에디터를 띄운다. 편집 완료는 didFinishEditImage 에서 처리된다.
+                HEEditImageViewController.showImageEditor(
+                    parent: picker,
+                    image: image,
+                    editId: editId,
+                    delegate: self,
+                    topToolViewBuilder: Self.makeTopBarBuilder()
+                )
             }
         }
     }
