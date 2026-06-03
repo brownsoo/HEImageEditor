@@ -30,11 +30,19 @@ class EdgeLineView: UIView {
     
     var edges: LineEdges = .top
     private var boundLayer: CALayer?
-    
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        // CG 컨텍스트 스트로크 색(.separator)은 동적 컬러라, 모드 전환 시 다시 그려야 한다.
+        if traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) {
+            setNeedsDisplay()
+        }
+    }
+
     override func draw(_ rect: CGRect) {
         super.draw(rect)
         if !edges.isEmpty, let context = UIGraphicsGetCurrentContext() {
-            context.setStrokeColor(UIColor(white: 238 / 255.0, alpha: 1.0).cgColor)
+            context.setStrokeColor(UIColor.separator.cgColor)
             context.setLineWidth(1)
                 context.beginPath()
             

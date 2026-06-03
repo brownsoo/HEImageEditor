@@ -391,7 +391,7 @@ extension HEPreviewBoxView {
         addSubview(coll)
         coll.translatesAutoresizingMaskIntoConstraints = false
         coll.edgesConstraintToSuperview(edges: .all)
-        coll.backgroundColor = .lightGray
+        coll.backgroundColor = .systemBackground
         
         collView = coll
         coll.delegate = self
@@ -419,13 +419,13 @@ extension HEPreviewBoxView {
         }
         
         if count == 0 {
-            collView.backgroundColor = UIColor(white: 238 / 255.0, alpha: 1.0)
+            collView.backgroundColor = .systemBackground
             emptyImageView.isHidden = false
             emptyImageView.center = CGPoint(x: self.bounds.width / 2, y: self.bounds.height / 2)
             addSubview(emptyImageView)
             hideLoader()
         } else {
-            collView.backgroundColor = .white
+            collView.backgroundColor = .systemBackground
             emptyImageView.isHidden = false
             emptyImageView.removeFromSuperview()
         }
