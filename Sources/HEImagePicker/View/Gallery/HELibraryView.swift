@@ -31,11 +31,11 @@ final class HELibraryView: UIView {
     
     internal let albumEmptyView: UIView = {
         let v = EdgeLineView()
-        v.backgroundColor = .white
+        v.backgroundColor = .systemBackground
         v.edges = .top
         let label = UILabel()
         label.text = PickerConfig.wordings.photoEmptyMessage
-        label.textColor = UIColor(white: 187 / 255.0, alpha: 1.0)
+        label.textColor = .secondaryLabel
         label.font = .systemFont(ofSize: 15, weight: .bold)
         label.textAlignment = .center
         v.addSubview(label)
@@ -63,10 +63,12 @@ final class HELibraryView: UIView {
         } else {
             bt.setTitle(PickerConfig.wordings.allPhotos, for: .normal)            
         }
-        bt.setTitleColor(.init(white: 52/255.0, alpha: 1), for: .normal)
+        bt.setTitleColor(.label, for: .normal)
         bt.titleLabel?.font = .systemFont(ofSize: 14, weight: .bold)
         bt.semanticContentAttribute = .forceRightToLeft
-        bt.setImage(PickerConfig.icons.arrowDownIcon?.he.resize(CGSize(width: 16, height: 16))?.withTintColor(UIColor(white: 51 / 255.0, alpha: 1.0), renderingMode: .alwaysOriginal), for: .normal)
+        // 템플릿 렌더링 + 동적 tintColor 로 다크모드/라이브 전환에 자동 대응한다.
+        bt.tintColor = .label
+        bt.setImage(PickerConfig.icons.arrowDownIcon?.he.resize(CGSize(width: 16, height: 16))?.withRenderingMode(.alwaysTemplate), for: .normal)
         bt.imageEdgeInsets = UIEdgeInsets(top: 0, left: 2, bottom: 0, right: -2)
         bt.contentEdgeInsets = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 18)
         return bt
@@ -108,7 +110,7 @@ final class HELibraryView: UIView {
 
     private let albumHeadlineView: UIView = {
         let v = UIView()
-        v.backgroundColor = .white
+        v.backgroundColor = .systemBackground
         return v
     }()
     
@@ -301,7 +303,7 @@ final class HELibraryView: UIView {
             || PickerConfig.pickerSources.contains(.videoCapture) {
             let iconView = UIImageView(frame: .init(origin: .zero, size: CGSize(width: 32, height: 32)))
             iconView.contentMode = .center
-            iconView.backgroundColor = UIColor(white: 136 / 255.0, alpha: 1.0)
+            iconView.backgroundColor = .secondarySystemFill
             iconView.layer.cornerRadius = 16
             iconView.layer.masksToBounds = true
             iconView.image = PickerConfig.icons.cameraFillIcon?.he.resize(CGSize(width: 16, height: 16))
