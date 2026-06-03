@@ -1075,12 +1075,14 @@ open class HEEditImageViewController: UIViewController, HEEditImageView {
         editingTopView.show(animate: false)
         editingTopView.confirmClickCallback = { [weak self] in
             guard let self else { return }
-            self.loadingView.show(inCenterOf: self.view)
             self.selectedTool = nil
             self.imageStickerTray?.hide()
             self.changeMainFrameToFullMode()
-            
+
             if EditorConfig.actionDoneEditorWhenImageStickerEditingConfirm {
+                // 에디터 전체를 완료하는 경우에만 로딩 표시. (done() 완료 콜백에서 숨김)
+                // 그렇지 않으면 done() 이 호출되지 않아 로딩이 영원히 남는다.
+                self.loadingView.show(inCenterOf: self.view)
                 self.modalTransitionStyle = .crossDissolve
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                     self.done()
