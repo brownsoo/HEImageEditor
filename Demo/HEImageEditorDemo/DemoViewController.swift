@@ -61,8 +61,9 @@ final class DemoViewController: UIViewController {
     private func setupUI() {
         let editButton = makeButton(title: "샘플 이미지 편집", action: #selector(didTapEdit))
         let pickerButton = makeButton(title: "사진 피커 열기", action: #selector(didTapPicker))
+        let multiPickerButton = makeButton(title: "사진(10개) 피커 열기", action: #selector(didTapMultiPicker))
 
-        let buttonStack = UIStackView(arrangedSubviews: [editButton, pickerButton])
+        let buttonStack = UIStackView(arrangedSubviews: [editButton, pickerButton, multiPickerButton])
         buttonStack.axis = .vertical
         buttonStack.spacing = 12
         buttonStack.translatesAutoresizingMaskIntoConstraints = false
@@ -168,7 +169,23 @@ final class DemoViewController: UIViewController {
     }
 
     @objc private func didTapPicker() {
-        let picker = HEImagePicker()
+        openPicker(maxItems: 1)
+    }
+
+    /// 최대 10개까지 선택 가능한 다중 선택 피커를 연다.
+    @objc private func didTapMultiPicker() {
+        openPicker(maxItems: 10)
+    }
+
+    /// 선택 가능한 최대 개수를 지정해 사진 피커를 띄운다.
+    ///
+    /// - Parameter maxItems: 최대 선택 개수. 1보다 크면 다중 선택이 활성화된다.
+    private func openPicker(maxItems: Int) {
+        var configuration = HEImagePickerConfiguration()
+        configuration.library.maxNumberOfItems = maxItems
+        configuration.library.defaultMultipleSelection = maxItems > 1
+
+        let picker = HEImagePicker(configuration: configuration)
         picker.pickerDelegate = self
         // 사진 피커는 전체 화면으로 표시한다. (네비게이션 바가 상태바 영역까지 정상 확보)
         picker.modalPresentationStyle = .fullScreen
