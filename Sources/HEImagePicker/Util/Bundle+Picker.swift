@@ -59,7 +59,7 @@ public struct HEPickerIcons {
 
     public var editImageIcon = UIImage(systemName: "wand.and.rays", withConfiguration: UIImage.SymbolConfiguration(pointSize: 20, weight: .regular, scale: .default))
     public var backButtonIcon = UIImage(systemName: "chevron.left", withConfiguration: UIImage.SymbolConfiguration(pointSize: 20, weight: .regular, scale: .default))
-    public var arrowDownIcon = UIImage(systemName: "chevron.down.circle.fill", withConfiguration: UIImage.SymbolConfiguration(pointSize: 20, weight: .regular, scale: .default))
+    public var arrowDownIcon = UIImage(systemName: "chevron.down.circle.fill", withConfiguration: UIImage.SymbolConfiguration(pointSize: 16, weight: .regular, scale: .default))
     public var cropIcon = UIImage(systemName: "crop", withConfiguration: UIImage.SymbolConfiguration(pointSize: 20, weight: .regular, scale: .default))?.withTintColor(.white, renderingMode: .alwaysOriginal)
     
     public var captureVideoOnImage: UIImage? = imageFromBundle("yp_iconVideoCaptureRecording")
