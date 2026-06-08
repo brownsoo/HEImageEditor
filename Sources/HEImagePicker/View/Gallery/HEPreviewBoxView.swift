@@ -111,6 +111,7 @@ public class HEPreviewBoxView: UIView {
 
         if PickerConfig.useEditPhoto {
             let button = HECapsuleButton()
+            button.tintColor = .white
             button.setImage(PickerConfig.icons.editImageIcon?.withTintColor(.white), for: .normal)
             button.setTitle(PickerConfig.wordings.editPhoto, for: .normal)
             button.setTitleColor(UIColor(white: 246 / 255.0, alpha: 1.0), for: .normal)
