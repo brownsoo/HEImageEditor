@@ -18,7 +18,7 @@ final class AlbumListViewController: UIViewController {
     var albums = [HEAlbum]()
     let albumsManager: HEAlbumsManager
     
-    private let spinner = UIActivityIndicatorView(style: .medium)
+    private let skeletonView = AlbumListSkeletonView()
     private var collView: UICollectionView!
     private var orientation: UIInterfaceOrientation = .portrait
     private let minimumCellSpacing: CGFloat = 12
@@ -49,7 +49,7 @@ final class AlbumListViewController: UIViewController {
     }
     
     func fetchAlbumsInBackground() {
-       spinner.startAnimating()
+        skeletonView.startAnimating()
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self else {return }
             var albums: [HEAlbum] = self.albumsManager.fetchAlbums()
@@ -61,7 +61,7 @@ final class AlbumListViewController: UIViewController {
             }
             self.albums = albums
             DispatchQueue.main.async {
-                self.spinner.stopAnimating()
+                self.skeletonView.stopAnimating()
                 self.collView.isHidden = false
                 self.collView.reloadData()
             }
@@ -102,10 +102,19 @@ final class AlbumListViewController: UIViewController {
         coll.delegate = self
         view.addSubview(coll)
         self.collView = coll
-        
+
         coll.isHidden = true
 //        coll.frame = view.frame
         coll.makeConstraints { v in
+            v.topAnchorConstraintTo(view.safeAreaLayoutGuide.topAnchor)
+            v.leadingAnchorConstraintToSuperview()
+            v.trailingAnchorConstraintToSuperview()
+            v.bottomAnchorConstraintToSuperview()
+        }
+
+        // 앨범 로딩 중 표시할 스켈레톤. 그리드와 동일한 영역을 덮고, 로딩이 끝나면 숨겨진다.
+        view.addSubview(skeletonView)
+        skeletonView.makeConstraints { v in
             v.topAnchorConstraintTo(view.safeAreaLayoutGuide.topAnchor)
             v.leadingAnchorConstraintToSuperview()
             v.trailingAnchorConstraintToSuperview()
