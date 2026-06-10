@@ -34,6 +34,9 @@ final class AlbumListViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        // 첫 표시가 가로인 경우에도 그리드와 스켈레톤의 열 수가 일치하도록
+        // 실제 인터페이스 방향으로 초기화한다. (viewWillTransition 은 회전 시에만 호출됨)
+        orientation = UIApplication.shared.he.findKeyWindow()?.windowScene?.interfaceOrientation ?? .portrait
         setupUI()
         fetchAlbumsInBackground()
     }

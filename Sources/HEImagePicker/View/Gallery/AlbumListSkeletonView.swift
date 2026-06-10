@@ -131,9 +131,9 @@ final class AlbumListSkeletonView: UIView {
         let title = CGRect(x: originX + (cellWidth - titleWidth) / 2, y: titleY, width: titleWidth, height: titleBarHeight)
         path.append(UIBezierPath(roundedRect: title, cornerRadius: titleBarHeight / 2))
 
-        // 개수 바 (제목 하단 중앙)
+        // 개수 바 (제목 하단 중앙). 실제 셀의 titleLb→countLb 간격(4pt)과 동일하게 맞춘다.
         let countWidth = cellWidth * 0.34
-        let countY = title.maxY + 8
+        let countY = title.maxY + 4
         let count = CGRect(x: originX + (cellWidth - countWidth) / 2, y: countY, width: countWidth, height: countBarHeight)
         path.append(UIBezierPath(roundedRect: count, cornerRadius: countBarHeight / 2))
     }
